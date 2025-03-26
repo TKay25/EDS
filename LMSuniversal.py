@@ -1,0 +1,2191 @@
+from io import BytesIO
+import uuid
+import os
+import numpy as np
+from mysql.connector import Error
+from flask import Flask, request, jsonify, session, render_template, redirect, url_for, send_file,flash
+from datetime import datetime, timedelta
+import pandas as pd
+from xhtml2pdf import pisa
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import matplotlib.pyplot as plt
+import seaborn as sns
+import psycopg2
+from psycopg2 import sql
+import openpyxl
+from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.styles import PatternFill, Font
+from werkzeug.utils import secure_filename
+import matplotlib.pyplot as plt
+import io
+import base64
+
+
+today_date = datetime.now().strftime('%d %B %Y')
+applied_date = datetime.now().strftime('%Y-%m-%d')
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'  
+app.secret_key = '011235'
+app.permanent_session_lifetime = timedelta(minutes=30)
+user_sessions = {}
+
+external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
+database = 'lmsdatabase_8ag3'
+
+connection = psycopg2.connect(external_database_url)
+
+cursor = connection.cursor()
+
+def delete_all_tables():
+    try:
+        
+        # Get all table names in the public schema
+        cursor.execute("""
+            SELECT tablename FROM pg_tables WHERE schemaname = 'public';
+        """)
+        tables = cursor.fetchall()
+
+        # Loop through and drop each table
+        for table in tables:
+            table_name = table[0]
+            cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
+            print(f"Dropped table: {table_name}")
+            connection.commit()
+
+        # Close the cursor and connection
+        print("All tables deleted successfully.")
+
+    except Exception as e:
+        print("Error:", e)
+
+# Run the function
+#delete_all_tables()
+
+def find_credentials(email, password):
+    connection.reconnect()
+    cursor = connection.cursor()
+    
+    try:
+        cursor.execute("SHOW TABLES")
+        tables = cursor.fetchall()
+        
+        for table in tables:
+            table_name = table[0]
+            query = f"""
+            SELECT COUNT(*)
+            FROM information_schema.columns
+            WHERE table_schema = 'LMSuniversal_guarddoing'
+            AND table_name = '{table_name}'
+            AND column_name IN ('email', 'password')
+            """
+            cursor.execute(query)
+            if cursor.fetchone()[0] == 2:  
+
+                query = f"""
+                SELECT * FROM {table_name}
+                WHERE email = %s AND password = %s
+                """
+                cursor.execute(query, (email, password))
+                result = cursor.fetchone()
+                if result:
+                    print(f"Credentials found in table: {table_name}")
+                    return result  
+
+    except: 
+        print("No matching credentials found in any table.")
+        return None
+
+def run1(table_name, empid):
+    print(empid)
+
+    query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
+    print(df_employees)
+    userdf = df_employees[df_employees['id'] == empid].reset_index()
+    print("yeaarrrrr")
+    print(userdf)
+    firstname = userdf.iat[0,2]
+    surname = userdf.iat[0,3]
+    whatsapp = userdf.iat[0,4]
+    address = userdf.iat[0,6]
+    email = userdf.iat[0,5]
+    fullnamedisp = firstname + ' ' + surname
+    leaveapprovername = userdf.iat[0,8]
+    leaveapproverid = userdf.iat[0,9]
+    leaveapproveremail = userdf.iat[0, 10]
+    leaveapproverwhatsapp = userdf.iat[0,11]
+    role = userdf.iat[0,7]
+    leavedaysbalance = userdf.iat[0,12]
+    print('check')
+
+    df_employees['Employee Name'] = df_employees['firstname'] + ' ' + df_employees['surname']
+
+    df_employees['Action'] = df_employees['id'].apply(
+        lambda x: f'''<div style="display: flex; gap: 10px;font-size: 12px;"> <button class="btn btn-primary3 edit-priv-btn" data-bs-toggle="modal" data-bs-target="#editModalpriv" data-name="{x}"  data-ID="{x}">Edit Role</button>  <button class="btn btn-primary3 change-approver-btn" data-bs-toggle="modal" data-bs-target="#editModalapprover" data-name="{x}" data-ID="{x}">Change Approver</button>  <button class="btn btn-primary3 edit-balance-btn" data-bs-toggle="modal" data-bs-target="#editModalbalance" data-name="{x}" data-ID="{x}">Edit Balance</button> </div>'''
+    )
+
+    selected_columns = df_employees[['id','Employee Name', "Role","Leave Approver Name","Leave Days Balance","Action"]]
+    selected_columns.columns = ['ID','EMPLOYEE NAME','ROLE','APPROVER','DAYS BALANCE','ACTION']
+
+    table_employees_html = selected_columns.to_html(classes="table table-bordered table-theme", table_id="employeesTable", index=False,  escape=False,)
+
+    selected_columns['Combined'] = selected_columns.apply(
+        lambda row: f"{row['ID']}--{row['EMPLOYEE NAME']}", axis=1
+    )
+
+    employees_list = selected_columns['Combined'].tolist()
+
+    selected_columns_accumulators = df_employees[['id','Employee Name', "Days Accumulated per Month"]]
+    selected_columns_accumulators.columns = ['ID','EMPLOYEE NAME','DAYS ACCUMULATED PER MONTH']
+    selected_columns_accumulators.loc[:, 'LEAVE DAYS ACCUMULATED PER MONTH'] = selected_columns_accumulators.apply(
+        lambda row: f'<input type="number" class="editable-field" value="{row["DAYS ACCUMULATED PER MONTH"] if row["DAYS ACCUMULATED PER MONTH"] is not None else 0}" data-id="{row["ID"]}" style="width: 100%;"/>',
+        axis=1
+    )
+
+    seacc = selected_columns_accumulators[['ID','EMPLOYEE NAME','LEAVE DAYS ACCUMULATED PER MONTH']]
+
+    table_employees_accumulators_html = seacc.to_html(classes="table table-bordered table-theme", table_id="employeesaccumulatorsTable", index=False,  escape=False,)
+
+    rememployees = selected_columns_accumulators[['ID','EMPLOYEE NAME']]
+    rememployees.loc[:, 'SELECTION'] = rememployees.apply(
+        lambda row: f'<input type="checkbox" class="custom-checkbox employee-checkbox" name="employee_ids" value="{row["ID"]}" data-employee-name="{row["EMPLOYEE NAME"]}">',
+        axis=1
+    )
+
+    table_rememployees_html = rememployees.to_html(classes="table table-bordered table-theme", table_id="removeemployeesTable", index=False,  escape=False,)
+
+    rememployees1 = selected_columns_accumulators[['ID','EMPLOYEE NAME']]
+    rememployees1.loc[:, 'SELECTION'] = rememployees1.apply(
+        lambda row: f'<input type="checkbox" class="custom-checkbox employee-checkbox-bulk-approver" name="employee_ids" value="{row["ID"]}" data-employee-name="{row["EMPLOYEE NAME"]}">',
+        axis=1
+    )
+    table_rememployees_bulk1_html = rememployees1.to_html(classes="table table-bordered table-theme", table_id="employeesbulk1Table", index=False,  escape=False,)
+
+    rememployees2 = selected_columns_accumulators[['ID','EMPLOYEE NAME']]
+    rememployees2.loc[:, 'SELECTION'] = rememployees2.apply(
+        lambda row: f'<input type="checkbox" class="custom-checkbox employee-checkbox-bulk-balances" name="employee_ids" value="{row["ID"]}" data-employee-name="{row["EMPLOYEE NAME"]}">',
+        axis=1
+    )
+    table_rememployees_bulk_balances_html = rememployees2.to_html(classes="table table-bordered table-theme", table_id="employeesbulkbalancesTable", index=False,  escape=False,)
+
+    rememployees3 = selected_columns_accumulators[['ID','EMPLOYEE NAME']]
+    rememployees3.loc[:, 'SELECTION'] = rememployees3.apply(
+        lambda row: f'<input type="checkbox" class="custom-checkbox employee-checkbox-bulk-accumulators" name="employee_ids" value="{row["ID"]}" data-employee-name="{row["EMPLOYEE NAME"]}">',
+        axis=1
+    )
+    table_rememployees_bulk_accumulators_html = rememployees3.to_html(classes="table table-bordered table-theme", table_id="bulkemployeesbulkaccumulatorsTable", index=False,  escape=False,)
+
+    company_name = table_name.replace("main", "")
+    table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+    table_name_apps_approved = f"{company_name}appsapproved"
+    table_name_apps_declined = f"{company_name}appsdeclined"
+    table_name_apps_cancelled = f"{company_name}appscancelled"
+
+
+    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_pending_approval};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_leave_appsmain_pending_approval = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_pending_approval['Approval Status'] = '<p style="color: #ffab00; border: 3px solid #ffab00;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Pending</p>'
+    df_leave_appsmain_pending_approvalcomb = df_leave_appsmain_pending_approval[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
+
+    print(df_leave_appsmain_pending_approval)
+
+
+    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_approved};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_approved['Approval Status'] = '<p style="color: #28a745; border: 3px solid #28a745;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Approved</p>'
+    df_leave_appsmain_approved['ACTION'] = df_leave_appsmain_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}">Download</button></div>''')
+    df_leave_appsmain_approvedcomb = df_leave_appsmain_approved[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]]
+
+    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_declined};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_leave_appsmain_declined = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_declined['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Declined</p>'
+    df_leave_appsmain_declinedcomb = df_leave_appsmain_declined[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
+
+    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_cancelled};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_leave_appsmain_cancelled = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_cancelled['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Cancelled</p>'
+    df_leave_appsmain_cancelledcomb = df_leave_appsmain_cancelled[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
+
+
+    df_leave_appsmain1 = df_leave_appsmain_pending_approvalcomb._append(df_leave_appsmain_approvedcomb)
+    df_leave_appsmain3 = df_leave_appsmain1._append(df_leave_appsmain_declinedcomb)
+    df_leave_appsmain = df_leave_appsmain3._append(df_leave_appsmain_cancelledcomb)
+    df_leave_appsmain['Employee Name'] = df_leave_appsmain['First Name'] + ' ' + df_leave_appsmain['Surname']
+    df_leave_appsmain = df_leave_appsmain[["App ID","Employee Name", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]].fillna('')
+
+
+
+    table_leave_apps_html = df_leave_appsmain.to_html(classes="table table-bordered table-theme", table_id="leaveappsTable", index=False,  escape=False,)
+
+
+
+
+
+
+
+    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {empid};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_leave_apps_pending_my_approval = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days"])
+    num_pending_my_approval = len(df_leave_apps_pending_my_approval)
+    df_leave_apps_pending_my_approval['ACTION'] = df_leave_apps_pending_my_approval['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 approve-app-btn" data-bs-toggle="modal" data-bs-target="#approveappModal" data-name="{x}" data-ID="{x}">Approve</button> <button class="btn btn-primary3 disapprove-app-btn" data-bs-toggle="modal" data-bs-target="#disapproveappModal" data-name="{x}" data-ID="{x}">Disapprove</button> </div>''') 
+    df_leave_apps_pending_my_approval['Approval Status'] = '<p style="color: #ffab00; border: 3px solid #ffab00;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Pending</p>'    
+    df_leave_apps_pending_my_approval_fin = df_leave_apps_pending_my_approval[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days", "Approval Status","ACTION"]]
+    
+
+    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor FROM {table_name_apps_approved} WHERE leaveapproverid = {empid};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_leave_apps_approved_by_me= pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days"])
+    df_leave_apps_approved_by_me['ACTION'] = df_leave_apps_approved_by_me['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 download-app-btn" data-name="{x}" data-ID="{x}">Download</button><button class="btn btn-primary3 revokeapprover-app-btn" data-bs-toggle="modal" data-bs-target="#revokeapproverappModal" data-name="{x}" data-ID="{x}">Revoke</button></div>''') 
+    df_leave_apps_approved_by_me['Approval Status'] = '<p style="color: #28a745; border: 3px solid #28a745;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Approved</p>'
+    df_leave_apps_approved_by_me = df_leave_apps_approved_by_me[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days", "Approval Status","ACTION"]]
+
+    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor FROM {table_name_apps_declined} WHERE leaveapproverid = {empid};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_leave_apps_declined_by_me= pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days"])
+    df_leave_apps_declined_by_me['ACTION'] = df_leave_apps_declined_by_me['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 revive-app-btn" data-bs-toggle="modal" data-bs-target="#reviveappModal" data-name="{x}" data-ID="{x}">Revive</button></div>''') 
+    df_leave_apps_declined_by_me['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Declined</p>'
+    df_leave_apps_declined_by_me = df_leave_apps_declined_by_me[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days", "Approval Status","ACTION"]]
+
+
+
+
+    df_leave_apps_approved_declined_by_me = df_leave_apps_approved_by_me._append(df_leave_apps_declined_by_me)
+    df_leave_apps_approved_declined_pending_by_me = df_leave_apps_approved_declined_by_me._append(df_leave_apps_pending_my_approval_fin).fillna('')   
+    df_leave_apps_approved_declined_pending_by_me['Employee Name'] = df_leave_apps_approved_declined_pending_by_me['First Name'] + ' ' + df_leave_apps_approved_declined_pending_by_me['Surname']
+    df_leave_apps_approved_declined_pending_by_me = df_leave_apps_approved_declined_pending_by_me[["App ID","Employee Name", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days", "Approval Status","ACTION"]]
+
+    table_leave_apps_approved_by_me_html = df_leave_apps_approved_declined_pending_by_me.to_html(classes="table table-bordered table-theme", table_id="leaveappsTableapprovedbyme", index=False,  escape=False,)
+ 
+
+
+
+
+
+    query = f"""SELECT id, appid, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername FROM {table_name_apps_approved};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_my_leave_apps_approved = pd.DataFrame(rows, columns=["ID","App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver"])
+    df_my_leave_apps_approved = df_my_leave_apps_approved[df_my_leave_apps_approved['ID'] == empid]
+    print("ahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+    print(df_my_leave_apps_approved)
+    df_my_leave_apps_approved['Approval Status'] = '<p style="color: #28a745; border: 3px solid #28a745;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Approved</p>'
+    df_my_leave_apps_approved['ACTION'] = df_my_leave_apps_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}">Download</button><button class="btn btn-primary3 revoke-app-btn" data-bs-toggle="modal" data-bs-target="#revokeappModal" data-name="{x}" data-ID="{x}">Revoke</button></div>''')
+    df_my_leave_apps_approved_approved_fin =  df_my_leave_apps_approved[["App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Approval Status","Leave Approver","ACTION"]]
+
+    query = f"""SELECT id, appid, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername FROM {table_name_apps_declined};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_my_leave_apps_declined = pd.DataFrame(rows, columns=["ID","App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver"])
+    df_my_leave_apps_declined = df_my_leave_apps_declined[df_my_leave_apps_declined['ID'] == empid]
+    print(df_my_leave_apps_declined)
+    df_my_leave_apps_declined['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Declined</p>'
+    df_my_leave_apps_declined['ACTION'] =  df_my_leave_apps_declined['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 reapply-app-btn" data-bs-toggle="modal" data-bs-target="#reapplyappModal" data-name="{x}" data-ID="{x}">Re-Apply</button>''') 
+    df_my_leave_apps_declined_fin_declined =  df_my_leave_apps_declined[["App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Approval Status","Leave Approver","ACTION"]]
+
+
+    query = f"""SELECT id, appid, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername FROM {table_name_apps_cancelled};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_my_leave_apps_cancelled = pd.DataFrame(rows, columns=["ID","App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver"])
+    df_my_leave_apps_cancelled = df_my_leave_apps_cancelled[df_my_leave_apps_cancelled['ID'] == empid]
+    print("ahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+    print(df_my_leave_apps_cancelled)
+    df_my_leave_apps_cancelled['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Cancelled</p>'
+    df_my_leave_apps_cancelled['ACTION'] =  df_my_leave_apps_cancelled['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 reapply-app-btn" data-bs-toggle="modal" data-bs-target="#reapplyappModal" data-name="{x}" data-ID="{x}">Re-Apply</button>''') 
+    df_my_leave_apps_cancelled_fin =  df_my_leave_apps_cancelled[["App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Approval Status","Leave Approver","ACTION"]]
+
+    df_my_leave_apps_approved_declined_fin1 = df_my_leave_apps_approved_approved_fin._append(df_my_leave_apps_declined_fin_declined)
+    df_my_leave_apps_approved_declined_fin = df_my_leave_apps_approved_declined_fin1._append(df_my_leave_apps_cancelled_fin)
+
+    
+    userleaveapppending = df_leave_appsmain_pending_approval[df_leave_appsmain_pending_approval['ID'] == empid].reset_index()
+    userleaveapppending['ACTION'] = userleaveapppending['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 edit-priv-btn" data-bs-toggle="modal" data-bs-target="#remindapproverModal" data-name="{x}" data-ID="{x}">Remind Approver</button> <button class="btn btn-primary3 cancel-app-btn" data-bs-toggle="modal" data-bs-target="#cancelappModal" data-name="{x}" data-ID="{x}">Cancel Application</button> </div>''') 
+    userleaveapppending = userleaveapppending[["App ID","Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status", "ACTION"]]
+    df_my_leave_apps_approved_declined_pending_fin = df_my_leave_apps_approved_declined_fin._append(userleaveapppending)
+
+    table_my_leave_apps_html = df_my_leave_apps_approved_declined_pending_fin.to_html(classes="table table-bordered table-theme", table_id="myleaveappsTable", index=False,  escape=False,)
+
+
+    def generate_leave_status_chart():
+
+        def categorize_status(status):
+            if "pending" in status.lower():
+                return "Pending"
+            elif "declined" in status.lower():
+                return "Declined"
+            elif "approved" in status.lower():
+                return "Approved"
+            elif "cancelled" in status.lower():
+                return "Cancelled"
+            return status  # Return unchanged if no match
+
+        df_my_leave_apps_approved_declined_pending_fin["Approval Status"] = df_my_leave_apps_approved_declined_pending_fin["Approval Status"].apply(categorize_status)
+        print("ragaaaaaaaaaaaaaaaa")
+        print(df_my_leave_apps_approved_declined_pending_fin)
+        
+        status_counts = df_my_leave_apps_approved_declined_pending_fin["Approval Status"].value_counts().to_dict()
+        return status_counts  # Return as dictionary
+    
+    return {
+        "table_my_leave_apps_html": table_my_leave_apps_html,
+        "table_leave_apps_approved_by_me_html": table_leave_apps_approved_by_me_html,
+        "num_pending_my_approval": num_pending_my_approval,
+        "table_leave_apps_html": table_leave_apps_html,
+        "table_employees_accumulators_html": table_employees_accumulators_html,
+        "table_rememployees_bulk_balances_html": table_rememployees_bulk_balances_html,
+        "table_rememployees_bulk_accumulators_html":  table_rememployees_bulk_accumulators_html,
+        "table_rememployees_html": table_rememployees_html,
+        "table_rememployees_bulk1_html": table_rememployees_bulk1_html,
+        "employees_list": employees_list,
+        "role": role,
+        "firstname": firstname,
+        "surname": surname,
+        "fullnamedisp": fullnamedisp,
+        "email": email,
+        "whatsapp": whatsapp,
+        "address": address,
+        "table_employees_html": table_employees_html,
+        "today_date": today_date,
+        "leaveapprovername": leaveapprovername,
+        "leaveapproverid": leaveapproverid,
+        "leavedaysbalance": leavedaysbalance,
+        "leaveapproveremail": leaveapproveremail,
+        "leaveapproverwhatsapp": leaveapproverwhatsapp,
+        "leave_status_chart": generate_leave_status_chart(),  
+
+    }
+
+
+
+def check_existing_data(df, table_name):
+    # Query database for existing WhatsApp and Email values
+    cursor.execute(f"SELECT whatsapp, email FROM {table_name}")
+    existing_data = cursor.fetchall()
+
+    existing_whatsapps = [data[0] for data in existing_data]
+    existing_emails = [data[1] for data in existing_data]
+
+    existing_whatsapps = [data[0] for data in existing_data]
+    existing_emails = [data[1] for data in existing_data]
+
+    # Drop rows where WhatsApp or Email already exists in the database
+    df = df[~df['WhatsApp'].isin(existing_whatsapps)]  # Remove rows with existing WhatsApp
+    df = df[~df['Email'].isin(existing_emails)]  # Remove rows with existing Email
+
+    return df
+
+app.config['ALLOWED_EXTENSIONS'] = {'xlsx'}
+
+if connection.status == psycopg2.extensions.STATUS_READY:
+    cursor = connection.cursor()
+        
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+
+    @app.route('/upload-excel', methods=['POST'])
+    def upload_excel():
+
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+            empid = session.get('empid')
+
+            if 'file' not in request.files:
+                return jsonify({"status": "error", "message": "No file part"}), 400
+            
+            file = request.files['file']
+            
+            if file.filename == '':
+                return jsonify({"status": "error", "message": "No selected file"}), 400
+            
+            if file and allowed_file(file.filename):
+                # Secure the filename and save the file to the upload folder
+
+                # Read the Excel file into a pandas DataFrame
+                df = pd.read_excel(file)
+                df = check_existing_data(df, table_name)
+
+                print(df)
+
+                if len(df) > 0:
+
+                    for index, row in df.iterrows():
+                        first_name = row['FirstName']
+                        surname = row['Surname']
+                        whatsapp = row['WhatsApp']
+                        email = row['Email']
+                        role = row['Role']
+                        current_leave_days_balance = row['Current Leave Days Balance']
+                        monthly_accumulation = row['Monthly Leave Days Accumulation']
+
+                        cursor.execute(f"""
+                            INSERT INTO {table_name} (firstname, surname, whatsapp, email, role, currentleavedaysbalance, monthlyaccumulation)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (first_name, surname, whatsapp, email, role, current_leave_days_balance, monthly_accumulation))
+                    
+                    connection.commit()
+
+                return redirect(url_for('Dashboard'))
+
+            
+        else:
+            return redirect(url_for('landingpage')) 
+
+
+
+    @app.route('/download-excel-template-add-employees')
+    def download_excel_template_add_employees():
+
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main", "")
+
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Employee Details"
+
+            headers = ["FirstName", "Surname", "WhatsApp", "Email", "Role", "Current Leave Days Balance", "Monthly Leave Days Accumulation"]  # 'Status' column will have dropdowns
+            ws.append(headers)
+
+        # Apply styles to header row
+            dark_blue = "003366"
+            white = "FFFFFF"
+            
+            # Setting header row background color and font color
+            for col in range(1, len(headers) + 1):
+                cell = ws.cell(row=1, column=col)
+                cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
+                cell.font = Font(color=white, bold=True)
+
+            dropdown_options = '"Administrator,Ordinary User"' 
+            dv = DataValidation(type="list", formula1=dropdown_options, allow_blank=False)
+            ws.add_data_validation(dv)
+
+            for row in range(2, 3000):  # Adjust range as needed
+                dv.add(ws[f"E{row}"])
+
+            file_path = f"{company_name} Employee Details Template.xlsx"
+            wb.save(file_path)
+
+            return send_file(file_path, as_attachment=True)
+        
+        else:
+            return redirect(url_for('landingpage')) 
+
+    @app.route('/admin_sign_up', methods=['POST'])
+    def submit_form():
+        global password
+        try:
+
+            external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
+            database = 'lmsdatabase_8ag3'
+
+            connection = psycopg2.connect(external_database_url)
+
+            cursor = connection.cursor()
+
+            company_name_w_space = request.form.get('company_name')
+            company_name = company_name_w_space.replace(' ', '_')
+            firstname = request.form.get('firstname')
+            surname = request.form.get('surname')
+            whatsapp = int(request.form['whatsapp'])
+            email = request.form.get('email')
+            password = request.form.get('password')
+
+            table_name = f"{company_name}main"
+            table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+            table_name_apps_cancelled = f"{company_name}appscancelled"
+            table_name_apps_approved = f"{company_name}appsapproved"
+            table_name_apps_declined = f"{company_name}appsdeclined"
+            table_name_apps_revoked = f"{company_name}appsrevoked"
+
+            check_table_query = f"""
+            SELECT COUNT(*) 
+            FROM information_schema.tables 
+            WHERE table_schema = %s AND table_name = %s;
+            """
+            cursor.execute(check_table_query, (database, table_name))
+            table_exists = cursor.fetchone()[0]
+
+            if table_exists:
+                print(f"Table `{table_name}` already exists. Skipping creation.")
+
+                return render_template('index.html')  
+
+            else:
+
+                create_table_query = f"""
+                CREATE TABLE {table_name} (
+                    id SERIAL PRIMARY KEY,
+                    firstname VARCHAR(100),
+                    surname VARCHAR(100),
+                    whatsapp INT,
+                    address VARCHAR(100),
+                    email VARCHAR(255),
+                    password VARCHAR(255),
+                    role VARCHAR(255),
+                    leaveapprovername VARCHAR(255),
+                    leaveapproverid INT,
+                    leaveapproveremail VARCHAR(255),
+                    leaveapproverwhatsapp INT,
+                    currentleavedaysbalance INT,
+                    monthlyaccumulation INT
+                );
+                """
+                cursor.execute(create_table_query)
+                connection.commit()
+                print(f"Table `{table_name}` created successfully!")
+
+
+                create_table_query = f"""
+                CREATE TABLE {table_name_apps_pending_approval} (
+                    appid SERIAL PRIMARY KEY,
+                    id INT,
+                    firstname VARCHAR(100),
+                    surname VARCHAR(100),
+                    leavetype VARCHAR(255),
+                    reasonifother VARCHAR(300),
+                    leaveapprovername VARCHAR(255),
+                    leaveapproverid INT,
+                    leaveapproveremail VARCHAR(255),
+                    leaveapproverwhatsapp INT,
+                    currentleavedaysbalance INT,
+                    dateapplied date,
+                    leavestartdate date,
+                    leaveenddate date,
+                    leavedaysappliedfor INT,
+                    leavedaysbalancebf INT,
+                    approvalstatus VARCHAR(255)
+                );
+                """
+                cursor.execute(create_table_query)
+                connection.commit()
+                print(f"Table `{table_name_apps_pending_approval}` created successfully!")
+
+
+                create_table_query = f"""
+                CREATE TABLE {table_name_apps_cancelled} (
+                    appid INT,
+                    id INT,
+                    firstname VARCHAR(100),
+                    surname VARCHAR(100),
+                    leavetype VARCHAR(255),
+                    reasonifother VARCHAR(300),
+                    leaveapprovername VARCHAR(255),
+                    leaveapproverid INT,
+                    leaveapproveremail VARCHAR(255),
+                    leaveapproverwhatsapp INT,
+                    currentleavedaysbalance INT,
+                    dateapplied date,
+                    leavestartdate date,
+                    leaveenddate date,
+                    leavedaysappliedfor INT,
+                    leavedaysbalancebf INT,
+                    approvalstatus VARCHAR(255),
+                    statusdate date
+                );
+                """
+                cursor.execute(create_table_query)
+                connection.commit()
+                print(f"Table `{table_name_apps_cancelled}` created successfully!")
+
+
+
+
+                create_table_query = f"""
+                CREATE TABLE {table_name_apps_approved} (
+                    appid INT,
+                    id INT,
+                    firstname VARCHAR(100),
+                    surname VARCHAR(100),
+                    leavetype VARCHAR(255),
+                    reasonifother VARCHAR(300),
+                    leaveapprovername VARCHAR(255),
+                    leaveapproverid INT,
+                    leaveapproveremail VARCHAR(255),
+                    leaveapproverwhatsapp INT,
+                    currentleavedaysbalance INT,
+                    dateapplied date,
+                    leavestartdate date,
+                    leaveenddate date,
+                    leavedaysappliedfor INT,
+                    leavedaysbalancebf INT,
+                    approvalstatus VARCHAR(255),
+                    statusdate date         
+                );
+                """
+                cursor.execute(create_table_query)
+                connection.commit()
+                print(f"Table `{table_name_apps_approved}` created successfully!")
+
+
+                create_table_query = f"""
+                CREATE TABLE {table_name_apps_declined} (
+                    appid INT,
+                    id INT,
+                    firstname VARCHAR(100),
+                    surname VARCHAR(100),
+                    leavetype VARCHAR(255),
+                    reasonifother VARCHAR(300),
+                    leaveapprovername VARCHAR(255),
+                    leaveapproverid INT,
+                    leaveapproveremail VARCHAR(255),
+                    leaveapproverwhatsapp INT,
+                    currentleavedaysbalance INT,
+                    dateapplied date,
+                    leavestartdate date,
+                    leaveenddate date,
+                    leavedaysappliedfor INT,
+                    leavedaysbalancebf INT,
+                    approvalstatus VARCHAR(255),
+                    statusdate date         
+                );
+                """
+                cursor.execute(create_table_query)
+                connection.commit()
+                print(f"Table `{table_name_apps_declined}` created successfully!")
+
+
+                create_table_query = f"""
+                CREATE TABLE {table_name_apps_revoked} (
+                    appid INT,
+                    id INT,
+                    firstname VARCHAR(100),
+                    surname VARCHAR(100),
+                    leavetype VARCHAR(255),
+                    reasonifother VARCHAR(300),
+                    leaveapprovername VARCHAR(255),
+                    leaveapproverid INT,
+                    leaveapproveremail VARCHAR(255),
+                    leaveapproverwhatsapp INT,
+                    currentleavedaysbalance INT,
+                    dateapplied date,
+                    leavestartdate date,
+                    leaveenddate date,
+                    leavedaysappliedfor INT,
+                    leavedaysbalancebf INT,
+                    approvalstatus VARCHAR(255),
+                    statusdate date         
+                );
+                """
+                cursor.execute(create_table_query)
+                connection.commit()
+                print(f"Table `{table_name_apps_revoked}` created successfully!")
+                admin = "Administrator"
+
+                
+                insert_query = f"""
+                INSERT INTO {table_name} (firstname, surname, role, whatsapp, email, password)
+                VALUES (%s, %s, %s, %s, %s, %s);
+                """
+                cursor.execute(insert_query, (firstname, surname, admin, whatsapp, email, password))
+                connection.commit()
+                print("First record inserted successfully!")
+                    
+                print(f"Received data for {company_name} - Administrator: {firstname} {surname} (Email: {email})")
+
+                query = f"SELECT id, firstname, surname, whatsapp, email, role, leaveapprovername, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+                cursor.execute(query)
+                rows = cursor.fetchall()
+
+                df_employeesemp = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Role","Leave Approver Name","Leave Days Balance","Days Accumulated per Month"])
+                userdfemp = df_employeesemp[df_employeesemp['Email'] == email].reset_index()
+                firstname = userdfemp.iat[0,2]
+                surname = userdfemp.iat[0,3]
+                email = userdfemp.iat[0,5]
+                empid = userdfemp.iat[0,1]
+
+                print("new d")
+                print(df_employeesemp)
+                print(userdfemp)                
+
+                user_uuid = uuid.uuid4()
+                session['user_uuid'] = str(user_uuid)
+                session.permanent = True  
+                user_sessions[email] = {'uuid': str(user_uuid), 'email': email}
+                session['table_name'] = table_name
+
+                session['empid'] = int(np.int64(empid))  # Ensure Python int
+                
+                results = run1(table_name, empid)  # Replace with your actual table name
+
+                return render_template('adminpage.html', **results, id= empid, company_name=company_name)
+            
+        except Error as e:
+            print(f'failed {e}')
+            return render_template('index.html')
+        
+
+    @app.route('/dashboard')
+    def Dashboard():
+
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+            empid = session.get('empid')
+
+            companyname = table_name.replace("main", "")
+            company_name = companyname.replace('_', ' ')
+
+            results = run1(table_name, empid)  
+
+            print("Back from adventures")
+            if results["role"] == 'Administrator':
+                role_narr = "LMS ADMINISTRATOR"
+
+                return render_template('adminpage.html', **results, id= empid, company_name=company_name, role_narr = role_narr)
+
+            if results["role"] == 'Ordinary User':
+
+                query = f"SELECT id FROM {table_name} WHERE leaveapproverid = {empid};"
+                cursor.execute(query)
+                rows = cursor.fetchall()
+
+                df_employeesempapp = pd.DataFrame(rows, columns=["id"])
+
+                if len(df_employeesempapp) > 0:
+
+                    role_narr = "LMS LEAVE APPLICATIONS APPROVER"
+                    hide_element = True
+                    return render_template('adminpage.html', **results, id= empid, company_name=company_name, hide_element=hide_element, role_narr = role_narr)
+
+                elif len(df_employeesempapp) == 0:
+                    
+                    role_narr = "LMS USER"
+                    hide_element = True
+                    hide_element2 = True
+                    return render_template('adminpage.html', **results, id= empid, company_name=company_name, hide_element=hide_element, hide_element2 = hide_element2, role_narr = role_narr)
+
+        
+        else:
+                return redirect(url_for('landingpage')) 
+        
+    @app.route('/login', methods=['POST'])
+    def login():
+        if request.method == 'POST':
+            try:
+                # Database connection
+                external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
+                connection = psycopg2.connect(external_database_url)
+                cursor = connection.cursor()
+
+                # Retrieve form data
+                email = request.form.get('emaillogin').strip()
+                password = request.form.get('passwordlogin').strip()
+
+                # Check for missing input
+                if not email or not password:
+                    return jsonify({'success': False, 'message': 'Email and password are required.'}), 400
+                
+                if email == "importsechelone@quipment" and password == "011235813FIBONACCI@":
+
+                    cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")
+                    
+                    tables = cursor.fetchall()
+                    table_names = [table[0] for table in tables]
+
+                    df_tables = pd.DataFrame(table_names, columns=['Table Name'])
+          
+                    return render_template('EDSDev.html', companies = df_tables)
+
+
+                # Query tables with the 'email' column
+                column_search_query = """
+                    SELECT TABLE_NAME
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE COLUMN_NAME = 'email' AND TABLE_SCHEMA = 'public';
+                """
+                cursor.execute(column_search_query)
+                tables_with_email = cursor.fetchall()
+
+                results = []
+                for (table_name,) in tables_with_email:
+                    search_query = f"SELECT * FROM {table_name} WHERE email = %s;"
+                    cursor.execute(search_query, (email,))
+                    rows = cursor.fetchall()
+                    if rows:
+                        results.append((table_name, rows))
+
+                if results:
+                    table_name, rows = results[0]
+                    print(f"Table Found: {table_name}")
+                    print(rows)
+
+                    table_df = pd.DataFrame(rows, columns=['id', 'firstname', 'surname', 'whatsapp', 'address', 'email', 'password', 'role', 'leaveapprovername', 'leaveapproverid', 'leaveapproveremail','leaveapproverwhatsapp','currentleavedaysbalance', 'monthlyaccumulation'])
+
+                    if table_df.iat[0, 6] == password:
+                        user_uuid = uuid.uuid4()
+                        session['user_uuid'] = str(user_uuid)
+                        session.permanent = True
+                        user_sessions[email] = {'uuid': str(user_uuid), 'email': email}
+
+                        empid = table_df.iat[0, 0]
+                        session['table_name'] = table_name
+                        session['empid'] = int(np.int64(empid))  # Ensure Python int
+
+                        # Redirect to dashboard
+                        return redirect(url_for('Dashboard'))
+
+                    else:
+                        print('Incorrect password')
+                        return jsonify({'success': False, 'message': 'Incorrect password.'}), 401
+
+                else:
+                    print(f"No rows found with email '{email}' in any table.")
+                    return jsonify({'success': False, 'message': 'Email not found.'}), 404
+
+            except Exception as e:
+                print("Error while connecting to the database:", e)
+                return jsonify({'success': False, 'message': str(e)}), 500
+
+            finally:
+                print("Done")
+
+        return jsonify({'success': False, 'message': 'Invalid request method.'}), 405
+
+    @app.route('/login_first_time', methods=['POST'])
+    def login_first_time():
+        if request.method == 'POST':
+            try:
+                # Database connection
+                external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
+                connection = psycopg2.connect(external_database_url)
+                cursor = connection.cursor()
+
+                # Retrieve form data
+                email = request.form.get('emailloginfirsttime').strip()
+                password = request.form.get('passwordloginfirsttime').strip()
+
+                print("first ")
+                print(email)
+                print(password)
+                # Check for missing input
+                if not email or not password:
+                    return jsonify({'success': False, 'message': 'Email and password are required.'}), 400
+                
+                if email == "importsechelone@quipment" and password == "011235813FIBONACCI@":
+
+                    cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")
+                    
+                    tables = cursor.fetchall()
+                    table_names = [table[0] for table in tables]
+
+                    df_tables = pd.DataFrame(table_names, columns=['Table Name'])
+          
+                    return render_template('EDSDev.html', companies = df_tables)
+
+
+                # Query tables with the 'email' column
+                column_search_query = """
+                    SELECT TABLE_NAME
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE COLUMN_NAME = 'email' AND TABLE_SCHEMA = 'public';
+                """
+                cursor.execute(column_search_query)
+                tables_with_email = cursor.fetchall()
+
+                results = []
+                for (table_name,) in tables_with_email:
+                    search_query = f"SELECT * FROM {table_name} WHERE email = %s;"
+                    cursor.execute(search_query, (email,))
+                    rows = cursor.fetchall()
+                    if rows:
+                        results.append((table_name, rows))
+
+                if results:
+                    table_name, rows = results[0]
+                    print(f"Table Found: {table_name}")
+                    print(rows)
+
+                    table_df = pd.DataFrame(rows, columns=['id', 'firstname', 'surname', 'whatsapp', 'address', 'email', 'password', 'role', 'leaveapprovername', 'leaveapproverid', 'leaveapproveremail','leaveapproverwhatsapp','currentleavedaysbalance', 'monthlyaccumulation'])
+                    empid = table_df.iat[0,0]
+
+                    update_query = f"UPDATE {table_name} SET password = %s WHERE email = %s;"
+                    cursor.execute(update_query, (password, email))
+
+                    connection.commit()                   
+
+                    user_uuid = uuid.uuid4()
+                    session['user_uuid'] = str(user_uuid)
+                    session.permanent = True
+                    user_sessions[email] = {'uuid': str(user_uuid), 'email': email}
+
+
+                    session['table_name'] = table_name
+                    session['empid'] = int(np.int64(empid))  # Ensure Python int
+
+                    # Redirect to dashboard
+                    return redirect(url_for('Dashboard'))
+
+                else:
+                    print('Incorrect passwor')
+                    return jsonify({'success': False, 'message': 'Email is not registered, Kindly communicate issue to your LMS Asdministrator.'}), 401
+
+
+            except Exception as e:
+                print("Error while connecting to the database:", e)
+                return jsonify({'success': False, 'message': str(e)}), 500
+
+            finally:
+                print("Done")
+
+        return jsonify({'success': False, 'message': 'Invalid request method.'}), 405
+    
+
+    @app.route('/leave_application', methods=['POST'])
+    def leave_application():
+
+        user_uuid = session.get('user_uuid')
+        table_name = session.get('table_name')
+        empid = session.get('empid')
+
+        if not user_uuid or not table_name or not empid:
+            return "Session data is missing", 400
+        
+        if request.method == 'POST':
+
+            company_name = table_name.replace("main", "")
+
+            employee_number = request.form.get('employee_number')
+            first_name = request.form.get('first_name_app')
+            surname = request.form.get('surname')
+            date_applied = request.form.get('dateapplied')
+            approver_name = request.form.get('approvername')
+            approver_id = request.form.get('approverid')
+            approver_email = request.form.get('approveremailapp')
+            approver_whatsapp = request.form.get('approverwhatsappapp')
+            leave_days_balance = request.form.get('leavedays-bf')
+            unicode = request.form.get('unicode')
+            leave_type = request.form.get('leaveType')
+            leave_specify = request.form.get('leaveSpecify')  # Optional field
+            start_date = request.form.get('startDate')
+            end_date = request.form.get('endDate')
+
+            try:
+
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+
+                # Initialize count for non-Sundays
+                leave_days = 0
+                current_date = start_date
+
+                # Iterate through the range of dates
+                while current_date <= end_date:
+                    if current_date.weekday() != 6:  # Exclude Sundays (6 is Sunday in Python's `weekday()` function)
+                        leave_days += 1
+                    current_date += timedelta(days=1)
+
+                # Debug: Print the result
+                print(f"Number of leave days (excluding Sundays): {leave_days}")
+
+            except ValueError:
+                    # Handle invalid date format
+                    return jsonify({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD.'}), 400
+
+            # Debug: Print received data (remove this in production)
+            print(f"Employee Number: {employee_number}")
+            print(f"First Name: {first_name}")
+            print(f"Surname: {surname}")
+            print(f"Date Applied: {date_applied}")
+            print(f"Approver Name: {approver_name}")
+            print(f"Approver ID: {approver_id}")
+            print(f"Leave Days Balance: {leave_days_balance}")
+            print(f"Unicode: {unicode}")
+            print(f"Leave Type: {leave_type}")
+            print(f"Leave Specify: {leave_specify}")
+            print(f"Start Date: {start_date}")
+            print(f"End Date: {end_date}")
+            
+            leavedaysbalancebf = int(leave_days_balance) - int(leave_days)
+
+            table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+
+            query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {empid};"
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])    
+
+            if len(df_employeesappspendingcheck) == 0:
+
+                status = "Pending"
+
+                insert_query = f"""
+                INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                """
+                cursor.execute(insert_query, (employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, int(leavedaysbalancebf), status))
+                connection.commit()
+
+                results = run1(table_name, empid)
+                return render_template('adminpage.html', **results)
+
+            else:
+                response = {'status': 'error', 'message': 'Leave application not submitted successfully.'}
+                return jsonify(response), 400  
+
+
+    @app.route('/manual_add_employee', methods=['POST'])
+    def manual_add_employee():
+        user_uuid = session.get('user_uuid')
+        table_name = session.get('table_name')
+        empid = session.get('empid')
+
+        if not user_uuid or not table_name or not empid:
+            return "Session data is missing", 400
+
+        company_name = table_name.replace("main", "")
+
+        if request.method == 'POST':
+            try:
+                print("Form data received:", request.form)
+
+                firstname = request.form.get('firstname', '').strip()
+                surname = request.form.get('surname', '').strip()
+                whatsapp = request.form.get('whatsapp', '').strip()
+                email = request.form.get('email', '').strip()
+                role = request.form.get('role', '').strip()
+                approver = request.form.get('selected_employees', '').strip()
+                current_leave_days = request.form.get('currentleavedays', '').strip()
+                monthly_accumulation = request.form.get('monthlyaccumulation', '').strip()
+                
+                if not all([firstname, surname, whatsapp, email, role, approver, current_leave_days, monthly_accumulation]):
+                    return "All fields are required", 400
+
+                try:
+                    whatsapp = int(whatsapp)
+                    current_leave_days = int(current_leave_days)
+                    monthly_accumulation = int(monthly_accumulation)
+                except ValueError:
+                    return "Invalid input for numeric fields", 400
+
+                table_name = f"{company_name}main"
+
+                check_query = f"SELECT COUNT(*) FROM {table_name} WHERE email = %s OR whatsapp = %s;"
+                cursor.execute(check_query, (email, whatsapp))
+                record_exists = cursor.fetchone()[0]
+
+                split_result = approver.split('--')
+
+                id_part = int(split_result[0])  
+                name_part = split_result[1] 
+
+                query = f"SELECT id, whatsapp, email FROM {table_name};"
+                cursor.execute(query)
+                rows = cursor.fetchall()
+
+                df_employees = pd.DataFrame(rows, columns=["id","whatsapp","email"])
+                print(df_employees)
+                userdf = df_employees[df_employees['id'] == id_part].reset_index()
+                print("yeaarrrrr")
+                print(userdf)
+                leaveapproverwhatsapp = int(np.int64(userdf.iat[0,2]))
+                leaveapproveremail = userdf.iat[0,3]
+
+                if record_exists == 0:
+                    insert_query = f"""
+                        INSERT INTO {table_name} 
+                        (firstname, surname, whatsapp, email, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp,currentleavedaysbalance, monthlyaccumulation)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    """
+                    cursor.execute(insert_query, (firstname, surname, whatsapp, email, role, name_part, id_part, leaveapproveremail, leaveapproverwhatsapp, current_leave_days, monthly_accumulation))
+                    connection.commit()
+                else:
+                    return "Record already exists", 400
+
+                results = run1(table_name, empid)
+                return render_template('adminpage.html', **results)
+
+            except Exception as e:
+                print("Error while processing:", e)
+                return f"An error occurred: {e}", 500
+
+        return redirect(url_for('landingpage'))
+
+
+    @app.route('/admin-modal', methods=['POST'])
+    def admin_info():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+            empid = session.get('empid')
+
+            if request.method == 'POST':
+
+                table_name = session.get('table_name')
+                company_name = table_name.replace("main", "")
+                current_leave_days = int(request.form['currentleavedays'])
+                monthly_accumulation = int(request.form['monthlyaccumulation'])
+
+                try:
+                    table_name = f"{company_name}main"
+
+                    print(F"AYEEEEEEEEEEEEEEEEEEEEEEEEEEEE {table_name}")
+
+                    update_query = f"""
+                    UPDATE {table_name}
+                    SET currentleavedaysbalance = %s, monthlyaccumulation = %s
+                    WHERE id = %s;
+                    """
+
+                    cursor.execute(update_query, (current_leave_days, monthly_accumulation, empid))
+                    connection.commit()
+                    
+                    results = run1(table_name, empid)  # Replace with your actual table name
+
+                    return render_template('adminpage.html', **results, id= empid, company_name=company_name)
+                                    
+                except Error as e:
+                    print("Error while connecting to MySQL:", e)
+                    return f"An error occurred: {e}", 500
+                
+        else:
+                return redirect(url_for('landingpage'))  
+            
+    @app.route('/update_role', methods=['POST'])
+    def update_role():
+    
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+            empid = session.get('empid')
+    
+
+            role = request.form.get('role')
+            current_id = request.form.get('currentId')
+            company_name_w_space = request.form.get('companyname')
+            company_name = company_name_w_space.replace(' ', '_')
+
+            print(role)
+            print(current_id)
+            print(company_name)
+            table_name = company_name + 'main'
+
+            update_query = f"""
+            UPDATE {table_name}
+            SET role = %s WHERE id = %s;
+            """
+
+            cursor.execute(update_query, (role, current_id))
+            
+            connection.commit()
+
+            results = run1(table_name, empid)  # Replace with your actual table name
+
+            return render_template('adminpage.html', **results, id= empid, company_name=company_name)
+
+            '''return jsonify({'message': 'role updated successfully'}), 200'''
+
+        else:
+            return redirect(url_for('landingpage'))  
+        
+
+
+
+    
+    @app.route('/update_approver', methods=['POST'])
+    def update_approver():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            approver = request.form.get('approver')
+            current_id = request.form.get('currentIdapprover')
+            company_name_w_space = request.form.get('companyname')
+            company_name = company_name_w_space.replace(' ', '_')
+
+            split_result = approver.split('--')
+
+            id_part = int(split_result[0])  
+            name_part = split_result[1]  
+            
+            print(approver)
+            print(current_id)
+            print(company_name)
+            table_name = company_name + 'main'
+
+            query = f"SELECT id, whatsapp, email FROM {table_name};"
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+            df_employees = pd.DataFrame(rows, columns=["id","whatsapp","email"])
+            print(df_employees)
+            userdf = df_employees[df_employees['id'] == id_part].reset_index()
+            print("yeaarrrrr")
+            print(userdf)
+            leaveapproverwhatsapp =  int(np.int64(userdf.iat[0,2]))
+            leaveapproveremail = userdf.iat[0,3]
+
+
+            update_query = f"""
+            UPDATE {table_name}
+            SET leaveapprovername = %s, leaveapproverid = %s, leaveapproveremail = %s,  leaveapproverwhatsapp = %s  WHERE id = %s;
+            """
+            cursor.execute(update_query, (name_part, id_part, leaveapproveremail, leaveapproverwhatsapp ,current_id))
+
+            connection.commit()
+
+            table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+            update_query = f"""
+            UPDATE {table_name_apps_pending_approval}
+            SET leaveapprovername = %s, leaveapproverid = %s, leaveapproveremail = %s,  leaveapproverwhatsapp = %s  WHERE id = %s;
+            """
+            cursor.execute(update_query, (name_part, id_part, leaveapproveremail, leaveapproverwhatsapp ,current_id))
+
+            connection.commit()
+
+            return jsonify({'message': 'Leave Applications Approver chnaged successfully'}), 200
+    
+        else:
+                return redirect(url_for('landingpage'))  
+
+    @app.route('/update_balance', methods=['POST'])
+    def update_balance():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            balance = request.form.get('balance')
+            current_id = request.form.get('currentIdbalance')
+            company_name_w_space = request.form.get('companyname')
+            company_name = company_name_w_space.replace(' ', '_')
+
+            print(balance)
+            print(current_id)
+            print(company_name)
+            table_name = company_name + 'main'
+
+            update_query = f"""
+            UPDATE {table_name}
+            SET currentleavedaysbalance = %s WHERE id = %s;
+            """
+
+            cursor.execute(update_query, (balance, current_id))
+            
+            connection.commit()
+
+            return jsonify({'message': 'Leave Days Balance changed successfully'}), 200
+    
+        else:
+                return redirect(url_for('landingpage'))  
+        
+
+    @app.route('/remove_employees', methods=['POST'])
+    def remove_employees():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+            try:
+                # Get the list of employee IDs from the request
+                data = request.get_json()
+                employee_ids = data.get('employee_ids', [])
+                company_name_w_space = data.get('companyname')
+                company_name = company_name_w_space.replace(' ', '_')
+                table_name = company_name + 'main'
+                print(employee_ids)
+
+                if not employee_ids:
+                    return jsonify({"success": False, "message": "No employees selected"})
+
+                # Prepare the placeholders for the employee IDs in the query
+                placeholders = ','.join(['%s'] * len(employee_ids))
+                print(placeholders)
+
+                # Prepare the DELETE query using the list of IDs and the table name
+                delete_query = f"""
+                DELETE FROM {table_name}
+                WHERE id IN ({placeholders});
+                """.format(placeholders=', '.join(['%s'] * len(employee_ids)))  # Create placeholders dynamically
+
+                # Execute the query with the list of selected employee IDs
+                cursor.execute(delete_query, tuple(employee_ids))  # Pass employee IDs as tuple
+
+                # Commit the transaction
+                connection.commit()
+
+                return jsonify({"success": True, "message": "Employees removed successfully"})
+
+            except Exception as e:
+                # Handle any errors
+                return jsonify({"success": False, "message": str(e)})
+            
+        else:
+                return redirect(url_for('landingpage'))  
+
+    @app.route('/update_accumulators', methods=['POST'])
+    def update_accumulators():
+
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            updates = request.json.get('updates', [])
+            company_name_w_space = request.json.get('companyname')
+            companyname = company_name_w_space.replace(' ', '_')
+
+            print(updates)
+            print(companyname)
+
+
+            # Update each record in the database
+            for update in updates:
+                employee_id = update.get('id')
+                new_accumulated_days = update.get('accumulated_days')
+                table_name = companyname + 'main'
+
+                update_query = f"""
+                UPDATE {table_name}
+                SET monthlyaccumulation = %s WHERE id = %s;
+                """
+
+                cursor.execute(update_query, (new_accumulated_days, employee_id))
+                
+                connection.commit()
+
+            return jsonify({'status': 'success', 'message': 'Accumulators updated successfully!'})
+        
+
+    @app.route('/assign_bulk_approver', methods=['POST'])
+    def assign_bulk_approver():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+
+            data = request.get_json()
+            approver = data.get('approver')
+            employees = data.get('employees')
+
+            if not approver or not employees:
+                return jsonify({'message': 'Approver or employees list is missing.'}), 400
+
+            split_result = approver.split('--')
+            id_part = int(split_result[0])  
+            name_part = split_result[1]  
+
+            query = f"SELECT id, whatsapp, email FROM {table_name};"
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+            df_employees = pd.DataFrame(rows, columns=["id","whatsapp","email"])
+            print(df_employees)
+            userdf = df_employees[df_employees['id'] == id_part].reset_index()
+            print("yeaarrrrr")
+            print(userdf)
+            leaveapproverwhatsapp = int(np.int64(userdf.iat[0,2]))
+            leaveapproveremail = userdf.iat[0,3]
+            
+            for employee_id in employees:
+                update_query = f"""
+                UPDATE {table_name}
+                SET leaveapprovername = %s, leaveapproverid = %s, leaveapproveremail = %s, leaveapproverwhatsapp = %s WHERE id = %s;
+                """
+
+                cursor.execute(update_query, (name_part, id_part, leaveapproveremail, leaveapproverwhatsapp, employee_id))
+                
+            connection.commit()
+
+            return jsonify({'message': 'New Approver assigned successfully to selected employees.'}), 200
+
+
+    @app.route('/assign_bulk_balances', methods=['POST'])
+    def assign_bulk_balances():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+
+            data = request.get_json()
+            balance = data.get('balance')
+            employees = data.get('employees')
+
+            if not balance or not employees:
+                return jsonify({'message': 'New Leave Days Balance or employees list is missing.'}), 400
+
+
+            for employee_id in employees:
+                update_query = f"""
+                UPDATE {table_name}
+                SET currentleavedaysbalance = %s
+                WHERE id = %s;
+                """
+                cursor.execute(update_query, (balance, employee_id))
+
+            connection.commit()
+
+            return jsonify({'message': 'New Leave Days Balances assigned successfully to selected employees.'}), 200
+        
+
+    @app.route('/assign_bulk_accumulators', methods=['POST'])
+    def assign_bulk_accumulators():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+
+            data = request.get_json()
+            accumulator = data.get('accumulator')
+            employees = data.get('employees')
+            print("gggggggggggggggggggggggggggggggggggggggg")
+            print(employees)
+
+            if not accumulator or not employees:
+                return jsonify({'message': 'New Monthly Leave Days Accumulator or employees list is missing.'}), 400
+
+            for employee_id in employees:
+                update_query = f"""
+                UPDATE {table_name}
+                SET monthlyaccumulation = %s
+                WHERE id = %s;
+                """
+                cursor.execute(update_query, (accumulator, employee_id))
+
+            connection.commit()
+
+            return jsonify({'message': 'New Monthly Leave Days Accumulator assigned successfully to selected employees.'}), 200
+        
+
+
+        
+    @app.route('/cancel_leave_application', methods=['POST'])
+    def cancel_leave_application():
+        user_uuid = session.get('user_uuid')
+
+        print("Received data:", request.data)  # log the raw data
+        print("JSON data:", request.get_json())  # log the parsed JSON
+
+        if user_uuid:
+
+            try:
+                data = request.get_json()
+                app_id = data.get("app_id")
+                print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+                print (app_id)
+                table_name = session.get('table_name')
+                company_name = table_name.replace("main","")
+                table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+                table_name_apps_cancelled = f"{company_name}appscancelled"
+
+                if not app_id:
+                    return jsonify({"message": "Application ID is missing."}), 400
+                
+
+                status = "Cancelled"
+                statusdate = today_date
+
+                query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
+                cursor.execute(query, (app_id,))
+                result = cursor.fetchone()
+                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
+                print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                print(employee_number)
+                print(approver_name)
+
+                try:
+                    insert_query = f"""
+                    INSERT INTO {table_name_apps_cancelled} 
+                    (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    """
+                    
+                    cursor.execute(insert_query, (
+                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                        approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                        end_date, leave_days, leavedaysbalancebf, status, statusdate
+                    ))
+                    
+                    connection.commit()
+                    print("Insert successful!")
+
+                except Exception as e:
+                    print("Error inserting data:", e)
+
+                # SQL query to delete or mark the leave as canceled
+                query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
+                cursor.execute(query, (app_id,))
+                connection.commit()
+
+                return jsonify({"message": f"Leave Application {app_id} canceled successfully."})
+            
+            except Exception as e:
+                return jsonify({"message": "Error canceling leave application.", "error": str(e)}), 500
+
+    @app.route('/reapply_leave_application', methods=['POST'])
+    def reapply_leave_application():
+        user_uuid = session.get('user_uuid')
+        empid = session.get('empid')
+
+        print("Received data:", request.data)  # log the raw data
+        print("JSON data:", request.get_json())  # log the parsed JSON
+
+        if user_uuid:
+
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main","")
+            table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+            table_name_apps_cancelled = f"{company_name}appscancelled"
+            table_name_apps_declined = f"{company_name}appsdeclined"
+
+
+            query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE id = %s;"
+            cursor.execute(query, (empid,))
+            rows = cursor.fetchall()
+            df_employees_reapp_check = pd.DataFrame(rows)    
+
+            if len(df_employees_reapp_check) == 0:
+
+                try:
+                    data = request.get_json()
+                    app_id = data.get("app_id")
+                    print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+                    print (app_id)
+
+                    if not app_id:
+                        return jsonify({"message": "Application ID is missing."}), 400
+                    
+                    status = "Pending"
+
+                    query = f"SELECT * FROM {table_name_apps_cancelled} WHERE appid = %s;"
+                    cursor.execute(query, (app_id,))
+                    result = cursor.fetchone()
+                    
+                    if result :
+                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
+                        print("cancelled yes")
+                        print(result)
+
+                        print("cancelled yes")
+    
+                        print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                        print(employee_number)
+                        print(approver_name)
+
+                        try:
+                            insert_query = f"""
+                            INSERT INTO {table_name_apps_pending_approval} 
+                            (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                            """
+                            
+                            cursor.execute(insert_query, (
+                                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                                approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                                end_date, leave_days, leavedaysbalancebf, status
+                            ))
+                            
+                            query = f"""DELETE FROM {table_name_apps_cancelled} WHERE appid = %s"""
+                            cursor.execute(query, (app_id,))
+
+                            connection.commit()
+                            print("Insert successful!")
+
+                        except Exception as e:
+                            print("Error inserting data:", e)
+                            return jsonify({"message": "Error re-applying leave application.", "error": str(e)}), 500
+
+                    else:
+
+                        query = f"SELECT * FROM {table_name_apps_declined} WHERE appid = %s;"
+                        cursor.execute(query, (app_id,))
+                        result = cursor.fetchone()
+                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
+        
+                        print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                        print(employee_number)
+                        print(approver_name)
+
+                        try:
+                            insert_query = f"""
+                            INSERT INTO {table_name_apps_pending_approval} 
+                            (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                            """
+                            
+                            cursor.execute(insert_query, (
+                                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                                approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                                end_date, leave_days, leavedaysbalancebf, status
+                            ))
+
+                            # SQL query to delete or mark the leave as canceled
+                            query = f"""DELETE FROM {table_name_apps_declined} WHERE appid = %s"""
+                            cursor.execute(query, (app_id,))
+                            
+                            connection.commit()
+                            print("Insert successful!")
+
+                        except Exception as e:
+
+                            print("Error inserting data:", e)       
+
+                            return jsonify({"message": "Error re-applying leave application.", "error": str(e)}), 500
+
+                    return jsonify({"message": f"Leave Application {app_id} re-applied successfully."})
+                
+                except Exception as e:
+                    return jsonify({"message": "Error re-applying leave application.", "error": str(e)}), 500
+                
+            else: 
+
+                response = {'status': 'error', 'message': 'Leave re-application not submitted successfully.'}
+                return jsonify(response), 400  
+            
+
+
+
+    @app.route('/revoke_leave_application', methods=['POST'])
+    def revoke_leave_application():
+        user_uuid = session.get('user_uuid')
+        empid = session.get('empid')
+
+        print("Received data:", request.data)  # log the raw data
+        print("JSON data:", request.get_json())  # log the parsed JSON
+
+        if user_uuid:
+
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main","")
+            table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+            table_name_apps_approved = f"{company_name}appsapproved"
+
+
+            query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE id = %s;"
+            cursor.execute(query, (empid,))
+            rows = cursor.fetchall()
+            df_employees_reapp_check = pd.DataFrame(rows)    
+
+            if len(df_employees_reapp_check) == 0:
+
+                try:
+                    data = request.get_json()
+                    app_id = data.get("app_id")
+                    print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+                    print (app_id)
+
+                    if not app_id:
+                        return jsonify({"message": "Application ID is missing."}), 400
+                    
+                    status = "Pending"
+
+                    query = f"SELECT * FROM {table_name_apps_approved} WHERE appid = %s;"
+                    cursor.execute(query, (app_id,))
+                    result = cursor.fetchone()
+                    
+                    if result :
+                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
+                        print("cancelled yes")
+                        print(result)
+
+                        print("cancelled yes")
+    
+                        print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                        print(employee_number)
+                        print(approver_name)
+
+                        try:
+                            insert_query = f"""
+                            INSERT INTO {table_name_apps_pending_approval} 
+                            (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                            """
+                            
+                            cursor.execute(insert_query, (
+                                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                                approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                                end_date, leave_days, leavedaysbalancebf, status
+                            ))
+                            
+                            query = f"""DELETE FROM {table_name_apps_approved} WHERE appid = %s"""
+                            cursor.execute(query, (app_id,))
+
+                            query = f"""SELECT currentleavedaysbalance FROM {table_name} WHERE id = %s;"""
+                            cursor.execute(query, (employee_number,))
+                            leavedayscf = cursor.fetchone()
+                            leavedayscf = int(leavedayscf[0])
+                            print(leavedayscf)
+
+                            new_current_balance = leavedayscf + leave_days
+                            query = f"UPDATE {table_name} SET currentleavedaysbalance = %s WHERE id = %s;"
+                            cursor.execute(query, (new_current_balance, employee_number))
+
+                            connection.commit()
+                            print("Insert successful!")
+
+                        except Exception as e:
+                            print("Error inserting data:", e)
+                            return jsonify({"message": "Error revoking leave application.", "error": str(e)}), 500
+
+                    return jsonify({"message": f"Leave Application {app_id} Revocation applied successfully."})
+                
+                except Exception as e:
+                    return jsonify({"message": "Error applying for revocation of leave application.", "error": str(e)}), 500
+                
+            else: 
+
+                response = {'status': 'error', 'message': 'Leave revocation application not submitted successfully.'}
+                return jsonify(response), 400  
+            
+
+            
+
+    @app.route('/revoke_leave_application_approver', methods=['POST'])
+    def revoke_leave_application_approver():
+        user_uuid = session.get('user_uuid')
+
+        print("Received data:", request.data)  # log the raw data
+        print("JSON data:", request.get_json())  # log the parsed JSON
+
+        if user_uuid:
+            data = request.get_json()
+            app_id = data.get("app_id")
+
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main","")
+            table_name_apps_approved = f"{company_name}appsapproved"
+            table_name_apps_declined = f"{company_name}appsdeclined"
+
+            try:
+
+                print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+                print (app_id)
+
+                if not app_id:
+                    return jsonify({"message": "Application ID is missing."}), 400
+                
+                status = "Declined"
+
+                query = f"SELECT * FROM {table_name_apps_approved} WHERE appid = %s;"
+                cursor.execute(query, (app_id,))
+                result = cursor.fetchone()
+                
+                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
+                print("approved yes")
+                print(result)
+
+                print("approved yes")
+
+                print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                print(employee_number)
+                print(approver_name)
+
+                try:
+                    insert_query = f"""
+                    INSERT INTO {table_name_apps_declined} 
+                    (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    """
+                    
+                    cursor.execute(insert_query, (
+                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                        approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                        end_date, leave_days, leavedaysbalancebf, status, today_date
+                    ))
+
+                    query = f"""SELECT currentleavedaysbalance FROM {table_name} WHERE id = %s;"""
+                    cursor.execute(query, (employee_number,))
+                    leavedayscf = cursor.fetchone()
+                    leavedayscf = int(leavedayscf[0])
+                    print(leavedayscf)
+
+                    new_current_balance = leavedayscf + leave_days
+                    query = f"UPDATE {table_name} SET currentleavedaysbalance = %s WHERE id = %s;"
+                    cursor.execute(query, (new_current_balance, employee_number))
+                    connection.commit()
+
+                    query = f"""DELETE FROM {table_name_apps_approved} WHERE appid = %s"""
+                    cursor.execute(query, (app_id,))
+
+                    connection.commit()
+                    print("Insert successful!")
+
+
+                except Exception as e:
+                    print("Error inserting data:", e)
+                    return jsonify({"message": "Error revoking leave application.", "error": str(e)}), 500
+
+                return jsonify({"message": f"Leave Application {app_id} revoked successfully."})
+            
+            except Exception as e:
+                return jsonify({"message": "Error re-applying leave application.", "error": str(e)}), 500
+                
+
+
+
+
+
+
+
+
+            
+    @app.route('/revive_leave_application', methods=['POST'])
+    def revive_leave_application():
+        user_uuid = session.get('user_uuid')
+
+        print("Received data:", request.data)  # log the raw data
+        print("JSON data:", request.get_json())  # log the parsed JSON
+
+        if user_uuid:
+            data = request.get_json()
+            app_id = data.get("app_id")
+
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main","")
+            table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+            table_name_apps_cancelled = f"{company_name}appscancelled"
+            table_name_apps_declined = f"{company_name}appsdeclined"
+
+            query = f"SELECT id FROM {table_name_apps_declined} WHERE appid = %s;"
+            cursor.execute(query, (app_id,))
+            res = cursor.fetchone()
+            employee_number_check = res
+
+            query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE id = %s;"
+            cursor.execute(query, (employee_number_check,))
+            rows = cursor.fetchall()
+            df_employees_reapp_check = pd.DataFrame(rows)    
+
+            if len(df_employees_reapp_check) == 0:
+
+                try:
+
+                    print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+                    print (app_id)
+
+                    if not app_id:
+                        return jsonify({"message": "Application ID is missing."}), 400
+                    
+                    status = "Pending"
+
+                    query = f"SELECT * FROM {table_name_apps_declined} WHERE appid = %s;"
+                    cursor.execute(query, (app_id,))
+                    result = cursor.fetchone()
+                    
+                    app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
+                    print("declined yes")
+                    print(result)
+
+                    print("declined yes")
+
+                    print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                    print(employee_number)
+                    print(approver_name)
+
+                    try:
+                        insert_query = f"""
+                        INSERT INTO {table_name_apps_pending_approval} 
+                        (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                        """
+                        
+                        cursor.execute(insert_query, (
+                            app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                            approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                            end_date, leave_days, leavedaysbalancebf, status
+                        ))
+                        
+                        query = f"""DELETE FROM {table_name_apps_declined} WHERE appid = %s"""
+                        cursor.execute(query, (app_id,))
+
+                        connection.commit()
+                        print("Insert successful!")
+
+                    except Exception as e:
+                        print("Error inserting data:", e)
+                        return jsonify({"message": "Error re-applying leave application.", "error": str(e)}), 500
+
+
+                    return jsonify({"message": f"Leave Application {app_id} revived successfully."})
+                
+                except Exception as e:
+                    return jsonify({"message": "Error re-applying leave application.", "error": str(e)}), 500
+                
+            else: 
+
+                response = {'status': 'error', 'message': 'Leave application not submitted successfully.'}
+                return jsonify(response), 400  
+
+    @app.route('/approve_leave_application', methods=['POST'])
+    def approve_leave_application():
+        user_uuid = session.get('user_uuid')
+
+        print("Received data:", request.data)  # log the raw data
+        print("JSON data:", request.get_json())  # log the parsed JSON
+
+        if user_uuid:
+
+            try:
+                data = request.get_json()
+                app_id = data.get("app_id")
+                print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+                print (app_id)
+                table_name = session.get('table_name')
+                company_name = table_name.replace("main","")
+                table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+                table_name_apps_approved = f"{company_name}appsapproved"
+
+                if not app_id:
+                    return jsonify({"message": "Application ID is missing."}), 400
+
+                status = "Approved"
+                statusdate = today_date
+
+                query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
+                cursor.execute(query, (app_id,))
+                result = cursor.fetchone()
+                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
+                print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                print(employee_number)
+                print(approver_name)
+                try:
+                    insert_query = f"""
+                    INSERT INTO {table_name_apps_approved} 
+                    (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    """
+                    
+                    cursor.execute(insert_query, (
+                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                        approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                        end_date, leave_days, leavedaysbalancebf, status, statusdate
+                    ))
+                    
+                    connection.commit()
+                    print("Insert successful!")
+
+                    query = f"UPDATE {table_name} SET currentleavedaysbalance = %s WHERE id = %s;"
+                    cursor.execute(query, (leavedaysbalancebf, employee_number))
+                    connection.commit()
+
+                except Exception as e:
+                    print("Error inserting data:", e)
+
+                query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
+                cursor.execute(query, (app_id,))
+                connection.commit()
+
+                return jsonify({"message": f"Leave Application {app_id} approved successfully."})
+            
+            except Exception as e:
+                return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
+            
+
+    @app.route('/disapprove_leave_application', methods=['POST'])
+    def disapprove_leave_application():
+        user_uuid = session.get('user_uuid')
+
+        print("Received data:", request.data)  # log the raw data
+        print("JSON data:", request.get_json())  # log the parsed JSON
+
+        if user_uuid:
+
+            try:
+                data = request.get_json()
+                app_id = data.get("app_id")
+                print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+                print (app_id)
+                table_name = session.get('table_name')
+                company_name = table_name.replace("main","")
+                table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+                table_name_apps_declined = f"{company_name}appsdeclined"
+
+                if not app_id:
+                    return jsonify({"message": "Application ID is missing."}), 400
+
+                status = "Declined"
+                statusdate = today_date
+
+                query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
+                cursor.execute(query, (app_id,))
+                result = cursor.fetchone()
+                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
+                print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                print(employee_number)
+                print(approver_name)
+                try:
+                    insert_query = f"""
+                    INSERT INTO {table_name_apps_declined} 
+                    (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    """
+                    
+                    cursor.execute(insert_query, (
+                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                        approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                        end_date, leave_days, leavedaysbalancebf, status, statusdate
+                    ))
+                    
+                    connection.commit()
+                    print("Insert successful!")
+
+                except Exception as e:
+                    print("Error inserting data:", e)
+
+                query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
+                cursor.execute(query, (app_id,))
+                connection.commit()
+
+                return jsonify({"message": f"Leave Application {app_id} declined successfully."})
+            
+            except Exception as e:
+                return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
+            
+
+
+
+
+    @app.route('/export_lms_book_excel')
+    def export_excel():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main","")
+
+
+            query = f"SELECT id, firstname, surname, whatsapp, email, address ,role,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+            df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
+            df_employees = df_employees.sort_values(by="ID", ascending=True)
+
+            print(df_employees)
+
+            # Create an in-memory Excel file
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
+
+            output.seek(0)
+
+            # Send the file to the client
+            return send_file(
+                output,
+                as_attachment=True,
+                download_name=f'{company_name} LMS Book as at {today_date}.xlsx',
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+
+    @app.route('/export_lms_book_pdf')
+    def export_pdf():
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+            table_name = session.get('table_name')
+            if not table_name:
+                return "Table name not found in session", 400
+
+            company_name = table_name.replace("main", "").strip()
+
+            query = f"SELECT id, firstname, surname, whatsapp, email, role, leaveapprovername, leaveapproverid, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+            df_employees = pd.DataFrame(rows, columns=["ID", "First Name", "Surname", "WhatsApp", "Email", "Role", "Leave Approver Name","Leave Approver ID", "Leave Days Balance", "Days Accumulated per Month" ])
+            df_employees = df_employees.sort_values(by="ID", ascending=True)
+
+            df_html = df_employees.to_html(index=False, classes='table table-bordered', escape=False)
+
+            html_content = f"""
+            <html>
+            <head>
+            <style>
+                .table {{
+                    width: 100%;
+                    border-collapse: collapse;
+                }}
+                .table th, .table td {{
+                    border: 1px solid #ddd;
+                    padding: 4px;
+                    text-align: left;
+                    max-width: 500px;  /* Limit cell width */
+                    word-wrap: break-word;  /* Enables wrapping */
+                    overflow-wrap: break-word;  /* Ensures wrapping in older browsers */
+                    white-space: normal;  /* Forces the text to wrap */
+                }}
+                .table th {{
+                    background-color: #003366;
+                    color: white;
+                }}
+                tr {{
+                    word-wrap: break-word;
+                }}
+                /* Specific styles for the email column */
+                td.Email {{
+                    max-width: 250px;  /* Limit email column width */
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    white-space: normal;
+                }}
+                th.Email {{
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                }}
+                h1 {{
+                    text-align: center;
+                    margin-bottom: 20px;
+                }}
+            </style>
+
+            </head>
+            <body>
+                <h1>{company_name} LMS Book</h1>
+                <p>As of {today_date}</p>
+                {df_html}
+            </body>
+            </html>
+            """
+
+            output = BytesIO()
+            pisa_status = pisa.CreatePDF(html_content, dest=output)
+
+            if pisa_status.err:
+                return "Failed to generate PDF", 500
+
+            output.seek(0)
+
+            return send_file(
+                output,
+                as_attachment=True,
+                download_name=f'{company_name} LMS Book as at {today_date}.pdf',
+                mimetype='application/pdf'
+            )
+        else:
+            return "Unauthorized access", 401
+
+    @app.route('/logout')
+    def logout():
+        # Clear the session data to log the user out
+        session.clear()
+
+        # Redirect to the landing page or login page after logout
+        return redirect(url_for('landingpage'))
+
+            
+else:
+    print('Connection to SQL failed')
+
+@app.route('/')
+def landingpage():
+    return render_template('index.html') 
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=55)

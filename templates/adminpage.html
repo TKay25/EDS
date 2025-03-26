@@ -1,0 +1,3617 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>EDS LMS Administrator Dashboard</title>
+        <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/EDS LOGO.png') }}">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <style>
+        /* Main Styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #f0f2f5, #e9f1fb);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 250px;
+            background-color: #003366;
+            color: #fff;
+            padding-top: 40px;
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
+            transition: width 0.3s;
+        }
+
+        .sidebar:hover {
+            width: 270px;
+        }
+
+        .sidebar h5 {
+            font-weight: bold;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+
+        .sidebar img {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar .btn {
+            color: #003366;
+            background-color: #fff;
+            width: 150px;
+            margin: 5px 0;
+            padding: 8x;
+            border: 3px solid #003366;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .sidebar .btn:hover {
+            background-color: #003366;
+            color: #fff;
+            border: 3px solid white;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary{
+            color: white;
+            background-color: #003366;
+            width: 15%;
+            margin: 8px 0;
+            padding: 5px;
+            border-radius: 8px;
+            border: 3px solid #003366;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+            text-align: center;
+            font-weight: 500;
+
+        }
+        .btn-primary:hover{
+            background-color: white;
+            color: #003366;
+            border: 3px solid #003366;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary10{
+            color: #003366;
+            background-color: white;
+            width: 15%;
+            margin: 8px 0;
+            padding: 5px;
+            border-radius: 8px;
+            border: 3px solid #003366;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+            text-align: center;
+            font-weight: 600;
+
+        }
+        .btn-primary10:hover{
+            background-color: #e9f1fb;
+            color: #003366;
+            border: 3px solid #003366;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary2{
+            color: white;
+            background-color: #003366;
+            width: 37%;
+            margin: 8px 0;
+            padding: 6px;
+            border-radius: 8px;
+            border: 3px solid #003366;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+            text-align: center;
+            font-weight: 500;
+
+        }
+        .btn-primary2:hover{
+            background-color: white;
+            color: #003366;
+            border: 3px solid #003366;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary9{
+            color: white;
+            background-color: #003366;
+            margin: 8px 0;
+            padding: 5px;
+            border-radius: 8px;
+            border: 3px solid #003366;
+            transition: background 0.3s;
+            text-align: center;
+            font-weight: 500;
+
+        }
+        .btn-primary9:hover{
+            background-color: white;
+            color: #003366;
+            border: 3px solid #003366;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary3{
+            color: white;
+            background-color: #003366;
+            width: 100%;
+            padding-left: 5px;
+            padding-right: 5px;
+            padding-top: 1px;
+            padding-bottom: 1px;
+            border-radius: 8px;
+            border: 3px solid #003366;
+            font-size: 13px;
+            transition: background 0.3s;
+            text-align: center;
+            font-weight: 500;
+
+        }
+        .form-control-blue {
+            background-color: #00336611; /* Example */
+            border: 1px solid #ccc;
+            appearance: auto; /* Ensure native dropdown appearance */
+        }
+
+
+        .btn-primary3:hover{
+            background-color: white;
+            color: #003366;
+            border: 3px solid #003366;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            margin-left: 270px;
+            padding: 30px;
+            width: calc(100% - 270px);
+            background-color: #ffffff;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #e9f1fb;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .current-date {
+            color: #003366;
+            font-weight: bold;
+            font-size: smaller;
+            font-size: 1rem;
+        }
+
+        .employeetag {
+            color: #003366;;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+
+        }
+
+        /* Tab Styling */
+        .nav-tabs .nav-link {
+            color: #003366;
+            font-weight: 600;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px 8px 0 0;
+            background: #e9f1fb;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #ffffff;
+            background-color: #003366;
+            font-weight: 800;
+        }
+
+        /* Card Styling */
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #ffffff;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-content {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            }
+        .modal-header{
+            background-color: #003366;
+            color: white;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 20px; /* Increase vertical spacing between fields */
+            }
+
+        .btn-center {
+            display: flex;
+            justify-content: center;
+            justify-content: space-between; 
+            gap: 10px;
+            }
+
+        .form-control-blue::after {
+            content: '\25BC'; /* Unicode for downwards triangle */
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white; /* Arrow color */
+            font-size: 18px;
+        }
+
+        /* Style for disabled option (making it grey) */
+        .form-control-blue option:disabled {
+            background-color: #A9A9A9; /* Grey background */
+            color: #D3D3D3; /* Grey text color */
+        }
+
+        .table-theme {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto; /* Allow columns to adjust based on content */
+        }
+
+        .table-theme th {
+            background-color: #003366;
+            color: white;
+            text-align: center !important;
+            vertical-align: middle !important;
+            padding: 2px;
+            font-weight: bold;
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        #employeesTable th, 
+        #employeesaccumulatorsTable th, 
+        #employeesbulk1Table th, 
+        #employeesbulkbalancesTable th, 
+        #removeemployeesTable th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+
+        .table-theme td {
+            font-weight: 500;
+            padding: 0px;
+            color: #003366;
+            text-align: center;
+            white-space: nowrap; /* Prevent text wrapping */
+            border-bottom: 1px solid #ddd;
+        }
+
+
+        .container2 {
+            font-size: 13px;
+            margin-top: -2rem;
+        }
+        /* Custom scrollbar styling */
+        .container2::-webkit-scrollbar {
+            width: 12px; /* Width of the scrollbar */
+        }
+
+        .container2::-webkit-scrollbar-thumb {
+            background-color: #003366; /* Scrollbar thumb color */
+            border-radius: 5px; /* Rounded corners for thumb */
+        }
+
+        .container2::-webkit-scrollbar-thumb:hover {
+            background-color: #e9f1fb;
+            box-shadow: inset 0 0 0 3px #003366; /* Simulates a border */
+        }
+
+        .container2::-webkit-scrollbar-track {
+            background-color: #f0f0f0; /* Scrollbar track color */
+            border-radius: 5px; /* Rounded corners for track */
+        }
+        .form-group label{
+            font-weight: bold;
+        }
+        /* For WebKit-based browsers (Chrome, Edge, Safari) */
+        #employeeList::-webkit-scrollbar {
+            width: 15px; /* Width of the scrollbar */
+        }
+
+        #employeeList::-webkit-scrollbar-thumb {
+            background-color: #003366; /* Blue color for the scrollbar handle */
+            border-radius: 5px; /* Rounded scrollbar handle */
+        }
+
+        #employeeList::-webkit-scrollbar-track {
+            background-color: #f1f1f1; /* Background color of the scrollbar track */
+        }
+
+        /* For Firefox */
+        #employeeList {
+            scrollbar-color: #003366 #f1f1f1; /* Handle color followed by track color */
+        }
+        select.form-control-blue option:hover {
+            background-color: #e6f0ff; /* Light blue on hover */
+            color: #003366; /* Dark blue text */
+        }
+        /* Style the close button */
+        .modal-header .btn-close {
+            background-color: white; /* Makes the background white */
+            color: black; /* Change the icon color to black */
+            opacity: 1; /* Ensure the button is fully opaque */
+        }
+
+        /* Optional: Hover effect */
+        .modal-header .btn-close:hover {
+            background-color: #f8f9fa; /* Light grey background on hover */
+            color: #000; /* Ensure the icon stays black on hover */
+            opacity: 1; /* Ensure full opacity on hover */
+        }
+        .modal-footer{
+            gap: 10px;
+        }
+
+        /* Default background color for editable fields */
+        .editable-field {
+            border-radius: 8px;
+            background-color: #e6f0ff; /* Light blue when not being edited */
+            border: rgba(0, 0, 0, 0.2) solid #003366; /* Light border */
+            transition: background-color 0.3s ease;
+        }
+
+        /* Background color when the field is focused (being edited) */
+        .editable-field:focus {
+            background-color: #003366; /* Change to light yellow when being edited */
+            color: white; /* Dark blue border when focused */
+            outline: none; /* Remove the default outline */
+        }
+
+        /* Style the checkboxes */
+        .custom-checkbox {
+            width: 25px; /* Make the checkbox bigger */
+            height: 25px; /* Make the checkbox bigger */
+            background-color: #e6f0ff; /* Dark blue background */
+            border-radius: 8px; /* Optional: round the corners */
+            border: 3px solid #003366; /* Dark blue border */
+            appearance: none; /* Remove default checkbox style */
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox:checked {
+            background-color: #003366; /* Dark blue when checked */
+            border-color: #003366; /* Dark blue border when checked */
+        }
+
+        .custom-checkbox:checked::after {
+            content: '\2713'; /* Checkmark symbol */
+            position: absolute;
+            top: 0;
+            left: 4px; /* Adjust position of the checkmark */
+            color: white; /* White color for the checkmark */
+            font-size: 15px; /* Make the checkmark larger */
+        }
+
+        #removeemployeesTable input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-size: 18px;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            border: 8px solid #f3f3f3; /* Light grey background color */
+            border-top: 8px solid #003366; /* Blue spinner color */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .profile-dropdown {
+            display: flex;
+            align-items: center;
+            width: 18%;
+        }
+
+        .profile-label {
+            display: flex;
+            font-size: 0.9rem;
+            font-weight: 800;
+            margin-right: 15px;
+            color: #003366;
+        }
+        .form-select {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            border-radius: 10px;
+            border: 3px solid  #003366;
+            font-weight: 800;
+            outline: none;
+            color:#003366;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+
+        }
+        /* Black overlay */
+        .dropdown-overlay {
+            position: fixed;  /* Covers the entire screen */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7); /* Black with 70% opacity */
+            z-index: 10; /* Ensure it appears above everything */
+            display: none; /* Initially hidden */
+        }
+        .dropdown-menu .dropdown-item {
+        color: #003366;
+        font-weight: 500;
+        }
+        .dropdown-menu .dropdown-item:hover {
+            background-color: #003366; /* Dark blue background on hover */
+            color: white; /* White text color on hover */
+            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+            cursor: pointer;
+        }
+        .otherleave{
+            display: none;
+        }
+
+        /* Remove default calendar icon */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);  /* Try to invert the icon to make it white */
+            background-color: transparent;
+            cursor: pointer;
+        }
+
+        /* Firefox */
+        input[type="date"]::-moz-calendar-picker-indicator {
+            filter: invert(1);
+            background-color: transparent;
+        }
+
+        /* To remove the native calendar icon completely (not recommended for accessibility) */
+        input[type="date"] {
+            background-image: none;
+        }
+        .modal-body{
+            color: #003366;
+        }
+        #chartContainer {
+            margin-top: 20px;
+            width: 230px;  /* Reduce chart size */
+        }
+        .dropdownfilter {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdownfilter-toggle {
+            background-color: #003366;
+            color: white;
+            padding: 2px 12px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        .dropdownfilter-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+            z-index: 1;
+            padding: 3px;
+            border-radius: 5px;
+        }
+        .dropdownfilter-content label {
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+            color: #003366;
+        }
+        .dropdownfilter:hover .dropdownfilter-content {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div> <br>
+        <p style="font-weight: 700;">We Are Commiting Your Changes {{fullnamedisp}}, Please Wait...</p>
+    </div>
+    
+    <div class="sidebar">
+        <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="Logo">
+        <h5>Leave Management System</h5>
+        <button class="btn" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal"><i class="bi bi-file-earmark-medical-fill"></i>    Apply for Leave</button>
+        <button id="btn-dashboard" class="btn"><i class="bi bi-pencil-square"></i>    Edit My Info</button>
+        <button id="btn-employee-profiles" class="btn"><i class="bi bi-info-circle-fill"></i>    Log Query</button>
+        <button onclick="window.location.href='/logout'" class="btn btn-danger"><i class="bi bi-door-closed-fill"></i>    Logout</button>
+    </div>
+
+    <main class="main-content">
+        <header>
+            <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} {{role_narr}} <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
+            <div><span class="current-date" id="currdate">DATE: {{ today_date }}</span></div>
+
+            <div class="profile-dropdown">
+                <label for="profile-select" class="profile-label">PROFILE</label>
+
+                <select id="profile-select" class="form-select">
+                    <option value="user" class="dropdown-item" style="font-weight: bold;color:#003366 ;" selected>MY PROFILE</option>
+                    <option id= "adminoptionchoice" value="admin" class="dropdown-item" style="font-weight: bold;color:#003366 ;" data-hide="{{ hide_element }}">ADMIN</option>
+                </select>
+            </div>
+
+        </header>
+
+        <div class="card" id="user-content" style="display: block;">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#my-summary-tab"> <i class="bi bi-person-circle"></i>    MY DASHBOARD</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#my-leave-applications-tab"><i class="bi bi-person-vcard-fill"></i>    MY LEAVE APPLICATIONS TRACKER</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#emp-applications-pending-approval-tab" id="approversonly" data-hide="{{ hide_element2 }}"><i class="bi bi-hourglass-split"></i>  LEAVE APPLICATIONS PENDING MY APPROVAL <span style="color: white; background-color:   #E30022;border-radius: 9px;padding-left: 5px; padding-right: 5px;">{{num_pending_my_approval}}</span></button>
+                </li>
+
+            </ul>
+            <div class="tab-content mt-4">
+                <div class="tab-pane fade show active" id="my-summary-tab">
+
+
+
+                    <!-- Dropdown with Checkboxes -->
+                    <div class="dropdownfilter">
+                        <button class="dropdownfilter-toggle">Select Approval Status </button>
+                        <div class="dropdownfilter-content">
+                            <label><input type="checkbox" class="status-filter custom-checkbox" value="Approved" checked> Approved</label>
+                            <label><input type="checkbox" class="status-filter custom-checkbox" value="Pending" checked> Pending</label>
+                            <label><input type="checkbox" class="status-filter custom-checkbox" value="Declined" checked> Declined</label>
+                            <label><input type="checkbox" class="status-filter custom-checkbox" value="Cancelled" checked> Cancelled</label>
+                        </div>
+                    </div>
+
+
+                    <!-- Chart Container -->
+                    <div id="chartContainer">
+                        <canvas id="leaveStatusChart"></canvas>
+                    </div>
+
+                </div>
+                <div class="tab-pane fade" id="my-leave-applications-tab">
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportleaveapprovalformsModal" style="width: max-content;"><i class="bi bi-file-earmark-zip-fill"></i>    Export My Approval Forms (PDFs)</button>
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportleaveapplicationsreportModal" style="width: max-content;"><i class="bi bi-files-alt"></i>   Export My History</button>
+
+                    <div class="container mt-5">
+                        <div class="container2" style="overflow-y: auto;">
+                            {{ table_my_leave_apps_html |safe }}
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="tab-pane fade show" id="emp-applications-pending-approval-tab">
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportleaveapprovalformsModal" style="width: max-content;"><i class="bi bi-file-earmark-zip-fill"></i>    Export Approval Forms (PDFs)</button>
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportleaveapplicationsreportModal" style="width: max-content;"><i class="bi bi-files-alt"></i>   Export Approval History</button>
+
+                    <div class="container mt-5">
+                        <div class="container2" style="overflow-y: auto;">
+                            {{ table_leave_apps_approved_by_me_html |safe }}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <div class="card" id="admin-content" style="display: none;">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dashboard-tab"><i class="bi bi-person-badge-fill"></i>    ADMIN DASHBOARD</button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#leave-apps-tab"><i class="bi bi-list-columns-reverse"></i>    LEAVE APPLICATIONS PORTAL</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#employee-profiles-tab"><i class="bi bi-people-fill"></i>    EMPLOYEE PROFILES</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings"><i class="bi bi-building-fill-gear"></i>    COMPANY PROFILE & SETTINGS</button>
+                </li>
+            </ul>
+            <div class="tab-content mt-4">
+                <div class="tab-pane fade show active" id="dashboard-tab">
+                    <h4>Dashboard Overview</h4>
+                    <p>View overall statistics and leave management insights here.</p>
+                </div>
+                <div class="tab-pane fade" id="leave-apps-tab">
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportleaveapprovalformsModal" style="width: max-content;"><i class="bi bi-file-earmark-zip-fill"></i>    Export Leave Applications Approval Forms (PDFs)</button>
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportleaveapplicationsreportModal" style="width: max-content;"><i class="bi bi-files-alt"></i>   Export Leave Applications Report</button>
+
+                    <div class="container mt-5">
+                        <div class="container2" style="overflow-y: auto;">
+                            {{ table_leave_apps_html |safe }}
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="employee-profiles-tab">
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addEmployeeModal"><i class="bi bi-person-plus-fill"></i>    Add New Employee(s)</button>
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#RemoveEmployeeModal"><i class="bi bi-person-dash-fill"></i>    Remove Employee(s)</button>
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#editLeaveDaysAccumulatorModal"><i class="bi bi-file-earmark-binary-fill"></i>    Edit Accumulators</button>
+                    <button type="button" class="btn btn-primary10 mt-3 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-people-fill"></i>    Bulk Operations
+                    </button>
+                    <ul class="dropdown-menu" style="background-color: white; padding: 9px;z-index: 5000; box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);">
+                        <li><button class="btn btn-primary3" data-bs-toggle="modal" data-bs-target="#BulkRoleModal" style="margin-bottom: 8px;"><i class="bi bi-person-badge-fill"></i>    Bulk Employee Role Editor</button></li>
+                        <li><button class="btn btn-primary3" data-bs-toggle="modal" data-bs-target="#BulkApproverModal" style="margin-bottom: 8px;"><i class="bi bi-person-bounding-box"></i>    Bulk Approver Changer</button></li>
+                        <li><button class="btn btn-primary3" data-bs-toggle="modal" data-bs-target="#BulkLeaveDaysBalanceModal" style="margin-bottom: 8px;"><i class="bi bi-123"></i>    Bulk Leave Days Balance Editor</button></li>
+                        <li><button class="btn btn-primary3" data-bs-toggle="modal" data-bs-target="#BulkAccumulatorsModal"><i class="bi bi-file-earmark-binary-fill"></i>    Bulk Accumulators Editor</button></li>
+
+                    </ul>
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#ExportLMSBookModal"><i class="bi bi-journal-text"></i>    Export LMS Book</button>
+
+                    <div class="container mt-5">
+                        <div class="container2" style="max-height: 450px; overflow-y: auto;">
+                            {{ table_employees_html|safe }}
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="settings">
+                    <h4>Payments</h4>
+                    <p>Manage Payments</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <div class="modal fade" id="exportleaveapplicationsreportModal" tabindex="-1" aria-labelledby="exportleaveapplicationsreportModalLabel" >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportleaveapplicationsreportModalLabel"><i class="bi bi-files-alt"></i>    EXPORT LEAVE APPLICATIONS REPORT</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p style="font-weight: 500;">Select file format to Export Leave Applications Report for <b>{{company_name}}</b> :</p>
+                    <div class="d-flex justify-content-around">
+                        <button class="btn btn-primary2 mt-3"  data-bs-dismiss="modal" id="formatexcelapplicationsexport"><i class="bi bi-filetype-xlsx"></i>    Excel Workbook</button>
+                        <button class="btn btn-primary2 mt-3"  data-bs-dismiss="modal" id="formatpdfapplicationsexport"><i class="bi bi-filetype-pdf"></i>    PDF</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="leave-days-checker" id="calculator" style="display: none;">
+    <div id="selectedLeave" class="selectedLeave"></div>
+    <div id="result" class="result">Requested Leave Days &#8680; <span id="dayCount"></span></div>
+
+</div>
+
+<div class="modal fade" id="leaveApplicationModal" tabindex="-1" aria-labelledby="leaveApplicationModalLabel" >
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leaveApplicationModalLabel"><i class="bi bi-calendar2-plus-fill"></i>    EMPLOYEE LEAVE APPLICATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/leave_application" id="leaveForm" enctype="multipart/form-data" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="employee_number" value="{{id}}">
+                    <input type="hidden" name="first_name_app" value="{{firstname}}">
+                    <input type="hidden" name="surname" value="{{surname}}">
+                    <input type="hidden" name="dateapplied" value="{{today_date}}">
+                    <input type="hidden" name="approvername" value="{{leaveapprovername}}">
+                    <input type="hidden" name="approverid" value="{{leaveapproverid}}">
+                    <input type="hidden" name="approveremailapp" value="{{leaveapproveremail}}">
+                    <input type="hidden" name="approverwhatsappapp" value="{{leaveapproverwhatsapp}}">
+                    <input type="hidden" name="leavedays-bf" id="leavedays-bf" value="{{leavedaysbalance}}">
+                    <input type="hidden" name="unicode" value="uniman">
+
+                    <b>Applicant Name:</b> 
+                    <span style="background-color:#e9f1fb;padding:6px; border-radius:15px;font-weight: 500; display: inline-block; margin-bottom: 5px;">{{fullnamedisp}}</span> <br>
+                    
+                    <b>Applicant LMS ID:</b>
+                    <span style="background-color:#e9f1fb;padding:6px; border-radius:15px;font-weight: 500; display: inline-block; margin-bottom: 5px;">{{id}}</span> <br>
+                    
+                    <b>Company Name:</b>
+                    <span style="background-color:#e9f1fb;padding:6px; border-radius:15px;font-weight: 500; display: inline-block; margin-bottom: 5px;">{{company_name}}</span><br>
+                    
+                    <b>Leave Application Approver:</b>
+                    <span style="background-color:#e9f1fb;padding:6px; border-radius:15px;font-weight: 500; display: inline-block; margin-bottom: 5px;">{{leaveapprovername}}</span> <br><br>
+                    
+                    <div class="form-group" style="display: flex; align-items: center;">
+                        <label for="leaveType" style="margin-right: 10px;"><b>Type of Leave:</b></label>
+                        <select id="leaveType" name="leaveType" class="form-control form-control-blue" style="width: 50%;" required>
+                            <option value="">--Select Leave Type--</option>
+                            <option value="annual">Annual Leave</option>
+                            <option value="special">Sick Leave</option>
+                            <option value="other">Other Leave</option>
+                        </select>
+                    </div>
+
+                    <div id="other-leave" class="otherleave">
+                        <label for="leaveSpecify"><b>Reason for Other Leave:</b></label>
+                        <textarea id="leaveSpecify" name="leaveSpecify" style="height: 60px; width: 100%; padding: 5px; border-radius: 8px;"></textarea>
+                    </div>
+
+                    <div class="form-group" style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <label for="startDate"><b>Start Date:</b></label>
+                        <input type="date" id="startDate" name="startDate" required style="padding: 6px; border-radius: 10px; color: white; background-color: #003366; width: 150px; -webkit-appearance: none; -moz-appearance: none; appearance: none; margin-left: 10px;">
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; align-items: center; justify-content: center;">
+                        <label for="endDate" ><b>End Date:</b></label>
+                        <input type="date" id="endDate" name="endDate" required style="padding: 6px; border-radius: 10px; color: white; background-color: #003366; width: 150px; -webkit-appearance: none; -moz-appearance: none; appearance: none; margin-left: 10px;">
+                    </div>
+                    
+                    <hr color="red">
+
+                    <b>APPLICANT CONTACT DETAILS DURING LEAVE</b><br><br>
+                    <b style="margin-bottom: 10px;">Residential Address:</b> <span  style="background-color:#e9f1fb;padding:3px; border-radius:8px;font-weight: 500; display: inline-block;margin-bottom: 10px;">{{address}}</span> <br>
+                    <b style="margin-bottom: 10px;">WhatsApp Number:</b> <span  style="background-color:#e9f1fb;padding:3px; border-radius:8px;font-weight: 500; display: inline-block;margin-bottom: 10px;">{{whatsapp}}</span><br>
+                    <b>Email Address:</b> <span  style="background-color:#e9f1fb;padding:3px; border-radius:8px;font-weight: 500; display: inline-block;">{{email}}</span><br>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="submitLeaveApplication" style="width: 40%;">Submit Application</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="SubmitLeaveApplicationModal" tabindex="-1" role="dialog" aria-labelledby="SubmitLeaveApplicationModalLabel">
+    <div class="modal-dialog" role="document"  style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="SubmitLeaveApplicationModalLabel"><i class="bi bi-file-earmark-medical-fill"></i>    LEAVE APPLICATION SUBMISSION CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="confirmationSubmitLeaveApplication" style="text-align: center;color: #003366;font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="confirmSubmit">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="cancelappModal" tabindex="-1" role="dialog" aria-labelledby="cancelappModalLabel">
+    <div class="modal-dialog" role="document"  style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelappModalLabel"><i class="bi bi-calendar2-x-fill"></i>   LEAVE APPLICATION CANCELLATION CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="cancelLeaveApplication" style="text-align: center;color: #003366;font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmcancelleaveapp">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="reapplyappModal" tabindex="-1" role="dialog" aria-labelledby="reapplyappModalLabel">
+    <div class="modal-dialog" role="document"  style="max-width: 50%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reapplyappModalLabel"><i class="bi bi-repeat"></i>    CONFIRMATION FOR RE-APPLICATION OF CANCELLED/DECLINED APPLICATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reapplyLeaveApplication" style="text-align: center;color: #003366;font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmreapplyleaveapp">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="reviveappModal" tabindex="-1" role="dialog" aria-labelledby="reviveappModalLabel">
+    <div class="modal-dialog" role="document"  style="max-width: 50%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviveappModalLabel"><i class="bi bi-repeat"></i>    CONFIRMATION FOR REVIVAL OF CANCELLED/DECLINED APPLICATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reviveLeaveApplication" style="text-align: center;color: #003366;font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmreviveleaveapp">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="revokeapproverappModal" tabindex="-1" role="dialog" aria-labelledby="revokeapproverappModalLabel">
+    <div class="modal-dialog" role="document"  style="max-width: 50%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="revokeapproverappModalLabel"><i class="bi bi-backspace-reverse"></i>    CONFIRMATION FOR REVOCATION OF LEAVE APPLICATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="revokeapproverLeaveApplication" style="text-align: center;color: #003366;font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmrevokeapproverleaveapp">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="revokeappModal" tabindex="-1" role="dialog" aria-labelledby="revokeappModalLabel">
+    <div class="modal-dialog" role="document"  style="max-width: 50%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="revokeappModalLabel"><i class="bi bi-backspace-reverse"></i>    CONFIRMATION FOR REVOCATION OF LEAVE APPLICATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="revokeappLeaveApplication" style="text-align: center;color: #003366;font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmrevokeleaveapp">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<div class="modal fade" id="editLeaveDaysAccumulatorModal" tabindex="-1" aria-labelledby="editLeaveDaysAccumulatorModalLabel" >
+    <div class="modal-dialog" style="max-width: 50%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editLeaveDaysAccumulatorModalLabel">LEAVE DAYS ACCUMULATORS EDITOR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container mt-5">
+                    <div class="container2" style="max-height: 450px; overflow-y: auto;">
+                        {{ table_employees_accumulators_html|safe }}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary9" id="saveaccumulators">Save Changes</button>
+                <button type="button" class="btn btn-primary9" data-dismiss="modal" id="closeaccumulators">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ExportLMSBookModal" tabindex="-1" aria-labelledby="ExportLMSBookModalLabel" >
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ExportLMSBookModalLabel"><i class="bi bi-journal-text"></i>    EXPORT LMS BOOK</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-weight: 500;">Select file format to export LMS Book for <b>{{company_name}}</b> :</p>
+                <div class="d-flex justify-content-around">
+                    <button class="btn btn-primary2 mt-3"  data-bs-dismiss="modal" id="formatexcellmsbookexport"><i class="bi bi-filetype-xlsx"></i>    Excel Workbook</button>
+                    <button class="btn btn-primary2 mt-3"  data-bs-dismiss="modal" id="formatpdflmsbookexport"><i class="bi bi-filetype-pdf"></i>    PDF</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" >
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEmployeeModalLabel"><i class="bi bi-person-fill-add"></i>    ADD EMPLOYEES</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Select an option to add employees:</p>
+                <div class="d-flex justify-content-around">
+                    <button class="btn btn-primary2 mt-3" id="formaddemployees">Add Manually</button>
+                    <button class="btn btn-primary2 mt-3" data-bs-toggle="modal" data-bs-target="#ExcelTempModal">Import from Excel File</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ExcelTempModal" tabindex="-1" aria-labelledby="ExcelTempModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ExcelTempModal">ADD EMPLOYEES FROM EXCEL TEMPLATE</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex flex-column align-items-center justify-content-center text-center">
+                    <form id="upload-form" action="/upload-excel" method="POST" enctype="multipart/form-data">
+                        <button class="btn upload-template btn-primary2 mt-3" style="width: max-content;">
+                            Upload Excel Template Containing Employee Details 
+                            <i class="bi bi-cloud-upload" style="margin-left: 5px;"></i>
+                        </button>
+                        <!-- Hidden file input -->
+                        <input type="file" id="file-upload" name="file" accept=".xlsx" style="display: none;">
+                    </form>
+                    <button class="btn btn-primary2 mt-3" id="download-btn-excel-template" style="width: max-content;">Download EDS LMS Template <i class="bi bi-file-earmark-arrow-down" style="margin-left: 5px;"></i></button>
+                </div>         
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="RemoveEmployeeModal" tabindex="-1" aria-labelledby="RemoveEmployeeModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="RemoveEmployeeModalLabel">REMOVE EMPLOYEES</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container mt-5">
+                    <div class="container2" style="max-height: 450px; overflow-y: auto;">
+                        {{ table_rememployees_html |safe }}
+                    </div>
+                </div>         
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="removeselectedemployees" style="white-space: nowrap;width: auto;display: inline-block;">Remove Selected Employee(s)</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for displaying selected employees -->
+<div class="modal fade" id="confirmationModalremove" tabindex="-1" role="dialog" aria-labelledby="confirmationModalremoveLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalremoveLabel">EMPLOYEE REMOVAL CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="confirmationMessageremove"></div>
+                <div id="selectedEmployeesList" style="max-height: 200px; overflow-y: scroll;margin-top: 20px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="confirmERemove">Yes, Remove</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal for displaying selected employees -->
+<div class="modal fade" id="approveappModal" tabindex="-1" role="dialog" aria-labelledby="approveappModalLabel">
+    <div class="modal-dialog" role="document" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approveappModalLabel"><i class="bi bi-file-earmark-check" style="margin-left: 5px;font-size: 1.7rem;"></i> LEAVE APPLICATION APPROVAL CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="confirmationMessageapproveapp" style="text-align: center;color: #003366;font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="confirmapproveleaveapp" style="width: max-content;">Yes, Approve</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="disapproveappModal" tabindex="-1" role="dialog" aria-labelledby="disapproveappModalLabel">
+    <div class="modal-dialog" role="document" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="disapproveappModalLabel"><i class="bi bi-file-earmark-excel" style="margin-left: 5px;font-size: 1.7rem;"></i> LEAVE APPLICATION DISAPPROVAL CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="confirmationMessagedisapproveapp" style="text-align: center;color: #003366;font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="confirmdisapproveleaveapp" style="width: max-content;">Yes, Disapprove</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="manualaddemployeeModal" tabindex="-1" role="dialog" aria-labelledby="manualaddemployeeModalLabel" >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="manualaddemployeeModalLabel"><i class="bi bi-person-fill-add"></i>    MANUAL EMPLOYEE ADDITIONS</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+        </div>
+        <div class="modal-body" style="font-size: 15px;">
+
+            <div class="form-group">
+                <label for="firstname-emp">Employee First Name</label>
+                <input type="text" style="font-size: 13px;" class="form-control" name="firstname-emp" id="firstname-emp" placeholder="Enter Employee First Name" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="surname-emp">Employee Surname</label>
+                <input type="text" style="font-size: 13px;" class="form-control" name="surname-emp" id="surname-emp" placeholder="Enter Employee Surname" required>
+              </div>
+              <div class="form-group">
+                <label for="whatsapp-emp">Employee WhatsApp Number</label>
+                <input type="number" style="font-size: 13px;" class="form-control" name="whatsapp-emp" id="whatsapp-emp" placeholder="Enter WhatsApp Number (without first zero)" required>
+              </div>          
+              <div class="form-group">
+                <label for="email-emp">Employee Email Address</label>
+                <input type="email" style="font-size: 13px;" class="form-control" name="email-emp" id="email-emp" placeholder="Enter Employee Email Address" required>
+              </div>
+            <div class="form-group">
+                <label for="role-emp-add">Employee Admin role</label>
+                <select style="font-size: 13px;" class="form-control form-control-blue" name="role-emp-add" id="role-emp-add" required>
+                  <option value="" disabled selected>Select Employee Role</option>
+                  <option value="Administrator">Administrator</option>
+                  <option value="Ordinary User">Ordinary User</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="leaveapplicationsapprover">Leave Applications Approver</label>
+                <select style="font-size: 13px;" name="selected_employees" class="form-control form-control-blue" id="leaveapplicationsapprover" style="max-height: 200px; overflow-y: auto; border: 1px solid #003366; padding: 5px;" required>
+                
+                  <option value="" disabled selected>Select Approver</option>
+                  
+                  {% for employee in employees_list %}
+                    <option value="{{ employee }}">{{ employee }}</option>
+                  {% endfor %}
+                </select>             
+            </div>
+            <div class="form-group">
+                <input style="font-size: 13px;" type="number" class="form-control" name="currentleavedays" placeholder="Employee Current Leave Days Balance" required>
+            </div>
+            <div class="form-group">
+                <input style="font-size: 13px;" type="number" class="form-control" name="monthlyaccumulation" placeholder="Employee Leave Days accumulation per month" required>
+            </div>
+            <input type="hidden" id="company_name" name="company_name" value="{{ company_name }}">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="saveaddemployee" style="width: 30%;">Save Info</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="AdminModal" tabindex="-1" role="dialog" aria-labelledby="AdminModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content"> 
+        <div class="modal-header">
+          <h5 class="modal-title" >ADMINISTRATOR INFO</h5>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="currentleavedays-admin">Enter Administrator Current Leave Days Balance</label>
+                <input type="number" class="form-control" name="currentleavedays-admin" id="currentleavedays-admin" placeholder="" required>
+            </div>
+            <div class="form-group">
+                <label for="monthlyaccumulation-admin">Enter Administrator Leave Days accumulation per month</labe-adminl>
+                <input type="number" class="form-control" name="monthlyaccumulation-admin" id="monthlyaccumulation-admin" placeholder="" required>
+            </div>
+            <input type="hidden" id="company_name"  name="company_name" value="{{ company_name }}">
+            <input type="hidden" id="email" name="email" value="{{ email }}">
+            <input type="hidden" id="firstname" name="firstname" value="{{ firstname }}">
+            <input type="hidden" id="surname" name="surname" value="{{ surname }}">
+        </div>
+        <div class="modal-footer">
+            <div class="btn-center">
+                <button type="button" id="adminextrainfo" class="btn btn-primary btn-block shadow" style="width:max-content;">Save</button>
+            </div> 
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="editModalpriv" tabindex="-1" role="dialog" aria-labelledby="editModalprivLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalprivLabel">EMPLOYEE ROLE EDITOR </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+        </div>
+        <div class="modal-body">
+          <form id="editroleForm">
+            <div class="form-group">
+                <label for="role-emp" id="content-edit-priv"></label>
+                <select id="role-emp" class="form-control form-control-blue" name="role-emp" style="margin-top: 20px;">
+                    <option value="" disabled selected>Select Employee Role</option>
+                    <option value="Administrator">Administrator</option>
+                    <option value="Ordinary User">Ordinary User</option> 
+                </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="saverole" style="width: 35%;">Save Changes</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="closepriv">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dropdown-overlay"></div>
+
+  <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmationModalLabel">Role ASSIGNMENT CONFIRMATION</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmationMessage" style="text-align: center;font-size: 13pt;"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="saveroleconfirm">Yes</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+    <div class="modal fade" id="editModalapprover" tabindex="-1" role="dialog" aria-labelledby="editModalapproverLabel">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="editModalapproverLabel">LEAVE APPLICATIONS APPROVER EDITOR</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+            <div class="modal-body">
+            <form id="editapproverForm">
+                <div class="form-group">
+                    <label for="leaveapplicationsapprover-emp" id="content-change-approver"></label>
+                    <select name="leaveapplicationsapprover-emp" class="form-control form-control-blue" id="leaveapplicationsapprover-emp" style="margin-top: 20px;">
+                    
+                    <option value="" disabled selected>Select Approver</option>        
+                    {% for employee in employees_list %}
+                        <option value="{{ employee }}">{{ employee }}</option>
+                    {% endfor %}
+                    </select> 
+                </div>
+            </form>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="saveapprover" style="width: 35%;">Save Changes</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="closeapprover">Cancel</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmationModalapprover" tabindex="-1" role="dialog" aria-labelledby="confirmationModalapproverLabel">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="confirmationModalapproverLabel">APPLICATIONS APPROVER CONFIRMATION</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            <p id="confirmationMessageapprover" style="text-align: center;font-size: 13pt;"></p>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="changeapproverconfirm">Yes</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+        </div>
+    </div>
+  
+  <input type="hidden" id="role"  name="role" value="{{ role }}">
+  <input type="hidden" id="idadmin"  name="idadmin" value="{{ id }}">
+
+  <div class="modal fade" id="editModalbalance" tabindex="-1" role="dialog" aria-labelledby="editModalbalanceLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalbalanceLabel">LEAVE DAYS BALANCE EDITOR</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+        </div>
+        <div class="modal-body">
+          <form id="editbalanceForm">
+            <div class="form-group">
+                <label for="leavedaysbalance-emp" id="content-edit-balance"></label>
+                <input type="number" class="form-control" name="leavedaysbalance" id="leavedaysbalance-emp" placeholder="Enter New Leave Days Balance" style="margin-top: 20px;" required>
+
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary9" id="savebalance" style="width: 35%;">Save Changes</button>
+          <button type="button" class="btn btn-primary9" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="confirmationModalbalance" tabindex="-1" role="dialog" aria-labelledby="confirmationModalbalanceLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmationModalbalanceLabel">LEAVE DAYS BALANCE CONFIRMATION</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmationMessagebalance" style="text-align: center;font-size: 13pt;"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="editbalanceconfirm">Yes</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
+  <!-- Bulk Operations -->
+  <div class="modal fade" id="BulkRoleModal" tabindex="-1" aria-labelledby="BulkRoleModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="BulkRoleModalLabel">BULK EMPLOYEE ROLE EDITOR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">                    
+                <div>
+                    <button id="selectAllCheckboxes" type="button" class="btn btn-primary">Select All</button>
+                    <button id="deselectAllCheckboxes" type="button" class="btn btn-primary" style="width: max-content;">Deselect All</button>
+                </div>
+
+                <div class="container mt-5">
+
+                    <div class="container2" style="max-height: 400px; overflow-y: auto;">
+                        {{ table_rememployees_bulk1_html |safe }}
+                    </div>
+                </div>   
+
+                <div class="form-group" style="margin-top: 30px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+                    <label for="employeerole-emp-bulk">Select New Role for the Above Selected Employee(s)</label>
+   
+                    <select id="employeerole-emp-bulk" class="form-control form-control-blue" name="employeerole-emp-bulk" style="margin-top: 20px;">
+                        <option value="" disabled selected>Select Employee Role</option>
+                        <option value="Administrator">Administrator</option>
+                        <option value="Ordinary User">Ordinary User</option> 
+                    </select>
+                </div>                   
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="bulkroleassign" data-bs-toggle="modal" data-bs-target="#ConfirmBulkRoleModal" style="white-space: nowrap;width: auto;display: inline-block;">Assign Role to Selected Employees</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ConfirmBulkRoleModal" tabindex="-1" aria-labelledby="ConfirmBulkRoleModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ConfirmBulkRoleModalLabel">BULK EMPLOYEE ROLES CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmRolesMessage" style="text-align: center;"></div>
+            <div id="selectedEmployeesList" style="text-align: center; padding: 5px;">
+                <strong>Selected Employees:</strong>
+                <ul id="selectedEmployeesUl" style="list-style-type: none; padding: 0; margin-top: 10px;"></ul>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmRoleAssign" data-bs-dismiss="modal">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <div class="modal fade" id="BulkApproverModal" tabindex="-1" aria-labelledby="BulkApproverModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="BulkApproverModalLabel">BULK LEAVE APPLICATIONS APPROVER EDITOR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">                    
+                <div>
+                    <button id="selectAllCheckboxes" type="button" class="btn btn-primary">Select All</button>
+                    <button id="deselectAllCheckboxes" type="button" class="btn btn-primary" style="width: max-content;">Deselect All</button>
+                </div>
+
+                <div class="container mt-5">
+
+                    <div class="container2" style="max-height: 400px; overflow-y: auto;">
+                        {{ table_rememployees_bulk1_html |safe }}
+                    </div>
+                </div>   
+
+                <div class="form-group" style="margin-top: 30px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+                    <label for="leaveapplicationsapprover-emp-bulk">Select New Leave Applications Approver for the Above Selected Employee(s)</label>
+
+                    <select name="leaveapplicationsapprover-emp-bulk" class="form-control form-control-blue" id="leaveapplicationsapprover-emp-bulk" style="margin-top: 5px; width: 60%;border: 3px solid #003366;">
+                        <option value="" disabled selected>Select Approver</option>        
+                        {% for employeebulk in employees_list %}
+                            <option value="{{ employeebulk }}">{{ employeebulk }}</option>
+                        {% endfor %}
+                    </select>  
+                </div>                   
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="bulkapproverassign" data-bs-toggle="modal" data-bs-target="#ConfirmBulkApproverModal" style="white-space: nowrap;width: auto;display: inline-block;">Assign Approver to Selected Employees</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ConfirmBulkApproverModal" tabindex="-1" aria-labelledby="ConfirmBulkApproverModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ConfirmBulkApproverModalLabel">BULK LEAVE APPLICATIONS APPROVER CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmMessage" style="text-align: center;"></div>
+            <div id="selectedEmployeesList" style="text-align: center; padding: 5px;">
+                <strong>Selected Employees:</strong>
+                <ul id="selectedEmployeesUl" style="list-style-type: none; padding: 0; margin-top: 10px;"></ul>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmAssign" data-bs-dismiss="modal">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="BulkLeaveDaysBalanceModal" tabindex="-1" aria-labelledby="BulkLeaveDaysBalanceModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="BulkLeaveDaysBalanceModalLabel">BULK LEAVE DAYS BALANCES EDITOR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <button id="selectAllCheckboxesbalances" type="button" class="btn btn-primary">Select All</button>
+                    <button id="deselectAllCheckboxesbalances" type="button" class="btn btn-primary" style="width: max-content;">Deselect All</button>
+                </div>
+                <div class="container mt-5">
+                    <div class="container2" style="max-height: 400px; overflow-y: auto;">
+                        {{ table_rememployees_bulk_balances_html  |safe }}
+                    </div>
+                </div>   
+
+                <div class="form-group" style="margin-top: 30px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+                    <label for="leavedaysbalance-emp-bulk">Enter New Leave Days Balance for the Above Selected Employee(s)</label>
+                    <input type="number" id="leavedaysbalance-emp-bulk" name="leavedaysbalance-emp-bulk" class="form-control" placeholder="Enter new leave days balance" style="margin-top: 5px;width: 60%;border: 3px solid #003366;" required />
+                </div>      
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="bulkbalancesassign" data-bs-toggle="modal" data-bs-target="#ConfirmBulkLeaveDaysBalanceModal" style="white-space: nowrap;width: auto;display: inline-block;">Commit New Leave Days Balance to Selected Employees</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ConfirmBulkLeaveDaysBalanceModal" tabindex="-1" aria-labelledby="ConfirmBulkLeaveDaysBalanceModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ConfirmBulkLeaveDaysBalanceModalLabel">BULK LEAVE DAYS BALANCES CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmMessagebalances" style="text-align: center;"></div>
+            <div id="selectedEmployeesListbalances" style="text-align: center; padding: 5px;">
+                <strong>Selected Employees:</strong>
+                <ul id="selectedEmployeesUlbalances" style="list-style-type: none; padding: 0; margin-top: 10px;"></ul>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmAssignbalances" data-bs-dismiss="modal">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="modal fade" id="BulkAccumulatorsModal" tabindex="-1" aria-labelledby="BulkAccumulatorsModalLabel">
+    <div class="modal-dialog" style="max-width: 45%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="BulkAccumulatorsModalLabel">BULK LEAVE DAYS ACCUMULATORS EDITOR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <button id="selectAllCheckboxesaccumulators" type="button" class="btn btn-primary">Select All</button>
+                    <button id="deselectAllCheckboxesaccumulators" type="button" class="btn btn-primary" style="width: max-content;">Deselect All</button>
+                </div>
+                <div class="container mt-5">
+                    <div class="container2" style="max-height: 400px; overflow-y: auto;">
+                        {{ table_rememployees_bulk_accumulators_html |safe }}
+                    </div>
+                </div>   
+
+                <div class="form-group" style="margin-top: 30px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+                    <label for="leavedaysaccumulators-emp-bulk">Select New Leave Days Accumulator for the Above Selected Employee(s)</label>
+                    <input type="number" id="leavedaysaccumulators-emp-bulk" name="leavedaysaccumulators-emp-bulk" class="form-control" placeholder="Enter new leave days monthly accumulator" style="margin-top: 5px;width: 60%;border: 3px solid #003366;" required />
+                </div>      
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="bulkaccumulatorsassign"  data-bs-toggle="modal" data-bs-target="#ConfirmBulkAccumulatorsModal" style="white-space: nowrap;width: auto;display: inline-block;">Commit New Leave Days Monthly Accumulator to Selected Employees</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ConfirmBulkAccumulatorsModal" tabindex="-1" aria-labelledby="ConfirmBulkAccumulatorsModalLabel">
+    <div class="modal-dialog" style="max-width: 40%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ConfirmBulkAccumulatorsModalLabel">BULK LEAVE DAYS ACCUMULATORS CONFIRMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmMessageaccumulators88" style="text-align: center;"></div>
+            <div id="selectedEmployeesListaccumulators" style="text-align: center; padding: 5px;">
+                <strong>Selected Employees:</strong>
+                <ul id="selectedEmployeesUlaccumulators" style="list-style-type: none; padding: 0; margin-top: 10px;"></ul>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmAssignaccumulators" data-bs-dismiss="modal">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+  <!-- Bootstrap and jQuery Scripts -->
+
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+<script>
+$(document).ready(function () {
+    if (sessionStorage.getItem('showAdminModal') === 'true') {
+        $('#AdminModal').modal('show');
+        sessionStorage.removeItem('showAdminModal'); 
+    }
+
+    $(".dropdown-toggle").on("click", function () {
+        $(".dropdown-overlay").toggle(); // Show/hide the overlay when the button is clicked
+    });
+
+    // Hide overlay when clicking outside the dropdown
+    $(document).on("click", function (e) {
+        if (!$(e.target).closest(".dropdown-menu, .dropdown-toggle").length) {
+            $(".dropdown-overlay").hide();
+        }
+    });
+
+});
+
+
+
+$(document).ready(function() {
+    // Initially hide the 'Other Leave' section (CSS already hides it)
+    // No need to do anything here since CSS will handle it initially
+
+    // Show/hide the 'Other Leave' section based on leave type selection
+    $('#leaveType').change(function() {
+        if ($(this).val() === 'other') {
+            // If 'Other Leave' is selected, display the section
+            $('#other-leave').show();
+        } else {
+            // If any other option is selected, hide the section
+            $('#other-leave').hide();
+        }
+    });
+});
+
+
+let currentIdeditrole = null;
+let currentIdchangeapprover = null;
+let currentIdeditbalance = null;
+
+let currentFirstName = null; 
+
+$(document).on('click', '.edit-priv-btn', function() {
+    currentIdeditrole = $(this).data('id'); 
+    $('#emp-id').text('ID: ' + currentIdeditrole);
+
+    var row = $(this).closest('tr'); 
+
+    currentFirstName = row.find('td').eq(1).text(); 
+
+    var message = `Select New Role for <strong>${currentFirstName} -- ID: ${currentIdeditrole}</strong>`;
+    $('#content-edit-priv').html(message);
+});
+
+$(document).on('click', '.change-approver-btn', function() {
+    currentIdchangeapprover = $(this).data('id'); 
+    $('#emp-id').text('ID: ' + currentIdchangeapprover);
+
+    var row = $(this).closest('tr'); 
+
+    currentFirstName = row.find('td').eq(1).text(); 
+
+    var message = `Select New Approver for <strong>${currentFirstName} -- ID: ${currentIdchangeapprover}</strong>`;
+    $('#content-change-approver').html(message);
+});
+
+$(document).on('click', '.edit-balance-btn', function() {
+    currentIdeditbalance = $(this).data('id'); 
+    $('#emp-id').text('ID: ' + currentIdeditbalance);
+
+    var row = $(this).closest('tr'); 
+
+    currentFirstName = row.find('td').eq(1).text(); 
+
+    var message = `Enter New Leave Days Balance for <strong>${currentFirstName} -- ID: ${currentIdeditbalance}</strong>`;
+    $('#content-edit-balance').html(message);
+});
+
+$(document).ready(function () {
+
+    $('#saveaccumulators').click(function () {
+        let updates = [];
+        const companyname = $('#company_name').val().trim();  // Get the company name from the hidden input
+
+        // Check if company name is empty
+        if (!companyname) {
+            alert("Company name is required.");
+            return;  // Prevent further execution if company name is missing
+        }
+
+        // Gather data from the table
+        $('#employeesaccumulatorsTable .editable-field').each(function () {
+            let $field = $(this);
+            let id = $field.data('id'); // Employee ID
+            let newValue = parseFloat($field.val()); // New value entered
+
+            // Check if the ID and value are valid before adding to updates
+            if (id && !isNaN(newValue)) {
+                updates.push({ id: id, accumulated_days: newValue });
+            } else {
+                console.error("Invalid data-id or value for field:", $field);
+            }
+        });
+
+        // Check if updates array is empty (no valid data to send)
+        if (updates.length === 0) {
+            alert("No valid data to update.");
+            return;  // Prevent sending the request if no valid data
+        }
+        $('#loadingOverlay').show();  // Show loading overlay immediately
+
+        // Send updates to the server
+        $.ajax({
+            url: '/update_accumulators',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ updates: updates, companyname: companyname }),
+            success: function (response) {
+
+                $('#editLeaveDaysAccumulatorModal').modal('hide');  // Hide the modal after success
+                $('#loadingOverlay').hide();  // Show loading overlay immediately
+                setTimeout(function() {
+                    alert(response.message);  // Show alert after the overlay
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the table to reflect changes
+            },
+            error: function () {
+                alert('Error updating Accumulators.');
+            }
+        });
+    });
+});
+
+
+
+$('#btn-dashboard').click(function() {
+        $('#dashboard-tab').tab('show');
+    });
+
+$('#btn-leave-apps-portal').click(function() {
+    $('#leave-apps-tab').tab('show');
+});
+
+$('#closepriv').on('click', function() {
+    $('#editModalpriv').modal('hide'); 
+});
+
+$('#closeapprover').on('click', function() {
+    $('#editModalapprover').modal('hide'); 
+});
+
+$('#closeaccumulators').on('click', function() {
+    $('#editLeaveDaysAccumulatorModal').modal('hide'); 
+});
+
+$('#cancel_add_emplyee_manual').on('click', function() {
+    $('#manualaddemployeeModal').modal('hide'); 
+});
+
+
+$('#saveroleconfirm').on('click', function() {
+    var newrole = $('#role-emp').val();  // Get the selected role
+    var companyname = $('#company_name').val();  // Get the company name from the hidden input
+
+    if (!newrole || !companyname) {
+        alert("Please fill in all required fields.");
+        return;  // Prevent further execution if fields are empty
+    }
+
+    $('#loadingOverlay').show();
+
+    
+    if (newrole) {
+        // Send the data to the Flask endpoint
+        $.ajax({
+            url: '/update_role',  // Change to your desired endpoint
+            method: 'POST',
+            data: {
+                role: newrole,
+                currentId: currentIdeditrole,  // Include the currentId in the request
+                companyname: companyname  // Include the company_name in the request
+            },
+            success: function(response) {
+                // Handle the response from Flask (e.g., show success message or refresh data)
+                $('#editModalpriv').modal('hide');  // Hide the modal after success
+                $('#loadingOverlay').hide();
+
+                setTimeout(function() {
+                    alert('Role updated successfully.');
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  
+            },
+            error: function(xhr, status, error) {
+                // Handle any errors (e.g., alert user)
+                alert('Error: ' + error);
+            }
+        });
+    } else {
+        // If no role is selected
+        alert("Please select a role before saving.");
+    }
+});
+
+$('#adminextrainfo').on('click', function () {
+
+    console.log("currentleaveDays:", $('#currentleavedays-admin').val());
+    console.log("monthlyaccumulation:", $('#monthlyaccumulation-admin').val());
+    console.log("companyname:", $('#company_name').val());
+    console.log("email:", $('#email').val());
+    console.log("firstName:", $('#firstname').val());
+    console.log("surname:", $('#surname').val());
+
+    const formData = {
+        currentleavedays: $('#currentleavedays-admin').val().trim(),
+        monthlyaccumulation: $('#monthlyaccumulation-admin').val().trim(),
+        companyName: $('#company_name').val().trim(),
+        email: $('#email').val().trim(),
+        firstname: $('#firstname').val().trim(),
+        surname: $('#surname').val().trim()
+    };
+
+    // Log the collected data for debugging
+    console.log("Form data being sent:", formData);
+
+    // Validate required fields
+    if ( !formData.currentleavedays || !formData.monthlyaccumulation) {
+        alert("Please fill in all required fields.");
+        return;  // Stop execution if validation fails
+    }
+
+    // Optional: Show a loading overlay
+    $('#loadingOverlay').show();
+
+    // AJAX request to send data to Flask backend
+    $.ajax({
+        url: '/admin-modal',  // Replace with your Flask endpoint
+        method: 'POST',
+        data: formData,
+        success: function (response) {
+            // Hide loading overlay
+            $('#loadingOverlay').hide();
+
+            // Handle success (e.g., close modal and show confirmation)
+            alert('Administrator info saved successfully.');
+            $('#AdminModal').modal('hide');  // Close modal
+            window.location.href = '/dashboard';
+        },
+        error: function (xhr, status, error) {
+            // Hide loading overlay
+            $('#loadingOverlay').hide();
+
+            // Handle error (e.g., display error message)
+            alert('Error: ' + error);
+            console.error("Error details:", xhr.responseText);
+        }
+    });
+});
+
+
+
+
+
+
+$('#changeapproverconfirm').on('click', function() {
+    var newapprover = $('#leaveapplicationsapprover-emp').val();  // Get the selected role
+    var companyname = $('#company_name').val();  // Get the company name from the hidden input
+
+    if (!newapprover || !companyname) {
+        alert("Please select Leave Applications Approver before commiting.");
+        return;  // Prevent further execution if fields are empty
+    }
+
+    $('#loadingOverlay').show();
+
+    if (newapprover) {
+        // Send the data to the Flask endpoint
+        $.ajax({
+            url: '/update_approver',  // Change to your desired endpoint
+            method: 'POST',
+            data: {
+                approver: newapprover,
+                currentIdapprover: currentIdchangeapprover,  // Include the currentId in the request
+                companyname: companyname  // Include the company_name in the request
+            },
+            success: function(response) {
+                
+                $('#confirmationModalapprover').modal('hide');  // Hide the modal after success
+                $('#editModalapprover').modal('hide');  // Hide the modal after success
+                $('#loadingOverlay').hide();
+
+                setTimeout(function() {
+                    alert('Approver changed successfully.');
+                }, 100);  // 100ms delay to ensure UI update before alert
+
+                location.reload();  
+            },
+            error: function(xhr, status, error) {
+                // Handle any errors (e.g., alert user)
+                alert('Error: ' + error);
+            }
+        });
+    } else {
+        // If no role is selected
+        alert("Please select an approver before saving.");
+    }
+});
+
+$('#editbalanceconfirm').on('click', function() {
+    var newbalance = $('#leavedaysbalance-emp').val().trim();  // Get the selected leave days balance
+    var companyname = $('#company_name').val().trim();  // Get the company name from the hidden input
+
+    // Check if the necessary fields have values
+    if (!newbalance || !companyname) {
+        alert("Please fill in all required fields.");
+        return;  // Prevent further execution if fields are empty
+    }
+
+    $('#loadingOverlay').show();
+
+    // Send the data to the Flask endpoint
+    $.ajax({
+        url: '/update_balance',  // Change to your desired endpoint
+        method: 'POST',
+        data: {
+            balance: newbalance,
+            currentIdbalance: currentIdeditbalance,  // Include the currentId in the request
+            companyname: companyname  // Include the company_name in the request
+        },
+        success: function(response) {
+            // Hide the modals immediately
+            $('#confirmationModalbalance').modal('hide');  // Hide the confirmation modal
+            $('#editModalbalance').modal('hide');  // Hide the edit modal
+            
+            // Hide the loading overlay immediately
+            $('#loadingOverlay').hide();
+
+            // Show alert after a very short delay to ensure the overlay is hidden first
+            setTimeout(function() {
+                alert('Leave Days Balance changed successfully');
+            }, 100);  // 0ms delay to ensure the alert appears after hiding overlay
+            location.reload();  // Reload the page or update the DOM as needed
+
+        },
+        error: function(xhr, status, error) {
+            // Handle any errors (e.g., alert user)
+            alert('Error: ' + error);
+            $('#loadingOverlay').hide();  // Hide overlay if error occurs
+        }
+    });
+});
+
+
+$('#saveaddemployee').on('click', function(e) {
+    e.preventDefault();
+
+    // Get form data
+    const formData = {
+        firstname: $('#firstname-emp').val().trim(),
+        surname: $('#surname-emp').val().trim(),
+        whatsapp: $('#whatsapp-emp').val().trim(),
+        email: $('#email-emp').val().trim(),
+        role: $('#role-emp-add').val(),
+        selected_employees: $('#leaveapplicationsapprover').val(),
+        currentleavedays: $('input[name="currentleavedays"]').val().trim(),
+        monthlyaccumulation: $('input[name="monthlyaccumulation"]').val().trim()
+    };
+
+    // Log form data for debugging
+    console.log("Form data being sent:", formData);
+
+    // Validation: Check if all required fields are filled
+    if (!formData.firstname || !formData.surname || !formData.whatsapp || !formData.email || !formData.role || !formData.selected_employees || !formData.currentleavedays || !formData.monthlyaccumulation) {
+        alert("Please fill in all required fields.");
+        return;  // Exit the function if validation fails
+    }
+
+    // Show loading overlay
+    $('#loadingOverlay').show();
+
+    // Send the form data using AJAX
+    $.ajax({
+        url: '/manual_add_employee',
+        method: 'POST',
+        data: formData,
+        success: function(response) {
+            
+            $('#addEmployeeModal').modal('hide');
+            $('#manualaddemployeeModal').modal('hide');
+            $('#loadingOverlay').hide();
+            // Add a slight delay before showing the alert to ensure UI update
+            setTimeout(function() {
+                alert('Employee added successfully');
+            }, 100);  // 100ms delay to ensure UI update before alert
+            //             
+            location.reload();  // Reload the page or update the DOM as needed
+        },
+        error: function(xhr, status, error) {
+            // Hide loading overlay and display error message
+            $('#loadingOverlay').hide();
+
+            // Check the response for more specific error messages
+            if (xhr.status === 400) {
+                alert('Bad Request: Please check your input data.');
+            } else if (xhr.status === 500) {
+                alert('Server Error: Something went wrong on the server side.');
+            } else {
+                alert('Error: ' + error);
+            }
+        }
+    });
+});
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const modals = document.querySelectorAll('.modal');
+    const mainContent = document.querySelector('body > *:not(.modal)'); // Select all content outside modals
+
+    modals.forEach(modal => {
+        modal.addEventListener('show.bs.modal', () => {
+            // Add inert to main content when modal is open
+            mainContent.setAttribute('inert', '');
+        });
+
+        modal.addEventListener('hidden.bs.modal', () => {
+            // Remove inert from main content when modal is closed
+            mainContent.removeAttribute('inert');
+        });
+    });
+
+
+    const myDiv = document.getElementById('adminoptionchoice');
+        const shouldHide = myDiv.getAttribute('data-hide');
+
+        // Hide if data-hide is "true"
+        if (shouldHide === "True") {
+            myDiv.remove();
+            localStorage.removeItem('selectedProfile');
+        }
+
+        const myDiv2 = document.getElementById('approversonly');
+        const shouldHide2 = myDiv2.getAttribute('data-hide');
+
+        // Hide if data-hide is "true"
+        if (shouldHide2 === "True") {
+            myDiv2.remove();
+        }
+
+
+
+
+
+    document.getElementById('formatexcellmsbookexport').addEventListener('click', () => {
+            window.location.href = '/export_lms_book_excel';
+        });
+
+    document.getElementById('formatpdflmsbookexport').addEventListener('click', () => {
+        window.location.href = '/export_lms_book_pdf';
+    });
+
+    // Handling form submission using AJAX
+    document.getElementById('upload-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission (since we're using AJAX)
+
+        // Send the form data using AJAX
+        fetch('/upload-excel', {
+            method: 'POST',
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); // Debug the response
+            
+            if (data.status === 'success') {
+                alert('Employees Successfully Added!'); // Show success alert
+                $('#loadingOverlay').hide(); // Hide the loading overlay
+
+            } else {
+                alert('Something went wrong. Please try again.'); // Handle error response
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error); // Debug error
+            $('#loadingOverlay').hide(); // Hide loading overlay in case of error
+            alert('An error occurred while uploading the file.'); // Show error alert
+        });
+    });
+
+    document.getElementById('leaveForm').addEventListener('submit', function (e) {
+    // Prevent the default form submission
+    e.preventDefault();
+
+    // Check if the form is valid
+    if (this.checkValidity()) {
+      // Trigger the modal programmatically
+      const modal = new bootstrap.Modal(document.getElementById('SubmitLeaveApplicationModal'));
+      modal.show();
+    } else {
+      // Highlight invalid fields and show validation messages
+      this.reportValidity();
+    }
+
+
+
+
+    $('#confirmSubmit').on('click', function () {
+    // Validate the required fields
+    var isValid = true;
+    var errorMessage = '';
+
+    // Check required fields
+    $('#leaveForm').find('input[required], select[required], textarea[required]').each(function () {
+        if (!$(this).val()) {
+            isValid = false;
+            errorMessage = 'Please fill in all required fields.';
+            return false; // Exit the loop on the first empty field
+        }
+    });
+
+    // If validation fails, show an alert and stop submission
+    if (!isValid) {
+        alert(errorMessage);
+        return;
+    }
+
+    // Gather all the form data
+    var formData = new FormData($('#leaveForm')[0]); // Include file inputs if any
+
+    // Show a loading overlay (optional)
+    $('#loadingOverlay').show();
+
+    // Make the AJAX request to submit the form
+    $.ajax({
+        url: '/leave_application',  // Replace with your Flask route for handling the form submission
+        type: 'POST',
+        data: formData,
+        processData: false, // Prevent jQuery from automatically processing the data
+        contentType: false, // Prevent jQuery from setting the content-type header
+        success: function (response) {
+            // Hide the modals
+            $('#SubmitLeaveApplicationModal').modal('hide');
+            $('#loadingOverlay').hide();
+
+            // Optionally, show a success message or redirect
+            alert('Leave application submitted successfully.');
+            location.reload(); // Reload the page or handle UI updates dynamically
+        },
+        error: function (xhr, status, error) {
+            // Handle errors gracefully
+            $('#loadingOverlay').hide();
+            alert('Error: Unable to submit your leave application. Please make sure that you do not have any pending leave applications and try again.');
+        }
+    });
+});
+
+  });
+
+
+
+    
+    // Event listener for "Select All" button
+    document.getElementById('selectAllCheckboxes').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-approver");
+        checkboxes.forEach(checkbox => {
+            if (!checkbox.checked) {
+                checkbox.checked = true; // Select the checkbox
+                const event = new Event('change');
+                checkbox.dispatchEvent(event); // Trigger change event
+            }
+        });
+    });
+
+    // Event listener for "Deselect All" button
+    document.getElementById('deselectAllCheckboxes').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-approver");
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                checkbox.checked = false; // Deselect the checkbox
+                const event = new Event('change');
+                checkbox.dispatchEvent(event); // Trigger change event
+            }
+        });
+    });
+
+    // Trigger file input click on button click
+    document.querySelector('.upload-template').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent any accidental form submission
+        document.getElementById('file-upload').click(); // This will open file manager
+    });
+
+    // Submit form after a file is selected
+    document.getElementById('file-upload').addEventListener('change', function() {
+        if (this.files.length > 0) {
+            // Prevent form submission for now
+            document.getElementById('upload-form').submit();  
+            $('#loadingOverlay').show(); // Show loading overlay
+        }
+    });
+
+
+
+
+
+
+
+    const leaveForm = document.getElementById("leaveForm");
+    const leaveTypeField = document.getElementById("leaveType");
+    const startDateField = document.getElementById("startDate");
+    const endDateField = document.getElementById("endDate");
+    const confirmationSubmitLeaveApplication = document.getElementById("confirmationSubmitLeaveApplication");
+
+
+    leaveForm.addEventListener("submit", function (event) {
+        // Prevent form submission
+        event.preventDefault();
+
+        // Get the values
+        const leaveType = leaveTypeField.value;
+        const startDate = startDateField.value;
+        const endDate = endDateField.value;
+
+        // Check if startDate and endDate are valid
+        if (!startDate || !endDate) {
+            alert("Please select valid start and end dates.");
+            return;
+        }
+
+        // Format the dates to 'dd MMM yyyy'
+        const formatDate = (date) => {
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        };
+
+        const formattedStartDate = formatDate(startDate);
+        const formattedEndDate = formatDate(endDate);
+
+        // Calculate the number of days excluding Sundays
+        let start = new Date(startDate);
+        const end = new Date(endDate);
+        let days = 0;
+
+        while (start <= end) {
+            // Add to days count if not Sunday (0 represents Sunday in JS)
+            if (start.getDay() !== 0) {
+                days++;
+            }
+            // Move to the next day
+            start.setDate(start.getDate() + 1);
+        }
+
+        confirmationSubmitLeaveApplication.innerHTML = `Proceed to submit your <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveType} leave application</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${days} day(s)</span></strong> (excluding Sundays) <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${formattedStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:4px; border-radius:15px;">${formattedEndDate}</span></strong>?`;
+        // Show confirmation dialog
+    });
+
+
+    document.getElementById('download-btn-excel-template').addEventListener('click', function() {
+        window.location.href = "/download-excel-template-add-employees";  // Triggers the Flask route to download the file
+    });
+
+
+    const bulkApproverAssignButton = document.getElementById('bulkapproverassign');
+    const approverDropdown = document.getElementById('leaveapplicationsapprover-emp-bulk');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const selectedEmployeesUl = document.getElementById('selectedEmployeesUl');
+
+
+
+    // Style the selected employees list to be scrollable with max height
+    selectedEmployeesUl.style.maxHeight = "300px";
+    selectedEmployeesUl.style.overflowY = "auto";
+    selectedEmployeesUl.style.border = "1px solid #ddd";
+    selectedEmployeesUl.style.padding = "10px";
+    selectedEmployeesUl.style.marginTop = "5px";
+
+    // Event listener for individual checkboxes
+    document.querySelectorAll(".employee-checkbox-bulk-approver").forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+            const employeeName = checkbox.getAttribute("data-employee-name");
+            const employeeId = checkbox.value;
+
+            if (checkbox.checked) {
+                // Add employee to the selected list if not already present
+                if (!selectedEmployeesUl.querySelector(`[data-employee-id="${employeeId}"]`)) {
+                    const li = document.createElement("li");
+                    li.textContent = employeeName;
+                    li.setAttribute("data-employee-id", employeeId);
+                    selectedEmployeesUl.appendChild(li);
+                }
+            } else {
+                // Remove employee from the selected list
+                const liToRemove = selectedEmployeesUl.querySelector(`[data-employee-id="${employeeId}"]`);
+                if (liToRemove) {
+                    selectedEmployeesUl.removeChild(liToRemove);
+                }
+            }
+        });
+    });
+
+    // Event listener for "Assign Approver" button
+    bulkApproverAssignButton.addEventListener('click', function () {
+        const selectedApprover = approverDropdown.value;
+
+        // Check if an approver is selected
+        if (!selectedApprover) {
+            alert('Please select an approver before proceeding.');
+            return;
+        }
+
+        // Collect selected employees
+        const selectedEmployees = Array.from(selectedEmployeesUl.children).map(li => li.textContent);
+
+        if (selectedEmployees.length === 0) {
+            alert('Please select at least one employee before proceeding.');
+            return;
+        }
+
+        confirmMessage.innerHTML = `
+            <p>Proceed to assign <br><br>
+            <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${selectedApprover}</span></strong> <br><br>
+            as the Leave Applications Approver for the following selected employees?</p>
+        `;
+    });
+
+
+    document.getElementById('confirmAssign').addEventListener('click', function () {
+        // Prepare the data to send to Flask
+        const approver = document.getElementById('leaveapplicationsapprover-emp-bulk').value;
+        const selectedEmployees = Array.from(document.getElementById('selectedEmployeesUl').children)
+            .map(li => li.getAttribute('data-employee-id'));
+
+        if (!approver || selectedEmployees.length === 0) {
+            alert('Please select an approver and at least one employee before proceeding.');
+            return;
+        }
+
+        const dataToSend = {
+            approver: approver,
+            employees: selectedEmployees,
+        };
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        // Perform the AJAX request
+        $.ajax({
+            url: '/assign_bulk_approver',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(dataToSend),
+            success: function(response) {
+                $('#ConfirmBulkApproverModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                // Add a slight delay before showing the alert to ensure UI update
+                setTimeout(function() {
+                    alert('Approver assigned successfully');
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function(xhr, status, error) {
+                $('#loadingOverlay').hide();  // Hide loading overlay
+
+                // Check the response for more specific error messages
+                if (xhr.status === 400) {
+                    alert('Bad Request: Please check your input data.');
+                } else if (xhr.status === 500) {
+                    alert('Server Error: Something went wrong on the server side.');
+                } else {
+                    alert('Error: ' + error);
+                }
+            }
+        });
+    });
+
+
+
+    const today = new Date().toISOString().split('T')[0];
+    const startDateInput = document.getElementById("startDate");
+    const endDateInput = document.getElementById("endDate");
+
+    // Set minimum date for startDate
+    startDateInput.setAttribute("min", today);
+
+    // Function to add one day to startDate
+    function addOneDay(dateString) {
+        const date = new Date(dateString);
+        date.setDate(date.getDate() + 1);
+        return date.toISOString().split('T')[0];
+    }
+
+    // Function to update endDate min attribute
+    function updateEndDateMin() {
+        const startDateValue = startDateInput.value;
+        if (startDateValue) {
+            const minEndDate = addOneDay(startDateValue);
+            endDateInput.setAttribute("min", minEndDate);
+            endDateInput.value = ""; // Reset end date to force re-selection
+        }
+    }
+
+    // Event listener for start date change
+    startDateInput.addEventListener("change", updateEndDateMin);
+
+
+
+
+
+
+
+
+
+
+
+    document.getElementById('selectAllCheckboxesbalances').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-balances");
+        checkboxes.forEach(checkbox => {
+            if (!checkbox.checked) {
+                checkbox.checked = true; // Select the checkbox
+                const event = new Event('change');
+                checkbox.dispatchEvent(event); // Trigger change event
+            }
+        });
+    });
+
+    // Event listener for "Deselect All" button
+    document.getElementById('deselectAllCheckboxesbalances').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-balances");
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                checkbox.checked = false; // Deselect the checkbox
+                const event = new Event('change');
+                checkbox.dispatchEvent(event); // Trigger change event
+            }
+        });
+    });
+
+    const bulkBalancesAssignButton = document.getElementById('bulkbalancesassign');
+    const balancesDropdown = document.getElementById('leavedaysbalance-emp-bulk');
+    const confirmMessagebalances = document.getElementById('confirmMessagebalances');
+    const selectedEmployeesUlbalances = document.getElementById('selectedEmployeesUlbalances');
+
+    // Style the selected employees list to be scrollable with max height
+    selectedEmployeesUlbalances.style.maxHeight = "300px";
+    selectedEmployeesUlbalances.style.overflowY = "auto";
+    selectedEmployeesUlbalances.style.border = "1px solid #ddd";
+    selectedEmployeesUlbalances.style.padding = "10px";
+    selectedEmployeesUlbalances.style.marginTop = "5px";
+
+    // Event listener for individual checkboxes
+    document.querySelectorAll(".employee-checkbox-bulk-balances").forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+            const employeeName = checkbox.getAttribute("data-employee-name");
+            const employeeId = checkbox.value;
+
+            if (checkbox.checked) {
+                // Add employee to the selected list if not already present
+                if (!selectedEmployeesUlbalances.querySelector(`[data-employee-id="${employeeId}"]`)) {
+                    const li = document.createElement("li");
+                    li.textContent = employeeName;
+                    li.setAttribute("data-employee-id", employeeId);
+                    selectedEmployeesUlbalances.appendChild(li);
+                }
+            } else {
+                // Remove employee from the selected list
+                const liToRemove = selectedEmployeesUlbalances.querySelector(`[data-employee-id="${employeeId}"]`);
+                if (liToRemove) {
+                    selectedEmployeesUlbalances.removeChild(liToRemove);
+                }
+            }
+        });
+    });
+
+    // Event listener for "Assign Approver" button
+    bulkBalancesAssignButton.addEventListener('click', function () {
+        const selectedBalance = balancesDropdown.value;
+
+        // Check if an approver is selected
+        if (!selectedBalance) {
+            alert('Please input new leave days balance before proceeding.');
+            return;
+        }
+
+        // Collect selected employees
+        const selectedEmployees = Array.from(selectedEmployeesUlbalances.children).map(li => li.textContent);
+
+        if (selectedEmployees.length === 0) {
+            alert('Please select at least one employee before proceeding.');
+            return;
+        }
+
+        confirmMessagebalances.innerHTML = `
+            <p>Proceed to assign <br><br>
+            <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${selectedBalance}</span></strong> <br><br>
+            as the Leave Days Balance for the following selected employees?</p>
+        `;
+    });
+
+
+    document.getElementById('confirmAssignbalances').addEventListener('click', function () {
+        // Prepare the data to send to Flask
+        const balance = document.getElementById('leavedaysbalance-emp-bulk').value;
+        const selectedEmployees = Array.from(document.getElementById('selectedEmployeesUlbalances').children)
+            .map(li => li.getAttribute('data-employee-id'));
+
+        if (!balance || selectedEmployees.length === 0) {
+            alert('Please input new leave days balance and at least one employee before proceeding.');
+            return;
+        }
+
+        const dataToSend = {
+            balance: balance,
+            employees: selectedEmployees,
+        };
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        // Perform the AJAX request
+        $.ajax({
+            url: '/assign_bulk_balances',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(dataToSend),
+            success: function(response) {
+                $('#ConfirmBulkBalancesModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                // Add a slight delay before showing the alert to ensure UI update
+                setTimeout(function() {
+                    alert('New Leave Days Balances assigned successfully');
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function(xhr, status, error) {
+                $('#loadingOverlay').hide();  // Hide loading overlay
+
+                // Check the response for more specific error messages
+                if (xhr.status === 400) {
+                    alert('Bad Request: Please check your input data.');
+                } else if (xhr.status === 500) {
+                    alert('Server Error: Something went wrong on the server side.');
+                } else {
+                    alert('Error: ' + error);
+                }
+            }
+        });
+    });
+
+
+
+
+
+
+
+
+
+
+
+    document.getElementById('selectAllCheckboxesaccumulators').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-accumulators");
+        checkboxes.forEach(checkbox => {
+            if (!checkbox.checked) {
+                checkbox.checked = true; // Select the checkbox
+                const event = new Event('change');
+                checkbox.dispatchEvent(event); // Trigger change event
+            }
+        });
+    });
+
+    // Event listener for "Deselect All" button
+    document.getElementById('deselectAllCheckboxesaccumulators').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-accumulators");
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                checkbox.checked = false; // Deselect the checkbox
+                const event = new Event('change');
+                checkbox.dispatchEvent(event); // Trigger change event
+            }
+        });
+    });
+
+    const bulkAccumulatorsAssignButton = document.getElementById('bulkaccumulatorsassign');
+    const accumulatorsDropdown = document.getElementById('leavedaysaccumulators-emp-bulk');
+    const confirmMessageaccumulators = document.getElementById('confirmMessageaccumulators88');
+    const selectedEmployeesUlaccumulators = document.getElementById('selectedEmployeesUlaccumulators');
+
+    // Style the selected employees list to be scrollable with max height
+    selectedEmployeesUlaccumulators.style.maxHeight = "300px";
+    selectedEmployeesUlaccumulators.style.overflowY = "auto";
+    selectedEmployeesUlaccumulators.style.border = "1px solid #ddd";
+    selectedEmployeesUlaccumulators.style.padding = "10px";
+    selectedEmployeesUlaccumulators.style.marginTop = "5px";
+
+    // Event listener for individual checkboxes
+    document.querySelectorAll(".employee-checkbox-bulk-accumulators").forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+            const employeeName = checkbox.getAttribute("data-employee-name");
+            const employeeId = checkbox.value;
+
+            if (checkbox.checked) {
+                // Add employee to the selected list if not already present
+                if (!selectedEmployeesUlaccumulators.querySelector(`[data-employee-id="${employeeId}"]`)) {
+                    const li = document.createElement("li");
+                    li.textContent = employeeName;
+                    li.setAttribute("data-employee-id", employeeId);
+                    selectedEmployeesUlaccumulators.appendChild(li);
+                }
+            } else {
+                // Remove employee from the selected list
+                const liToRemove = selectedEmployeesUlaccumulators.querySelector(`[data-employee-id="${employeeId}"]`);
+                if (liToRemove) {
+                    selectedEmployeesUlaccumulators.removeChild(liToRemove);
+                }
+            }
+        });
+    });
+
+    // Event listener for "Assign Approver" button
+    bulkAccumulatorsAssignButton.addEventListener('click', function () {
+        const selectedAccumulator = accumulatorsDropdown.value;
+
+        console.log('Selected Accumulator:', selectedAccumulator);
+
+        // Check if an approver is selected
+        if (!selectedAccumulator) {
+            alert('Please input new leave days accumulator before proceeding.');
+            return;
+        }
+
+        // Collect selected employees
+        const selectedEmployees = Array.from(selectedEmployeesUlaccumulators.children).map(li => li.textContent);
+
+        if (selectedEmployees.length === 0) {
+            alert('Please select at least one employee before proceeding.');
+            return;
+        }
+
+        confirmMessageaccumulators.innerHTML = `
+            <p>Proceed to assign <br><br>
+            <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${selectedAccumulator}</span></strong> <br><br>
+            as the Monthly Leave Days Accumulator for the following selected employees?</p>
+        `;
+    });
+
+
+    document.getElementById('confirmAssignaccumulators').addEventListener('click', function () {
+        // Prepare the data to send to Flask
+        const accumulator = document.getElementById('leavedaysaccumulators-emp-bulk').value;
+        const selectedEmployees = Array.from(document.getElementById('selectedEmployeesUlaccumulators').children)
+            .map(li => li.getAttribute('data-employee-id'));
+
+        if (!accumulator || selectedEmployees.length === 0) {
+            alert('Please input new monthly leave days accumulator and at least one employee before proceeding.');
+            return;
+        }
+
+        const dataToSend = {
+            accumulator: accumulator,
+            employees: selectedEmployees,
+        };
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        // Perform the AJAX request
+        $.ajax({
+            url: '/assign_bulk_accumulators',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(dataToSend),
+            success: function(response) {
+                $('#ConfirmBulkAccumulatorsModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                // Add a slight delay before showing the alert to ensure UI update
+                setTimeout(function() {
+                    alert('New Monthly Leave Days Accumulator assigned successfully');
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function(xhr, status, error) {
+                $('#loadingOverlay').hide();  // Hide loading overlay
+
+                // Check the response for more specific error messages
+                if (xhr.status === 400) {
+                    alert('Bad Request: Please check your input data.');
+                } else if (xhr.status === 500) {
+                    alert('Server Error: Something went wrong on the server side.');
+                } else {
+                    alert('Error: ' + error);
+                }
+            }
+        });
+    });
+
+
+
+
+
+
+
+    let currentIdrevokeapproverapp = null
+
+    $(document).on('click', '.revokeapprover-app-btn', function() {
+
+        const formatDate = (date) => {
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        };
+
+        currentIdrevokeapproverapp = $(this).data('id');
+        $('#apprevoke-id').text('APP ID: ' + currentIdrevokeapproverapp);
+        var row = $('#leaveappsTableapprovedbyme td').filter(function() {
+            return $(this).text() == currentIdrevokeapproverapp;
+        }).closest('tr');
+
+        var name = row.find('td').eq(1).text();
+        var leavetype = row.find('td').eq(2).text();
+        var dateapplied = formatDate(row.find('td').eq(3).text());
+        var leaveStartDate = formatDate(row.find('td').eq(4).text());
+        var leaveEndDate = formatDate(row.find('td').eq(5).text());
+        var leavedays = row.find('td').eq(6).text();
+        
+        var message = `Proceed to Revoke <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${name}</span></strong> applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIdrevokeapproverapp}</strong>]</span>?`;
+        
+        $('#revokeapproverLeaveApplication').html(message);
+    });
+
+
+
+    $(document).on('click', '#confirmrevokeapproverleaveapp', function() {
+
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        $.ajax({
+            url: '/revoke_leave_application_approver',  // Flask route to handle cancellation
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ app_id: currentIdrevokeapproverapp }),
+            success: function(response) {
+                $('#revokeapproverappModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                setTimeout(function() {
+                    alert(response.message);
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function (xhr, status, error) {
+            // Handle errors gracefully
+            $('#reviveappModal').modal('hide');
+            $('#loadingOverlay').hide();
+            alert('Error: Unable to revoke the leave application.');
+        }
+        });
+    });
+
+
+
+
+
+
+    let currentIddelapp = null
+
+    $(document).on('click', '.cancel-app-btn', function() {
+
+        const formatDate = (date) => {
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        };
+
+        currentIddelapp = $(this).data('id');
+        $('#appcancel-id').text('APP ID: ' + currentIddelapp);
+        var row = $('#myleaveappsTable td').filter(function() {
+            return $(this).text() == currentIddelapp;
+        }).closest('tr');
+        
+        var leavetype = row.find('td').eq(1).text();
+        var dateapplied = formatDate(row.find('td').eq(2).text());
+        var leaveStartDate = formatDate(row.find('td').eq(3).text());
+        var leaveEndDate = formatDate(row.find('td').eq(4).text());
+        var leavedays = row.find('td').eq(5).text();
+        
+        var message = `Proceed to Cancel <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIddelapp}</strong>]</span>?`;
+        
+    
+        $('#cancelLeaveApplication').html(message);
+
+
+    });
+
+
+
+    $(document).on('click', '#confirmcancelleaveapp', function() {
+
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        $.ajax({
+            url: '/cancel_leave_application',  // Flask route to handle cancellation
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ app_id: currentIddelapp }),
+            success: function(response) {
+                $('#cancelappModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                setTimeout(function() {
+                    alert(response.message);
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+                alert("Failed to cancel the leave application. Please try again.");
+            }
+        });
+    });
+
+
+
+    let currentIdreapplyapp = null
+
+    $(document).on('click', '.reapply-app-btn', function() {
+
+        const formatDate = (date) => {
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        };
+
+        currentIdreapplyapp = $(this).data('id');
+        $('#appreapply-id').text('APP ID: ' + currentIdreapplyapp);
+        var row = $('#myleaveappsTable td').filter(function() {
+            return $(this).text() == currentIdreapplyapp;
+        }).closest('tr');
+        
+        var leavetype = row.find('td').eq(1).text();
+        var dateapplied = formatDate(row.find('td').eq(2).text());
+        var leaveStartDate = formatDate(row.find('td').eq(3).text());
+        var leaveEndDate = formatDate(row.find('td').eq(4).text());
+        var leavedays = row.find('td').eq(5).text();
+        
+        var message = `Proceed to Re-apply <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIdreapplyapp}</strong>]</span>?`;
+        
+    
+        $('#reapplyLeaveApplication').html(message);
+
+
+    });
+
+
+
+    $(document).on('click', '#confirmreapplyleaveapp', function() {
+
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        $.ajax({
+            url: '/reapply_leave_application',  // Flask route to handle cancellation
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ app_id: currentIdreapplyapp }),
+            success: function(response) {
+                $('#reapplyappModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                setTimeout(function() {
+                    alert(response.message);
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function (xhr, status, error) {
+            // Handle errors gracefully
+            $('#reapplyappModal').modal('hide');
+            $('#loadingOverlay').hide();
+            alert('Error: Unable to submit your leave application. Please make sure that you do not have any pending leave applications and try again.');
+        }
+        });
+    });
+
+
+
+
+
+
+
+
+
+    let currentIdrevokeapp = null
+
+    $(document).on('click', '.revoke-app-btn', function() {
+
+        const formatDate = (date) => {
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        };
+
+        currentIdrevokeapp = $(this).data('id');
+        $('#appreapply-id').text('APP ID: ' + currentIdrevokeapp );
+        var row = $('#myleaveappsTable td').filter(function() {
+            return $(this).text() == currentIdrevokeapp ;
+        }).closest('tr');
+        
+        var leavetype = row.find('td').eq(1).text();
+        var dateapplied = formatDate(row.find('td').eq(2).text());
+        var leaveStartDate = formatDate(row.find('td').eq(3).text());
+        var leaveEndDate = formatDate(row.find('td').eq(4).text());
+        var leavedays = row.find('td').eq(5).text();
+        
+        var message = `Proceed to apply for Revocation of <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIdrevokeapp}</strong>]</span>?`;
+        
+
+        $('#revokeappLeaveApplication').html(message);
+
+
+    });
+
+
+
+    $(document).on('click', '#confirmrevokeleaveapp', function() {
+
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        $.ajax({
+            url: '/revoke_leave_application',  // Flask route to handle cancellation
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ app_id: currentIdrevokeapp }),
+            success: function(response) {
+                $('#revokeappModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                setTimeout(function() {
+                    alert(response.message);
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function (xhr, status, error) {
+            // Handle errors gracefully
+            $('#revokeappModal').modal('hide');
+            $('#loadingOverlay').hide();
+            alert('Error: Unable to submit your leave application revocation request. Please make sure that you do not have any pending leave applications and try again.');
+        }
+        });
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+    let currentIdreviveapp = null
+
+    $(document).on('click', '.revive-app-btn', function() {
+
+        const formatDate = (date) => {
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        };
+
+        currentIdreviveapp = $(this).data('id');
+        $('#apprevive-id').text('APP ID: ' + currentIdreviveapp);
+        var row = $('#leaveappsTableapprovedbyme td').filter(function() {
+            return $(this).text() == currentIdreviveapp;
+        }).closest('tr');
+
+        var name = row.find('td').eq(1).text();
+        var leavetype = row.find('td').eq(2).text();
+        var dateapplied = formatDate(row.find('td').eq(3).text());
+        var leaveStartDate = formatDate(row.find('td').eq(4).text());
+        var leaveEndDate = formatDate(row.find('td').eq(5).text());
+        var leavedays = row.find('td').eq(6).text();
+        
+        var message = `Proceed to Revive <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${name}</span></strong> applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIdreviveapp}</strong>]</span>?`;
+        
+
+        $('#reviveLeaveApplication').html(message);
+
+
+    });
+
+
+
+    $(document).on('click', '#confirmreviveleaveapp', function() {
+
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        $.ajax({
+            url: '/revive_leave_application',  // Flask route to handle cancellation
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ app_id: currentIdreviveapp }),
+            success: function(response) {
+                $('#reviveappModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                setTimeout(function() {
+                    alert(response.message);
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function (xhr, status, error) {
+            // Handle errors gracefully
+            $('#reviveappModal').modal('hide');
+            $('#loadingOverlay').hide();
+            alert('Error: Unable to revive the leave application. Please make sure that the employee does not have any pending leave applications and try again.');
+        }
+        });
+    });
+
+
+
+
+    let currentIdapproveapp = null
+
+    $(document).on('click', '.approve-app-btn', function() {
+
+        const formatDate = (date) => {
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        };
+
+        currentIdapproveapp = $(this).data('id');
+        $('#appapprove-id').text('APP ID: ' + currentIdapproveapp);
+        var row = $('#leaveappsTableapprovedbyme td').filter(function() {
+            return $(this).text() == currentIdapproveapp;
+        }).closest('tr');
+        
+        var leavetype = row.find('td').eq(2).text();
+        var name = row.find('td').eq(1).text();
+        var dateapplied = formatDate(row.find('td').eq(3).text());
+        var leaveStartDate = formatDate(row.find('td').eq(4).text());
+        var leaveEndDate = formatDate(row.find('td').eq(5).text());
+        var leavedays = row.find('td').eq(6).text();
+        
+        var message = `Proceed to Approve <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${name}</span> applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIdapproveapp}</strong>]</span>?`;
+        
+    
+        $('#confirmationMessageapproveapp').html(message);
+
+    });
+
+
+
+    let currentIddisapproveapp = null
+
+    $(document).on('click', '.disapprove-app-btn', function() {
+
+        const formatDate = (date) => {
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        };
+
+        currentIddisapproveapp = $(this).data('id');
+        $('#appdisapprove-id').text('APP ID: ' + currentIddisapproveapp);
+        var row = $('#leaveappsTableapprovedbyme td').filter(function() {
+            return $(this).text() == currentIddisapproveapp;
+        }).closest('tr');
+        
+        var leavetype = row.find('td').eq(2).text();
+        var name = row.find('td').eq(1).text();
+        var dateapplied = formatDate(row.find('td').eq(3).text());
+        var leaveStartDate = formatDate(row.find('td').eq(4).text());
+        var leaveEndDate = formatDate(row.find('td').eq(5).text());
+        var leavedays = row.find('td').eq(6).text();
+        
+        var message = `Proceed to Disapprove <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${name}</span> applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIddisapproveapp}</strong>]</span>?`;
+        
+    
+        $('#confirmationMessagedisapproveapp').html(message);
+
+    });
+
+
+    $(document).on('click', '#confirmapproveleaveapp', function() {
+
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        $.ajax({
+            url: '/approve_leave_application',  // Flask route to handle cancellation
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ app_id: currentIdapproveapp }),
+
+
+
+            success: function(response) {
+                $('#approveappModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                setTimeout(function() {
+                    alert(response.message);
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+                alert("Failed to approve the leave application. Please try again.");
+            }
+        });
+    });
+
+    
+    $(document).on('click', '#confirmdisapproveleaveapp', function() {
+
+        $('#loadingOverlay').show();  // Hide loading overlay
+
+        $.ajax({
+            url: '/disapprove_leave_application',  // Flask route to handle cancellation
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ app_id: currentIddisapproveapp }),
+
+
+
+            success: function(response) {
+                $('#disapproveappModal').modal('hide');  // Close the modal
+                $('#loadingOverlay').hide();  // Hide loading overlay
+                setTimeout(function() {
+                    alert(response.message);
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  // Reload the page or update the DOM as needed
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+                alert("Failed to disapprove the leave application. Please try again.");
+            }
+        });
+    });
+
+
+
+
+
+
+
+
+    document.getElementById('saverole').addEventListener('click', function () {
+    // Get the role dropdown element
+        const roleDropdown = document.getElementById('role-emp');
+
+        // Get the selected option
+        const selectedOption = roleDropdown.options[roleDropdown.selectedIndex];
+
+        // Check if a valid role is selected
+        if (selectedOption && selectedOption.value !== "") {
+            // Update the confirmation message with the selected option's text
+            document.getElementById('confirmationMessage').innerHTML =
+                `Proceed to assign the role <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${selectedOption.text}</strong> <br><br> to <strong><span style="margin-top:8px;">${currentFirstName}</span></strong>?`;
+
+            const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            confirmationModal.show();
+        } else {
+            // Show alert if no valid option is selected
+            alert("Please select a valid role before proceeding.");
+        }
+    });
+
+    // Update selected value dynamically (optional, for reference or debugging)
+    document.getElementById('role-emp').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        console.log(`Updated Selection: ${selectedOption.value} (${selectedOption.text})`);
+    });
+
+
+    document.getElementById('saveapprover').addEventListener('click', function () {
+        // Get the role dropdown element
+        const approverDropdown = document.getElementById('leaveapplicationsapprover-emp');
+
+        // Get the selected option
+        const selectedOption = approverDropdown.options[approverDropdown.selectedIndex];
+
+        // Check if a valid role is selected
+        if (selectedOption && selectedOption.value !== "") {
+            // Update the confirmation message with the selected option's text
+            document.getElementById('confirmationMessageapprover').innerHTML =
+                `Proceed to assign <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${selectedOption.text}</strong> <br><br> as the Leave Applications Approver for <br> <strong><span style="margin-top:8px;">${currentFirstName}</span></strong>?`;
+
+            // Show the confirmation modal
+            const confirmationModalapprover = new bootstrap.Modal(document.getElementById('confirmationModalapprover'));
+            confirmationModalapprover.show();
+        } else {
+            // Show alert if no valid option is selected
+            alert("Please select an approver before proceeding.");
+        }
+    });
+
+    // Update selected value dynamically (optional, for reference or debugging)
+    document.getElementById('leaveapplicationsapprover-emp').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        console.log(`Updated Selection: ${selectedOption.value} (${selectedOption.text})`);
+    });
+
+
+
+
+
+    document.getElementById('savebalance').addEventListener('click', function () {
+        // Get the input field for the leave days balance
+        const balanceDays = document.getElementById('leavedaysbalance-emp');
+
+        // Get the value entered in the input field
+        const inputValue = balanceDays.value;
+
+        // Check if a valid number is entered (non-empty and positive number)
+        if (inputValue && !isNaN(inputValue) && parseFloat(inputValue) > 0) {
+            // Update the confirmation message with the entered number
+            document.getElementById('confirmationMessagebalance').innerHTML =
+                `Proceed to update <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${inputValue}</strong> <br><br> as the new Leave Days Balance for <br> <strong><span style="margin-top:8px;">${currentFirstName}</span></strong>?`;
+
+            // Show the confirmation modal
+            const confirmationModalbalance = new bootstrap.Modal(document.getElementById('confirmationModalbalance'));
+            confirmationModalbalance.show();
+        } else {
+            // Show alert if no valid number is entered
+            alert("Please enter a valid Leave Days Balance before proceeding.");
+        }
+    });
+
+
+
+
+
+
+
+    document.getElementById('savebalance').addEventListener('click', function () {
+        // Get the input field for the leave days balance
+        const balanceDays = document.getElementById('leavedaysbalance-emp');
+
+        // Get the value entered in the input field
+        const inputValue = balanceDays.value;
+
+        // Check if a valid number is entered (non-empty and positive number)
+        if (inputValue && !isNaN(inputValue) && parseFloat(inputValue) > 0) {
+            // Update the confirmation message with the entered number
+            document.getElementById('confirmationMessagebalance').innerHTML =
+                `Proceed to update <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${inputValue}</strong> <br><br> as the new Leave Days Balance for <br> <strong><span style="margin-top:8px;">${currentFirstName}</span></strong>?`;
+
+            // Show the confirmation modal
+            const confirmationModalbalance = new bootstrap.Modal(document.getElementById('confirmationModalbalance'));
+            confirmationModalbalance.show();
+        } else {
+            // Show alert if no valid number is entered
+            alert("Please enter a valid Leave Days Balance before proceeding.");
+        }
+    });
+
+    // Update input value dynamically (optional, for reference or debugging)
+    document.getElementById('leavedaysbalance-emp').addEventListener('input', function () {
+        const inputValue = this.value;
+        console.log(`Updated Leave Days Balance: ${inputValue}`);
+    });
+
+
+
+    document.getElementById('formaddemployees').addEventListener('click', function() {
+        $('#manualaddemployeeModal').modal('show');
+
+
+    })
+
+
+
+    
+
+    document.getElementById('removeselectedemployees').addEventListener('click', function() {
+    // Get all the checkboxes that are checked
+    const checkboxes = document.querySelectorAll('input[name="employee_ids"]:checked');
+    const selectedEmployeeNames = [];
+    const selectedEmployeeIds = [];
+
+    // Loop through checked checkboxes and get the corresponding employee name and ID
+    checkboxes.forEach(function(checkbox) {
+        const row = checkbox.closest('tr');
+        const employeeName = row.querySelector('td:nth-child(2)').textContent; // Get the name from the second column
+        const employeeId = checkbox.value; // Assuming the checkbox value is the employee ID
+        selectedEmployeeNames.push(employeeName);
+        selectedEmployeeIds.push(employeeId);
+    });
+
+    // Check if at least one employee is selected
+    if (selectedEmployeeNames.length > 0) {
+        // Populate the confirmation message with the number of selected employees
+        const confirmationMessage = `Proceed to remove <strong>${selectedEmployeeNames.length}</strong> employee(s)?`;
+        document.getElementById('confirmationMessageremove').innerHTML = confirmationMessage;
+
+        // Populate the modal with selected employee names
+        const employeeListDiv = document.getElementById('selectedEmployeesList');
+        employeeListDiv.innerHTML = ''; // Clear any previous content
+
+        selectedEmployeeNames.forEach(function(name) {
+            const div = document.createElement('div');
+            div.textContent = name;
+            employeeListDiv.appendChild(div);
+        });
+
+        // Show the modal
+        $('#confirmationModalremove').modal('show');
+
+        // When 'Yes' is clicked, send the selected employee IDs to the server
+        document.getElementById('confirmERemove').addEventListener('click', function() {
+
+            const companyname = $('#company_name').val();  // Get the company name from the hidden input
+
+            fetch('/remove_employees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    employee_ids: selectedEmployeeIds,
+                    companyname: companyname  // Include the company name here
+
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the server response (e.g., display a success message or update the UI)
+                if (data.success) {
+                    alert('Employees removed successfully!');
+                    $('#confirmationModalremove').modal('hide');
+                    $('#loadingOverlay').show();
+                    location.reload();  
+
+                    // You can refresh the table or update the UI here as needed
+                } else {
+                    alert('Error occurred while removing employees.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        });
+
+    } else {
+        // Show an alert if no employees are selected
+        alert("Please select at least one employee to remove.");
+    }
+});
+
+
+
+
+
+});
+
+  </script>
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable for the main employees table
+        $('#employeesTable').DataTable({
+            paging: false,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+            pageLength: 8,       // Force max 5 entries per page
+            lengthChange: false, // Disable entries per page dropdown
+        });
+
+        $('#leaveappsTable').DataTable({
+            paging: true,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+            pageLength: 8,       // Force max 5 entries per page
+            lengthChange: false, // Disable entries per page dropdown
+            order: [[0, 'desc']] // Sort first column (index 0) in descending order
+
+        });
+
+        
+        
+        $('#myleaveappsTable').DataTable({
+            paging: true,        // Enable pagination
+            searching: true,     // Enable search
+            ordering: true,      // Enable sorting
+            info: true,          // Show table information
+            pageLength: 8,       // Force max 5 entries per page
+            lengthChange: false, // Disable entries per page dropdown
+            order: [[0, 'desc']] // Sort first column (index 0) in descending order
+        });
+
+        $('#leaveappsTableapprovedbyme').DataTable({
+            paging: true,        // Enable pagination
+            searching: true,     // Enable search
+            ordering: true,      // Enable sorting
+            info: true,          // Show table information
+            pageLength: 8,       // Force max 5 entries per page
+            lengthChange: false, // Disable entries per page dropdown
+            order: [[0, 'desc']] // Sort first column (index 0) in descending order
+
+        });
+
+        // Initialize DataTable for the accumulators table
+        $('#employeesaccumulatorsTable').DataTable({
+            paging: false,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+        });
+        
+        $('#removeemployeesTable').DataTable({
+            paging: false,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+        });
+
+        $('#employeesbulk1Table').DataTable({
+            paging: false,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+        });
+        
+        $('#employeesbulkbalancesTable').DataTable({
+            paging: false,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+        });
+        
+        $('#employeesbulkaccumulatorsTable').DataTable({
+            paging: false,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+        });
+
+        $('#bulkemployeesbulkaccumulatorsTable').DataTable({
+            paging: false,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+        });       
+
+    });
+</script>
+
+
+<script>
+    // Function to filter employees based on search input
+    function searchEmployees() {
+        var input, filter, list, items, label, i;
+        input = document.getElementById('employeeSearch');
+        filter = input.value.toLowerCase();
+        list = document.getElementById('employeeList');
+        items = list.getElementsByClassName('employee-item');
+
+        // Loop through the items and hide those that do not match the search query
+        for (i = 0; i < items.length; i++) {
+            label = items[i].getElementsByTagName('label')[0];
+            if (label) {
+                if (label.innerText.toLowerCase().indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+
+ 
+
+
+
+
+
+
+
+    const profileSelect = document.getElementById('profile-select');
+    const userContent = document.getElementById('user-content');
+    const adminContent = document.getElementById('admin-content');
+
+    function toggleProfileContent() {
+    const selectedProfile = profileSelect.value;
+    
+    if (selectedProfile === 'user') {
+        // Show user content, hide admin content with smooth transition
+        userContent.style.display = 'block';
+        adminContent.style.display = 'none';
+        setTimeout(() => {
+            userContent.classList.add('fade-in');
+            adminContent.classList.remove('fade-out');
+        }, 10);
+    } else if (selectedProfile === 'admin') {
+        // Show admin content, hide user content with smooth transition
+        adminContent.style.display = 'block';
+        userContent.style.display = 'none';
+        setTimeout(() => {
+            adminContent.classList.add('fade-in');
+            userContent.classList.remove('fade-out');
+        }, 10);
+    }
+
+    // Save selected profile in localStorage
+    localStorage.setItem('selectedProfile', selectedProfile);
+}
+
+// Event listener for profile select change
+profileSelect.addEventListener('change', toggleProfileContent);
+
+// On page load, retrieve the stored profile and apply it
+window.addEventListener('load', function() {
+    const savedProfile = localStorage.getItem('selectedProfile');
+    
+    if (savedProfile) {
+        profileSelect.value = savedProfile;
+        toggleProfileContent();  // Apply the stored profile on page load
+    }
+});
+
+
+</script>
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+    var leaveStatusData = JSON.parse('{{ leave_status_chart | tojson | safe }}');
+
+    var ctx = document.getElementById("leaveStatusChart").getContext("2d");
+    var chartInstance;
+
+    // Define color mapping for statuses
+    var statusColors = {
+        "Approved": "#28a745",
+        "Pending": "#ffab00",
+        "Declined": "#E30022",
+        "Cancelled": "#FF4D5A"
+    };
+
+    function updateChart() {
+        var selectedStatuses = [];
+        document.querySelectorAll(".status-filter:checked").forEach(checkbox => {
+            selectedStatuses.push(checkbox.value);
+        });
+
+        var filteredData = {};
+        selectedStatuses.forEach(status => {
+            filteredData[status] = leaveStatusData[status] || 0;
+        });
+
+        if (chartInstance) {
+            chartInstance.destroy(); // Destroy old chart before creating a new one
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: Object.keys(filteredData),
+                datasets: [{
+                    data: Object.values(filteredData),
+                    backgroundColor: Object.keys(filteredData).map(status => statusColors[status] || "#ccc")
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: true, position: "bottom" },
+                    datalabels: { 
+                        display: true, 
+                        color: "white", 
+                        font: { weight: "bold", size: 14 },
+                        formatter: (value, context) => value // Show raw value inside slices
+                    }
+                }
+            },
+            plugins: [ChartDataLabels] // Enable Data Labels Plugin
+        });
+    }
+
+    // Initial chart load
+    updateChart();
+
+    // Add event listeners to checkboxes
+    document.querySelectorAll(".status-filter").forEach(checkbox => {
+        checkbox.addEventListener("change", updateChart);
+    });
+});
+</script>
+
+</body>
+</html>
