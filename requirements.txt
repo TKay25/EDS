@@ -6,3 +6,4 @@ seaborn
 xhtml2pdf
 xlsxwriter
 gunicorn
+psycopg2
