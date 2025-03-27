@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexusTech Solutions | Enterprise Software Development</title>
+    <title>Echelon Digital Solutions | Enterprise Software Development</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -19,12 +19,12 @@
             --secondary: #FF6B00;
             --dark: #1A1A2E;
             --light: #F5F5F7;
-            --accent: #00A896;
+            --accent: #003366;
         }
         
         body {
             font-family: 'Poppins', sans-serif;
-            color: var(--dark);
+            color: var(--primary);
             background-color: var(--light);
             margin: 0;
             padding: 0;
@@ -33,7 +33,7 @@
 
         h1, h2, h3, h4, h5, h6 {
             font-weight: 700;
-            color: var(--dark);
+            color: var(--primary);
         }
 
         p {
@@ -87,6 +87,23 @@
             background-color: white !important;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
+        .navbar-brand {
+            display: flex;
+            align-items: center; /* Align items vertically */
+            gap: 10px; /* Add spacing between the logo and text */
+            text-decoration: none;
+        }
+
+        .logo {
+            height: 50px; /* Adjust logo size as needed */
+        }
+
+        .brand-text {
+            font-size: 20px; /* Adjust text size */
+            color: #003366; /* Adjust text color */
+            margin: 0;
+        }
+
 
         .navbar-brand img {
             height: 40px;
@@ -96,7 +113,7 @@
             font-weight: 500;
             padding: 8px 15px !important;
             margin: 0 5px;
-            color: var(--dark) !important;
+            color: var(--primary) !important;
         }
 
         .nav-link:hover {
@@ -178,6 +195,7 @@
         .btn-primary {
             background-color: var(--primary);
             border-color: var(--primary);
+            border-radius: 20px;
         }
 
         .btn-primary:hover {
@@ -188,7 +206,8 @@
         }
 
         .btn-outline-light:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: #00214d;
+            color: white;
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
@@ -290,7 +309,7 @@
             font-weight: 600;
             color: #777 !important;
             background: none;
-            border-radius: 8px;
+            border-radius: 20px;
             margin: 0 5px 15px;
         }
 
@@ -669,7 +688,8 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <img src="{{ url_for('static', filename='images/eds logo blue.png') }}" alt="Logo" class="logo" width="40%">
+                <img src="{{ url_for('static', filename='images/eds logo blue.png') }}" alt="Logo" class="logo">
+                <h1 class="brand-text">ECHELON DIGITAL SOLUTIONS</h1>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -735,11 +755,11 @@
                     <img src="https://via.placeholder.com/600x500?text=About+Us" alt="About NexusTech" class="img-fluid about-img">
                 </div>
                 <div class="col-lg-6">
-                    <h2 class="section-title">About NexusTech Solutions</h2>
-                    <p>Founded in 2010, NexusTech Solutions has been at the forefront of enterprise software development, helping organizations across industries transform their operations with cutting-edge technology solutions.</p>
+                    <h2 class="section-title">About Echelon Digital Solutions</h2>
+                    <p>Founded in 2023, Echelon Digital Solutions has been at the forefront of enterprise software development, helping organizations across industries transform their operations with cutting-edge technology solutions.</p>
                     <p>Our team of experienced developers, analysts, and consultants work closely with clients to understand their unique challenges and deliver tailored solutions that drive real business value.</p>
                     <ul class="about-features">
-                        <li><i class="bi bi-check-circle-fill"></i> 150+ Enterprise Clients Worldwide</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 34+ Enterprise Clients Nationwide</li>
                         <li><i class="bi bi-check-circle-fill"></i> ISO 27001 Certified for Information Security</li>
                         <li><i class="bi bi-check-circle-fill"></i> 24/7 Technical Support</li>
                         <li><i class="bi bi-check-circle-fill"></i> Custom Development & Integration Services</li>
@@ -863,10 +883,10 @@
                                         <li><i class="bi bi-check-circle-fill text-accent"></i> Real-time leave balance tracking</li>
                                         <li><i class="bi bi-check-circle-fill text-accent"></i> Customizable leave policies by department/role</li>
                                         <li><i class="bi bi-check-circle-fill text-accent"></i> Integration with payroll and HR systems</li>
-                                        <li><i class="bi bi-check-circle-fill text-accent"></i> Mobile access for employees and managers</li>
+                                        <li><i class="bi bi-check-circle-fill text-accent"></i> Mobile access for employees and managers via WhatsApp</li>
                                         <li><i class="bi bi-check-circle-fill text-accent"></i> Comprehensive reporting and analytics</li>
                                     </ul>
-                                    <a href="#" class="btn btn-primary mt-3">Request Demo</a>
+                                    <a  href="{{ url_for('explore_lms') }}" class="btn btn-primary mt-3">Explore <i class="bi bi-arrow-right"></i></a>
                                 </div>
                                 <div class="col-lg-6">
                                     <img src="https://via.placeholder.com/600x400?text=Leave+Management" alt="Leave Management System" class="img-fluid solution-img">

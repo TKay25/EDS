@@ -2179,6 +2179,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         # Redirect to the landing page or login page after logout
         return redirect(url_for('landingpage'))
 
+
+
             
 else:
     print('Connection to SQL failed')
@@ -2186,6 +2188,11 @@ else:
 @app.route('/')
 def landingpage():
     return render_template('main.html') 
+
+@app.route('/explore_lms')
+def explore_lms():
+    return render_template('index.html')  
+    
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=55)
