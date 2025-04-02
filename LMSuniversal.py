@@ -2189,7 +2189,7 @@ else:
 def landingpage():
     return render_template('main.html') 
 
-@app.route('/handle-privacy-click')
+@app.route('/echelon-digital-solutions-privacy-policy')
 def privacypolicy():
     return render_template('privacypolicy.html') 
 
