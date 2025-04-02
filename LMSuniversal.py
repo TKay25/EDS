@@ -2189,6 +2189,11 @@ else:
 def landingpage():
     return render_template('main.html') 
 
+@app.route('/handle-privacy-click')
+def privacypolicy():
+    return render_template('privacypolicy.html') 
+
+
 @app.route('/explore_lms')
 def explore_lms():
     return render_template('index.html')  
