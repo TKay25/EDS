@@ -272,6 +272,7 @@ def webhook():
         return jsonify({"status": "received"}), 200
     
 
+    return jsonify({"status": "received"}), 200
 
 
 def delete_all_tables():
