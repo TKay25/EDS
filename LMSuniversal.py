@@ -146,9 +146,11 @@ def webhook():
                                         """
                                         cursor.execute(query, (f"%{sender_number}",))
                                         result = cursor.fetchone()
-                                        
+
                                         if result:
                                             print(f"Credentials found in table: {table_name}")
+                                            first_column_value = result[0]
+                                            print(f"First column value: {first_column_value}")
                                             continue
                                         
                                         
@@ -160,27 +162,6 @@ def webhook():
                                 if connection:
                                     print('DONE')
 
-                            try:
-
-                                query = f"SELECT id, firstname, surname, whatsapp, leaveapprovername FROM {table_name};"
-                                cursor.execute(query)
-                                rows = cursor.fetchall()
-
-                                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Leave Approver Name"])
-                                print(df_employees)
-                                userdf = df_employees[df_employees['id'].astype(str).str.endswith(str(sender_number))].reset_index(drop=True)                            
-                                print("yeaarrrrr")
-                                print(userdf)
-                                
-
-
-                            except:
-
-                                send_whatsapp_message(
-                                    sender_id, 
-                                    "Oops, You are not registered by your employer.\n\n"
-                                    "Get in touch with your Leave Management Administrator for assistance."
-                                )
 
                             # 1. FIRST check for button clicks
                             if message.get("type") == "interactive":
