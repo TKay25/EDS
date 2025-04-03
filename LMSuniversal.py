@@ -126,7 +126,9 @@ def webhook():
                                 tables = cursor.fetchall()
 
                                 for table in tables:
-                                    table_name = table[0]
+                                    table_name = table[0]  # Extract table name from result tuple
+                                    
+                                    # Check if this table has both email and password columns
                                     cursor.execute("""
                                         SELECT COUNT(*)
                                         FROM information_schema.columns
@@ -135,15 +137,19 @@ def webhook():
                                         AND column_name IN ('email', 'password')
                                     """, (table_name,))
                                     
+                                    # If both columns exist (count = 2)
                                     if cursor.fetchone()[0] == 2:
-                                        cursor.execute("""
-                                            SELECT * FROM {} 
-                                            WHERE whatsapp LIKE %s
-                                        """.format(table_name), (f"%{sender_number}",))
+                                        # Then search this table for matching WhatsApp number
+                                        query = f"""
+                                            SELECT * FROM {table_name}
+                                            WHERE whatsapp::TEXT LIKE %s
+                                        """
+                                        cursor.execute(query, (f"%{sender_number}",))
                                         result = cursor.fetchone()
+                                        
                                         if result:
                                             print(f"Credentials found in table: {table_name}")
-                                            return jsonify({"data": result}), 200
+                                            return result
                 
                             finally:
                                 if connection:
