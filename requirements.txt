@@ -8,3 +8,5 @@ xlsxwriter
 gunicorn
 psycopg2
 openpyxl
+requests
+json
