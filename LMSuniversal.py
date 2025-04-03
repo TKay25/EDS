@@ -134,11 +134,11 @@ def webhook():
                                         FROM information_schema.columns
                                         WHERE table_schema = 'public'
                                         AND table_name = %s
-                                        AND column_name IN ('email', 'password')
+                                        AND column_name IN ('password')
                                     """, (table_name,))
                                     
                                     # If both columns exist (count = 2)
-                                    if cursor.fetchone()[0] == 2:
+                                    if cursor.fetchone()[0] == 1:
                                         # Then search this table for matching WhatsApp number
                                         query = f"""
                                             SELECT * FROM {table_name}
@@ -150,6 +150,9 @@ def webhook():
                                         if result:
                                             print(f"Credentials found in table: {table_name}")
                                             return result
+                                        
+                                    else: 
+                                        print('pakaipa')
                 
                             finally:
                                 if connection:
