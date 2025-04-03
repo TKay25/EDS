@@ -114,6 +114,9 @@ def webhook():
                             print(sender_number)
                             print(f"📱 Sender's WhatsApp number: {sender_number}")  # Debug log
 
+                            connection.reconnect()
+                            cursor = connection.cursor()
+                            
                             cursor.execute("SHOW TABLES")
                             tables = cursor.fetchall()
                             
