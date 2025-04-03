@@ -149,12 +149,11 @@ def webhook():
                                         
                                         if result:
                                             print(f"Credentials found in table: {table_name}")
+                                            return result
                                         
-   
+                                        
                                     else: 
                                         print('pakaipa')
-                                        return jsonify({"error": "Unsupported method"}), 405
-
                 
                             finally:
                                 if connection:
@@ -270,11 +269,8 @@ def webhook():
                                     "Echelon Bot Here 😎. Say 'hello' to start!"
                                 )
 
-
-
         return jsonify({"status": "received"}), 200
     
-    return jsonify({"status": "received"}), 200
 
 
 
