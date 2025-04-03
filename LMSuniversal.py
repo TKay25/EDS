@@ -149,9 +149,7 @@ def webhook():
                                         
                                         if result:
                                             print(f"Credentials found in table: {table_name}")
-                                            return jsonify({"data": result}), 200  # Convert to proper Flask response
                                         
-                                        return jsonify({"status": "received"}), 200
    
                                     else: 
                                         print('pakaipa')
@@ -272,7 +270,7 @@ def webhook():
                                     "Echelon Bot Here 😎. Say 'hello' to start!"
                                 )
 
-                                
+
 
         return jsonify({"status": "received"}), 200
     
