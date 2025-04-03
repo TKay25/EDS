@@ -93,7 +93,6 @@ def send_whatsapp_message(to, text, buttons=None):
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
-    """Webhook for receiving WhatsApp messages"""
     if request.method == "GET":
         if request.args.get("hub.verify_token") == VERIFY_TOKEN:
             return request.args.get("hub.challenge")
@@ -101,7 +100,7 @@ def webhook():
 
     if request.method == "POST":
         data = request.get_json()
-        print("📥 Full incoming data:", json.dumps(data, indent=2))  # Debug raw data
+        print("📥 Full incoming data:", json.dumps(data, indent=2))
 
         if data and "entry" in data:
             for entry in data["entry"]:
@@ -109,45 +108,46 @@ def webhook():
                     if "messages" in change["value"]:
                         for message in change["value"]["messages"]:
                             sender_id = message["from"]
-                            
-                            sender_number = sender_id[-9:]  # Takes last 9 characters (e.g., "12345678")
-                            print(sender_number)
-                            print(f"📱 Sender's WhatsApp number: {sender_number}")  # Debug log
+                            sender_number = sender_id[-9:]
+                            print(f"📱 Sender's WhatsApp number: {sender_number}")
 
                             external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
-                            database = 'lmsdatabase_8ag3'
-                
-                            connection = psycopg2.connect(external_database_url)
-                
-                            cursor = connection.cursor()
-                            
-                            cursor.execute("SHOW TABLES")
-                            tables = cursor.fetchall()
-                            
-                            for table in tables:
-                                table_name = table[0]
-                                query = f"""
-                                SELECT COUNT(*)
-                                FROM information_schema.columns
-                                WHERE table_schema = 'LMSuniversal_guarddoing'
-                                AND table_name = '{table_name}'
-                                AND column_name IN ('email', 'password')
-                                """
-                                cursor.execute(query)
-                                if cursor.fetchone()[0] == 2:  
-                                    query = f"""
-                                    SELECT * FROM {table_name}
-                                    WHERE whatsapp LIKE %s
-                                    """
-                                    # Use % wildcard at the end to match numbers that end with sender_number
-                                    cursor.execute(query, (f"%{sender_number}",))
-                                    result = cursor.fetchone()
-                                    
-                                    if result:
-                                        print(f"Credentials found in table: {table_name}")
-                                        return result
-                
 
+                            try:
+                                connection = psycopg2.connect(external_database_url)
+                                cursor = connection.cursor()
+
+                                # Get tables (PostgreSQL syntax)
+                                cursor.execute("""
+                                    SELECT table_name 
+                                    FROM information_schema.tables 
+                                    WHERE table_schema = 'public'
+                                """)
+                                tables = cursor.fetchall()
+
+                                for table in tables:
+                                    table_name = table[0]
+                                    cursor.execute("""
+                                        SELECT COUNT(*)
+                                        FROM information_schema.columns
+                                        WHERE table_schema = 'public'
+                                        AND table_name = %s
+                                        AND column_name IN ('email', 'password')
+                                    """, (table_name,))
+                                    
+                                    if cursor.fetchone()[0] == 2:
+                                        cursor.execute("""
+                                            SELECT * FROM {} 
+                                            WHERE whatsapp LIKE %s
+                                        """.format(table_name), (f"%{sender_number}",))
+                                        result = cursor.fetchone()
+                                        if result:
+                                            print(f"Credentials found in table: {table_name}")
+                                            return jsonify({"data": result}), 200
+                
+                            finally:
+                                if connection:
+                                    print('DONE')
 
                             query = f"SELECT id, firstname, surname, whatsapp, leaveapprovername FROM {table_name};"
                             cursor.execute(query)
