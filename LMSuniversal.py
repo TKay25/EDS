@@ -177,7 +177,6 @@ def webhook():
                                     print('DONE')
 
 
-                            # 1. FIRST check for button clicks
                             if message.get("type") == "interactive":
                                 interactive = message.get("interactive", {})
                                 if interactive.get("type") == "button_reply":
@@ -211,72 +210,72 @@ def webhook():
                                         )
                                         continue'''
 
-                                else:
+                            else:
 
-                                    text = message.get("text", {}).get("body", "").lower()
-                                    print(f"📨 Message from {sender_id}: {text}")
+                                text = message.get("text", {}).get("body", "").lower()
+                                print(f"📨 Message from {sender_id}: {text}")
+                                
+                                if "hello" in text.lower():
+                                    buttons = [
+                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply Leave"}},
+                                        {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                        {"type": "reply", "reply": {"id": "Check", "title": "Check Balance"}}
+                                    ]
+                                    send_whatsapp_message(
+                                        sender_id, 
+                                        f"Hello {first_name} {last_name} [ID: {id_user}] from {company_reg}! Echelon Bot Here 😎. How can I assist you?", 
+                                        buttons
+                                    )
+    
                                     
-                                    if "hello" in text.lower():
-                                        buttons = [
-                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply Leave"}},
-                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                            {"type": "reply", "reply": {"id": "Check", "title": "Check Balance"}}
-                                        ]
+                                elif "start" in text.lower():
+                                    # Extract the date part after "start"
+                                    date_part = text.split("start", 1)[1].strip()
+                                    
+                                    # Try to parse the date
+                                    try:
+                                        parsed_date = datetime.strptime(date_part, "%d %B %Y")
+                                        # If successful, respond with "yes"
+                                        send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
+                                            "Now Enter the last day that you will be on leave.Use the format: 👇🏻\n"
+                                            "`end 24 january 2025`"                      
+                                                            )
+                                        
+                                        # Here you would typically store the date and continue the leave application process
+                                    except ValueError:
+                                        # If parsing fails, respond with "no" and show correct format
                                         send_whatsapp_message(
-                                            sender_id, 
-                                            f"Hello {first_name} {last_name} [ID: {id_user}] from {company_reg}! Echelon Bot Here 😎. How can I assist you?", 
-                                            buttons
+                                            sender_id,
+                                            f"❌ No, incorrect message format, {first_name}. Please use:\n"
+                                            "`start 24 january 2025`\n"
+                                            "Example: `start 15 march 2024`"
                                         )
-        
-                                        
-                                    elif "start" in text.lower():
-                                        # Extract the date part after "start"
-                                        date_part = text.split("start", 1)[1].strip()
-                                        
-                                        # Try to parse the date
-                                        try:
-                                            parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                            # If successful, respond with "yes"
-                                            send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
-                                                "Now Enter the last day that you will be on leave.Use the format: 👇🏻\n"
-                                                "`end 24 january 2025`"                      
-                                                                )
-                                            
-                                            # Here you would typically store the date and continue the leave application process
-                                        except ValueError:
-                                            # If parsing fails, respond with "no" and show correct format
-                                            send_whatsapp_message(
-                                                sender_id,
-                                                f"❌ No, incorrect message format, {first_name}. Please use:\n"
-                                                "`start 24 january 2025`\n"
-                                                "Example: `start 15 march 2024`"
-                                            )
 
-                                    elif "end" in text.lower():
-                                        # Extract the date part after "start"
-                                        date_part = text.split("end", 1)[1].strip()
-                                        
-                                        # Try to parse the date
-                                        try:
-                                            parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                            # If successful, respond with "yes"
-                                            send_whatsapp_message(sender_id, f"✅ Great News {first_name}! \n\n Your Leave Application has been submitted successfully!\n\n"
-                                                "To Check the status of you leave application, Type Hello.")
-                                            # Here you would typically store the date and continue the leave application process
-                                        except ValueError:
-                                            # If parsing fails, respond with "no" and show correct format
-                                            send_whatsapp_message(
-                                                sender_id,
-                                                "❌ No, incorrect message format. Please use:\n"
-                                                "`end 24 january 2025`\n"
-                                                "Example: `end 15 march 2024`"
-                                            )
-
-                                    else:
+                                elif "end" in text.lower():
+                                    # Extract the date part after "start"
+                                    date_part = text.split("end", 1)[1].strip()
+                                    
+                                    # Try to parse the date
+                                    try:
+                                        parsed_date = datetime.strptime(date_part, "%d %B %Y")
+                                        # If successful, respond with "yes"
+                                        send_whatsapp_message(sender_id, f"✅ Great News {first_name}! \n\n Your Leave Application has been submitted successfully!\n\n"
+                                            "To Check the status of you leave application, Type Hello.")
+                                        # Here you would typically store the date and continue the leave application process
+                                    except ValueError:
+                                        # If parsing fails, respond with "no" and show correct format
                                         send_whatsapp_message(
-                                            sender_id, 
-                                            "Echelon Bot Here 😎. Say 'hello' to start!"
+                                            sender_id,
+                                            "❌ No, incorrect message format. Please use:\n"
+                                            "`end 24 january 2025`\n"
+                                            "Example: `end 15 march 2024`"
                                         )
+
+                                else:
+                                    send_whatsapp_message(
+                                        sender_id, 
+                                        "Echelon Bot Here 😎. Say 'hello' to start!"
+                                    )
 
         return jsonify({"status": "received"}), 200
     
