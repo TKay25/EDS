@@ -169,12 +169,7 @@ def webhook():
                                             )  
 
                                             return jsonify({"status": "received"}), 200
-                                    
-                                    else: 
-                                        send_whatsapp_message(
-                                            sender_id, 
-                                            "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
-                                        )  
+                                     
 
                                         return jsonify({"status": "received"}), 200                
                             finally:
