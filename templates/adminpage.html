@@ -873,28 +873,24 @@
                     <div class="mb-3">
                         <label for="whatsappNumber" class="form-label">WhatsApp Number</label>
                         <input type="number" class="form-control" id="whatsappNumber" 
-                               placeholder="Enter WhatsApp number with country code" 
-                               pattern="[0-9]{10,15}" required>
-                        <div class="invalid-feedback">Please enter a valid phone number</div>
+                               placeholder="Enter WhatsApp number">
                     </div>
                     
                     <div class="mb-3">
                         <label for="emailAddress" class="form-label">Email Address</label>
                         <input type="email" class="form-control" id="emailAddress" 
-                               placeholder="Enter email address" required>
-                        <div class="invalid-feedback">Please enter a valid email address</div>
+                               placeholder="Enter email address">
                     </div>
                     
                     <div class="mb-3">
                         <label for="residentialAddress" class="form-label">Residential Address</label>
                         <textarea class="form-control" id="residentialAddress" 
-                                  rows="3" placeholder="Enter full residential address" required></textarea>
-                        <div class="invalid-feedback">Please enter your address</div>
+                                  rows="3" placeholder="Enter full residential address"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="savenewinfo">Save Changes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="savenewinfo" style="width: max-content;">Save Changes</button>
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
             </div>
         </div>
