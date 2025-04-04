@@ -151,6 +151,7 @@ def webhook():
                                             id_user = result[0]  # Access first column value
                                             first_name = result[1]  # Access first column value
                                             last_name = result[2]  # Access first column value
+                                            company_reg = table_name[:-4]  # Removes last 4 characters
 
                                             print(id_user)
                                             print(first_name)
@@ -170,8 +171,12 @@ def webhook():
                                             return jsonify({"status": "received"}), 200
                                     
                                     else: 
-                                        print('pakaipa')
-                
+                                        send_whatsapp_message(
+                                            sender_id, 
+                                            "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
+                                        )  
+
+                                        return jsonify({"status": "received"}), 200                
                             finally:
                                 if connection:
                                     print('DONE')
@@ -205,7 +210,7 @@ def webhook():
                                 ]
                                 send_whatsapp_message(
                                     sender_id, 
-                                    f"Hello {first_name} {last_name}! Echelon Bot Here 😎. How can I assist you?", 
+                                    f"Hello {first_name} {last_name} [ID: {id_user}] from {company_reg}! Echelon Bot Here 😎. How can I assist you?", 
                                     buttons
                                 )
 
