@@ -190,7 +190,6 @@ def webhook():
                                             {"type": "reply", "reply": {"id": "annual", "title": "Annual Leave"}},
                                             {"type": "reply", "reply": {"id": "sick", "title": "Sick Leave"}},
                                             {"type": "reply", "reply": {"id": "maternity", "title": "Maternity Leave"}},
-                                            {"type": "reply", "reply": {"id": "other", "title": "Other Leave"}}
 
                                         ]
                                         send_whatsapp_message(
