@@ -197,7 +197,7 @@ def webhook():
                                             buttons
                                         )
                             
-                                    elif button_id in ["annual","sick","maternity"] :
+                                    elif button_id in ["Annual","Sick","Maternity"] :
 
                                         send_whatsapp_message(
                                             sender_id, 
