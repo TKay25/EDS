@@ -209,13 +209,28 @@ def webhook():
                                     buttons
                                 )
 
-                            elif "apply leave" in text.lower():
+                                '''elif "apply leave" in text.lower():
                                 send_whatsapp_message(
                                         sender_id, 
                                         f"Ok. When would you like your leave to start {first_name}?\n"
                                         "Please enter your response using the format: 👇🏻\n"
                                         "`start 24 january 2025`"
                                     )
+                                '''
+                                
+                            elif "apply leave" in text.lower():
+                                buttons = [
+                                    {"type": "reply", "reply": {"id": "annual", "title": "Annual Leave"}},
+                                    {"type": "reply", "reply": {"id": "sick", "title": "Sick Leave"}},
+                                    {"type": "reply", "reply": {"id": "maternity", "title": "Maternity Leave"}},
+                                    {"type": "reply", "reply": {"id": "other", "title": "Other Leave"}}
+
+                                ]
+                                send_whatsapp_message(
+                                    sender_id, 
+                                    f"{first_name}, kindly select the type of Leave that you are applying for.", 
+                                    buttons
+                                )
                                 
                             elif "start" in text.lower():
                                 # Extract the date part after "start"
