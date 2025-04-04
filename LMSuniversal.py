@@ -187,7 +187,7 @@ def webhook():
                                     if button_id == "Apply":
                                         send_whatsapp_message(
                                             sender_id, 
-                                            "Ok. When would you like your leave to start?\n"
+                                            f"Ok. When would you like your leave to start {first_name}?\n"
                                             "Please enter your response using the format: 👇🏻\n"
                                             "`start 24 january 2025`"
                                         )
@@ -211,12 +211,12 @@ def webhook():
 
                             elif "apply leave" in text.lower():
                                 send_whatsapp_message(
-                                    sender_id, 
-                                    f"Ok {first_name}, when would you like your leave to start?\n\n"
-                                    "Please enter your response using the format: 👇🏻\n"
-                                    "`start 24 january 2025`"
-                                )
-
+                                        sender_id, 
+                                        f"Ok. When would you like your leave to start {first_name}?\n"
+                                        "Please enter your response using the format: 👇🏻\n"
+                                        "`start 24 january 2025`"
+                                    )
+                                
                             elif "start" in text.lower():
                                 # Extract the date part after "start"
                                 date_part = text.split("start", 1)[1].strip()
