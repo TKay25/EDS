@@ -227,9 +227,6 @@ def webhook():
                                     f"Hello {first_name} {last_name} [ID: {id_user}] from {company_reg}! Echelon Bot Here 😎. How can I assist you?", 
                                     buttons
                                 )
-
-                                
-                            elif "apply leave" in text.lower():
  
                                 
                             elif "start" in text.lower():
