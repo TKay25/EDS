@@ -186,9 +186,9 @@ def webhook():
                                     if button_id == "Apply":
 
                                         buttons = [
-                                            {"type": "reply", "reply": {"id": "annual", "title": "Annual Leave"}},
-                                            {"type": "reply", "reply": {"id": "sick", "title": "Sick Leave"}},
-                                            {"type": "reply", "reply": {"id": "maternity", "title": "Maternity Leave"}},
+                                            {"type": "reply", "reply": {"id": "Annual", "title": "Annual Leave"}},
+                                            {"type": "reply", "reply": {"id": "Sick", "title": "Sick Leave"}},
+                                            {"type": "reply", "reply": {"id": "Maternity", "title": "Maternity Leave"}},
 
                                         ]
                                         send_whatsapp_message(
@@ -197,18 +197,15 @@ def webhook():
                                             buttons
                                         )
                             
+                                    elif button_id in ["annual","sick","maternity"] :
 
-
-
-
-
-                                        '''send_whatsapp_message(
+                                        send_whatsapp_message(
                                             sender_id, 
-                                            f"Ok. When would you like your leave to start {first_name}?\n"
+                                            f"Ok. When would you like your {button_id} leave to start {first_name}?\n"
                                             "Please enter your response using the format: 👇🏻\n"
                                             "`start 24 january 2025`"
                                         )
-                                        continue'''
+                                        continue
 
                             else:
 
@@ -223,7 +220,7 @@ def webhook():
                                     ]
                                     send_whatsapp_message(
                                         sender_id, 
-                                        f"Hello {first_name} {last_name} [ID: {id_user}] from {company_reg}! Echelon Bot Here 😎. How can I assist you?", 
+                                        f"Hello {first_name} {last_name} [ID: {id_user}] from {company_reg}!\n\n Echelon Bot Here 😎. How can I assist you?", 
                                         buttons
                                     )
     
@@ -237,7 +234,7 @@ def webhook():
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
                                         # If successful, respond with "yes"
                                         send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
-                                            "Now Enter the last day that you will be on leave.Use the format: 👇🏻\n"
+                                            f"Now Enter the last day that you will be on {button_id} leave.Use the format: 👇🏻\n"
                                             "`end 24 january 2025`"                      
                                                             )
                                         
