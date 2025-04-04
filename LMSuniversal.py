@@ -148,13 +148,24 @@ def webhook():
                                         result = cursor.fetchone()
 
                                         if result:
+                                            id_user = result[0]  # Access first column value
+                                            first_name = result[1]  # Access first column value
+                                            last_name = result[2]  # Access first column value
+
+                                            print(id_user)
+                                            print(first_name)
+                                            print(last_name)
+
                                             print(f"Credentials found in table: {table_name}")
                                             first_column_value = result[0]
                                             print(f"First column value: {first_column_value}")
                                             continue
                                         
-                                        
-                                        
+                                        else: 
+                                            send_whatsapp_message(
+                                                sender_id, 
+                                                "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
+                                            )                                        
                                     else: 
                                         print('pakaipa')
                 
