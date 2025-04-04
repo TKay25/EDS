@@ -165,7 +165,10 @@ def webhook():
                                             send_whatsapp_message(
                                                 sender_id, 
                                                 "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
-                                            )                                        
+                                            )  
+
+                                            return jsonify({"status": "received"}), 200
+                                    
                                     else: 
                                         print('pakaipa')
                 
@@ -202,14 +205,14 @@ def webhook():
                                 ]
                                 send_whatsapp_message(
                                     sender_id, 
-                                    "Hello! Echelon Bot Here 😎. How can I assist you?", 
+                                    f"Hello {first_name} {last_name}! Echelon Bot Here 😎. How can I assist you?", 
                                     buttons
                                 )
 
                             elif "apply leave" in text.lower():
                                 send_whatsapp_message(
                                     sender_id, 
-                                    "Ok. When would you like your leave to start?\n\n"
+                                    f"Ok {first_name}, when would you like your leave to start?\n\n"
                                     "Please enter your response using the format: 👇🏻\n"
                                     "`start 24 january 2025`"
                                 )
@@ -232,7 +235,7 @@ def webhook():
                                     # If parsing fails, respond with "no" and show correct format
                                     send_whatsapp_message(
                                         sender_id,
-                                        "❌ No, incorrect message format. Please use:\n"
+                                        f"❌ No, incorrect message format, {first_name}. Please use:\n"
                                         "`start 24 january 2025`\n"
                                         "Example: `start 15 march 2024`"
                                     )
@@ -245,7 +248,7 @@ def webhook():
                                 try:
                                     parsed_date = datetime.strptime(date_part, "%d %B %Y")
                                     # If successful, respond with "yes"
-                                    send_whatsapp_message(sender_id, "✅ Leave Application Successful!\n\n"
+                                    send_whatsapp_message(sender_id, f"✅ Great News {first_name}! \n\n Your Leave Application has been submitted successfully!\n\n"
                                         "To Check the status of you leave application, Type Hello.")
                                     # Here you would typically store the date and continue the leave application process
                                 except ValueError:
