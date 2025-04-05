@@ -55,9 +55,16 @@ CREATE TABLE whatsapptempapplication (
     enddate date
 );
 """
+
+cursor.execute("""
+    ALTER TABLE whatsapptempapplication
+    ADD COLUMN IF NOT EXISTS companynamewa VARCHAR(255);
+""")
+
+
 #cursor.execute(create_table_query)
-#connection.commit()
-#print(f"Table whatsapptempapplication created successfully!")
+connection.commit()
+print(f"column added to Table whatsapptempapplication successfully!")
 
 def send_whatsapp_message(to, text, buttons=None):
     """Function to send a WhatsApp message using Meta API, with optional buttons."""
@@ -215,10 +222,14 @@ def webhook():
 
 
                                     elif button_id in ["Annual","Sick","Maternity"] :
-                                        button_id_leave_type = button_id
-                                        session['button_id_leave_type'] = str(button_id_leave_type)
-                                        yy = session.get("button_id_leave_type")
-                                        print(f" yearrrrrrrrrrrrrrrrrrrrrrrrrrr  {yy}")
+                                        button_id_leave_type = str(button_id)
+
+                                        cursor.execute(f"""
+                                            INSERT INTO whatsapptempapplication (empidwa, leavetypewa)
+                                            VALUES (%s, %s)
+                                        """, (id_user, button_id_leave_type))
+                                    
+                                        connection.commit()
 
                                         send_whatsapp_message(
                                             sender_id, 
@@ -249,7 +260,17 @@ def webhook():
 
                                 elif "start" in text.lower():
                                     date_part = text.split("start", 1)[1].strip()
-                                    button_id_leave_type = session.get('button_id_leave_type')
+
+                                    query = f"""
+                                        SELECT empidwa, leavetypewa FROM whatsapptempapplication
+                                    """
+                                    cursor.execute(query)
+                                    result = cursor.fetchone()
+
+                                    if result:
+                                        id_user = result[0]  
+                                        first_name = result[1] 
+
 
                                     try:
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
