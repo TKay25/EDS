@@ -46,6 +46,19 @@ PHONE_NUMBER_ID = "613718218490566"
 VERIFY_TOKEN = "678529848010943"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
+create_table_query = f"""
+CREATE TABLE whatsapptempapplication (
+    id SERIAL PRIMARY KEY,
+    empidwa INT,
+    leavetypewa VARCHAR (100),
+    startdate date,
+    enddate date
+);
+"""
+cursor.execute(create_table_query)
+connection.commit()
+print(f"Table whatsapptempapplication created successfully!")
+
 def send_whatsapp_message(to, text, buttons=None):
     """Function to send a WhatsApp message using Meta API, with optional buttons."""
     headers = {
