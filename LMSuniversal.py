@@ -41,7 +41,7 @@ connection = psycopg2.connect(external_database_url)
 cursor = connection.cursor()
 
 # WhatsApp API Credentials (Replace with your actual credentials)
-ACCESS_TOKEN = "EAATESj1oB5YBO586ZCOD5stZC3n9dZBU0LoujuZAUU25VQuxDa4AQxlZBvOCKeZAiSQIUQRoikmeaB7iJjiTfiWQsoKUk2LfteTZCRqA0fb0hwkDl7mAAs3eY4ylKfMEfa3DDcinURg9xEnQ1NfxPfdHCXGuXxK5KaZAxtbc8XjL7cGevS6sgcikTEekUsAaWH449VQLGnoqARwgKLtDXgjoRvNAVHwZD"
+ACCESS_TOKEN = "EAATESj1oB5YBO5GZBw6SjfMKmJaixS4l40l5Dwx3ZBdMbNq1d6BCIJJOwvilcHH7A5FQHFn2XjYvHHJiAxZAnRkOl7HmCRCs0F6IW7T39JskudSonrMkNuHb9xqn2htu6cFNtZBWXZAbGvH1zK2rXdkGyKOZBuZAZACc2kR13cFzZAaZA4k7tgxGdTq6vNxLvmGbACzwLSZACLTOlV0ZACVaGYHuZAU8HUkUZD"
 PHONE_NUMBER_ID = "613718218490566"
 VERIFY_TOKEN = "678529848010943"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
@@ -110,6 +110,8 @@ def webhook():
                             sender_id = message["from"]
                             sender_number = sender_id[-9:]
                             print(f"📱 Sender's WhatsApp number: {sender_number}")
+                            session['client'] = str(sender_number)
+
 
                             external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
 
@@ -201,7 +203,7 @@ def webhook():
 
                                         send_whatsapp_message(
                                             sender_id, 
-                                            f"Ok. When would you like your {button_id} leave to start {first_name}?\n"
+                                            f"Ok. When would you like your {button_id} Leave to start {first_name}?\n\n"
                                             "Please enter your response using the format: 👇🏻\n"
                                             "`start 24 january 2025`"
                                         )
@@ -234,7 +236,7 @@ def webhook():
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
                                         # If successful, respond with "yes"
                                         send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
-                                            f"Now Enter the last day that you will be on {button_id} leave.Use the format: 👇🏻\n"
+                                            f"Now Enter the last day that you will be on {button_id} Leave.Use the format: 👇🏻\n"
                                             "`end 24 january 2025`"                      
                                                             )
                                         
