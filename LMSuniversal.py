@@ -204,6 +204,8 @@ def webhook():
                                     elif button_id in ["Annual","Sick","Maternity"] :
                                         button_id_leave_type = button_id
                                         session['button_id_leave_type'] = str(button_id_leave_type)
+                                        yy = session.get("button_id_leave_type")
+                                        print(f" yearrrrrrrrrrrrrrrrrrrrrrrrrrr  {yy}")
 
                                         send_whatsapp_message(
                                             sender_id, 
