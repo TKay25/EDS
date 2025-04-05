@@ -200,6 +200,8 @@ def webhook():
                                         )
                             
                                     elif button_id in ["Annual","Sick","Maternity"] :
+                                        button_id_leave_type = button_id
+                                        session['button_id_leave_type'] = str(button_id_leave_type)
 
                                         send_whatsapp_message(
                                             sender_id, 
@@ -230,13 +232,14 @@ def webhook():
                                 elif "start" in text.lower():
                                     # Extract the date part after "start"
                                     date_part = text.split("start", 1)[1].strip()
-                                    
+                                    button_id_leave_type = session.get('button_id_leave_type')
+
                                     # Try to parse the date
                                     try:
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
                                         # If successful, respond with "yes"
                                         send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
-                                            f"Now Enter the last day that you will be on {button_id} Leave.Use the format: 👇🏻\n"
+                                            f"Now Enter the last day that you will be on {button_id_leave_type} Leave.Use the format: 👇🏻\n"
                                             "`end 24 january 2025`"                      
                                                             )
                                         
