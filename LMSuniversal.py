@@ -107,9 +107,14 @@ def webhook():
                 for change in entry["changes"]:
                     if "messages" in change["value"]:
                         for message in change["value"]["messages"]:
+
+                            conversation_id = str(uuid.uuid4())
+                            session['conversation_id'] = conversation_id
+                        
+
                             sender_id = message["from"]
                             sender_number = sender_id[-9:]
-                            print(f"📱 Sender's WhatsApp number: {sender_number}")
+                            print(f"📱 Conversation {conversation_id}: Sender's WhatsApp number: {sender_number}")
                             session['client'] = str(sender_number)
 
 
