@@ -55,9 +55,9 @@ CREATE TABLE whatsapptempapplication (
     enddate date
 );
 """
-cursor.execute(create_table_query)
-connection.commit()
-print(f"Table whatsapptempapplication created successfully!")
+#cursor.execute(create_table_query)
+#connection.commit()
+#print(f"Table whatsapptempapplication created successfully!")
 
 def send_whatsapp_message(to, text, buttons=None):
     """Function to send a WhatsApp message using Meta API, with optional buttons."""
