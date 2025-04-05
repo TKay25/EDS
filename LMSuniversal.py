@@ -41,7 +41,7 @@ connection = psycopg2.connect(external_database_url)
 cursor = connection.cursor()
 
 # WhatsApp API Credentials (Replace with your actual credentials)
-ACCESS_TOKEN = "EAATESj1oB5YBO5GZBw6SjfMKmJaixS4l40l5Dwx3ZBdMbNq1d6BCIJJOwvilcHH7A5FQHFn2XjYvHHJiAxZAnRkOl7HmCRCs0F6IW7T39JskudSonrMkNuHb9xqn2htu6cFNtZBWXZAbGvH1zK2rXdkGyKOZBuZAZACc2kR13cFzZAaZA4k7tgxGdTq6vNxLvmGbACzwLSZACLTOlV0ZACVaGYHuZAU8HUkUZD"
+ACCESS_TOKEN = "EAATESj1oB5YBOy22duZCZBJx5bXqEVBZCQLY6tyN9fbif4krYaWdNiZB0EZBkMjqcBKXhlnU823McWUMcputyrcTZClFBdf0WvMad6WzLYtEmXf1ovPUoAdIty1hxw8iPV96KSIJXhZBmhNOQgl6K27nxAdQsVuHxga8klXwqzDIKqa7sIvOCjDybVOLDhIBxWjh0ixnFrYoUYZBDXoICmsKYSexzt0ZD"
 PHONE_NUMBER_ID = "613718218490566"
 VERIFY_TOKEN = "678529848010943"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
@@ -119,7 +119,6 @@ def webhook():
                                 connection = psycopg2.connect(external_database_url)
                                 cursor = connection.cursor()
 
-                                # Get tables (PostgreSQL syntax)
                                 cursor.execute("""
                                     SELECT table_name 
                                     FROM information_schema.tables 
@@ -128,9 +127,8 @@ def webhook():
                                 tables = cursor.fetchall()
 
                                 for table in tables:
-                                    table_name = table[0]  # Extract table name from result tuple
+                                    table_name = table[0]  
                                     
-                                    # Check if this table has both email and password columns
                                     cursor.execute("""
                                         SELECT COUNT(*)
                                         FROM information_schema.columns
@@ -139,9 +137,7 @@ def webhook():
                                         AND column_name IN ('password')
                                     """, (table_name,))
                                     
-                                    # If both columns exist (count = 2)
                                     if cursor.fetchone()[0] == 1:
-                                        # Then search this table for matching WhatsApp number
                                         query = f"""
                                             SELECT * FROM {table_name}
                                             WHERE whatsapp::TEXT LIKE %s
@@ -150,10 +146,10 @@ def webhook():
                                         result = cursor.fetchone()
 
                                         if result:
-                                            id_user = result[0]  # Access first column value
-                                            first_name = result[1]  # Access first column value
-                                            last_name = result[2]  # Access first column value
-                                            company_reg = table_name[:-4]  # Removes last 4 characters
+                                            id_user = result[0]  
+                                            first_name = result[1]  
+                                            last_name = result[2]  
+                                            company_reg = table_name[:-4]  
 
                                             print(id_user)
                                             print(first_name)
@@ -168,12 +164,12 @@ def webhook():
                                             send_whatsapp_message(
                                                 sender_id, 
                                                 "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
-                                            )  
-
-                                            return jsonify({"status": "received"}), 200
-                                     
-
-                                        return jsonify({"status": "received"}), 200                
+                                            )
+                                            
+                                            return jsonify({"status": "received"}), 200 
+                                            
+                                        return jsonify({"status": "received"}), 200    
+                                               
                             finally:
                                 if connection:
                                     print('DONE')
@@ -186,19 +182,20 @@ def webhook():
                                     print(f"🔘 Button clicked: {button_id}")
                                     
                                     if button_id == "Apply":
-
+                            
                                         buttons = [
                                             {"type": "reply", "reply": {"id": "Annual", "title": "Annual Leave"}},
                                             {"type": "reply", "reply": {"id": "Sick", "title": "Sick Leave"}},
                                             {"type": "reply", "reply": {"id": "Maternity", "title": "Maternity Leave"}},
-
                                         ]
+
                                         send_whatsapp_message(
                                             sender_id, 
                                             f"{first_name}, kindly select the type of Leave that you are applying for.", 
                                             buttons
                                         )
-                            
+
+
                                     elif button_id in ["Annual","Sick","Maternity"] :
                                         button_id_leave_type = button_id
                                         session['button_id_leave_type'] = str(button_id_leave_type)
@@ -209,6 +206,7 @@ def webhook():
                                             "Please enter your response using the format: 👇🏻\n"
                                             "`start 24 january 2025`"
                                         )
+
                                         continue
 
                             else:
@@ -227,25 +225,20 @@ def webhook():
                                         f"Hello {first_name} {last_name} [ID: {id_user}] from {company_reg}!\n\n Echelon Bot Here 😎. How can I assist you?", 
                                         buttons
                                     )
-    
-                                    
+
+
                                 elif "start" in text.lower():
-                                    # Extract the date part after "start"
                                     date_part = text.split("start", 1)[1].strip()
                                     button_id_leave_type = session.get('button_id_leave_type')
 
-                                    # Try to parse the date
                                     try:
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                        # If successful, respond with "yes"
                                         send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
                                             f"Now Enter the last day that you will be on {button_id_leave_type} Leave.Use the format: 👇🏻\n"
                                             "`end 24 january 2025`"                      
                                                             )
                                         
-                                        # Here you would typically store the date and continue the leave application process
                                     except ValueError:
-                                        # If parsing fails, respond with "no" and show correct format
                                         send_whatsapp_message(
                                             sender_id,
                                             f"❌ No, incorrect message format, {first_name}. Please use:\n"
@@ -254,18 +247,13 @@ def webhook():
                                         )
 
                                 elif "end" in text.lower():
-                                    # Extract the date part after "start"
                                     date_part = text.split("end", 1)[1].strip()
                                     
-                                    # Try to parse the date
                                     try:
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                        # If successful, respond with "yes"
                                         send_whatsapp_message(sender_id, f"✅ Great News {first_name}! \n\n Your Leave Application has been submitted successfully!\n\n"
                                             "To Check the status of you leave application, Type Hello.")
-                                        # Here you would typically store the date and continue the leave application process
                                     except ValueError:
-                                        # If parsing fails, respond with "no" and show correct format
                                         send_whatsapp_message(
                                             sender_id,
                                             "❌ No, incorrect message format. Please use:\n"
