@@ -41,7 +41,7 @@ connection = psycopg2.connect(external_database_url)
 cursor = connection.cursor()
 
 # WhatsApp API Credentials (Replace with your actual credentials)
-ACCESS_TOKEN = "EAATESj1oB5YBOy22duZCZBJx5bXqEVBZCQLY6tyN9fbif4krYaWdNiZB0EZBkMjqcBKXhlnU823McWUMcputyrcTZClFBdf0WvMad6WzLYtEmXf1ovPUoAdIty1hxw8iPV96KSIJXhZBmhNOQgl6K27nxAdQsVuHxga8klXwqzDIKqa7sIvOCjDybVOLDhIBxWjh0ixnFrYoUYZBDXoICmsKYSexzt0ZD"
+ACCESS_TOKEN = "EAATESj1oB5YBOxR7dThQsRH8ZCYg6bjb1UQkU5xeaZCkAhxEWhFrKVqZALMObTRJr9RI9mhUsC2MJZCaXZAovEk5V1kgKhjId2bQVzzmEK0nBqKO0jBLg1WL7m4TGL9p3tN4pCfJFkZC2cSroy6mhiZAkGytIyTrXelN1kmCc4INmGryUVZCnLTZB6XiVQEdeJCBYuZB9jgdWFsJpNLYOboL3AgGxNGw16"
 PHONE_NUMBER_ID = "613718218490566"
 VERIFY_TOKEN = "678529848010943"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
