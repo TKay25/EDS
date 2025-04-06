@@ -119,6 +119,7 @@ def webhook():
         return "Verification failed", 403
 
     if request.method == "POST":
+        global today_date
         data = request.get_json()
         print("📥 Full incoming data:", json.dumps(data, indent=2))
 
@@ -224,9 +225,97 @@ def webhook():
                                     elif button_id == "Submitapp":
                             
                                         try:
-                                            parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                            send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {company_reg}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                                "To Check the status of you leave application, type `Hello` then select `Track Application`.")
+
+                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+
+                                            query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                            cursor.execute(query)
+                                            rows = cursor.fetchall()
+
+                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])    
+
+                                            if len(df_employeesappspendingcheck) == 0:
+
+                                                cursor.execute("""
+                                                    SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                    WHERE empidwa = %s
+                                                """, (str(id_user)))
+                                        
+                                                result = cursor.fetchone()
+
+                                                appid = result[0]
+                                                leavetype = result[2]
+                                                startdate = result[3]
+                                                enddate = result[4]
+                                                table_name = f"{company_reg}main"
+
+                                                if isinstance(startdate, str):
+                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                if isinstance(enddate, str):
+                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                business_days = 0
+                                                current_date = startdate
+
+                                                while current_date <= enddate:
+                                                    if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                        business_days += 1
+                                                    current_date += timedelta(days=1)  # Use timedelta directly
+
+
+
+                                                query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+                                                cursor.execute(query)
+                                                rows = cursor.fetchall()
+
+                                                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
+                                                print(df_employees)
+                                                userdf = df_employees[df_employees['id'] == str(id_user)].reset_index()
+                                                print("yeaarrrrr")
+                                                print(userdf)
+                                                firstname = userdf.iat[0,2]
+                                                surname = userdf.iat[0,3]
+                                                whatsapp = userdf.iat[0,4]
+                                                address = userdf.iat[0,6]
+                                                email = userdf.iat[0,5]
+                                                fullnamedisp = firstname + ' ' + surname
+                                                leaveapprovername = userdf.iat[0,8]
+                                                leaveapproverid = userdf.iat[0,9]
+                                                leaveapproveremail = userdf.iat[0, 10]
+                                                leaveapproverwhatsapp = userdf.iat[0,11]
+                                                role = userdf.iat[0,7]
+                                                leavedaysbalance = userdf.iat[0,12]
+                                                print('check')
+
+                                                leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+
+                                                status = "Pending"
+
+                                                insert_query = f"""
+                                                INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                """
+                                                cursor.execute(insert_query, (id_user, first_name, last_name, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, leavedaysbalance, today_date, startdate, enddate, int(business_days), int(leavedaysbalancebf), status))
+                                                connection.commit()
+
+
+
+                                                query = f"SELECT appid FROM {table_name_apps_pending_approval};"
+                                                cursor.execute(query)
+                                                rows = cursor.fetchall()
+
+                                                df_employees = pd.DataFrame(rows, columns=["id"])
+                                                leaveappid = df_employees.iat[0,0]
+
+                                                parsed_date = datetime.strptime(date_part, "%d %B %Y")
+                                                send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {company_reg}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                                    f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                                    f"A Notification has been sent to `{leaveapprovername}`  on `0{leaveapproverwhatsapp}` to decide on  your application.\n\n"
+                                                    "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+
+                                            else:
+                                                print("leave app submission failed")
+
                                         except ValueError:
                                             send_whatsapp_message(
                                                 sender_id,
@@ -234,10 +323,6 @@ def webhook():
                                                 "`end 24 january 2025`\n"
                                                 "Example: `end 15 march 2024`"
                                             )
-
-
-
-
 
 
                                     elif button_id == "Track":
@@ -389,7 +474,7 @@ def webhook():
                                     ]
                                     send_whatsapp_message(
                                         sender_id, 
-                                        f"Do you wish to submit your `{leavetype} Leave Application` for leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
+                                        f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
                                         buttons
                                     )
 
