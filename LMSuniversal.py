@@ -334,6 +334,7 @@ def webhook():
                                         WHERE empidwa = %s
                                     """, (date_part, id_user))
 
+
                                     cursor.execute("""
                                         SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
                                         WHERE empidwa = %s
@@ -361,17 +362,47 @@ def webhook():
 
                                     print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
 
-                                    try:
+
+                                    buttons = [
+                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                    ]
+                                    send_whatsapp_message(
+                                        sender_id, 
+                                        f"Do you wish to submit your `{leavetype} Leave Application` for leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
+                                        buttons
+                                    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                    '''try:
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
                                         send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {company_reg}! \n\n Your {leavetype} Leave Application for {business_days} days from {startdate} to {enddate} has been submitted successfully!\n\n"
-                                            "To Check the status of you leave application, Type Hello the select `Track Application`.")
+                                            "To Check the status of you leave application, type `Hello` then select `Track Application`.")
                                     except ValueError:
                                         send_whatsapp_message(
                                             sender_id,
                                             "❌ No, incorrect message format. Please use:\n"
                                             "`end 24 january 2025`\n"
                                             "Example: `end 15 march 2024`"
-                                        )
+                                        )'''
+
+
+
+
+
+
 
                                 else:
                                     send_whatsapp_message(
