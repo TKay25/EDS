@@ -221,6 +221,20 @@ def webhook():
                                             buttons
                                         )
 
+                                    elif button_id == "Track":
+                            
+                                        buttons = [
+                                            {"type": "reply", "reply": {"id": "Check", "title": "Check Status"}},
+                                            {"type": "reply", "reply": {"id": "Remind", "title": "Remind Approver"}},
+                                            {"type": "reply", "reply": {"id": "Cancel", "title": "Cancel Application"}},
+                                        ]
+
+
+                                        send_whatsapp_message(
+                                            sender_id, 
+                                            f"{first_name}, kindly select a Leave Application Tracker option.", 
+                                            buttons
+                                        )
 
                                     elif button_id in ["Annual","Sick","Maternity"] :
                                         button_id_leave_type = str(button_id)
@@ -234,7 +248,7 @@ def webhook():
 
                                         cursor.execute(f"""
                                             INSERT INTO whatsapptempapplication (empidwa, leavetypewa, companynamewa)
-                                            VALUES (%s, %s,. %s)
+                                            VALUES (%s, %s, %s)
                                         """, (id_user, button_id_leave_type, company_reg))
 
                                         connection.commit()
