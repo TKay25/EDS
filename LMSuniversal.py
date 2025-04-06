@@ -273,7 +273,7 @@ def webhook():
                                     cursor.execute("""
                                         SELECT empidwa, leavetypewa FROM whatsapptempapplication
                                         WHERE empidwa = %s
-                                    """, (id_user))
+                                    """, (str(id_user)))
                             
                                     result = cursor.fetchone()
 
