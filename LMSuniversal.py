@@ -233,6 +233,14 @@ def webhook():
                                         button_id_leave_type = str(button_id)
 
                                         cursor.execute("""
+                                            DELETE FROM whatsapptempapplication
+                                            WHERE empidwa = %s
+                                        """, (str(id_user),))  
+                                        
+                                        connection.commit()
+
+
+                                        cursor.execute("""
                                             UPDATE whatsapptempapplication
                                             SET leavetypewa = %s
                                             WHERE empidwa = %s
@@ -314,11 +322,44 @@ def webhook():
 
                                 elif "end" in text.lower():
                                     date_part = text.split("end", 1)[1].strip()
-                                    
+
+                                    cursor.execute("""
+                                        UPDATE whatsapptempapplication
+                                        SET enddate = %s
+                                        WHERE empidwa = %s
+                                    """, (date_part, id_user))
+
+                                    cursor.execute("""
+                                        SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                        WHERE empidwa = %s
+                                    """, (str(id_user)))
+                            
+                                    result = cursor.fetchone()
+
+                                    appid = result[0]
+                                    leavetype = result[2]
+                                    startdate = result[3]
+                                    enddate = result[4]
+
+                                    if isinstance(startdate, str):
+                                        startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
+                                    if isinstance(enddate, str):
+                                        enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                    business_days = 0
+                                    current_date = startdate
+
+                                    while current_date <= enddate:
+                                        if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri, 5=Sat, 6=Sun
+                                            business_days += 1
+                                        current_date += datetime.timedelta(days=1)
+
+                                    print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
+
                                     try:
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                        send_whatsapp_message(sender_id, f"✅ Great News {first_name}! \n\n Your Leave Application has been submitted successfully!\n\n"
-                                            "To Check the status of you leave application, Type Hello.")
+                                        send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {company_reg}! \n\n Your {leavetype} Leave Application for {business_days} days from {startdate} to {enddate} has been submitted successfully!\n\n"
+                                            "To Check the status of you leave application, Type Hello the select `Track Application`.")
                                     except ValueError:
                                         send_whatsapp_message(
                                             sender_id,
