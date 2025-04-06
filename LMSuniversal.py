@@ -215,13 +215,6 @@ def webhook():
                                         ]
 
 
-                                        cursor.execute(f"""
-                                            INSERT INTO whatsapptempapplication (empidwa, companynamewa)
-                                            VALUES (%s, %s)
-                                        """, (id_user, company_reg))
-                                    
-                                        connection.commit()
-
                                         send_whatsapp_message(
                                             sender_id, 
                                             f"{first_name}, kindly select the type of Leave that you are applying for.", 
@@ -239,12 +232,10 @@ def webhook():
                                         
                                         connection.commit()
 
-
-                                        cursor.execute("""
-                                            UPDATE whatsapptempapplication
-                                            SET leavetypewa = %s
-                                            WHERE empidwa = %s
-                                        """, (button_id_leave_type, id_user))
+                                        cursor.execute(f"""
+                                            INSERT INTO whatsapptempapplication (empidwa, leavetypewa, companynamewa)
+                                            VALUES (%s, %s,. %s)
+                                        """, (id_user, button_id_leave_type, company_reg))
 
                                         connection.commit()
 
