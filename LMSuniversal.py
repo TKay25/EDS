@@ -214,6 +214,14 @@ def webhook():
                                             {"type": "reply", "reply": {"id": "Maternity", "title": "Maternity Leave"}},
                                         ]
 
+
+                                        cursor.execute(f"""
+                                            INSERT INTO whatsapptempapplication (empidwa, companynamewa)
+                                            VALUES (%s, %s)
+                                        """, (id_user, company_reg))
+                                    
+                                        connection.commit()
+
                                         send_whatsapp_message(
                                             sender_id, 
                                             f"{first_name}, kindly select the type of Leave that you are applying for.", 
@@ -224,11 +232,12 @@ def webhook():
                                     elif button_id in ["Annual","Sick","Maternity"] :
                                         button_id_leave_type = str(button_id)
 
-                                        cursor.execute(f"""
-                                            INSERT INTO whatsapptempapplication (empidwa, leavetypewa)
-                                            VALUES (%s, %s)
-                                        """, (id_user, button_id_leave_type))
-                                    
+                                        cursor.execute("""
+                                            UPDATE whatsapptempapplication
+                                            SET leavetypewa = %s
+                                            WHERE empidwa = %s
+                                        """, (button_id_leave_type, id_user))
+
                                         connection.commit()
 
                                         send_whatsapp_message(
@@ -261,21 +270,29 @@ def webhook():
                                 elif "start" in text.lower():
                                     date_part = text.split("start", 1)[1].strip()
 
-                                    query = f"""
+                                    cursor.execute("""
                                         SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                    """
-                                    cursor.execute(query)
+                                        WHERE empidwa = %s
+                                    """, (id_user))
+                            
                                     result = cursor.fetchone()
 
                                     if result:
-                                        id_user = result[0]  
-                                        first_name = result[1] 
+                                        leavetypewa = result[1] 
 
-
+                                    cursor.execute("SELECT * FROM whatsapptempapplication")
+                                    columns = [desc[0] for desc in cursor.description]
+                                    records = cursor.fetchall()
+                                    
+                                    df = pd.DataFrame(records, columns=columns)
+                                    
+                                    print("\n📊 whatsapptempapplication Table:")
+                                    print(df)
+                                    
                                     try:
                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
                                         send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
-                                            f"Now Enter the last day that you will be on {button_id_leave_type} Leave.Use the format: 👇🏻\n"
+                                            f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
                                             "`end 24 january 2025`"                      
                                                             )
                                         
