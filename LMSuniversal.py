@@ -221,6 +221,25 @@ def webhook():
                                             buttons
                                         )
 
+                                    elif button_id == "Submitapp":
+                            
+                                        try:
+                                            parsed_date = datetime.strptime(date_part, "%d %B %Y")
+                                            send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {company_reg}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                                "To Check the status of you leave application, type `Hello` then select `Track Application`.")
+                                        except ValueError:
+                                            send_whatsapp_message(
+                                                sender_id,
+                                                "❌ No, incorrect message format. Please use:\n"
+                                                "`end 24 january 2025`\n"
+                                                "Example: `end 15 march 2024`"
+                                            )
+
+
+
+
+
+
                                     elif button_id == "Track":
                             
                                         buttons = [
@@ -235,6 +254,7 @@ def webhook():
                                             f"{first_name}, kindly select a Leave Application Tracker option.", 
                                             buttons
                                         )
+
 
                                     elif button_id in ["Annual","Sick","Maternity"] :
                                         button_id_leave_type = str(button_id)
@@ -386,17 +406,6 @@ def webhook():
 
 
 
-                                    '''try:
-                                        parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                        send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {company_reg}! \n\n Your {leavetype} Leave Application for {business_days} days from {startdate} to {enddate} has been submitted successfully!\n\n"
-                                            "To Check the status of you leave application, type `Hello` then select `Track Application`.")
-                                    except ValueError:
-                                        send_whatsapp_message(
-                                            sender_id,
-                                            "❌ No, incorrect message format. Please use:\n"
-                                            "`end 24 january 2025`\n"
-                                            "Example: `end 15 march 2024`"
-                                        )'''
 
 
 
