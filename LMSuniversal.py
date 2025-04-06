@@ -271,6 +271,14 @@ def webhook():
                                     date_part = text.split("start", 1)[1].strip()
 
                                     cursor.execute("""
+                                        UPDATE whatsapptempapplication
+                                        SET startdate = %s
+                                        WHERE empidwa = %s
+                                    """, (date_part, id_user))
+
+                                    connection.commit()
+
+                                    cursor.execute("""
                                         SELECT empidwa, leavetypewa FROM whatsapptempapplication
                                         WHERE empidwa = %s
                                     """, (str(id_user)))
