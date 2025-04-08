@@ -298,8 +298,6 @@ def webhook():
                                                 cursor.execute(insert_query, (id_user, first_name, last_name, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, leavedaysbalance, today_date, startdate, enddate, int(business_days), int(leavedaysbalancebf), status))
                                                 connection.commit()
 
-
-
                                                 query = f"SELECT appid FROM {table_name_apps_pending_approval};"
                                                 cursor.execute(query)
                                                 rows = cursor.fetchall()
