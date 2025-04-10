@@ -270,7 +270,7 @@ def webhook():
 
                                                 df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
                                                 print(df_employees)
-                                                userdf = df_employees[df_employees['id'] == id_user].reset_index()
+                                                userdf = df_employees[df_employees['id'] == int(np.int64(id_user))].reset_index()
                                                 print("yeaarrrrr")
                                                 print(userdf)
                                                 firstname = userdf.iat[0,2]
