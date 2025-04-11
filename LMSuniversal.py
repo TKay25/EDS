@@ -41,7 +41,7 @@ connection = psycopg2.connect(external_database_url)
 cursor = connection.cursor()
 
 # WhatsApp API Credentials (Replace with your actual credentials)
-ACCESS_TOKEN = "EAATESj1oB5YBOZCnfzDM0J66r1PimtAgtZAj2OwexZAH5uFfF19hWzi9n0OwcY9r2wibtiFw8RCUmeu6SU0QOmZBZBqwNPnpzPzHXZCdtrMEicpoCAoNvBY2niFciDHiJS9w8OlkTp3ZAYKemedejo3ofJww9Xt49jkdG7saL0uQMzZAeZA4VSvZBGohG5OLICHR4zTcuz7YxZB885azZAT0qr8c4ZBya0TKF"
+ACCESS_TOKEN = "EAATESj1oB5YBO3Cc8ZCAtL1MMRT3hFF4ARZCV9ZCug7UJR63wXEubdzqiW4ZC0VZCgYEzMZB1FLo4qdC5STKUWgOrvjOEKZCdJe7CdD2ldsuclbL3lC4aINrS0zhFVLsmoZB2PMpDKEfP3QWLB5y7qGM4FZBlYkpsbB2WeZCqpcMZBYczYSrXrw3VJfxF2UdpfwQ6xGf0nUsNPZCAFHfgeMizCyJR3ZA5CVEa"
 PHONE_NUMBER_ID = "613718218490566"
 VERIFY_TOKEN = "678529848010943"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
@@ -2671,4 +2671,4 @@ def explore_lms():
     
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=55, debug=True)
+    app.run(host='0.0.0.0', debug=True)
