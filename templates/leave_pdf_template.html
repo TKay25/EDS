@@ -172,14 +172,14 @@
     </div>
     
     <div id="pageFooter">
-        Page <span class="pageNumber"></span> | Generated on {{ generated_on }}
+        Page <span class="pageNumber"></span> | Generated on {{ app.generated_on }}
     </div>
     
     <div class="document-container">
         <div class="letterhead">
             <div class="company-info">
                 <h2>{{ app.company_name }}</h2>
-                <p>Human Resources Department</p>
+                <p>Powered by Echelon Digital Solutionst</p>
             </div>
             <div class="status-badge">{{ app.status }}</div>
         </div>
@@ -193,7 +193,7 @@
                     <td>{{ app.employee_name }}</td>
                 </tr>
                 <tr>
-                    <th>Employee ID</th>
+                    <th>Employee EDS LMS ID</th>
                     <td>{{ app.employee_id }}</td>
                 </tr>
                 <tr>

@@ -2411,7 +2411,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
     @app.route('/download_leave_app/<app_id>')
     def download_pdf(app_id):
-
+        global today_date
         user_uuid = session.get('user_uuid')
         empid = session.get('empid')
 
@@ -2419,18 +2419,24 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             table_name = session.get('table_name')
             company_name = table_name.replace("main","")
             try:
+                table_name_apps_approved = company_name + 'appsapproved'
+                query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_approved} WHERE appid = %s;"""
+                cursor.execute(query, (app_id,))  
+                rows = cursor.fetchall()
+                df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
 
-
-
-
-
-
+                employee_name = f"{df_leave_appsmain_approved.iat[0,2].title()} {df_leave_appsmain_approved.iat[0,3].title()}"
+                leave_type = df_leave_appsmain_approved.iat[0,4].title()
+                company_name_doc = company_name.replace("_"," ").title()
 
                 application = {
-                    'company_name': {company_name},
-                    'employee_name': 'John Doe',
-                    'leave_type': 'Annual Leave',
-                    'dates': 'Dec 1-5, 2023',
+                    'company_name': company_name_doc,
+                    'employee_name': employee_name,
+                    'employee_id': empid,
+                    'leave_type': leave_type,
+                    'generated_on': today_date,
+                    'startdate': 'Dec 1-5, 2023',
+                    'enddate': 'Dec 1-5, 2023',
                     'status': 'Approved'
                 }
                 
