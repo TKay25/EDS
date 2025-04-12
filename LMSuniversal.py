@@ -235,7 +235,7 @@ def webhook():
                                         else:
                                             buttons = [
                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
-                                                {"type": "reply", "reply": {"id": "Cancel", "title": "Cancel Pending Application"}},
+                                                {"type": "reply", "reply": {"id": "Cancel", "title": "Cancel Pending App"}},
                                             ]
                                             send_whatsapp_message(
                                                 sender_id, 
