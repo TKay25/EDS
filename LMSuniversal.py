@@ -1586,6 +1586,13 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 connection.commit()
                 
 
+                table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+                update_query = f"""UPDATE {table_name_apps_pending_approval} SET whatsapp = %s, email = %s, address = %s WHERE id = %s; """
+                cursor.execute(update_query, (whatsapp, email, address, empid))
+                connection.commit()
+                update_query = f"""UPDATE {table_name_apps_pending_approval} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                cursor.execute(update_query, (whatsapp, email, empid))
+                connection.commit()
 
                 
 
@@ -1599,13 +1606,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     }
                 }), 200
 
-                table_name_apps_pending_approval = f"{company_name}appspendingapproval"
-                update_query = f"""UPDATE {table_name_apps_pending_approval} SET whatsapp = %s, email = %s, address = %s WHERE id = %s; """
-                cursor.execute(update_query, (whatsapp, email, address, empid))
-                connection.commit()
-                update_query = f"""UPDATE {table_name_apps_pending_approval} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
-                cursor.execute(update_query, (whatsapp, email, empid))
-                connection.commit()
+
 
                 table_name_apps_cancelled = f"{company_name}appscancelled"
                 update_query = f"""UPDATE {table_name_apps_cancelled} SET whatsapp = %s, email = %s, address = %s WHERE id = %s; """
