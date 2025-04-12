@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Leave Application - {{ app.company_name }}</title>
+    <title>{{ app.company_name }} Leave Application [ID {{app.app_id}}] </title>
     <style>
         /* Modern print styling */
         @page {
@@ -178,10 +178,7 @@
     </div>
     
     <div id="pageFooter">
-        Page <span class="pageNumber"></span> | Generated on {{ app.generated_on }}
-        <p>
-            Powered by Echelon Digital Solutions
-        </p>
+        Page <span class="pageNumber"></span> | Generated on {{ app.generated_on }} | Powered by Echelon Digital Solutions
     </div>
     
     <div class="document-container">
@@ -265,7 +262,7 @@
     </div>
     
     <div class="footer">
-        <p>This is an official document of {{ app.company_name }}. Unauthorized use is prohibited.</p>
+        <p>This is an official document of {{ app.company_name }}. Unauthorised edits and(or) use is prohibited.</p>
     </div>
 </body>
 </html>
