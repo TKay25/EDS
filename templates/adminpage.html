@@ -682,8 +682,8 @@
         <header>
             <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} {{role_narr}} <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
             <div><span class="current-date" id="currdate">DATE: {{ today_date }}</span></div>
-            <input type="hidden" name="name-down" value="{{firstname}}">
-            <input type="hidden" name="name-down2" value="{{surname}}">
+            <span id="name-down" value="{{firstname}}" style="display: none;"></span>
+            <span id="name-down2" value="{{surname}}" style="display: none;"></span>
 
 
             <div class="profile-dropdown">
