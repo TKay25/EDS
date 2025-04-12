@@ -2237,11 +2237,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         empid = session.get('empid')
 
-        print("Received data:", request.data)  # log the raw data
-        print("JSON data:", request.get_json())  # log the parsed JSON
-
         if user_uuid:
-
+            print("Received data:", request.data)  # log the raw data
+            print("JSON data:", request.get_json())  # log the parsed JSON
             table_name = session.get('table_name')
             company_name = table_name.replace("main","")
             table_name_apps_pending_approval = f"{company_name}appspendingapproval"
@@ -2413,32 +2411,45 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
     @app.route('/download_leave_app/<app_id>')
     def download_pdf(app_id):
-        try:
-            # 1. Get application data (replace with your DB query)
-            application = {
-                'company_name': 'Acme Corp',
-                'employee_name': 'John Doe',
-                'leave_type': 'Annual Leave',
-                'dates': 'Dec 1-5, 2023',
-                'status': 'Approved'
-            }
-            
-            # 2. Render HTML
-            html = render_template('leave_pdf_template.html', app=application)
-            
-            # 3. Generate PDF
-            pdf = HTML(string=html).write_pdf()
-            
-            # 4. Create response
-            response = make_response(pdf)
-            response.headers['Content-Type'] = 'application/pdf'
-            response.headers['Content-Disposition'] = \
-                f'attachment; filename=leave_application_{app_id}.pdf'
-            
-            return response
-            
-        except Exception as e:
-            return str(e), 500
+
+        user_uuid = session.get('user_uuid')
+        empid = session.get('empid')
+
+        if user_uuid:
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main","")
+            try:
+
+
+
+
+
+
+
+                application = {
+                    'company_name': {company_name},
+                    'employee_name': 'John Doe',
+                    'leave_type': 'Annual Leave',
+                    'dates': 'Dec 1-5, 2023',
+                    'status': 'Approved'
+                }
+                
+                # 2. Render HTML
+                html = render_template('leave_pdf_template.html', app=application)
+                
+                # 3. Generate PDF
+                pdf = HTML(string=html).write_pdf()
+                
+                # 4. Create response
+                response = make_response(pdf)
+                response.headers['Content-Type'] = 'application/pdf'
+                response.headers['Content-Disposition'] = \
+                    f'attachment; filename=leave_application_{company_name} {app_id}.pdf'
+                
+                return response
+                
+            except Exception as e:
+                return str(e), 500
 
 
 
