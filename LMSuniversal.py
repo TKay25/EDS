@@ -1584,6 +1584,20 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 update_query = f"""UPDATE {details_table} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
                 cursor.execute(update_query, (whatsapp, email, empid))
                 connection.commit()
+                
+
+
+                
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Employee details updated successfully',
+                    'data': {
+                        'whatsapp': whatsapp,
+                        'email': email,
+                        'address': address
+                    }
+                }), 200
 
                 table_name_apps_pending_approval = f"{company_name}appspendingapproval"
                 update_query = f"""UPDATE {table_name_apps_pending_approval} SET whatsapp = %s, email = %s, address = %s WHERE id = %s; """
@@ -1609,7 +1623,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 cursor.execute(update_query, (whatsapp, email, empid))
                 connection.commit()
 
-
                 table_name_apps_declined = f"{company_name}appsdeclined"
                 update_query = f"""UPDATE {table_name_apps_declined} SET whatsapp = %s, email = %s, address = %s WHERE id = %s; """
                 cursor.execute(update_query, (whatsapp, email, address, empid))
@@ -1625,16 +1638,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 update_query = f"""UPDATE {table_name_apps_revoked} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
                 cursor.execute(update_query, (whatsapp, email, empid))
                 connection.commit()
-
-                return jsonify({
-                    'success': True,
-                    'message': 'Employee details updated successfully',
-                    'data': {
-                        'whatsapp': whatsapp,
-                        'email': email,
-                        'address': address
-                    }
-                }), 200
 
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
