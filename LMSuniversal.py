@@ -2438,8 +2438,13 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 leave_type = df_leave_appsmain_approved.iat[0,4].title()
                 company_name_doc = company_name.replace("_"," ").title()
 
+                def get_logo_base64():
+                    logo_path = os.path.join(app.static_folder, 'images', 'eds logo blue.png')
+                    with open(logo_path, "rb") as img_file:
+                        return "data:image/png;base64," + base64.b64encode(img_file.read()).decode('utf-8')
+
                 application = {
-                    'company_logo': os.path.join(app.static_folder, 'images', 'eds logo blue.png'),
+                    'company_logo': get_logo_base64() ,
                     'company_name': company_name_doc,
                     'employee_name': employee_name,
                     'employee_id': df_leave_appsmain_approved.iat[0,1],
