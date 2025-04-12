@@ -2242,8 +2242,9 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
 async function downloadLeaveApp(appId) {
     const btn = document.querySelector(`button[data-id="${appId}"]`);
     const originalText = btn.innerHTML;
-    const firstname = document.getElementById('name-down').value.trim();
-    const surname = document.getElementById('name-down2').value.trim();
+    const firstname = document.getElementById('name-down').getAttribute('value');
+    const surname = document.getElementById('name-down2').getAttribute('value');
+    
     try {
         // 1. Show loading state
         btn.disabled = true;
