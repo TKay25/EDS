@@ -568,13 +568,106 @@
         .dropdownfilter:hover .dropdownfilter-content {
             display: block;
         }
+
+        .eds-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            font-family: 'Century Gothic', sans-serif;  
+        }
+        
+        .eds-logo {
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px #003366;
+        }
+        
+        .eds-tagline {
+            color: #fff;
+            font-size: 0.6rem;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+        
+        .loader-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .loader-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, White, #003366);
+            animation: load 3s ease-in-out infinite;
+            border-radius: 2px;
+        }
+        
+        @keyframes load {
+            0% { width: 0%; left: 0; }
+            50% { width: 100%; left: 0; }
+            100% { width: 0%; left: 100%; }
+        }
+        
+        .eds-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 20px);
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .grid-item {
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 255, 252, 0.2);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .grid-item:nth-child(1) { animation-delay: 0s; }
+        .grid-item:nth-child(2) { animation-delay: 0.2s; }
+        .grid-item:nth-child(3) { animation-delay: 0.4s; }
+        .grid-item:nth-child(4) { animation-delay: 0.6s; }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.2); opacity: 1; background: #336699; }
+        }
     </style>
 </head>
 
 <body>
-    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <div class="loading-spinner"></div> <br>
-        <p style="font-weight: 700;">We Are Commiting Your Changes {{fullnamedisp}}, Please Wait...</p>
+    <div class="eds-loader" id="edsLoader" style="display: none;">
+        <div class="eds-logo"><img src="{{ url_for('static', filename='images/EDS LOGO.png') }}"  alt="Logo" class="logo" style="width: 170px;"></div>
+        <br><br>
+        <p style="font-weight: 700;color: white;font-size: 1.2rem;">We Are Commiting Your Changes {{firstname}}, Please Wait...</p>
+
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
+        
+        <div class="eds-grid">
+            <div class="grid-item"></div>
+            <div class="grid-item"></div>
+            <div class="grid-item"></div>
+            <div class="grid-item"></div>
+        </div>
     </div>
     
     <div class="sidebar">
@@ -1787,7 +1880,7 @@ $(document).ready(function () {
             alert("No valid data to update.");
             return;  // Prevent sending the request if no valid data
         }
-        $('#loadingOverlay').show();  // Show loading overlay immediately
+        $('edsLoader').show();  // Show loading overlay immediately
 
         // Send updates to the server
         $.ajax({
@@ -1798,7 +1891,7 @@ $(document).ready(function () {
             success: function (response) {
 
                 $('#editLeaveDaysAccumulatorModal').modal('hide');  // Hide the modal after success
-                $('#loadingOverlay').hide();  // Show loading overlay immediately
+                $('edsLoader').hide();  // Show loading overlay immediately
                 setTimeout(function() {
                     alert(response.message);  // Show alert after the overlay
                 }, 100);  // 100ms delay to ensure UI update before alert
@@ -1847,7 +1940,7 @@ $('#saveroleconfirm').on('click', function() {
         return;  // Prevent further execution if fields are empty
     }
 
-    $('#loadingOverlay').show();
+    $('edsLoader').show();
 
     
     if (newrole) {
@@ -1863,7 +1956,7 @@ $('#saveroleconfirm').on('click', function() {
             success: function(response) {
                 // Handle the response from Flask (e.g., show success message or refresh data)
                 $('#editModalpriv').modal('hide');  // Hide the modal after success
-                $('#loadingOverlay').hide();
+                $('edsLoader').hide();
 
                 setTimeout(function() {
                     alert('Role updated successfully.');
@@ -1909,7 +2002,7 @@ $('#adminextrainfo').on('click', function () {
     }
 
     // Optional: Show a loading overlay
-    $('#loadingOverlay').show();
+    $('edsLoader').show();
 
     // AJAX request to send data to Flask backend
     $.ajax({
@@ -1918,7 +2011,7 @@ $('#adminextrainfo').on('click', function () {
         data: formData,
         success: function (response) {
             // Hide loading overlay
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
 
             // Handle success (e.g., close modal and show confirmation)
             alert('Administrator info saved successfully.');
@@ -1927,7 +2020,7 @@ $('#adminextrainfo').on('click', function () {
         },
         error: function (xhr, status, error) {
             // Hide loading overlay
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
 
             // Handle error (e.g., display error message)
             alert('Error: ' + error);
@@ -1950,7 +2043,7 @@ $('#changeapproverconfirm').on('click', function() {
         return;  // Prevent further execution if fields are empty
     }
 
-    $('#loadingOverlay').show();
+    $('edsLoader').show();
 
     if (newapprover) {
         // Send the data to the Flask endpoint
@@ -1966,7 +2059,7 @@ $('#changeapproverconfirm').on('click', function() {
                 
                 $('#confirmationModalapprover').modal('hide');  // Hide the modal after success
                 $('#editModalapprover').modal('hide');  // Hide the modal after success
-                $('#loadingOverlay').hide();
+                $('edsLoader').hide();
 
                 setTimeout(function() {
                     alert('Approver changed successfully.');
@@ -1995,7 +2088,7 @@ $('#editbalanceconfirm').on('click', function() {
         return;  // Prevent further execution if fields are empty
     }
 
-    $('#loadingOverlay').show();
+    $('edsLoader').show();
 
     // Send the data to the Flask endpoint
     $.ajax({
@@ -2012,7 +2105,7 @@ $('#editbalanceconfirm').on('click', function() {
             $('#editModalbalance').modal('hide');  // Hide the edit modal
             
             // Hide the loading overlay immediately
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
 
             // Show alert after a very short delay to ensure the overlay is hidden first
             setTimeout(function() {
@@ -2024,7 +2117,7 @@ $('#editbalanceconfirm').on('click', function() {
         error: function(xhr, status, error) {
             // Handle any errors (e.g., alert user)
             alert('Error: ' + error);
-            $('#loadingOverlay').hide();  // Hide overlay if error occurs
+            $('edsLoader').hide();  // Hide overlay if error occurs
         }
     });
 });
@@ -2055,7 +2148,7 @@ $('#saveaddemployee').on('click', function(e) {
     }
 
     // Show loading overlay
-    $('#loadingOverlay').show();
+    $('edsLoader').show();
 
     // Send the form data using AJAX
     $.ajax({
@@ -2066,7 +2159,7 @@ $('#saveaddemployee').on('click', function(e) {
             
             $('#addEmployeeModal').modal('hide');
             $('#manualaddemployeeModal').modal('hide');
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
             // Add a slight delay before showing the alert to ensure UI update
             setTimeout(function() {
                 alert('Employee added successfully');
@@ -2076,7 +2169,7 @@ $('#saveaddemployee').on('click', function(e) {
         },
         error: function(xhr, status, error) {
             // Hide loading overlay and display error message
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
 
             // Check the response for more specific error messages
             if (xhr.status === 400) {
@@ -2107,7 +2200,7 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
     };
 
     // Show loading overlay
-    $('#loadingOverlay').show();
+    $('edsLoader').show();
 
     // Send data using jQuery AJAX
     $.ajax({
@@ -2118,7 +2211,7 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
         success: function(response) {
             // Hide modals and loading overlay
             $('#editinfoModal').modal('hide');
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
             
             // Show success message with slight delay
             setTimeout(function() {
@@ -2128,7 +2221,7 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
         },
         error: function(xhr, status, error) {
             // Hide loading overlay
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
 
             // Handle different error cases
             if (xhr.status === 400) {
@@ -2206,7 +2299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (data.status === 'success') {
                 alert('Employees Successfully Added!'); // Show success alert
-                $('#loadingOverlay').hide(); // Hide the loading overlay
+                $('edsLoader').hide(); // Hide the loading overlay
 
             } else {
                 alert('Something went wrong. Please try again.'); // Handle error response
@@ -2214,7 +2307,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => {
             console.error('Error:', error); // Debug error
-            $('#loadingOverlay').hide(); // Hide loading overlay in case of error
+            $('edsLoader').hide(); // Hide loading overlay in case of error
             alert('An error occurred while uploading the file.'); // Show error alert
         });
     });
@@ -2268,7 +2361,7 @@ document.addEventListener('DOMContentLoaded', () => {
     var formData = new FormData($('#leaveForm')[0]); // Include file inputs if any
 
     // Show a loading overlay (optional)
-    $('#loadingOverlay').show();
+    $('edsLoader').show();
 
     // Make the AJAX request to submit the form
     $.ajax({
@@ -2280,7 +2373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         success: function (response) {
             // Hide the modals
             $('#SubmitLeaveApplicationModal').modal('hide');
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
 
             // Optionally, show a success message or redirect
             alert('Leave application submitted successfully.');
@@ -2288,7 +2381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         error: function (xhr, status, error) {
             // Handle errors gracefully
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
             alert('Error: Unable to submit your leave application. Please make sure that you do not have any pending leave applications and try again.');
         }
     });
@@ -2334,7 +2427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (this.files.length > 0) {
             // Prevent form submission for now
             document.getElementById('upload-form').submit();  
-            $('#loadingOverlay').show(); // Show loading overlay
+            $('edsLoader').show(); // Show loading overlay
         }
     });
 
@@ -2478,7 +2571,7 @@ document.addEventListener('DOMContentLoaded', () => {
             approver: approver,
             employees: selectedEmployees,
         };
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         // Perform the AJAX request
         $.ajax({
@@ -2488,7 +2581,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: JSON.stringify(dataToSend),
             success: function(response) {
                 $('#ConfirmBulkApproverModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 // Add a slight delay before showing the alert to ensure UI update
                 setTimeout(function() {
                     alert('Approver assigned successfully');
@@ -2496,7 +2589,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 location.reload();  // Reload the page or update the DOM as needed
             },
             error: function(xhr, status, error) {
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
 
                 // Check the response for more specific error messages
                 if (xhr.status === 400) {
@@ -2649,7 +2742,7 @@ document.addEventListener('DOMContentLoaded', () => {
             balance: balance,
             employees: selectedEmployees,
         };
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         // Perform the AJAX request
         $.ajax({
@@ -2659,7 +2752,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: JSON.stringify(dataToSend),
             success: function(response) {
                 $('#ConfirmBulkBalancesModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 // Add a slight delay before showing the alert to ensure UI update
                 setTimeout(function() {
                     alert('New Leave Days Balances assigned successfully');
@@ -2667,7 +2760,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 location.reload();  // Reload the page or update the DOM as needed
             },
             error: function(xhr, status, error) {
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
 
                 // Check the response for more specific error messages
                 if (xhr.status === 400) {
@@ -2793,7 +2886,7 @@ document.addEventListener('DOMContentLoaded', () => {
             accumulator: accumulator,
             employees: selectedEmployees,
         };
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         // Perform the AJAX request
         $.ajax({
@@ -2803,7 +2896,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: JSON.stringify(dataToSend),
             success: function(response) {
                 $('#ConfirmBulkAccumulatorsModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 // Add a slight delay before showing the alert to ensure UI update
                 setTimeout(function() {
                     alert('New Monthly Leave Days Accumulator assigned successfully');
@@ -2811,7 +2904,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 location.reload();  // Reload the page or update the DOM as needed
             },
             error: function(xhr, status, error) {
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
 
                 // Check the response for more specific error messages
                 if (xhr.status === 400) {
@@ -2862,7 +2955,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $(document).on('click', '#confirmrevokeapproverleaveapp', function() {
 
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         $.ajax({
             url: '/revoke_leave_application_approver',  // Flask route to handle cancellation
@@ -2871,7 +2964,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: JSON.stringify({ app_id: currentIdrevokeapproverapp }),
             success: function(response) {
                 $('#revokeapproverappModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 setTimeout(function() {
                     alert(response.message);
                 }, 100);  // 100ms delay to ensure UI update before alert
@@ -2880,7 +2973,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: function (xhr, status, error) {
             // Handle errors gracefully
             $('#reviveappModal').modal('hide');
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
             alert('Error: Unable to revoke the leave application.');
         }
         });
@@ -2924,7 +3017,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $(document).on('click', '#confirmcancelleaveapp', function() {
 
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         $.ajax({
             url: '/cancel_leave_application',  // Flask route to handle cancellation
@@ -2933,7 +3026,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: JSON.stringify({ app_id: currentIddelapp }),
             success: function(response) {
                 $('#cancelappModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 setTimeout(function() {
                     alert(response.message);
                 }, 100);  // 100ms delay to ensure UI update before alert
@@ -2981,7 +3074,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $(document).on('click', '#confirmreapplyleaveapp', function() {
 
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         $.ajax({
             url: '/reapply_leave_application',  // Flask route to handle cancellation
@@ -2990,7 +3083,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: JSON.stringify({ app_id: currentIdreapplyapp }),
             success: function(response) {
                 $('#reapplyappModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 setTimeout(function() {
                     alert(response.message);
                 }, 100);  // 100ms delay to ensure UI update before alert
@@ -2999,7 +3092,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: function (xhr, status, error) {
             // Handle errors gracefully
             $('#reapplyappModal').modal('hide');
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
             alert('Error: Unable to submit your leave application. Please make sure that you do not have any pending leave applications and try again.');
         }
         });
@@ -3046,7 +3139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $(document).on('click', '#confirmrevokeleaveapp', function() {
 
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         $.ajax({
             url: '/revoke_leave_application',  // Flask route to handle cancellation
@@ -3055,7 +3148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: JSON.stringify({ app_id: currentIdrevokeapp }),
             success: function(response) {
                 $('#revokeappModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 setTimeout(function() {
                     alert(response.message);
                 }, 100);  // 100ms delay to ensure UI update before alert
@@ -3064,7 +3157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: function (xhr, status, error) {
             // Handle errors gracefully
             $('#revokeappModal').modal('hide');
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
             alert('Error: Unable to submit your leave application revocation request. Please make sure that you do not have any pending leave applications and try again.');
         }
         });
@@ -3116,7 +3209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $(document).on('click', '#confirmreviveleaveapp', function() {
 
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         $.ajax({
             url: '/revive_leave_application',  // Flask route to handle cancellation
@@ -3125,7 +3218,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: JSON.stringify({ app_id: currentIdreviveapp }),
             success: function(response) {
                 $('#reviveappModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 setTimeout(function() {
                     alert(response.message);
                 }, 100);  // 100ms delay to ensure UI update before alert
@@ -3134,7 +3227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: function (xhr, status, error) {
             // Handle errors gracefully
             $('#reviveappModal').modal('hide');
-            $('#loadingOverlay').hide();
+            $('edsLoader').hide();
             alert('Error: Unable to revive the leave application. Please make sure that the employee does not have any pending leave applications and try again.');
         }
         });
@@ -3206,7 +3299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $(document).on('click', '#confirmapproveleaveapp', function() {
 
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         $.ajax({
             url: '/approve_leave_application',  // Flask route to handle cancellation
@@ -3218,7 +3311,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             success: function(response) {
                 $('#approveappModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 setTimeout(function() {
                     alert(response.message);
                 }, 100);  // 100ms delay to ensure UI update before alert
@@ -3234,7 +3327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     $(document).on('click', '#confirmdisapproveleaveapp', function() {
 
-        $('#loadingOverlay').show();  // Hide loading overlay
+        $('edsLoader').show();  // Hide loading overlay
 
         $.ajax({
             url: '/disapprove_leave_application',  // Flask route to handle cancellation
@@ -3246,7 +3339,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             success: function(response) {
                 $('#disapproveappModal').modal('hide');  // Close the modal
-                $('#loadingOverlay').hide();  // Hide loading overlay
+                $('edsLoader').hide();  // Hide loading overlay
                 setTimeout(function() {
                     alert(response.message);
                 }, 100);  // 100ms delay to ensure UI update before alert
@@ -3450,7 +3543,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     alert('Employees removed successfully!');
                     $('#confirmationModalremove').modal('hide');
-                    $('#loadingOverlay').show();
+                    $('edsLoader').show();
                     location.reload();  
 
                     // You can refresh the table or update the UI here as needed

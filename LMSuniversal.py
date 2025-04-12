@@ -2754,7 +2754,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         session.clear()
 
         # Redirect to the landing page or login page after logout
-        return redirect(url_for('landingpage'))
+        return redirect(url_for('explore_lms'))
 
 
 
