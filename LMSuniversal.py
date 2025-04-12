@@ -2439,6 +2439,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 company_name_doc = company_name.replace("_"," ").title()
 
                 application = {
+                    'company_logo': os.path.join(app.static_folder, 'images', 'eds logo blue.png'),
                     'company_name': company_name_doc,
                     'employee_name': employee_name,
                     'employee_id': df_leave_appsmain_approved.iat[0,1],
