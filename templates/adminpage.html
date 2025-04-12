@@ -583,13 +583,13 @@
         <button class="btn" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal"><i class="bi bi-file-earmark-medical-fill"></i>    Apply for Leave</button>
         <button data-bs-toggle="modal" data-bs-target="#editinfoModal" class="btn"><i class="bi bi-pencil-square"></i>    Edit My Info</button>
         <button id="btn-employee-profiles" class="btn"><i class="bi bi-info-circle-fill"></i>    Log Query</button>
-        <button onclick="window.location.href='/logout'" class="btn btn-danger"><i class="bi bi-door-closed-fill"></i>    Logout</button>
     </div>
 
     <main class="main-content">
         <header>
             <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} {{role_narr}} <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
             <div><span class="current-date" id="currdate">DATE: {{ today_date }}</span></div>
+
 
             <div class="profile-dropdown">
                 <label for="profile-select" class="profile-label">PROFILE</label>
@@ -598,7 +598,10 @@
                     <option value="user" class="dropdown-item" style="font-weight: bold;color:#003366 ;" selected>MY PROFILE</option>
                     <option id= "adminoptionchoice" value="admin" class="dropdown-item" style="font-weight: bold;color:#003366 ;" data-hide="{{ hide_element }}">ADMIN</option>
                 </select>
+
             </div>
+            <button onclick="window.location.href='/logout'" class="btn btn-danger"><i class="bi bi-door-closed-fill" style="margin-right: 7px;"></i>    Logout</button>
+
 
         </header>
 
