@@ -211,11 +211,11 @@ def webhook():
 
                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                        query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                         cursor.execute(query)
                                         rows = cursor.fetchall()
 
-                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])    
+                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
 
                                         if len(df_employeesappspendingcheck) == 0:
 
@@ -232,14 +232,17 @@ def webhook():
                                                 buttons
                                             )
 
-                                        else:
+                                        elif len(df_employeesappspendingcheck) > 0:
                                             buttons = [
                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                 {"type": "reply", "reply": {"id": "Cancel", "title": "Cancel Pending App"}},
                                             ]
                                             send_whatsapp_message(
                                                 sender_id, 
-                                                f"Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.", 
+                                                f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
+                                                f"Your {df_employeesappspendingcheck[0,1]} Leave Application [ID - {df_employeesappspendingcheck[0,0]}] applied on {df_employeesappspendingcheck[0,3]} for {df_employeesappspendingcheck[0,6]} days from {df_employeesappspendingcheck[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck[0,5].strftime('%d %B %Y')} is still pending approval from {df_employeesappspendingcheck[0,2]}.\n\n" 
+                                                f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
+                                                , 
                                                 buttons
                                             )
 
