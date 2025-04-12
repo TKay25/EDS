@@ -339,7 +339,7 @@ def webhook():
                                                         {"type": "reply", "reply": {"id": "disapprove", "title": "Disapprove"}},
                                                     ]
                                                     send_whatsapp_message(
-                                                        f"+263{leaveapproverwhatsapp}", 
+                                                        f"263{leaveapproverwhatsapp}", 
                                                         f"Attention {leaveapprovername}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
                                                         f"Select an option below to either approve or disapprove the application."         
                                                         , 
