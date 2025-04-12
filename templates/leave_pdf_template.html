@@ -157,7 +157,7 @@
             bottom: 50%;
             right: 50%;
             transform: translate(50%, 50%) rotate(-30deg);
-            opacity: 0.05;
+            opacity: 0.1;
             font-size: 120px;
             font-weight: bold;
             color: #003366;
@@ -173,13 +173,13 @@
     
     <div id="pageFooter">
         Page <span class="pageNumber"></span> | Generated on {{ app.generated_on }}
+        <p>Powered by Echelon Digital Solutions</p>
     </div>
     
     <div class="document-container">
         <div class="letterhead">
             <div class="company-info">
                 <h2>LEAVE APPLICATION STATUS [APP ID: {{app.reference_number}}]</h2>
-                <p>Powered by Echelon Digital Solutions</p>
             </div>
             <div class="status-badge">{{ app.status }}</div>
         </div>
