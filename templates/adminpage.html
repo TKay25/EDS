@@ -872,19 +872,19 @@
                 <form id="employeeDetailsEditForm">
                     <div class="mb-3">
                         <label for="whatsappNumber" class="form-label">WhatsApp Number</label>
-                        <input type="number" class="form-control" id="whatsapp"
+                        <input type="number" class="form-control" id="whatsapp-editinfo-4"
                                placeholder="{{whatsapp}}">
                     </div>
                     
                     <div class="mb-3">
                         <label for="emailAddress" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" 
+                        <input type="email" class="form-control" id="email-editinfo-4" 
                                placeholder="{{email}}">
                     </div>
                     
                     <div class="mb-3">
                         <label for="residentialAddress" class="form-label">Residential Address</label>
-                        <textarea class="form-control" id="address" 
+                        <textarea class="form-control" id="address-editinfo-4" 
                                   rows="3" placeholder="{{address}}"></textarea>
                     </div>
                 </form>
@@ -2092,50 +2092,52 @@ $('#saveaddemployee').on('click', function(e) {
 
 
 document.getElementById('savenewinfo').addEventListener('click', function() {
-    const form = document.getElementById('employeeDetailsEditForm');
-    const whatsappInput = document.getElementById('whatsapp');
-    const emailInput = document.getElementById('email');
-    const addressInput = document.getElementById('address');
+    const whatsappInput = document.getElementById('whatsapp-editinfo-4');
+    const emailInput = document.getElementById('email-editinfo-4');
+    const addressInput = document.getElementById('address-editinfo-4');
 
     // If field is empty, use placeholder value
-    const whatsapp = whatsappInput.value.trim() || whatsappInput.placeholder;
-    const email = emailInput.value.trim() || emailInput.placeholder;
-    const address = addressInput.value.trim() || addressInput.placeholder;
-
-    // Prepare data for submission
     const formData = {
-        whatsapp: whatsapp,
-        email: email,
-        address: address
+        whatsapp: whatsappInput.value.trim() || whatsappInput.placeholder,
+        email: emailInput.value.trim() || emailInput.placeholder,
+        address: addressInput.value.trim() || addressInput.placeholder
     };
+
+    // Show loading overlay
     $('#loadingOverlay').show();
 
-    // Example: Send data via Fetch API
-    fetch('/update_employee_details', {
+    // Send data using jQuery AJAX
+    $.ajax({
+        url: '/update_employee_details',
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            // Hide modals and loading overlay
+            $('#editinfoModal').modal('hide');
+            $('#loadingOverlay').hide();
+            
+            // Show success message with slight delay
+            setTimeout(function() {
+                alert('Employee details updated successfully');
+                location.reload();
+            }, 100);
         },
-        body: JSON.stringify(formData),
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Success:', data);
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editinfoModal'));
-        modal.hide();
-        $('#loadingOverlay').hide();
-        // Add a slight delay before showing the alert to ensure UI update
-        setTimeout(function() {
-            alert('Employee Details edited successfully');
-        }, 100);  // 100ms delay to ensure UI update before alert
-        //             
-        location.reload();  // Reload the page or update the DOM as needed
-    })
-    .catch((error) => {
-        console.error('Error:', error);
+        error: function(xhr, status, error) {
+            // Hide loading overlay
+            $('#loadingOverlay').hide();
+
+            // Handle different error cases
+            if (xhr.status === 400) {
+                alert('Bad Request: Please check your input data.');
+            } else if (xhr.status === 500) {
+                alert('Server Error: Something went wrong on the server side.');
+            } else {
+                alert('Error: ' + error);
+            }
+        }
     });
 });
-
 
 
 
