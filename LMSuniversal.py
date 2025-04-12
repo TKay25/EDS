@@ -2434,12 +2434,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 userdf = df_employees[df_employees['id'] == empid].reset_index()
                 print("yeaarrrrr")
 
-
-
-
-
-
-
                 employee_name = f"{df_leave_appsmain_approved.iat[0,2].title()} {df_leave_appsmain_approved.iat[0,3].title()}"
                 leave_type = df_leave_appsmain_approved.iat[0,4].title()
                 company_name_doc = company_name.replace("_"," ").title()
@@ -2456,9 +2450,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     'start_date': df_leave_appsmain_approved.iat[0,6],
                     'end_date': df_leave_appsmain_approved.iat[0,7],
                     'days_requested': df_leave_appsmain_approved.iat[0,8], 
-                    'address': userdf.iat[0,5], 
-                    'whatsapp': userdf.iat[0,3], 
-                    'email': userdf.iat[0,4], 
+                    'address': userdf.iat[0,6], 
+                    'whatsapp': f"0{userdf.iat[0,4]}", 
+                    'email': userdf.iat[0,5], 
                     'status': 'Approved'
                 }
                 
@@ -2478,12 +2472,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 
             except Exception as e:
                 return str(e), 500
-
-
-
-
-
-
             
     @app.route('/revive_leave_application', methods=['POST'])
     def revive_leave_application():
