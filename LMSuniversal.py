@@ -208,19 +208,40 @@ def webhook():
                                     print(f"🔘 Button clicked: {button_id}")
                                     
                                     if button_id == "Apply":
-                            
-                                        buttons = [
-                                            {"type": "reply", "reply": {"id": "Annual", "title": "Annual Leave"}},
-                                            {"type": "reply", "reply": {"id": "Sick", "title": "Sick Leave"}},
-                                            {"type": "reply", "reply": {"id": "Maternity", "title": "Maternity Leave"}},
-                                        ]
+
+                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+
+                                        query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                        cursor.execute(query)
+                                        rows = cursor.fetchall()
+
+                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])    
+
+                                        if len(df_employeesappspendingcheck) == 0:
+
+                                            buttons = [
+                                                {"type": "reply", "reply": {"id": "Annual", "title": "Annual Leave"}},
+                                                {"type": "reply", "reply": {"id": "Sick", "title": "Sick Leave"}},
+                                                {"type": "reply", "reply": {"id": "Maternity", "title": "Maternity Leave"}},
+                                            ]
 
 
-                                        send_whatsapp_message(
-                                            sender_id, 
-                                            f"{first_name}, kindly select the type of Leave that you are applying for.", 
-                                            buttons
-                                        )
+                                            send_whatsapp_message(
+                                                sender_id, 
+                                                f"{first_name}, kindly select the type of Leave that you are applying for.", 
+                                                buttons
+                                            )
+
+                                        else:
+                                            buttons = [
+                                                {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                {"type": "reply", "reply": {"id": "Cancel", "title": "Cancel Pending Application"}},
+                                            ]
+                                            send_whatsapp_message(
+                                                sender_id, 
+                                                f"Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.", 
+                                                buttons
+                                            )
 
                                     elif button_id == "Submitapp":
                             
