@@ -2108,6 +2108,7 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
         email: email,
         address: address
     };
+    $('#loadingOverlay').show();
 
     // Example: Send data via Fetch API
     fetch('/update_employee_details', {
@@ -2122,6 +2123,13 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
         console.log('Success:', data);
         const modal = bootstrap.Modal.getInstance(document.getElementById('editinfoModal'));
         modal.hide();
+        $('#loadingOverlay').hide();
+        // Add a slight delay before showing the alert to ensure UI update
+        setTimeout(function() {
+            alert('Employee Details edited successfully');
+        }, 100);  // 100ms delay to ensure UI update before alert
+        //             
+        location.reload();  // Reload the page or update the DOM as needed
     })
     .catch((error) => {
         console.error('Error:', error);
