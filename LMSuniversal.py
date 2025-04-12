@@ -240,7 +240,7 @@ def webhook():
                                             send_whatsapp_message(
                                                 sender_id, 
                                                 f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
-                                                f"Your {df_employeesappspendingcheck.iat[0,1]} Leave Application [ID - {df_employeesappspendingcheck.iat[0,0]}] applied on {df_employeesappspendingcheck.iat[0,3]} for {df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
                                                 f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
                                                 , 
                                                 buttons
