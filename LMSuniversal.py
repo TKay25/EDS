@@ -2444,6 +2444,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     'employee_id': df_leave_appsmain_approved.iat[0,1],
                     'leave_type': leave_type,
                     'generated_on': today_date,
+                    'date_applied': df_leave_appsmain_approved.iat[0,5],
                     'approver_name': df_leave_appsmain_approved.iat[0,9].title(),
                     'approver_id': df_leave_appsmain_approved.iat[0,12],
                     'reference_number': app_id,
