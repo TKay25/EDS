@@ -682,6 +682,8 @@
         <header>
             <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} {{role_narr}} <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
             <div><span class="current-date" id="currdate">DATE: {{ today_date }}</span></div>
+            <input type="hidden" name="name-down" value="{{firstname}}">
+            <input type="hidden" name="name-down2" value="{{surname}}">
 
 
             <div class="profile-dropdown">
@@ -2192,6 +2194,7 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
     const emailInput = document.getElementById('email-editinfo-4');
     const addressInput = document.getElementById('address-editinfo-4');
 
+
     // If field is empty, use placeholder value
     const formData = {
         whatsapp: whatsappInput.value.trim() || whatsappInput.placeholder,
@@ -2239,7 +2242,9 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
 async function downloadLeaveApp(appId) {
     const btn = document.querySelector(`button[data-id="${appId}"]`);
     const originalText = btn.innerHTML;
-    
+    const firstname =  document.getElementById('name-down').val().trim();
+    const surname =  document.getElementById('name-down2').val().trim();
+
     try {
         // 1. Show loading state
         btn.disabled = true;
@@ -2265,7 +2270,7 @@ async function downloadLeaveApp(appId) {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `leave_application_${appId}.pdf`;
+        a.download = `leave_application_${firstname} ${surname}_${appId}.pdf`;
         document.body.appendChild(a);
         a.click();
 
