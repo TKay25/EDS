@@ -2425,6 +2425,21 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 rows = cursor.fetchall()
                 df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver", "Status Date"])
 
+                query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+                cursor.execute(query)
+                rows = cursor.fetchall()
+
+                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
+                print(df_employees)
+                userdf = df_employees[df_employees['id'] == empid].reset_index()
+                print("yeaarrrrr")
+
+
+
+
+
+
+
                 employee_name = f"{df_leave_appsmain_approved.iat[0,2].title()} {df_leave_appsmain_approved.iat[0,3].title()}"
                 leave_type = df_leave_appsmain_approved.iat[0,4].title()
                 company_name_doc = company_name.replace("_"," ").title()
@@ -2432,14 +2447,18 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 application = {
                     'company_name': company_name_doc,
                     'employee_name': employee_name,
-                    'employee_id': empid,
+                    'employee_id': df_leave_appsmain_approved.iat[0,1],
                     'leave_type': leave_type,
                     'generated_on': today_date,
                     'approver_name': df_leave_appsmain_approved.iat[0,9].title(),
-                    'appid': app_id,
+                    'reference_number': app_id,
                     'approved_date': df_leave_appsmain_approved.iat[0,10],
                     'start_date': df_leave_appsmain_approved.iat[0,6],
                     'end_date': df_leave_appsmain_approved.iat[0,7],
+                    'days_requested': df_leave_appsmain_approved.iat[0,8], 
+                    'address': userdf.iat[0,5], 
+                    'whatsapp': userdf.iat[0,3], 
+                    'email': userdf.iat[0,4], 
                     'status': 'Approved'
                 }
                 

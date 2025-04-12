@@ -7,7 +7,7 @@
         /* Modern print styling */
         @page {
             size: A4;
-            margin: 20mm;
+            margin: 25mm;
             @top-center {
                 content: element(pageHeader);
             }
@@ -168,7 +168,7 @@
 </head>
 <body>
     <div id="pageHeader">
-        {{ app.company_name }} | Leave Application
+        {{ app.company_name }} | Leave Application Slip
     </div>
     
     <div id="pageFooter">
@@ -179,7 +179,7 @@
         <div class="letterhead">
             <div class="company-info">
                 <h2>LEAVE APPLICATION STATUS</h2>
-                <p>Powered by Echelon Digital Solutionst</p>
+                <p>Powered by Echelon Digital Solutions</p>
             </div>
             <div class="status-badge">{{ app.status }}</div>
         </div>
@@ -198,7 +198,7 @@
                 </tr>
                 <tr>
                     <th>Leave Type</th>
-                    <td>{{ app.leave_type }}</td>
+                    <td>{{ app.leave_type }} Leave</td>
                 </tr>
                 <tr>
                     <th>Date Range</th>
@@ -240,15 +240,15 @@
             <table class="details-table">
                 <tr>
                     <th>Physical Address</th>
-                    <td>{{ app.approver_name }}</td>
+                    <td>{{ app.address }}</td>
                 </tr>
                 <tr>
-                    <th>Phone Number</th>
-                    <td>{{ app.approved_date }}</td>
+                    <th>WhatsApp Number</th>
+                    <td>{{ app.whatsapp }}</td>
                 </tr>
                 <tr>
                     <th>Email Address</th>
-                    <td>{{ app.reference_number }}</td>
+                    <td>{{ app.email }}</td>
                 </tr>
             </table>
         </div>
