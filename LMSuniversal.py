@@ -305,10 +305,9 @@ def webhook():
                                                 df_employees = pd.DataFrame(rows, columns=["id"])
                                                 leaveappid = df_employees.iat[0,0]
 
-                                                parsed_date = datetime.strptime(date_part, "%d %B %Y")
                                                 send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {company_reg}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                                                     f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                    f"A Notification has been sent to `{leaveapprovername}`  on `0{leaveapproverwhatsapp}` to decide on  your application.\n\n"
+                                                    f"A Notification has been sent to `{leaveapprovername}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
                                                     "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
 
                                             else:
