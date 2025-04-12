@@ -9,3 +9,7 @@ gunicorn
 psycopg2
 openpyxl
 requests
+pdfkit
+python-wkhtmltopdf
+weasyprint
+

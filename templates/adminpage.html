@@ -2236,7 +2236,54 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
 });
 
 
+async function downloadLeaveApp(appId) {
+    const btn = document.querySelector(`button[data-id="${appId}"]`);
+    const originalText = btn.innerHTML;
+    
+    try {
+        // 1. Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
 
+        // 2. Fetch PDF
+        const response = await fetch(`/download_leave_app/${appId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // 3. Check content type (ensure it's PDF)
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/pdf')) {
+            throw new Error('Invalid content type - expected PDF');
+        }
+
+        // 4. Create download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `leave_application_${appId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+
+        // 5. Cleanup
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+    } catch (error) {
+        console.error('Download failed:', error);
+        btn.innerHTML = '<i class="fa fa-exclamation-circle"></i> Failed - Retry';
+        // Optional: Show user-friendly alert
+        alert(`Download failed: ${error.message}`);
+    } finally {
+        // 6. Reset button (even if success or error)
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {

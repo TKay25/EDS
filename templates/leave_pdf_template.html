@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Leave Application</title>
+    <style>
+        /* Print-specific styles */
+        @page {
+            size: A5;
+            margin: 15mm;
+            @top-center {
+                content: "{{ app.company_name }}";
+                font-size: 10pt;
+            }
+
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 10px;
+        }
+        .status-approved {
+            background-color: #006699;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            font-weight: bold;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .details-table th, .details-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .details-table th {
+            background-color: #f2f2f2;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 10pt;
+            text-align: right;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Leave Application</h1>
+        <div class="status-approved">{{ app.status }}</div>
+    </div>
+    
+    <table class="details-table">
+        <tr>
+            <th>Employee Name</th>
+            <td>{{ app.employee_name }}</td>
+        </tr>
+        <tr>
+            <th>Employee ID</th>
+            <td>{{ app.employee_id }}</td>
+        </tr>
+        <tr>
+            <th>Leave Type</th>
+            <td>{{ app.leave_type }}</td>
+        </tr>
+        <tr>
+            <th>Start Date</th>
+            <td>{{ app.start_date }}</td>
+        </tr>
+        <tr>
+            <th>End Date</th>
+            <td>{{ app.end_date }}</td>
+        </tr>
+        <tr>
+            <th>Reason</th>
+            <td>{{ app.reason }}</td>
+        </tr>
+        <tr>
+            <th>Approved On</th>
+            <td>{{ app.approved_date }}</td>
+        </tr>
+    </table>
+    
+    <div class="footer">
+        <p>Generated on: {{ generated_on }}</p>
+        <p>Confidential - {{ app.company_name }}</p>
+    </div>
+</body>
+</html>

@@ -3,7 +3,7 @@ import uuid
 import os
 import numpy as np
 from mysql.connector import Error
-from flask import Flask, request, jsonify, session, render_template, redirect, url_for, send_file,flash
+from flask import Flask, request, jsonify, session, render_template, redirect, url_for, send_file,flash, make_response
 from datetime import datetime, timedelta
 import pandas as pd
 from xhtml2pdf import pisa
@@ -22,6 +22,9 @@ import io
 import base64
 import json
 import requests
+import pdfkit
+from weasyprint import HTML
+
 
 
 today_date = datetime.now().strftime('%d %B %Y')
@@ -708,7 +711,7 @@ def run1(table_name, empid):
     rows = cursor.fetchall()
     df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
     df_leave_appsmain_approved['Approval Status'] = '<p style="color: #28a745; border: 3px solid #28a745;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Approved</p>'
-    df_leave_appsmain_approved['ACTION'] = df_leave_appsmain_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}">Download</button></div>''')
+    df_leave_appsmain_approved['ACTION'] = df_leave_appsmain_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}" onclick="downloadLeaveApp('{x}')">Download</button></div>''')
     df_leave_appsmain_approvedcomb = df_leave_appsmain_approved[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]]
 
     query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_declined};"""
@@ -756,7 +759,7 @@ def run1(table_name, empid):
     cursor.execute(query)
     rows = cursor.fetchall()
     df_leave_apps_approved_by_me= pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days"])
-    df_leave_apps_approved_by_me['ACTION'] = df_leave_apps_approved_by_me['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 download-app-btn" data-name="{x}" data-ID="{x}">Download</button><button class="btn btn-primary3 revokeapprover-app-btn" data-bs-toggle="modal" data-bs-target="#revokeapproverappModal" data-name="{x}" data-ID="{x}">Revoke</button></div>''') 
+    df_leave_apps_approved_by_me['ACTION'] = df_leave_apps_approved_by_me['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 download-app-btn" data-name="{x}" data-ID="{x}" onclick="downloadLeaveApp('{x}')">Download</button><button class="btn btn-primary3 revokeapprover-app-btn" data-bs-toggle="modal" data-bs-target="#revokeapproverappModal" data-name="{x}" data-ID="{x}">Revoke</button></div>''') 
     df_leave_apps_approved_by_me['Approval Status'] = '<p style="color: #28a745; border: 3px solid #28a745;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Approved</p>'
     df_leave_apps_approved_by_me = df_leave_apps_approved_by_me[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days", "Approval Status","ACTION"]]
 
@@ -791,7 +794,7 @@ def run1(table_name, empid):
     print("ahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
     print(df_my_leave_apps_approved)
     df_my_leave_apps_approved['Approval Status'] = '<p style="color: #28a745; border: 3px solid #28a745;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Approved</p>'
-    df_my_leave_apps_approved['ACTION'] = df_my_leave_apps_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}">Download</button><button class="btn btn-primary3 revoke-app-btn" data-bs-toggle="modal" data-bs-target="#revokeappModal" data-name="{x}" data-ID="{x}">Revoke</button></div>''')
+    df_my_leave_apps_approved['ACTION'] = df_my_leave_apps_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}" onclick="downloadLeaveApp('{x}')">Download</button><button class="btn btn-primary3 revoke-app-btn" data-bs-toggle="modal" data-bs-target="#revokeappModal" data-name="{x}" data-ID="{x}">Revoke</button></div>''')
     df_my_leave_apps_approved_approved_fin =  df_my_leave_apps_approved[["App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Approval Status","Leave Approver","ACTION"]]
 
     query = f"""SELECT id, appid, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername FROM {table_name_apps_declined};"""
@@ -2406,6 +2409,36 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 
 
 
+
+
+    @app.route('/download_leave_app/<app_id>')
+    def download_pdf(app_id):
+        try:
+            # 1. Get application data (replace with your DB query)
+            application = {
+                'company_name': 'Acme Corp',
+                'employee_name': 'John Doe',
+                'leave_type': 'Annual Leave',
+                'dates': 'Dec 1-5, 2023',
+                'status': 'Approved'
+            }
+            
+            # 2. Render HTML
+            html = render_template('leave_pdf_template.html', app=application)
+            
+            # 3. Generate PDF
+            pdf = HTML(string=html).write_pdf()
+            
+            # 4. Create response
+            response = make_response(pdf)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = \
+                f'attachment; filename=leave_application_{app_id}.pdf'
+            
+            return response
+            
+        except Exception as e:
+            return str(e), 500
 
 
 
