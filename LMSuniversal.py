@@ -2420,10 +2420,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             company_name = table_name.replace("main","")
             try:
                 table_name_apps_approved = company_name + 'appsapproved'
-                query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_approved} WHERE appid = %s;"""
+                query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate FROM {table_name_apps_approved} WHERE appid = %s;"""
                 cursor.execute(query, (app_id,))  
                 rows = cursor.fetchall()
-                df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+                df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver", "Status Date"])
 
                 employee_name = f"{df_leave_appsmain_approved.iat[0,2].title()} {df_leave_appsmain_approved.iat[0,3].title()}"
                 leave_type = df_leave_appsmain_approved.iat[0,4].title()
@@ -2435,8 +2435,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     'employee_id': empid,
                     'leave_type': leave_type,
                     'generated_on': today_date,
-                    'startdate': 'Dec 1-5, 2023',
-                    'enddate': 'Dec 1-5, 2023',
+                    'approver_name': df_leave_appsmain_approved.iat[0,9].title(),
+                    'appid': app_id,
+                    'approved_date': df_leave_appsmain_approved.iat[0,10],
+                    'start_date': df_leave_appsmain_approved.iat[0,6],
+                    'end_date': df_leave_appsmain_approved.iat[0,7],
                     'status': 'Approved'
                 }
                 

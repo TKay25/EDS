@@ -6,8 +6,8 @@
     <style>
         /* Modern print styling */
         @page {
-            size: A5;
-            margin: 15mm;
+            size: A4;
+            margin: 20mm;
             @top-center {
                 content: element(pageHeader);
             }
@@ -178,7 +178,7 @@
     <div class="document-container">
         <div class="letterhead">
             <div class="company-info">
-                <h2>{{ app.company_name }}</h2>
+                <h2>LEAVE APPLICATION STATUS</h2>
                 <p>Powered by Echelon Digital Solutionst</p>
             </div>
             <div class="status-badge">{{ app.status }}</div>
@@ -227,6 +227,27 @@
                 </tr>
                 <tr>
                     <th>Reference Number</th>
+                    <td>{{ app.reference_number }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="reason-box">
+            <p><strong>Employee Contact Details During Leave:</strong></p>
+        </div>
+
+        <div class="details-card">
+            <table class="details-table">
+                <tr>
+                    <th>Physical Address</th>
+                    <td>{{ app.approver_name }}</td>
+                </tr>
+                <tr>
+                    <th>Phone Number</th>
+                    <td>{{ app.approved_date }}</td>
+                </tr>
+                <tr>
+                    <th>Email Address</th>
                     <td>{{ app.reference_number }}</td>
                 </tr>
             </table>
