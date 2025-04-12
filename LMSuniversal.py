@@ -1541,6 +1541,48 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 response = {'status': 'error', 'message': 'Leave application not submitted successfully.'}
                 return jsonify(response), 400  
 
+    
+
+    @app.route('/update_employee_details', methods=['POST'])
+    def update_employee_details():
+        user_uuid = session.get('user_uuid')
+        table_name = session.get('table_name')
+        empid = session.get('empid')
+
+        if not user_uuid or not table_name or not empid:
+            return "Session data is missing", 400
+
+        company_name = table_name.replace("main", "")
+
+        if request.method == 'POST':
+            try:
+                data = request.get_json()
+
+                whatsapp = data.get('whatsapp', '')
+                email = data.get('email', '')
+                address = data.get('address', '')
+
+                if email and '@' not in email:
+                    return jsonify({'error': 'Invalid email format'}), 400
+                
+                details_table = company_name + 'main'
+                update_query = f"""UPDATE {details_table} SET whatsapp = %s, email = %s, address = %s WHERE id = %s; """
+                cursor.execute(update_query, (whatsapp, email, address, empid))
+                connection.commit()
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Employee details updated successfully',
+                    'data': {
+                        'whatsapp': whatsapp,
+                        'email': email,
+                        'address': address
+                    }
+                }), 200
+
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+
 
     @app.route('/manual_add_employee', methods=['POST'])
     def manual_add_employee():
