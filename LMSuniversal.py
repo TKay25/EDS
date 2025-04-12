@@ -286,8 +286,6 @@ def webhook():
                                                         business_days += 1
                                                     current_date += timedelta(days=1)  # Use timedelta directly
 
-
-
                                                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
                                                 cursor.execute(query)
                                                 rows = cursor.fetchall()
@@ -333,6 +331,20 @@ def webhook():
                                                     f"Your Leave Application ID is `{leaveappid}`.\n\n"
                                                     f"A Notification has been sent to `{leaveapprovername}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
                                                     "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+                                                
+                                                if leaveapproverwhatsapp:
+    
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": "approve", "title": "Approve"}},
+                                                        {"type": "reply", "reply": {"id": "disapprove", "title": "Disapprove"}},
+                                                    ]
+                                                    send_whatsapp_message(
+                                                        f"+263{leaveapproverwhatsapp}", 
+                                                        f"Attention {leaveapprovername}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                        f"Select an option below to either approve or disapprove the application."         
+                                                        , 
+                                                        buttons
+                                                    )
 
                                             else:
                                                 print("leave app submission failed")
