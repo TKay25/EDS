@@ -183,7 +183,7 @@ def webhook():
                                             whatsapp_foc_8 = f"0{result[3]}"
                                             email_foc_8 = result[4]
                                             address_foc_8 = result[5]
-                                            days_days_balance = result[7]
+                                            days_days_balance = result[12]
                                             company_reg = table_name[:-4]  
 
                                             print(id_user)
@@ -548,7 +548,7 @@ def webhook():
 
                                         send_whatsapp_message(
                                             sender_id, 
-                                            f"Hey {first_name}, your current available leave days balance is {days_days_balance} days.\n\n"
+                                            f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
                                             "Select an option below to continue 👇",
                                             buttons
                                         )
