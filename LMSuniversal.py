@@ -174,6 +174,8 @@ def webhook():
                                         cursor.execute(query, (f"%{sender_number}",))
                                         result = cursor.fetchone()
 
+                                        print(result)
+
                                         if result:
                                             id_user = result[0]  
                                             first_name = result[1]  
