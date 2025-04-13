@@ -291,7 +291,7 @@ def webhook():
 
                                                 buttons = [
                                                     {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                    {"type": "reply", "reply": {"id": "Apply", "title": "New Leave Application"}},
+                                                    {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                     {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
                                                 ]
                                                 send_whatsapp_message(
@@ -388,8 +388,8 @@ def webhook():
                                             elif all_approved_declined_cancelled.iat[0,8] == "Declined":
 
                                                 buttons = [
-                                                    {"type": "reply", "reply": {"id": "Resubmit", "title": "Re-Submit Application"}},
-                                                    {"type": "reply", "reply": {"id": "Apply", "title": "New Leave Application"}},
+                                                    {"type": "reply", "reply": {"id": "Resubmit", "title": "ReSubmit Application"}},
+                                                    {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                     {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
                                                 ]
                                                 send_whatsapp_message(
@@ -402,7 +402,7 @@ def webhook():
 
                                                 buttons = [
                                                     {"type": "reply", "reply": {"id": "Resubmit", "title": "Re-Submit Application"}},
-                                                    {"type": "reply", "reply": {"id": "Apply", "title": "New Leave Application"}},
+                                                    {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                     {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
                                                 ]
                                                 send_whatsapp_message(
@@ -584,7 +584,7 @@ def webhook():
                                 
                                 if "hello" in text.lower():
                                     buttons = [
-                                        {"type": "reply", "reply": {"id": "Apply", "title": "New Leave Application"}},
+                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                         {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
                                         {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}}
                                     ]
