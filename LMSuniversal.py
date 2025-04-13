@@ -288,7 +288,7 @@ def webhook():
 
                                                 send_whatsapp_message(
                                                     sender_id, 
-                                                    f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` that you applied for on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]} by `{all_approved_declined_cancelled.iat[0,3]}`.\n\n" 
+                                                    f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days from {all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')} to {all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]} by `{all_approved_declined_cancelled.iat[0,3]}` on `{all_approved_declined_cancelled.iat[0,9]}`.\n\n" 
                                                     f"Type `hello` to explore options." 
                                                 )
 
