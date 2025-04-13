@@ -301,13 +301,8 @@ def webhook():
 
                                                 def generate_leave_pdf():
 
-                                                    def get_logo_base64():
-                                                        logo_path = os.path.join(app.static_folder, 'images', 'eds logo blue.png')
-                                                        with open(logo_path, "rb") as img_file:
-                                                            return "data:image/png;base64," + base64.b64encode(img_file.read()).decode('utf-8')
-
                                                     app = {
-                                                        'company_logo': get_logo_base64() ,
+                                                        'company_logo': 44 ,
                                                         'company_name': company_reg.replace("_"," ").title(),
                                                         'employee_name': f"{first_name} {last_name}",
                                                         'leave_type': all_approved_declined_cancelled.iat[0,2],
