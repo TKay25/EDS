@@ -319,9 +319,9 @@ def webhook():
                                                         'whatsapp': 9, 
                                                         'email': 9, 
                                                         'status': 'Approved'
-                                                    },
+                                                    }
 
-                                                    html_out = render_template("leave_pdf_template.html", **app)
+                                                    html_out = render_template("leave_pdf_template.html", app = app)
                                                     pdf_path = f"leave_app_8.pdf"
                                                     HTML(string=html_out).write_pdf(pdf_path)
                                                     return pdf_path
