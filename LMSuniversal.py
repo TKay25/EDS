@@ -404,7 +404,7 @@ def webhook():
                                             elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
                                                 buttons = [
-                                                    {"type": "reply", "reply": {"id": "Resubmit", "title": "Re-Submit Application"}},
+                                                    {"type": "reply", "reply": {"id": "Resubmit", "title": "ReSubmit Application"}},
                                                     {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                     {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                 ]
