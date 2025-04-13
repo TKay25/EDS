@@ -560,7 +560,7 @@ def webhook():
                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                         table_name_apps_cancelled = f"{company_reg}appscancelled"
 
-                                        query = f"SELECT appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                        query = f"SELECT appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                         cursor.execute(query)
                                         (app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, status) = cursor.fetchone()
 
