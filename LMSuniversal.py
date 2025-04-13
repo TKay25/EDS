@@ -181,6 +181,7 @@ def webhook():
                                             whatsapp_foc_8 = f"0{result[3]}"
                                             email_foc_8 = result[4]
                                             address_foc_8 = result[5]
+                                            days_days_balance = result[7]
                                             company_reg = table_name[:-4]  
 
                                             print(id_user)
@@ -259,11 +260,11 @@ def webhook():
                                         table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                         cursor.execute(query)
                                         rows = cursor.fetchall()
 
-                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
 
                                         if len(df_employeesappspendingcheck) == 0:
 
@@ -292,7 +293,7 @@ def webhook():
                                                 buttons = [
                                                     {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
                                                     {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                    {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
+                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                 ]
                                                 send_whatsapp_message(
                                                     sender_id, 
@@ -390,7 +391,7 @@ def webhook():
                                                 buttons = [
                                                     {"type": "reply", "reply": {"id": "Resubmit", "title": "ReSubmit Application"}},
                                                     {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                    {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
+                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                 ]
                                                 send_whatsapp_message(
                                                     sender_id, 
@@ -403,7 +404,7 @@ def webhook():
                                                 buttons = [
                                                     {"type": "reply", "reply": {"id": "Resubmit", "title": "Re-Submit Application"}},
                                                     {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                    {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
+                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                 ]
                                                 send_whatsapp_message(
                                                     sender_id, 
@@ -418,8 +419,8 @@ def webhook():
                                             ]
                                             send_whatsapp_message(
                                                 sender_id, 
-                                                f"Sorry {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
-                                                f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
+                                                f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                f"Select an option below to either remind `{df_employeesappspendingcheck.iat[0,2]}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
                                                 , 
                                                 buttons
                                             )
@@ -536,18 +537,17 @@ def webhook():
                                                 "Example: `end 15 march 2024`"
                                             )
 
-                                    elif button_id == "Track":
-
+                                    elif button_id == "Checkbal":
+                                        
                                         buttons = [
-                                            {"type": "reply", "reply": {"id": "Check", "title": "Check Status"}},
-                                            {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
-                                            {"type": "reply", "reply": {"id": "Cancel", "title": "Cancel Application"}},
+                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                        {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
                                         ]
-
 
                                         send_whatsapp_message(
                                             sender_id, 
-                                            f"{first_name}, kindly select a Leave Application Tracker option.", 
+                                            f"Hey {first_name}, your current available leave days balance is {days_days_balance} days.\n\n"
+                                            "Select an option below to continue 👇",
                                             buttons
                                         )
 
@@ -586,7 +586,7 @@ def webhook():
                                     buttons = [
                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                         {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                        {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}}
+                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
                                     ]
                                     companyxx = company_reg.replace("_"," ").title()
                                     send_whatsapp_message(
