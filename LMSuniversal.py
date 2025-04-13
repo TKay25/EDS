@@ -178,6 +178,9 @@ def webhook():
                                             id_user = result[0]  
                                             first_name = result[1]  
                                             last_name = result[2]  
+                                            whatsapp_foc_8 = f"0{result[3]}"
+                                            email_foc_8 = result[4]
+                                            address_foc_8 = result[5]
                                             company_reg = table_name[:-4]  
 
                                             print(id_user)
@@ -264,20 +267,20 @@ def webhook():
 
                                         if len(df_employeesappspendingcheck) == 0:
 
-                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
+                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
                                             cursor.execute(query)
                                             rows = cursor.fetchall()
-                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"]) 
+                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
 
-                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
                                             cursor.execute(query)
                                             rows = cursor.fetchall()
-                                            df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])  
+                                            df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])  
                     
-                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
                                             cursor.execute(query)
                                             rows = cursor.fetchall()
-                                            df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])
+                                            df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])
                     
                                             all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                             all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
@@ -294,8 +297,7 @@ def webhook():
                                                 send_whatsapp_message(
                                                     sender_id, 
                                                     f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.\n\n" 
-                                                    "Select whether to apply for Revocation of this approved leave application, submit another leave application or check your current leave days balance." ,
-                                                    buttons
+                                                    "Select whether to apply for Revocation of this approved leave application, submit another leave application or check your current leave days balance." 
                                                 )
 
 
@@ -310,13 +312,13 @@ def webhook():
                                                         'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
                                                         'reference_number': all_approved_declined_cancelled.iat[0,0],
                                                         'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
-                                                        'new_balance': 8,
-                                                        'start_date': 9,
-                                                        'end_date': 9,
-                                                        'days_requested': 9, 
-                                                        'address': 9, 
-                                                        'whatsapp': 9, 
-                                                        'email': 9, 
+                                                        'new_balance': all_approved_declined_cancelled.iat[0,10],
+                                                        'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
+                                                        'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
+                                                        'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                        'address': address_foc_8, 
+                                                        'whatsapp': whatsapp_foc_8, 
+                                                        'email': email_foc_8, 
                                                         'status': 'Approved'
                                                     }
 
@@ -330,7 +332,10 @@ def webhook():
                                                 global ACCESS_TOKEN
                                                 global PHONE_NUMBER_ID
 
-                                                def upload_pdf_to_whatsapp(pdf_bytes, filename="leave_application.pdf"):
+                                                def upload_pdf_to_whatsapp(pdf_bytes):
+
+                                                    filename=f"leave_application_{company_reg.replace("_"," ").title()}_{all_approved_declined_cancelled.iat[0,0]}.pdf"
+                                                
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}"
@@ -348,11 +353,8 @@ def webhook():
                                                     return response.json()["id"]
 
                                                                                                 
-
-
-                                                
                                                 def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                    filename="leave_application.pdf"
+                                                    filename=f"leave_application_{company_reg.replace("_"," ").title()}_{all_approved_declined_cancelled.iat[0,0]}.pdf"
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -377,7 +379,11 @@ def webhook():
                                                 media_id = upload_pdf_to_whatsapp(pdf_path)
                                                 send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-
+                                                send_whatsapp_message(
+                                                    sender_id,
+                                                    "Select an option below to continue 👇",
+                                                    buttons
+                                                )
 
                                         elif len(df_employeesappspendingcheck) > 0:
                                             buttons = [
@@ -2622,7 +2628,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 response = make_response(pdf)
                 response.headers['Content-Type'] = 'application/pdf'
                 response.headers['Content-Disposition'] = \
-                    f'attachment; filename=leave_application_{company_name} {app_id}.pdf'
+                    f'attachment; filename=leave_application_{company_name}_{app_id}.pdf'
                 
                 return response
                 
