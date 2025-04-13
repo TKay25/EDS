@@ -296,8 +296,7 @@ def webhook():
                                                 ]
                                                 send_whatsapp_message(
                                                     sender_id, 
-                                                    f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.\n\n" 
-                                                    "Select whether to apply for Revocation of this approved leave application, submit another leave application or check your current leave days balance." 
+                                                    f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
                                                 )
 
 
@@ -334,7 +333,7 @@ def webhook():
 
                                                 def upload_pdf_to_whatsapp(pdf_bytes):
                                                     compxxy = company_reg.replace("_"," ").title()
-                                                    filename=f"leave_application_{compxxy}_{all_approved_declined_cancelled.iat[0,0]}.pdf"
+                                                    filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
                                                 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                     headers = {
@@ -355,7 +354,7 @@ def webhook():
                                                                                                 
                                                 def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
                                                     compxxy = company_reg.replace("_"," ").title()
-                                                    filename=f"leave_application_{compxxy}_{all_approved_declined_cancelled.iat[0,0]}.pdf"
+                                                    filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
