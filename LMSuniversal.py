@@ -333,8 +333,8 @@ def webhook():
                                                 global PHONE_NUMBER_ID
 
                                                 def upload_pdf_to_whatsapp(pdf_bytes):
-
-                                                    filename=f"leave_application_{company_reg.replace("_"," ").title()}_{all_approved_declined_cancelled.iat[0,0]}.pdf"
+                                                    compxxy = company_reg.replace("_"," ").title()
+                                                    filename=f"leave_application_{compxxy}_{all_approved_declined_cancelled.iat[0,0]}.pdf"
                                                 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                     headers = {
@@ -354,7 +354,8 @@ def webhook():
 
                                                                                                 
                                                 def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                    filename=f"leave_application_{company_reg.replace("_"," ").title()}_{all_approved_declined_cancelled.iat[0,0]}.pdf"
+                                                    compxxy = company_reg.replace("_"," ").title()
+                                                    filename=f"leave_application_{compxxy}_{all_approved_declined_cancelled.iat[0,0]}.pdf"
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
