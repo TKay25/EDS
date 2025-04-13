@@ -44,7 +44,7 @@ connection = psycopg2.connect(external_database_url)
 cursor = connection.cursor()
 
 # WhatsApp API Credentials (Replace with your actual credentials)
-ACCESS_TOKEN = "EAATESj1oB5YBOw8v5tUM2Vjc65Fx6ZA8mJJTcAGQr3Xm1xbHWAy3wkNZAOvQ6zCquEBVr9sqcZANCMdi2OUZBcUH2b9JXEU6upX2daZAHziAb0ZCfaYdwmNHNGxv9IHASrBi8FNXXIDZAEZBar32hN6c5JnjzZB0P9dXZBZBOZAn55cS3uXhh7gvQRqE1mpxiYULwmaDhY1cvlSzoNYxqqtmJgkSW2p3Jl4ZD"
+ACCESS_TOKEN = "EAATESj1oB5YBOZBJ2qvRR8bRcPyXO7pZAcqnKlBC64uwkH1XXuGgTX8tl59G1P5NbZBfZATWSZCw1qcyxhWiAxje00ZCLAhJmRhejoVbmDZBYVMYPmvcrPxPhY5R8qfPk1X2XslWxrrRjTudl7NPd8ZBwUvv09y3ZCfZCZCHelVesxLi7LAkF0gsBRRGhyh9x1eVANeS0s0ZBrZCMAw0ruODjeXZBWc2yva8MZD"
 PHONE_NUMBER_ID = "558392750697195"
 VERIFY_TOKEN = "521035180620700"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
@@ -1643,12 +1643,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             try:
                 print("Form data received:", request.form)
 
-                firstname = request.form.get('firstname', '').strip()
-                surname = request.form.get('surname', '').strip()
+                firstname = request.form.get('firstname', '').strip().title()
+                surname = request.form.get('surname', '').strip().title()
                 whatsapp = request.form.get('whatsapp', '').strip()
                 email = request.form.get('email', '').strip()
                 role = request.form.get('role', '').strip()
-                approver = request.form.get('selected_employees', '').strip()
+                approver = request.form.get('selected_employees', '').strip().title()
                 current_leave_days = request.form.get('currentleavedays', '').strip()
                 monthly_accumulation = request.form.get('monthlyaccumulation', '').strip()
                 

@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>EDS LMS Dashboard</title>
+        <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
         <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -902,9 +903,10 @@
                         <label for="leaveType" style="margin-right: 10px;"><b>Type of Leave:</b></label>
                         <select id="leaveType" name="leaveType" class="form-control form-control-blue" style="width: 50%;" required>
                             <option value="">--Select Leave Type--</option>
-                            <option value="annual">Annual Leave</option>
-                            <option value="special">Sick Leave</option>
-                            <option value="other">Other Leave</option>
+                            <option value="Annual">Annual Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Maternity">Maternity Leave</option>
+                            <option value="Other">Other Leave</option>
                         </select>
                     </div>
 
