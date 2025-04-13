@@ -327,9 +327,10 @@ def webhook():
                                                     return pdf_path
                                                 
                                                 global ACCESS_TOKEN
+                                                global PHONE_NUMBER_ID
 
                                                 def upload_pdf_to_whatsapp(file_path):
-                                                    url = "https://graph.facebook.com/v19.0/YOUR_PHONE_NUMBER_ID/media"
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}"
                                                     }
@@ -345,7 +346,7 @@ def webhook():
                                                     return media_id
                                                 
                                                 def send_whatsapp_pdf_by_media_id(recipient_number, media_id, filename="leave_app_8.pdf"):
-                                                    url = "https://graph.facebook.com/v19.0/YOUR_PHONE_NUMBER_ID/messages"
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
                                                         "Content-Type": "application/json"
