@@ -555,6 +555,7 @@ def webhook():
                                             buttons
                                         )
 
+
                                     elif button_id == "Cancelapp" :
 
                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -594,8 +595,8 @@ def webhook():
                                         query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
                                         cursor.execute(query, (app_id,))
                                         connection.commit()
-
-
+                                        
+                                        companyxx = company_reg.replace("_", " ").title()
                                         buttons = [
                                             {"type": "reply", "reply": {"id": "Resubmit", "title": "ReSubmit Application"}},
                                             {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
