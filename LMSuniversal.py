@@ -300,9 +300,8 @@ def webhook():
 
 
                                                 def generate_leave_pdf():
-
                                                     app = {
-                                                        'company_logo': 44 ,
+                                                        'company_logo': 44,
                                                         'company_name': company_reg.replace("_"," ").title(),
                                                         'employee_name': f"{first_name} {last_name}",
                                                         'leave_type': all_approved_declined_cancelled.iat[0,2],
@@ -321,10 +320,12 @@ def webhook():
                                                         'status': 'Approved'
                                                     }
 
-                                                    html_out = render_template("leave_pdf_template.html", app = app)
-                                                    pdf_path = f"leave_app_8.pdf"
-                                                    HTML(string=html_out).write_pdf(pdf_path)
-                                                    return pdf_path
+                                                    html_out = render_template("leave_pdf_template.html", app=app)
+                                                    
+                                                    # ✅ Return as bytes instead of saving to file
+                                                    pdf_bytes = HTML(string=html_out).write_pdf()
+                                                    return pdf_bytes
+
                                                 
                                                 global ACCESS_TOKEN
                                                 global PHONE_NUMBER_ID
@@ -342,12 +343,11 @@ def webhook():
                                                     }
 
                                                     response = requests.post(url, headers=headers, files=files)
-
-                                                    print("📥 Full incoming data:", response.text)  # Helpful for debugging
-
+                                                    print("📥 Full incoming data:", response.text)  # Good for debugging
                                                     response.raise_for_status()
                                                     return response.json()["id"]
-                                                
+
+                                                                                                
 
 
                                                 
