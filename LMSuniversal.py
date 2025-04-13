@@ -551,10 +551,6 @@ def webhook():
                                             buttons
                                         )
 
-
-
-
-
                                     elif button_id in ["Annual","Sick","Maternity"] :
                                         button_id_leave_type = str(button_id)
 
@@ -588,7 +584,7 @@ def webhook():
                                 
                                 if "hello" in text.lower():
                                     buttons = [
-                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply Leave"}},
+                                        {"type": "reply", "reply": {"id": "Apply", "title": "New Leave Application"}},
                                         {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
                                         {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}}
                                     ]
