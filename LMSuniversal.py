@@ -329,23 +329,29 @@ def webhook():
                                                 global ACCESS_TOKEN
                                                 global PHONE_NUMBER_ID
 
-                                                def upload_pdf_to_whatsapp(file_path):
+                                                def upload_pdf_to_whatsapp(pdf_bytes, filename="leave_application.pdf"):
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}"
                                                     }
+
                                                     files = {
-                                                        "file": (file_path, open(file_path, "rb")),
+                                                        "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
                                                         "type": (None, "application/pdf"),
                                                         "messaging_product": (None, "whatsapp")
                                                     }
 
                                                     response = requests.post(url, headers=headers, files=files)
-                                                    response.raise_for_status()  # Raise error if upload fails
-                                                    media_id = response.json()["id"]
-                                                    return media_id
+
+                                                    print("📥 Full incoming data:", response.text)  # Helpful for debugging
+
+                                                    response.raise_for_status()
+                                                    return response.json()["id"]
                                                 
-                                                def send_whatsapp_pdf_by_media_id(recipient_number, media_id, filename="leave_app_8.pdf"):
+
+
+                                                
+                                                def send_whatsapp_pdf_by_media_id(recipient_number, media_id, filename="leave_application.pdf"):
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -356,8 +362,8 @@ def webhook():
                                                         "to": recipient_number,
                                                         "type": "document",
                                                         "document": {
-                                                            "id": media_id,
-                                                            "filename": filename
+                                                            "id": media_id,            # Media ID from upload step
+                                                            "filename": filename       # Desired file name on recipient's phone
                                                         }
                                                     }
 
@@ -365,9 +371,10 @@ def webhook():
                                                     response.raise_for_status()
                                                     return response.json()
 
+
                                                 pdf_path = generate_leave_pdf()
                                                 media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                send_whatsapp_pdf_by_media_id(to=sender_id, media_id=media_id, filename="leave_app_8.pdf", caption="Here's your approved leave application summary.")
+                                                send_whatsapp_pdf_by_media_id(to=sender_id, media_id=media_id, filename="leave_application.pdf", caption="Here's your approved leave application summary.")
 
 
 
