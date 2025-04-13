@@ -291,7 +291,7 @@ def webhook():
 
                                                 buttons = [
                                                     {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                    {"type": "reply", "reply": {"id": "Apply", "title": "Apply Leave"}},
+                                                    {"type": "reply", "reply": {"id": "Apply", "title": "New Leave Application"}},
                                                     {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
                                                 ]
                                                 send_whatsapp_message(
