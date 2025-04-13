@@ -564,12 +564,7 @@ def webhook():
                                         cursor.execute(query)
                                         result = cursor.fetchone()
                                         if result:
-                                            (
-                                                app_id, employee_number, first_name, surname, leave_type, 
-                                                leave_specify, approver_name, approver_id, approver_email, 
-                                                approver_whatsapp, leave_days_balance, date_applied, 
-                                                start_date, end_date, leave_days, status
-                                            ) = result
+                                            (app_id, employee_number, first_name, surname, leave_type,  leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days) = result
                                         else:
                                             print("No record found for the user.")
 
