@@ -385,6 +385,32 @@ def webhook():
                                                     buttons
                                                 )
 
+                                            elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+
+                                                buttons = [
+                                                    {"type": "reply", "reply": {"id": "Resubmit", "title": "Re-Submit Application"}},
+                                                    {"type": "reply", "reply": {"id": "Apply", "title": "New Leave Application"}},
+                                                    {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
+                                                ]
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                    buttons 
+                                                )
+
+                                            elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
+
+                                                buttons = [
+                                                    {"type": "reply", "reply": {"id": "Resubmit", "title": "Re-Submit Application"}},
+                                                    {"type": "reply", "reply": {"id": "Apply", "title": "New Leave Application"}},
+                                                    {"type": "reply", "reply": {"id": "Check", "title": "Check Days Balance"}},
+                                                ]
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled⛔ your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
+                                                    buttons 
+                                                )
+
                                         elif len(df_employeesappspendingcheck) > 0:
                                             buttons = [
                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
