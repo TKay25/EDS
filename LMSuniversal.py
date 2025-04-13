@@ -351,7 +351,8 @@ def webhook():
 
 
                                                 
-                                                def send_whatsapp_pdf_by_media_id(recipient_number, media_id, filename="leave_application.pdf"):
+                                                def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                    filename="leave_application.pdf"
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -374,7 +375,7 @@ def webhook():
 
                                                 pdf_path = generate_leave_pdf()
                                                 media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                send_whatsapp_pdf_by_media_id(to=sender_id, media_id=media_id, filename="leave_application.pdf", caption="Here's your approved leave application summary.")
+                                                send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
 
 
