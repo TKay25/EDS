@@ -285,6 +285,7 @@ def webhook():
                                             print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
 
                                             if all_approved_declined_cancelled.iat[0,8] == "Approved":
+
                                                 buttons = [
                                                     {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
                                                     {"type": "reply", "reply": {"id": "Apply", "title": "Apply Leave"}},
@@ -296,6 +297,82 @@ def webhook():
                                                     "Select whether to apply for Revocation of this approved leave application, submit another leave application or check your current leave days balance." ,
                                                     buttons
                                                 )
+
+
+                                                def generate_leave_pdf():
+
+                                                    def get_logo_base64():
+                                                        logo_path = os.path.join(app.static_folder, 'images', 'eds logo blue.png')
+                                                        with open(logo_path, "rb") as img_file:
+                                                            return "data:image/png;base64," + base64.b64encode(img_file.read()).decode('utf-8')
+
+                                                    app = {
+                                                        'company_logo': get_logo_base64() ,
+                                                        'company_name': company_reg.replace("_"," ").title(),
+                                                        'employee_name': f"{first_name} {last_name}",
+                                                        'leave_type': all_approved_declined_cancelled.iat[0,2],
+                                                        'generated_on': today_date,
+                                                        'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
+                                                        'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
+                                                        'reference_number': all_approved_declined_cancelled.iat[0,0],
+                                                        'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
+                                                        'new_balance': 8,
+                                                        'start_date': 9,
+                                                        'end_date': 9,
+                                                        'days_requested': 9, 
+                                                        'address': 9, 
+                                                        'whatsapp': 9, 
+                                                        'email': 9, 
+                                                        'status': 'Approved'
+                                                    },
+
+                                                    html_out = render_template("leave_pdf_template.html", **app)
+                                                    pdf_path = f"leave_app_8.pdf"
+                                                    HTML(string=html_out).write_pdf(pdf_path)
+                                                    return pdf_path
+                                                
+                                                global ACCESS_TOKEN
+
+                                                def upload_pdf_to_whatsapp(file_path):
+                                                    url = "https://graph.facebook.com/v19.0/YOUR_PHONE_NUMBER_ID/media"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                    }
+                                                    files = {
+                                                        "file": (file_path, open(file_path, "rb")),
+                                                        "type": (None, "application/pdf"),
+                                                        "messaging_product": (None, "whatsapp")
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, files=files)
+                                                    response.raise_for_status()  # Raise error if upload fails
+                                                    media_id = response.json()["id"]
+                                                    return media_id
+                                                
+                                                def send_whatsapp_pdf_by_media_id(recipient_number, media_id, filename="leave_app_8.pdf"):
+                                                    url = "https://graph.facebook.com/v19.0/YOUR_PHONE_NUMBER_ID/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": recipient_number,
+                                                        "type": "document",
+                                                        "document": {
+                                                            "id": media_id,
+                                                            "filename": filename
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+                                                    response.raise_for_status()
+                                                    return response.json()
+
+                                                pdf_path = generate_leave_pdf()
+                                                media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                send_whatsapp_pdf_by_media_id(to=sender_id, media_id=media_id, filename="leave_app_8.pdf", caption="Here's your approved leave application summary.")
+
 
 
                                         elif len(df_employeesappspendingcheck) > 0:
