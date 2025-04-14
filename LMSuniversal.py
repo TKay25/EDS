@@ -561,11 +561,11 @@ def webhook():
                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                         table_name_apps_cancelled = f"{company_reg}appscancelled"
 
-                                        query = f"SELECT appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                        query = f"SELECT appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf FROM {table_name_apps_pending_approval} WHERE id = %s;"
                                         cursor.execute(query, (id_user,))
                                         result = cursor.fetchone()
                                         if result:
-                                            (app_id, employee_number, first_name, surname, leave_type,  leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days) = result
+                                            (app_id, employee_number, first_name, surname, leave_type,  leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf) = result
                                         
                                             try:
                                                     status = "Cancelled"
@@ -601,7 +601,7 @@ def webhook():
                                                 {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                             ]
 
-                                            send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
+                                            send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
                                                 "Select an option below to continue 👇",
                                                 buttons
                                             )                                          
