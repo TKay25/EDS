@@ -601,7 +601,7 @@ def webhook():
                                                 {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                             ]
 
-                                            send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
+                                            send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
                                                 "Select an option below to continue 👇",
                                                 buttons
                                             )                                          
