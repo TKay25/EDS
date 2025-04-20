@@ -734,6 +734,10 @@ def webhook():
                                     text = message.get("text", {}).get("body", "").lower()
                                     print(f"📨 Message from {sender_id}: {text}")
                                     
+                                    print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+
+                                    print(role_foc_8)
+
                                     if "hello" in text.lower():
                                         buttons = [
                                             {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
@@ -749,6 +753,7 @@ def webhook():
 
 
                                     elif "start" in text.lower():
+
                                         date_part = text.split("start", 1)[1].strip()
 
                                         cursor.execute("""
@@ -794,6 +799,7 @@ def webhook():
                                             )
 
                                     elif "end" in text.lower():
+
                                         date_part = text.split("end", 1)[1].strip()
 
                                         cursor.execute("""
@@ -849,6 +855,7 @@ def webhook():
                                         )
 
                             elif role_foc_8 == "Administrator":
+
                                 print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
 
                                 print(role_foc_8)
