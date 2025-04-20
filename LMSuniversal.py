@@ -945,7 +945,7 @@ def webhook():
                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                     {"id": "Track", "title": "Track My Application"},
                                                     {"id": "Checkbal", "title": "Check Days Balance"},
-                                                    {"id": "Pending", "title": " Apps Pending My Approval"},
+                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
                                                     {"id": "Template", "title": "Add Employees"},
                                                     {"id": "Rolechange", "title": "Change Employee's Role"},
                                                     {"id": "Book", "title": "Extract Leave Book"}
