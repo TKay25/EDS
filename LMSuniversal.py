@@ -229,6 +229,7 @@ def webhook():
                                             print(id_user)
                                             print(first_name)
                                             print(last_name)
+                                            print(role_foc_8)
 
                                             print(f"Credentials found in table: {table_name}")
                                             first_column_value = result[0]
