@@ -3821,12 +3821,100 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 userdf = df_employees[df_employees['id'] == int(np.int64(employee_number))].reset_index()
                 print("yeaarrrrr")
                 print(userdf)
-                firstname = userdf.iat[0,2]
-                surname = userdf.iat[0,3]
+                firstname = userdf.iat[0,2].title()
+                surname = userdf.iat[0,3].title()
                 whatsappemp = userdf.iat[0,4]
+                email = userdf.iat[0,5]
+                address = userdf.iat[0,6]
                 companyxx = company_name.replace("_", " ").title()
+                app_namexx = approver_name.title()
 
-                send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved✅ by  {approver_name}!")
+                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
+                cursor.execute(query)
+                rows = cursor.fetchall()
+                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
+
+                df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
+
+                send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
+
+
+                def generate_leave_pdf():
+                    app = {
+                        'company_logo': 44,
+                        'company_name': companyxx,
+                        'employee_name': f"{first_name} {surname}",
+                        'leave_type': leave_type,
+                        'generated_on': today_date,
+                        'date_applied': df_employeesappsapprovedcheck.iat[0,4].strftime('%d %B %Y'),
+                        'approver_name': df_employeesappsapprovedcheck.iat[0,3].title(),
+                        'reference_number': df_employeesappsapprovedcheck.iat[0,0],
+                        'approved_date': df_employeesappsapprovedcheck.iat[0,9].strftime('%d %B %Y'),
+                        'new_balance': df_employeesappsapprovedcheck.iat[0,10],
+                        'start_date':  df_employeesappsapprovedcheck.iat[0,5].strftime('%d %B %Y'),
+                        'end_date':  df_employeesappsapprovedcheck.iat[0,6].strftime('%d %B %Y'),
+                        'days_requested':  df_employeesappsapprovedcheck.iat[0,7], 
+                        'address': address, 
+                        'whatsapp': f"+263{whatsappemp}", 
+                        'email': email, 
+                        'status': 'Approved'
+                    }
+
+                    html_out = render_template("leave_pdf_template.html", app=app)
+                    
+                    # ✅ Return as bytes instead of saving to file
+                    pdf_bytes = HTML(string=html_out).write_pdf()
+                    return pdf_bytes
+
+                
+                global ACCESS_TOKEN
+                global PHONE_NUMBER_ID
+
+                def upload_pdf_to_whatsapp(pdf_bytes):
+                    filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
+                
+                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                    headers = {
+                        "Authorization": f"Bearer {ACCESS_TOKEN}"
+                    }
+
+                    files = {
+                        "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                        "type": (None, "application/pdf"),
+                        "messaging_product": (None, "whatsapp")
+                    }
+
+                    response = requests.post(url, headers=headers, files=files)
+                    print("📥 Full incoming data:", response.text)  # Good for debugging
+                    response.raise_for_status()
+                    return response.json()["id"]
+
+                                                                
+                def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                    filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
+                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                    headers = {
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Content-Type": "application/json"
+                    }
+                    payload = {
+                        "messaging_product": "whatsapp",
+                        "to": recipient_number,
+                        "type": "document",
+                        "document": {
+                            "id": media_id,            # Media ID from upload step
+                            "filename": filename       # Desired file name on recipient's phone
+                        }
+                    }
+
+                    response = requests.post(url, headers=headers, json=payload)
+                    response.raise_for_status()
+                    return response.json()
+
+
+                pdf_path = generate_leave_pdf()
+                media_id = upload_pdf_to_whatsapp(pdf_path)
+                send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
 
                 return jsonify({"message": f"Leave Application {app_id} approved successfully."})
             
