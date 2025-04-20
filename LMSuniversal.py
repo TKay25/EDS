@@ -1205,6 +1205,7 @@ def webhook():
                                             )
 
                                         elif button_id == "Resubmitapp" :
+
                                             table_name_apps_cancelled = f"{company_reg}appscancelled"
                                             table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
@@ -1214,7 +1215,8 @@ def webhook():
 
                                             if result:
 
-                                                df_employees = pd.DataFrame(result).sort_values(by=df_employees.columns[0], ascending=False)
+                                                df_employees = pd.DataFrame(result)
+                                                df_employees = df_employees.sort_values(by=df_employees.columns[0], ascending=False)
                                                 print(df_employees)
                                                         
                                                 try:
