@@ -334,7 +334,6 @@ def webhook():
                                                 print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
 
                                                 if all_approved_declined_cancelled.iat[0,8] == "Approved":
-                                                    app333 = all_approved_declined_cancelled.iat[0,3].title()
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
@@ -343,7 +342,7 @@ def webhook():
                                                     ]
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{app333}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
+                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
                                                     )
 
 
@@ -433,7 +432,6 @@ def webhook():
                                                     )
 
                                                 elif all_approved_declined_cancelled.iat[0,8] == "Declined":
-                                                    app444 = all_approved_declined_cancelled.iat[0,3].title()
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
@@ -442,7 +440,7 @@ def webhook():
                                                     ]
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{app444}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
                                                         buttons 
                                                     )
 
@@ -942,7 +940,6 @@ def webhook():
                                                 print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
 
                                                 if all_approved_declined_cancelled.iat[0,8] == "Approved":
-                                                    app888 = all_approved_declined_cancelled.iat[0,3].title()
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
@@ -951,7 +948,7 @@ def webhook():
                                                     ]
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{app888}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
+                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
                                                     )
 
 
@@ -1041,7 +1038,7 @@ def webhook():
                                                     )
 
                                                 elif all_approved_declined_cancelled.iat[0,8] == "Declined":
-                                                    app999 = all_approved_declined_cancelled.iat[0,3].title()
+
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
                                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
@@ -1049,7 +1046,7 @@ def webhook():
                                                     ]
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{app999}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
                                                         buttons 
                                                     )
 
@@ -1445,7 +1442,6 @@ def webhook():
                                                 print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
 
                                                 if all_approved_declined_cancelled.iat[0,8] == "Approved":
-                                                    app111 = all_approved_declined_cancelled.iat[0,3].title()
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
@@ -1454,7 +1450,7 @@ def webhook():
                                                     ]
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{app111}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
+                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
                                                     )
 
 
@@ -1544,7 +1540,6 @@ def webhook():
                                                     )
 
                                                 elif all_approved_declined_cancelled.iat[0,8] == "Declined":
-                                                    app222 = all_approved_declined_cancelled.iat[0,3].title()
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
@@ -1553,7 +1548,7 @@ def webhook():
                                                     ]
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{app222}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
                                                         buttons 
                                                     )
 
@@ -1602,7 +1597,7 @@ def webhook():
                                                 }
                                             ]
 
-                                            send_whatsapp_message(
+                                            send_whatsapp_list_message(
                                                 sender_id, 
                                                 f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
                                                 "Select an option below to continue 👇",
@@ -1614,6 +1609,8 @@ def webhook():
 
 
 
+                                            
+                                            # Handle Apps Pending My Approval
                                             pass
                                             
                                         elif selected_option == "Template":
