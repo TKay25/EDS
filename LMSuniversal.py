@@ -872,18 +872,19 @@ def webhook():
                                             "title": "Administrator Options",
                                             "rows": [
                                                 {"id": "Apply", "title": "Apply for Leave"},
-                                                {"id": "Track", "title": "Track Application"},
-                                                {"id": "Checkbal", "title": "Check Days Balance"},
-                                                {"id": "Pending", "title": "Applications Pending"},
-                                                {"id": "Template", "title": "Add Employees Templ"}
-
+                                                {"id": "Track", "title": "Track My Recent Application"},
+                                                {"id": "Checkbal", "title": "Check My Leave Days Balance"},
+                                                {"id": "Pending", "title": " Applications Pending My Approval"},
+                                                {"id": "Template", "title": "Download Template for adding Employees"},
+                                                {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                {"id": "Book", "title": "Extract Leave Book"}
                                             ]
                                         }
                                     ]
                                     
                                     send_whatsapp_list_message(
                                         sender_id,
-                                        f"Hello {first_name} {last_name} from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
+                                        f"Hello {first_name} {last_name}, LMS Administrator from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
                                         "Administrator Options",  # Title of the list
                                         sections
                                     )
