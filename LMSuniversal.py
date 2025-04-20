@@ -180,7 +180,6 @@ def webhook():
                             print(f"📱 Conversation {conversation_id}: Sender's WhatsApp number: {sender_number}")
                             session['client'] = str(sender_number)
 
-
                             external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
 
                             try:
@@ -222,7 +221,7 @@ def webhook():
                                             whatsapp_foc_8 = f"0{result[3]}"
                                             email_foc_8 = result[4]
                                             address_foc_8 = result[5]
-                                            role_foc_8 = result[6]
+                                            role_foc_8 = result[7]
                                             days_days_balance = result[12]
                                             company_reg = table_name[:-4]  
 
