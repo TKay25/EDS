@@ -44,7 +44,7 @@ connection = psycopg2.connect(external_database_url)
 cursor = connection.cursor()
 
 # WhatsApp API Credentials (Replace with your actual credentials)
-ACCESS_TOKEN = "EAATESj1oB5YBO9BhrXTVJdQgqfFJPtD9t8W5XuybLSMpfnWTfkJ3DrvP4jpXyHgzahsonYN7r1qZC4NBYiu7lWq9bkCpRpZCWDcLklbUPYQJOHle8ZAhi04fjXDXsZCRajyI4fzOEIBoKYZCTUBgyETEurqehsKiQGnfBglv6RZCZCtOfm3hZCm9pR5PsezWzS55zxkCZAKwrsg4XmjBmtbhWoyuzB2UZD"
+ACCESS_TOKEN = "EAATESj1oB5YBOyIVfVPEAIZAZA7sgPboDN36Wa2Or11uZCBEZCVWaNAZB0exkYYG6gcIdiYbvPCST9tKjS54ib1NqXbNg7UvJYaZCIZAjxgTBQwvyoWE8cZCMgje1wkrUyb335TMwNwYSTA3rNwppRZAeQGt3M7s5x15nZCbZBtEfZBtSIu3p7ZCHOcF0pMTuLgjQreLz2QZDZD"
 PHONE_NUMBER_ID = "558392750697195"
 VERIFY_TOKEN = "521035180620700"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
@@ -1262,8 +1262,22 @@ def webhook():
                                                 connection.commit()                                       
 
                                                 companyxx = company_reg.replace("_", " ").title()
+                                                sections = [
+                                                    {
+                                                        "title": "Administrator Options",
+                                                        "rows": [
+                                                            {"id": "Apply", "title": "Apply for Leave"},
+                                                            {"id": "Track", "title": "Track My Application"},
+                                                            {"id": "Checkbal", "title": "Check Days Balance"},
+                                                            {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                            {"id": "Template", "title": "Add Employees"},
+                                                            {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                            {"id": "Book", "title": "Extract Leave Book"}
+                                                        ]
+                                                    }
+                                                ]
 
-                                                send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Re-Submitted for approval successfully✅!")                                          
+                                                send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Re-Submitted for approval successfully✅!", sections)                                          
                                             
                                             else:
                                                 print("No record found for the user.")
@@ -1568,16 +1582,26 @@ def webhook():
                                             
                                         elif selected_option == "Checkbal":
 
-                                            buttons = [
-                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                            sections = [
+                                                {
+                                                    "title": "Administrator Options",
+                                                    "rows": [
+                                                        {"id": "Apply", "title": "Apply for Leave"},
+                                                        {"id": "Track", "title": "Track My Application"},
+                                                        {"id": "Checkbal", "title": "Check Days Balance"},
+                                                        {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                        {"id": "Template", "title": "Add Employees"},
+                                                        {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                        {"id": "Book", "title": "Extract Leave Book"}
+                                                    ]
+                                                }
                                             ]
 
                                             send_whatsapp_message(
                                                 sender_id, 
                                                 f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
                                                 "Select an option below to continue 👇",
-                                                buttons
+                                                sections
                                             )
                                             
                                         elif selected_option == "Pending":
@@ -1596,12 +1620,7 @@ def webhook():
                                             # Handle Extract Leave Book
                                             pass
                                             
-                                    # (Keep your existing button_reply handling here)
-                                    elif interactive.get("type") == "button_reply":
-                                        # Your existing button handling code
-                                        pass
 
-                                # Handle regular text messages (like "hello")
                                 elif message.get("type") == "text":
                                     text = message.get("text", {}).get("body", "").lower()
                                     print(f"📨 Message from {sender_id}: {text}")
@@ -1631,7 +1650,6 @@ def webhook():
                                             sections
                                         )
 
-    
                                     elif "start" in text.lower():
 
                                         date_part = text.split("start", 1)[1].strip()
