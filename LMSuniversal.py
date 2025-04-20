@@ -3784,6 +3784,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
                 print(employee_number)
                 print(approver_name)
+
                 try:
                     insert_query = f"""
                     INSERT INTO {table_name_apps_approved} 
@@ -3810,6 +3811,22 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
                 cursor.execute(query, (app_id,))
                 connection.commit()
+
+                query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+                cursor.execute(query)
+                rows = cursor.fetchall()
+
+                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
+                print(df_employees)
+                userdf = df_employees[df_employees['id'] == int(np.int64(employee_number))].reset_index()
+                print("yeaarrrrr")
+                print(userdf)
+                firstname = userdf.iat[0,2]
+                surname = userdf.iat[0,3]
+                whatsappemp = userdf.iat[0,4]
+                companyxx = company_name.replace("_", " ").title()
+
+                send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved✅ by  {approver_name}!")
 
                 return jsonify({"message": f"Leave Application {app_id} approved successfully."})
             
