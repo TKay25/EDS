@@ -1208,54 +1208,63 @@ def webhook():
                                             table_name_apps_cancelled = f"{company_reg}appscancelled"
                                             table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                            query = f"SELECT appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                            query = f"SELECT appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf FROM {table_name_apps_cancelled} WHERE id = %s;"
                                             cursor.execute(query, (id_user,))
-                                            result = cursor.fetchone()
-                                            if result:
-                                                (app_id, employee_number, first_name, surname, leave_type,  leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf) = result
-                                            
-                                                try:
-                                                        status = "Cancelled"
-                                                        statusdate = today_date
-                                                    
-                                                        insert_query = f"""
-                                                        INSERT INTO {table_name_apps_cancelled} 
-                                                        (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
-                                                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                        """
+                                            result = cursor.fetchall()
 
-                                                        cursor.execute(insert_query, (
-                                                            app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
-                                                            approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
-                                                            end_date, leave_days, leavedaysbalancebf, status, statusdate
-                                                        ))
+                                            if result:
+
+                                                df_employees = pd.DataFrame(result).sort_values(by=df_employees.columns[0], ascending=False)
+                                                print(df_employees)
                                                         
-                                                        connection.commit()
-                                                        print("Insert successful!")
+                                                try:
+
+                                                    status = "Pending"
+                                                    app_id = int(np.int64(df_employees.iat[0,0]))
+                                                    employee_number = int(np.int64(df_employees.iat[0,1]))
+                                                    first_name = df_employees.iat[0,2]
+                                                    surname = df_employees.iat[0,3]
+                                                    leave_type = df_employees.iat[0,4]
+                                                    leave_specify = df_employees.iat[0,5]
+                                                    approver_name = df_employees.iat[0,6]
+                                                    approver_id =  int(np.int64(df_employees.iat[0,7]))
+                                                    approver_email =  df_employees.iat[0,8]
+                                                    approver_whatsapp =  int(np.int64(df_employees.iat[0,9]))
+                                                    leave_days_balance =  int(np.int64(df_employees.iat[0,10]))
+                                                    date_applied = df_employees.iat[0,11]
+                                                    start_date = df_employees.iat[0,12]
+                                                    end_date = df_employees.iat[0,13]
+                                                    leave_days =  int(np.int64(df_employees.iat[0,14]))
+                                                    leavedaysbalancebf =  int(np.int64(df_employees.iat[0,15]))
+                                                    insert_query = f"""
+                                                    INSERT INTO {table_name_apps_pending_approval} 
+                                                    (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                    """
+
+                                                    cursor.execute(insert_query, (
+                                                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                                                        approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                                                        end_date, leave_days, leavedaysbalancebf, status
+                                                    ))
+                                                    
+                                                    connection.commit()
+                                                    print("Insert successful!")
 
                                                 except Exception as e:
                                                     print("Error inserting data:", e)
 
                                                 # SQL query to delete or mark the leave as canceled
-                                                query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
+                                                query = f"""DELETE FROM {table_name_apps_cancelled} WHERE appid = %s"""
                                                 cursor.execute(query, (app_id,))
                                                 connection.commit()                                       
 
                                                 companyxx = company_reg.replace("_", " ").title()
-                                                buttons = [
-                                                    {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                    {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                ]
 
-                                                send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
-                                                    "Select an option below to continue 👇",
-                                                    buttons
-                                                )                                          
+                                                send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Re-Submitted for approval successfully✅!")                                          
                                             
                                             else:
                                                 print("No record found for the user.")
-
 
                                         elif button_id == "Cancelapp" :
 
