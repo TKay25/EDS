@@ -856,38 +856,109 @@ def webhook():
 
                             elif role_foc_8 == "Administrator":
 
-                                print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
-
-                                print(role_foc_8)
-
-                                text = message.get("text", {}).get("body", "").lower()
-                                print(f"📨 Message from {sender_id}: {text}")
-
-                                if "hello" in text.lower():
-
-                                    companyxx = company_reg.replace("_"," ").title()
+                                if message.get("type") == "interactive":
+                                    interactive = message.get("interactive", {})
                                     
-                                    sections = [
-                                        {
-                                            "title": "Administrator Options",
-                                            "rows": [
-                                                {"id": "Apply", "title": "Apply for Leave"},
-                                                {"id": "Track", "title": "Track My Recent Application"},
-                                                {"id": "Checkbal", "title": "Check My Leave Days Balance"},
-                                                {"id": "Pending", "title": " Applications Pending My Approval"},
-                                                {"id": "Template", "title": "Download Template for adding Employees"},
-                                                {"id": "Rolechange", "title": "Change Employee's Role"},
-                                                {"id": "Book", "title": "Extract Leave Book"}
-                                            ]
-                                        }
-                                    ]
+                                    if interactive.get("type") == "list_reply":
+                                        selected_option = interactive.get("list_reply", {}).get("id")
+                                        print(f"📋 User selected: {selected_option}")
+                                        
+                                        if selected_option == "Apply":
+
+                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+
+                                            query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                            cursor.execute(query)
+                                            rows = cursor.fetchall()
+
+                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+
+                                            if len(df_employeesappspendingcheck) == 0:
+
+                                                buttons = [
+                                                    {"type": "reply", "reply": {"id": "Annual", "title": "Annual Leave"}},
+                                                    {"type": "reply", "reply": {"id": "Sick", "title": "Sick Leave"}},
+                                                    {"type": "reply", "reply": {"id": "Maternity", "title": "Maternity Leave"}},
+                                                ]
+
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    f"{first_name}, kindly select the type of Leave that you are applying for.", 
+                                                    buttons
+                                                )
+
+                                            elif len(df_employeesappspendingcheck) > 0:
+                                                buttons = [
+                                                    {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                    {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                ]
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
+                                                    f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                    f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
+                                                    , 
+                                                    buttons
+                                                )
+                                            
+                                        elif selected_option == "Track":
+                                            # Handle Track My Application
+                                            pass
+                                            
+                                        elif selected_option == "Checkbal":
+                                            # Handle Check Days Balance
+                                            pass
+                                            
+                                        elif selected_option == "Pending":
+                                            # Handle Apps Pending My Approval
+                                            pass
+                                            
+                                        elif selected_option == "Template":
+                                            # Handle Add Employees
+                                            pass
+                                            
+                                        elif selected_option == "Rolechange":
+                                            # Handle Change Employee's Role
+                                            pass
+                                            
+                                        elif selected_option == "Book":
+                                            # Handle Extract Leave Book
+                                            pass
+                                            
+                                    # (Keep your existing button_reply handling here)
+                                    elif interactive.get("type") == "button_reply":
+                                        # Your existing button handling code
+                                        pass
+
+                                # Handle regular text messages (like "hello")
+                                elif message.get("type") == "text":
+                                    text = message.get("text", {}).get("body", "").lower()
+                                    print(f"📨 Message from {sender_id}: {text}")
                                     
-                                    send_whatsapp_list_message(
-                                        sender_id,
-                                        f"Hello {first_name} {last_name}, LMS Administrator from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
-                                        "Administrator Options",  # Title of the list
-                                        sections
-                                    )
+                                    if "hello" in text.lower():
+                                        companyxx = company_reg.replace("_"," ").title()
+                                        
+                                        sections = [
+                                            {
+                                                "title": "Administrator Options",
+                                                "rows": [
+                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                    {"id": "Track", "title": "Track My Application"},
+                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                    {"id": "Pending", "title": " Apps Pending My Approval"},
+                                                    {"id": "Template", "title": "Add Employees"},
+                                                    {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                    {"id": "Book", "title": "Extract Leave Book"}
+                                                ]
+                                            }
+                                        ]
+                                        
+                                        send_whatsapp_list_message(
+                                            sender_id,
+                                            f"Hello {first_name} {last_name}, LMS Administrator from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
+                                            "Administrator Options",
+                                            sections
+                                        )
 
 
 
