@@ -1416,7 +1416,7 @@ def webhook():
                                             rows = cursor.fetchall()
 
                                             df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
-                                            df_employeesappspendingcheck = df_employeesappsapprovedcheck.sort_values(by=df_employeesappspendingcheck.columns[0], ascending=False)
+                                            df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[0], ascending=False)
 
                                             if len(df_employeesappspendingcheck) == 0:
 
@@ -1458,7 +1458,7 @@ def webhook():
                                                     {"type": "reply", "reply": {"id": "Approveappwa", "title": "Approve"}},
                                                     {"type": "reply", "reply": {"id": "Disapproveappwa", "title": "Disapprove"}},
                                                 ]
-                                                
+
                                                 send_whatsapp_message(
                                                     sender_id, 
                                                     f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
