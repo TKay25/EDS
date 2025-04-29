@@ -2095,64 +2095,6 @@ def webhook():
                                                 )
 
                                                 continue
-
-                                            elif selected_option == "Pending":
-
-                                                table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-
-                                                query = f"SELECT id, leavetype, leaveapprovername, leaveapproverid, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {str(id_user)};"
-                                                cursor.execute(query)
-                                                rows = cursor.fetchall()
-
-                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
-                                                df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[0], ascending=False)
-
-                                                if len(df_employeesappspendingcheck) == 0:
-
-                                                    companyxx = company_reg.replace("_", " ").title()
-                                                    sections = [
-                                                        {
-                                                            "title": "Administrator Options",
-                                                            "rows": [
-                                                                {"id": "Apply", "title": "Apply for Leave"},
-                                                                {"id": "Track", "title": "Track My Application"},
-                                                                {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Template", "title": "Add Employees"},
-                                                                {"id": "Rolechange", "title": "Change Employee's Role"},
-                                                                {"id": "Book", "title": "Extract Leave Book"}
-                                                            ]
-                                                        }
-                                                    ]
-    
-
-                                                    send_whatsapp_list_message(
-                                                        sender_id, 
-                                                        f"{first_name}, there are currently no leave applications that are pending your approval.", 
-                                                    "Administrator Options",
-                                                    sections) 
-
-                                                elif len(df_employeesappspendingcheck) > 0:
-
-                                                    appid = df_employeesappspendingcheck.iat[0,0]
-                                                    leave_typeemp = df_employeesappspendingcheck.iat[0,1]
-                                                    firstnameemp = df_employeesappspendingcheck.iat[0,2]
-                                                    surnameemp = df_employeesappspendingcheck.iat[0,3]
-                                                    dateapplied = df_employeesappspendingcheck.iat[0,4]
-                                                    leavestartdate = df_employeesappspendingcheck.iat[0,5]
-                                                    leaveenddate = df_employeesappspendingcheck.iat[0,6]
-                                                    leavedays = df_employeesappspendingcheck.iat[0,7]
-
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Approveappwa", "title": "Approve"}},
-                                                        {"type": "reply", "reply": {"id": "Disapproveappwa", "title": "Disapprove"}},
-                                                    ]
-
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
-                                                        "Select an option below to either approve or disapprove this leave application.", 
-                                                        buttons
-                                                    )
                                                 
                                             elif selected_option == "Track":
 
@@ -3259,7 +3201,7 @@ def webhook():
                                                     companyxx = company_reg.replace("_", " ").title()
                                                     sections = [
                                                         {
-                                                            "title": "Administrator Options",
+                                                            "title": "Administrator/Approver Options",
                                                             "rows": [
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
@@ -3275,7 +3217,7 @@ def webhook():
                                                     send_whatsapp_list_message(
                                                         sender_id, 
                                                         f"{first_name}, there are currently no leave applications that are pending your approval.", 
-                                                    "Administrator Options",
+                                                    "Administrator/Approver Options",
                                                     sections) 
 
                                                 elif len(df_employeesappspendingcheck) > 0:
