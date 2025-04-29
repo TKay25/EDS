@@ -1475,32 +1475,6 @@ def webhook():
                                                 else:
                                                     print("No record found for the user.")
 
-                                            elif button_id in ["Annual","Sick","Parental"] :
-
-                                                button_id_leave_type = str(button_id)
-
-                                                cursor.execute("""
-                                                    DELETE FROM whatsapptempapplication
-                                                    WHERE empidwa = %s
-                                                """, (str(id_user),))  
-                                                
-                                                connection.commit()
-
-                                                cursor.execute(f"""
-                                                    INSERT INTO whatsapptempapplication (empidwa, leavetypewa, companynamewa)
-                                                    VALUES (%s, %s, %s)
-                                                """, (id_user, button_id_leave_type, company_reg))
-
-                                                connection.commit()
-
-                                                send_whatsapp_message(
-                                                    sender_id, 
-                                                    f"Ok. When would you like your {button_id} Leave to start {first_name}?\n\n"
-                                                    "Please enter your response using the format: 👇🏻\n"
-                                                    "`start 24 january 2025`"
-                                                )
-
-                                                continue
 
 
                                             elif "appwa_" in button_id.lower():
@@ -1508,7 +1482,7 @@ def webhook():
                                                 app_id = button_id.split("_")[1]
                                                 print(app_id) 
 
-                                                if "Approve" in button_id.lower():
+                                                if "approve" in button_id.lower():
 
                                                     try:
                                                         print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
@@ -1684,14 +1658,6 @@ def webhook():
 
 
 
-
-
-
-
-
-
-                                                        return jsonify({"message": f"Leave Application {app_id} approved successfully."})
-                                                    
                                                     except Exception as e:
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
 
