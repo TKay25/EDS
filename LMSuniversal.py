@@ -1443,6 +1443,7 @@ def webhook():
                                         print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
 
                                         print(role_foc_8)
+                                        companyxx = company_reg.replace("_", " ").title()
 
                                         if "hello" in text.lower():
 
