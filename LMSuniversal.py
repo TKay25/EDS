@@ -1405,6 +1405,7 @@ def webhook():
                                                     print("No record found for the user.")
 
                                             elif button_id in ["Annual","Sick","Maternity"] :
+
                                                 button_id_leave_type = str(button_id)
 
                                                 cursor.execute("""
@@ -1949,7 +1950,6 @@ def webhook():
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                 {"id": "Template", "title": "Add Employees"},
                                                                 {"id": "Rolechange", "title": "Change Employee's Role"},
                                                                 {"id": "Book", "title": "Extract Leave Book"}
@@ -2020,6 +2020,7 @@ def webhook():
 
                                         
                                         if interactive.get("type") == "list_reply":
+
                                             selected_option = interactive.get("list_reply", {}).get("id")
                                             print(f"📋 User selected: {selected_option}")
 
@@ -2116,7 +2117,6 @@ def webhook():
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                 {"id": "Template", "title": "Add Employees"},
                                                                 {"id": "Rolechange", "title": "Change Employee's Role"},
                                                                 {"id": "Book", "title": "Extract Leave Book"}
@@ -2338,7 +2338,6 @@ def webhook():
                                                             {"id": "Apply", "title": "Apply for Leave"},
                                                             {"id": "Track", "title": "Track My Application"},
                                                             {"id": "Checkbal", "title": "Check Days Balance"},
-                                                            {"id": "Pending", "title": "Apps Pending My Approval"},
                                                             {"id": "Template", "title": "Add Employees"},
                                                             {"id": "Rolechange", "title": "Change Employee's Role"},
                                                             {"id": "Book", "title": "Extract Leave Book"}
@@ -2389,7 +2388,6 @@ def webhook():
                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                         {"id": "Track", "title": "Track My Application"},
                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                        {"id": "Pending", "title": "Apps Pending My Approval"},
                                                         {"id": "Template", "title": "Add Employees"},
                                                         {"id": "Rolechange", "title": "Change Employee's Role"},
                                                         {"id": "Book", "title": "Extract Leave Book"}
@@ -3301,6 +3299,10 @@ def webhook():
                                                 pass
                                                 
 
+
+
+
+
                                     elif message.get("type") == "text":
 
                                         text = message.get("text", {}).get("body", "").lower()
@@ -3327,7 +3329,7 @@ def webhook():
                                             send_whatsapp_list_message(
                                                 sender_id,
                                                 f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
-                                                "Administrator Options",
+                                                "Administrator/Approver Options",
                                                 sections
                                             )
 
