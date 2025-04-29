@@ -266,7 +266,40 @@ def webhook():
                                     if message.get("type") == "interactive":
                                         interactive = message.get("interactive", {})
 
-                                        if interactive.get("type") == "button_reply":
+
+                                        if interactive.get("type") == "list_reply":
+                                            selected_option = interactive.get("list_reply", {}).get("id")
+                                            print(f"📋 User selected: {selected_option}")
+
+                                            if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
+                                                button_id_leave_type = str(selected_option)
+
+                                                cursor.execute("""
+                                                    DELETE FROM whatsapptempapplication
+                                                    WHERE empidwa = %s
+                                                """, (str(id_user),))  
+                                                
+                                                connection.commit()
+
+                                                cursor.execute(f"""
+                                                    INSERT INTO whatsapptempapplication (empidwa, leavetypewa, companynamewa)
+                                                    VALUES (%s, %s, %s)
+                                                """, (id_user, button_id_leave_type, company_reg))
+
+                                                connection.commit()
+
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    f"Ok. When would you like your {selected_option} Leave to start {first_name}?\n\n"
+                                                    "Please enter your response using the format: 👇🏻\n"
+                                                    "`start 24 january 2025`"
+                                                )
+
+                                                continue
+
+
+
+                                        elif interactive.get("type") == "button_reply":
                                             button_id = interactive.get("button_reply", {}).get("id")
                                             print(f"🔘 Button clicked: {button_id}")
                                             
@@ -289,7 +322,8 @@ def webhook():
                                                                 {"id": "Annual", "title": "Annual Leave"},
                                                                 {"id": "Sick", "title": "Sick Leave"},
                                                                 {"id": "Study", "title": "Study Leave"},
-                                                                {"id": "Maternity", "title": "Maternity"},
+                                                                {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                                {"id": "Parental", "title": "Parental Leave"},
                                                                 {"id": "Other", "title": "Other"},
                                                             ]
                                                         }
@@ -880,7 +914,39 @@ def webhook():
                                     if message.get("type") == "interactive":
                                         interactive = message.get("interactive", {})
 
-                                        if interactive.get("type") == "button_reply":
+                                        if interactive.get("type") == "list_reply":
+                                            selected_option = interactive.get("list_reply", {}).get("id")
+                                            print(f"📋 User selected: {selected_option}")
+
+                                            if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
+                                                button_id_leave_type = str(selected_option)
+
+                                                cursor.execute("""
+                                                    DELETE FROM whatsapptempapplication
+                                                    WHERE empidwa = %s
+                                                """, (str(id_user),))  
+                                                
+                                                connection.commit()
+
+                                                cursor.execute(f"""
+                                                    INSERT INTO whatsapptempapplication (empidwa, leavetypewa, companynamewa)
+                                                    VALUES (%s, %s, %s)
+                                                """, (id_user, button_id_leave_type, company_reg))
+
+                                                connection.commit()
+
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    f"Ok. When would you like your {selected_option} Leave to start {first_name}?\n\n"
+                                                    "Please enter your response using the format: 👇🏻\n"
+                                                    "`start 24 january 2025`"
+                                                )
+
+                                                continue
+
+
+
+                                        elif interactive.get("type") == "button_reply":
                                             button_id = interactive.get("button_reply", {}).get("id")
                                             print(f"🔘 Button clicked: {button_id}")
                                             
@@ -903,7 +969,8 @@ def webhook():
                                                                 {"id": "Annual", "title": "Annual Leave"},
                                                                 {"id": "Sick", "title": "Sick Leave"},
                                                                 {"id": "Study", "title": "Study Leave"},
-                                                                {"id": "Maternity", "title": "Maternity"},
+                                                                {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                                {"id": "Parental", "title": "Parental Leave"},
                                                                 {"id": "Other", "title": "Other"},
                                                             ]
                                                         }
@@ -1517,7 +1584,8 @@ def webhook():
                                                                 {"id": "Annual", "title": "Annual Leave"},
                                                                 {"id": "Sick", "title": "Sick Leave"},
                                                                 {"id": "Study", "title": "Study Leave"},
-                                                                {"id": "Maternity", "title": "Maternity Leave"},
+                                                                {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                                {"id": "Parental", "title": "Parental Leave"},
                                                                 {"id": "Other", "title": "Other"},
                                                             ]
                                                         }
@@ -1977,8 +2045,14 @@ def webhook():
                                             else:
                                                 print("No record found for the user.")
 
-                                        elif button_id in ["Annual","Sick","Maternity"] :
-                                            button_id_leave_type = str(button_id)
+
+                                    
+                                    if interactive.get("type") == "list_reply":
+                                        selected_option = interactive.get("list_reply", {}).get("id")
+                                        print(f"📋 User selected: {selected_option}")
+
+                                        if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
+                                            button_id_leave_type = str(selected_option)
 
                                             cursor.execute("""
                                                 DELETE FROM whatsapptempapplication
@@ -1996,20 +2070,14 @@ def webhook():
 
                                             send_whatsapp_message(
                                                 sender_id, 
-                                                f"Ok. When would you like your {button_id} Leave to start {first_name}?\n\n"
+                                                f"Ok. When would you like your {selected_option} Leave to start {first_name}?\n\n"
                                                 "Please enter your response using the format: 👇🏻\n"
                                                 "`start 24 january 2025`"
                                             )
 
                                             continue
-
-
-                                    
-                                    if interactive.get("type") == "list_reply":
-                                        selected_option = interactive.get("list_reply", {}).get("id")
-                                        print(f"📋 User selected: {selected_option}")
                                         
-                                        if selected_option == "Apply":
+                                        elif selected_option == "Apply":
 
                                             table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
