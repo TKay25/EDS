@@ -919,10 +919,12 @@ def webhook():
                                         interactive = message.get("interactive", {})
 
                                         if interactive.get("type") == "list_reply":
+
                                             selected_option = interactive.get("list_reply", {}).get("id")
                                             print(f"📋 User selected: {selected_option}")
 
                                             if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
+
                                                 button_id_leave_type = str(selected_option)
 
                                                 cursor.execute("""
@@ -948,13 +950,7 @@ def webhook():
 
                                                 continue
 
-
-
-                                        elif interactive.get("type") == "button_reply":
-                                            button_id = interactive.get("button_reply", {}).get("id")
-                                            print(f"🔘 Button clicked: {button_id}")
-                                            
-                                            if button_id == "Apply":
+                                            elif selected_option == "Apply":
 
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
@@ -966,26 +962,25 @@ def webhook():
 
                                                 if len(df_employeesappspendingcheck) == 0:
 
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Annual", "title": "Annual Leave"},
-                                                                {"id": "Sick", "title": "Sick Leave"},
-                                                                {"id": "Study", "title": "Study Leave"},
-                                                                {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                {"id": "Parental", "title": "Parental Leave"},
-                                                                {"id": "Other", "title": "Other"},
-                                                            ]
-                                                        }
-                                                    ]
+                                                        sections = [
+                                                            {
+                                                                "title": "Leave Type Options",
+                                                                "rows": [
+                                                                    {"id": "Annual", "title": "Annual Leave"},
+                                                                    {"id": "Sick", "title": "Sick Leave"},
+                                                                    {"id": "Study", "title": "Study Leave"},
+                                                                    {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                                    {"id": "Parental", "title": "Parental Leave"},
+                                                                    {"id": "Other", "title": "Other"},
+                                                                ]
+                                                            }
+                                                        ]
 
-                                                    send_whatsapp_list_message(
-                                                        sender_id, 
-                                                        f"{first_name}, kindly select the type of Leave that you are applying for.", 
-                                                        "Leave Type Options",
-                                                        sections) 
-                                                    
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"{first_name}, kindly select the type of Leave that you are applying for.", 
+                                                            "Leave Type Options",
+                                                            sections) 
 
                                                 elif len(df_employeesappspendingcheck) > 0:
                                                     buttons = [
@@ -1001,7 +996,12 @@ def webhook():
                                                         buttons
                                                     )
 
-                                            elif button_id == "Track":
+                                        elif interactive.get("type") == "button_reply":
+
+                                            button_id = interactive.get("button_reply", {}).get("id")
+                                            print(f"🔘 Button clicked: {button_id}")
+
+                                            if button_id == "Track":
 
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                 table_name_apps_approved = f"{company_reg}appsapproved"
