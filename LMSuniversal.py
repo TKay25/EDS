@@ -3057,7 +3057,6 @@ def webhook():
                                                         }
                                                     ]
     
-
                                                     send_whatsapp_list_message(
                                                         sender_id, 
                                                         f"{first_name}, there are currently no leave applications that are pending your approval.", 
@@ -3066,6 +3065,14 @@ def webhook():
 
                                                 elif len(df_employeesappspendingcheck) > 0:
 
+                                                    firstnameemp2 = df_employeesappspendingcheck.iat[0,2]
+                                                    surnameemp2 = df_employeesappspendingcheck.iat[0,3]
+                                                    leave_type2 = df_employeesappspendingcheck.iat[0,1]
+                                                    days = df_employeesappspendingcheck.iat[0,7]
+                                                    date_applied2 = df_employeesappspendingcheck.iat[0,4]
+                                                    start_date2 = df_employeesappspendingcheck.iat[0,5]
+                                                    end_date2 = df_employeesappspendingcheck.iat[0,6]
+
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Approveappwa", "title": "Approve"}},
                                                         {"type": "reply", "reply": {"id": "Disapproveappwa", "title": "Disapprove"}},
@@ -3073,7 +3080,7 @@ def webhook():
 
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
+                                                        f"{firstnameemp2} {surnameemp2}'s {days} day {leave_type2} Leave Application, applied on {date_applied2.strftime('%d %B %Y')} and running from {start_date2.strftime('%d %B %Y')} to {end_date2.strftime('%d %B %Y')} is pending your Approval.\n\n" 
                                                         "Select an option below to either approve or disapprove this leave application.", 
                                                         buttons
                                                     )
