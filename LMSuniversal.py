@@ -1551,9 +1551,6 @@ def webhook():
 
                                                         df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
 
-                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
-
-
                                                         def generate_leave_pdf():
                                                             app = {
                                                                 'company_logo': 44,
@@ -1629,14 +1626,34 @@ def webhook():
 
                                                         pdf_path = generate_leave_pdf()
                                                         media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                        send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
+
+                                                        buttonsapproval = [
+                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Apps Pending My Approval"}},
+                                                        ]
+
+                                                        send_whatsapp_message(sender_id, f"✅ Great News {approver_name} from {companyxx}! \n\n You have successfully approved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
                                                         send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "Select an option below to continue 👇y, or Type `Hello` to view all Approver options",
+                                                            buttonsapproval
+                                                        )
 
 
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                        ]
 
-
-
-
+                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
+                                                        send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "Select an option below to continue 👇",
+                                                            buttons
+                                                        )
 
 
                                                     except Exception as e:
@@ -3143,32 +3160,16 @@ def webhook():
                                                 else:
                                                     print("No record found for the user.")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                            elif "appwa_" in button_id.lower():
+                                            elif "appwa" in button_id.lower():
 
                                                 app_id = button_id.split("_")[1]
-                                                print(app_id) 
+                                                print(app_id)
 
-                                                if "Approve" in button_id.lower():
+                                                if "approve" in button_id.lower():
 
                                                     try:
+                                                       
                                                         print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
-
-
-
-
 
                                                         table_name = company_reg + 'main'
                                                         company_name = company_reg.replace("_", " ").title()
@@ -3176,19 +3177,14 @@ def webhook():
                                                         table_name_apps_approved = f"{company_reg}appsapproved"
 
                                                         if not app_id:
-
-
-
-
-
+                                                            print("none on appid")
 
                                                             return jsonify({"message": "Application ID is missing."}), 400
 
-
-
-
                                                         status = "Approved"
                                                         statusdate = today_date
+                                                        print("bababababababababa")
+                                                        print(table_name_apps_pending_approval)
 
                                                         query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
                                                         cursor.execute(query, (app_id,))
@@ -3248,9 +3244,6 @@ def webhook():
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
 
                                                         df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
-
-                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
-
 
                                                         def generate_leave_pdf():
                                                             app = {
@@ -3327,9 +3320,34 @@ def webhook():
 
                                                         pdf_path = generate_leave_pdf()
                                                         media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                        send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
 
-                                                        return jsonify({"message": f"Leave Application {app_id} approved successfully."})
+                                                        buttonsapproval = [
+                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Apps Pending My Approval"}},
+                                                        ]
+
+                                                        send_whatsapp_message(sender_id, f"✅ Great News {approver_name} from {companyxx}! \n\n You have successfully approved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
+                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "Select an option below to continue 👇y, or Type `Hello` to view all Approver options",
+                                                            buttonsapproval
+                                                        )
+
+
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                        ]
+
+                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
+                                                        send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "Select an option below to continue 👇",
+                                                            buttons
+                                                        )
                                                     
                                                     except Exception as e:
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
