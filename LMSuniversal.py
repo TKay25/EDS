@@ -1000,11 +1000,11 @@ def webhook():
 
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                                query = f"SELECT id, leavetype, leaveapprovername, leaveapproverid, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {str(id_user)};"
+                                                query = f"SELECT id, leavetype, firstname, surname, leaveapprovername, leaveapproverid, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {str(id_user)};"
                                                 cursor.execute(query)
                                                 rows = cursor.fetchall()
 
-                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "leaveapprovername", "leaveapproverid", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
                                                 df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[0], ascending=False)
 
                                                 if len(df_employeesappspendingcheck) == 0:
@@ -1034,10 +1034,10 @@ def webhook():
                                                     appid = df_employeesappspendingcheck.iat[0,0]
                                                     surnameemp2 = df_employeesappspendingcheck.iat[0,3]
                                                     leave_type2 = df_employeesappspendingcheck.iat[0,1]
-                                                    days = df_employeesappspendingcheck.iat[0,7]
-                                                    date_applied2 = df_employeesappspendingcheck.iat[0,4]
-                                                    start_date2 = df_employeesappspendingcheck.iat[0,5]
-                                                    end_date2 = df_employeesappspendingcheck.iat[0,6]
+                                                    days = df_employeesappspendingcheck.iat[0,9]
+                                                    date_applied2 = df_employeesappspendingcheck.iat[0,6]
+                                                    start_date2 = df_employeesappspendingcheck.iat[0,7]
+                                                    end_date2 = df_employeesappspendingcheck.iat[0,8]
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": f"Approveappwa_{appid}", "title": "Approve"}},
@@ -1046,19 +1046,10 @@ def webhook():
 
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"{firstnameemp2} {surnameemp2}'s {days} day {leave_type2} Leave Application, applied on {date_applied2.strftime('%d %B %Y')} and running from {start_date2.strftime('%d %B %Y')} to {end_date2.strftime('%d %B %Y')} is pending your Approval.\n\n" 
+                                                        f"Hey {first_name}, {firstnameemp2} {surnameemp2}'s {days} day {leave_type2} Leave Application, applied on {date_applied2.strftime('%d %B %Y')} and running from {start_date2.strftime('%d %B %Y')} to {end_date2.strftime('%d %B %Y')} is pending your Approval.\n\n" 
                                                         "Select an option below to either approve or disapprove this leave application.", 
                                                         buttons
                                                     )
-
-
-
-
-
-
-
-
-
 
                                         elif interactive.get("type") == "button_reply":
 
@@ -1474,7 +1465,7 @@ def webhook():
 
 
 
-                                            elif "appwa_" in button_id.lower():
+                                            elif "appwa" in button_id.lower():
 
                                                 app_id = button_id.split("_")[1]
                                                 print(app_id)
