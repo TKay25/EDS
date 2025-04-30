@@ -1217,10 +1217,6 @@ def webhook():
                                                         )
 
 
-
-
-
-
                                                 elif len(df_employeesappspendingcheck) > 0:
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
@@ -1229,7 +1225,7 @@ def webhook():
                                                     approoooover = df_employeesappspendingcheck.iat[0,2].title()
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
+                                                        f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,8]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
                                                         f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
                                                         , 
                                                         buttons
@@ -1641,6 +1637,7 @@ def webhook():
 
 
                                                     except Exception as e:
+                                                        print(e)
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
 
 
