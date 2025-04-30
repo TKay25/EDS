@@ -1000,11 +1000,11 @@ def webhook():
 
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                                query = f"SELECT id, leavetype, firstname, surname, leaveapprovername, leaveapproverid, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {str(id_user)};"
+                                                query = f"SELECT id, leavetype, firstname, surname, leaveapprovername, leaveapproverid, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, appid  FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {str(id_user)};"
                                                 cursor.execute(query)
                                                 rows = cursor.fetchall()
 
-                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "leaveapprovername", "leaveapproverid", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "leaveapprovername", "leaveapproverid", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "appid"])    
                                                 df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[0], ascending=False)
 
                                                 if len(df_employeesappspendingcheck) == 0:
@@ -1031,7 +1031,7 @@ def webhook():
                                                 elif len(df_employeesappspendingcheck) > 0:
 
                                                     firstnameemp2 = df_employeesappspendingcheck.iat[0,2]
-                                                    appid = df_employeesappspendingcheck.iat[0,0]
+                                                    appid = df_employeesappspendingcheck.iat[0,10]
                                                     surnameemp2 = df_employeesappspendingcheck.iat[0,3]
                                                     leave_type2 = df_employeesappspendingcheck.iat[0,1]
                                                     days = df_employeesappspendingcheck.iat[0,9]
@@ -3512,11 +3512,11 @@ def webhook():
 
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                                query = f"SELECT id, leavetype, leaveapprovername, leaveapproverid, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {str(id_user)};"
+                                                query = f"SELECT id, leavetype, firstname, surname, leaveapprovername, leaveapproverid, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, appid  FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {str(id_user)};"
                                                 cursor.execute(query)
                                                 rows = cursor.fetchall()
 
-                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "leaveapprovername", "leaveapproverid", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "appid"])    
                                                 df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[0], ascending=False)
 
                                                 if len(df_employeesappspendingcheck) == 0:
@@ -3546,7 +3546,7 @@ def webhook():
                                                 elif len(df_employeesappspendingcheck) > 0:
 
                                                     firstnameemp2 = df_employeesappspendingcheck.iat[0,2]
-                                                    appid = df_employeesappspendingcheck.iat[0,0]
+                                                    appid = df_employeesappspendingcheck.iat[0,10]
                                                     surnameemp2 = df_employeesappspendingcheck.iat[0,3]
                                                     leave_type2 = df_employeesappspendingcheck.iat[0,1]
                                                     days = df_employeesappspendingcheck.iat[0,7]
