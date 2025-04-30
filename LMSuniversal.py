@@ -1012,15 +1012,12 @@ def webhook():
                                                     companyxx = company_reg.replace("_", " ").title()
                                                     sections = [
                                                         {
-                                                            "title": "Administrator/Approver Options",
+                                                            "title": "User Options",
                                                             "rows": [
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                {"id": "Template", "title": "Add Employees"},
-                                                                {"id": "Rolechange", "title": "Change Employee's Role"},
-                                                                {"id": "Book", "title": "Extract Leave Book"}
+                                                                {"id": "Pending", "title": "Apps Pending My Approval"}
                                                             ]
                                                         }
                                                     ]
@@ -1480,16 +1477,13 @@ def webhook():
                                             elif "appwa_" in button_id.lower():
 
                                                 app_id = button_id.split("_")[1]
-                                                print(app_id) 
+                                                print(app_id)
 
                                                 if "approve" in button_id.lower():
 
                                                     try:
+                                                       
                                                         print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
-
-
-
-
 
                                                         table_name = company_reg + 'main'
                                                         company_name = company_reg.replace("_", " ").title()
@@ -1498,15 +1492,7 @@ def webhook():
 
                                                         if not app_id:
 
-
-
-
-
-
                                                             return jsonify({"message": "Application ID is missing."}), 400
-
-
-
 
                                                         status = "Approved"
                                                         statusdate = today_date
