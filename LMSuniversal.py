@@ -1483,11 +1483,14 @@ def webhook():
                                                         table_name_apps_approved = f"{company_reg}appsapproved"
 
                                                         if not app_id:
+                                                            print("none on appid")
 
                                                             return jsonify({"message": "Application ID is missing."}), 400
 
                                                         status = "Approved"
                                                         statusdate = today_date
+                                                        print("bababababababababa")
+                                                        print(table_name_apps_pending_approval)
 
                                                         query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
                                                         cursor.execute(query, (app_id,))
