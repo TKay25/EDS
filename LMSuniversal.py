@@ -1005,7 +1005,7 @@ def webhook():
                                                 rows = cursor.fetchall()
 
                                                 df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "leaveapprovername", "leaveapproverid", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "appid"])    
-                                                df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[0], ascending=False)
+                                                df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[10], ascending=False)
 
                                                 if len(df_employeesappspendingcheck) == 0:
 
@@ -3535,7 +3535,7 @@ def webhook():
                                                 rows = cursor.fetchall()
 
                                                 df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "firstname", "surname", "leaveapprovername", "leaveapproverid", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "appid"])    
-                                                df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[0], ascending=False)
+                                                df_employeesappspendingcheck = df_employeesappspendingcheck.sort_values(by=df_employeesappspendingcheck.columns[10], ascending=False)
 
                                                 if len(df_employeesappspendingcheck) == 0:
 
