@@ -2716,6 +2716,7 @@ def webhook():
 
 
                                         if interactive.get("type") == "button_reply":
+
                                             button_id = interactive.get("button_reply", {}).get("id")
                                             print(f"🔘 Button clicked: {button_id}")
                                             
@@ -2889,6 +2890,52 @@ def webhook():
                                                         sender_id, 
                                                         f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
                                                         f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
+                                                        , 
+                                                        buttons
+                                                    )
+
+                                            elif button_id == "Apply":
+
+                                                table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+
+                                                query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                cursor.execute(query)
+                                                rows = cursor.fetchall()
+
+                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+
+                                                if len(df_employeesappspendingcheck) == 0:
+
+                                                    sections = [
+                                                        {
+                                                            "title": "Leave Type Options",
+                                                            "rows": [
+                                                                {"id": "Annual", "title": "Annual Leave"},
+                                                                {"id": "Sick", "title": "Sick Leave"},
+                                                                {"id": "Study", "title": "Study Leave"},
+                                                                {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                                {"id": "Parental", "title": "Parental Leave"},
+                                                                {"id": "Other", "title": "Other"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_message(
+                                                        sender_id, 
+                                                        f"{first_name}, kindly select the type of Leave that you are applying for.", 
+                                                        "Leave Type Options",
+                                                        sections) 
+
+                                                elif len(df_employeesappspendingcheck) > 0:
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                        {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                    ]
+                                                    send_whatsapp_message(
+                                                        sender_id, 
+                                                        f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
+                                                        f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                        f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
                                                         , 
                                                         buttons
                                                     )
@@ -3100,6 +3147,19 @@ def webhook():
                                                 else:
                                                     print("No record found for the user.")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
                                             elif "appwa_" in button_id.lower():
 
                                                 app_id = button_id.split("_")[1]
@@ -3277,6 +3337,15 @@ def webhook():
                                                     
                                                     except Exception as e:
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
+
+
+
+
+
+
+
+
+
 
 
 
