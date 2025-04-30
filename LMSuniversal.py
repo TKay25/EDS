@@ -1647,7 +1647,7 @@ def webhook():
                                                             {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                         ]
 
-                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
+                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been Approved ✅ by `{app_namexx}`!")
                                                         send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
                                                         send_whatsapp_message(
                                                             sender_id,
@@ -3330,10 +3330,9 @@ def webhook():
                                                         send_whatsapp_pdf_by_media_id(sender_id, media_id)
                                                         send_whatsapp_message(
                                                             sender_id,
-                                                            "Select an option below to continue 👇y, or Type `Hello` to view all Approver options",
+                                                            "Select an option below to continue 👇, or Type `Hello` to view all Administrator/Approver Options",
                                                             buttonsapproval
                                                         )
-
 
                                                         buttons = [
                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
@@ -3341,11 +3340,11 @@ def webhook():
                                                             {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                         ]
 
-                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
+                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been Approved ✅ by `{app_namexx}`!")
                                                         send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
                                                         send_whatsapp_message(
-                                                            sender_id,
-                                                            "Select an option below to continue 👇",
+                                                            f"263{whatsappemp}",
+                                                            "Select an option below to continue 👇, or Type `Hello` to view all User Options",
                                                             buttons
                                                         )
                                                     
