@@ -4900,7 +4900,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                     df_tables = pd.DataFrame(table_names, columns=['Table Name'])
           
-                    return render_template('EDSDev.html', companies = df_tables)
+                    return render_template('edslmsadmin.html')
 
 
                 # Query tables with the 'email' column
