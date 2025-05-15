@@ -4891,7 +4891,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 if not email or not password:
                     return jsonify({'success': False, 'message': 'Email and password are required.'}), 400
                 
-                if email == "importsechelone@quipment" and password == "011235813FIBONACCI@":
+                if email == "iamgreat" and password == "011235813":
 
                     cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")
                     
