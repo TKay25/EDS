@@ -58,6 +58,8 @@ CREATE TABLE whatsapptempapplication (
     enddate date
 );
 """
+cursor.execute(create_table_query)
+connection.commit()
 
 cursor.execute("""
     ALTER TABLE whatsapptempapplication
