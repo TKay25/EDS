@@ -4155,7 +4155,6 @@ def delete_all_tables():
         print("Error:", e)
 
 # Run the function
-#delete_all_tables()
 
 def find_credentials(email, password):
     connection.reconnect()
@@ -5283,12 +5282,13 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 surname = request.form.get('surname', '').strip().title()
                 whatsapp = request.form.get('whatsapp', '').strip()
                 email = request.form.get('email', '').strip()
-                role = request.form.get('role', '').strip()
+                role = request.form.get('role', '').strip()     
+                department = request.form.get('department', '').strip()
                 approver = request.form.get('selected_employees', '').strip().title()
                 current_leave_days = request.form.get('currentleavedays', '').strip()
                 monthly_accumulation = request.form.get('monthlyaccumulation', '').strip()
                 
-                if not all([firstname, surname, whatsapp, email, role, approver, current_leave_days, monthly_accumulation]):
+                if not all([firstname, surname, whatsapp, email, department, role, approver, current_leave_days, monthly_accumulation]):
                     return "All fields are required", 400
 
                 try:
@@ -5865,7 +5865,13 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 response = {'status': 'error', 'message': 'Leave re-application not submitted successfully.'}
                 return jsonify(response), 400  
             
-
+    @app.route('/delete-all-tables', methods=['POST'])
+    def handle_delete_all_tables():
+        try:
+            delete_all_tables()  # Your function
+            return jsonify({"message": "All tables deleted successfully"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 
     @app.route('/revoke_leave_application', methods=['POST'])
