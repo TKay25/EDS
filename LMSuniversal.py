@@ -3581,13 +3581,9 @@ def webhook():
 
                                                 # Rename columns for clarity
                                                 mom_leave.columns.name = None
-                                                mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"Leave Days ({col.strftime('%b %Y')})" for col in mom_leave.columns[3:]]
+                                                mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"{col.strftime('%b-%Y')}" for col in mom_leave.columns[3:]]
 
                                                 print(mom_leave)
-
-
-
-
 
                                                 def upload_excel_to_whatsapp(excel_bytes, company_reg, first_name, last_name, reference_number=None):
                                                     """Uploads an Excel file to WhatsApp servers and returns the media ID"""
