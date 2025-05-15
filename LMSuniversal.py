@@ -4193,11 +4193,11 @@ def find_credentials(email, password):
 def run1(table_name, empid):
     print(empid)
 
-    query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+    query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
     cursor.execute(query)
     rows = cursor.fetchall()
 
-    df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
+    df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Department","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month","Department"])
     print(df_employees)
     userdf = df_employees[df_employees['id'] == empid].reset_index()
     print("yeaarrrrr")
@@ -4214,6 +4214,8 @@ def run1(table_name, empid):
     leaveapproverwhatsapp = userdf.iat[0,11]
     role = userdf.iat[0,7]
     leavedaysbalance = userdf.iat[0,12]
+    department = userdf.iat[0,14]
+
     print('check')
 
     df_employees['Employee Name'] = df_employees['firstname'] + ' ' + df_employees['surname']
@@ -4447,6 +4449,7 @@ def run1(table_name, empid):
         "table_rememployees_bulk1_html": table_rememployees_bulk1_html,
         "employees_list": employees_list,
         "role": role,
+        "department": department,
         "firstname": firstname,
         "surname": surname,
         "fullnamedisp": fullnamedisp,
@@ -4636,6 +4639,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     address VARCHAR(100),
                     email VARCHAR(255),
                     password VARCHAR(255),
+                    department VARCHAR(255),
                     role VARCHAR(255),
                     leaveapprovername VARCHAR(255),
                     leaveapproverid INT,
@@ -4656,6 +4660,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     id INT,
                     firstname VARCHAR(100),
                     surname VARCHAR(100),
+                    department VARCHAR(255),
                     leavetype VARCHAR(255),
                     reasonifother VARCHAR(300),
                     leaveapprovername VARCHAR(255),
@@ -4682,6 +4687,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     id INT,
                     firstname VARCHAR(100),
                     surname VARCHAR(100),
+                    department VARCHAR(255),
                     leavetype VARCHAR(255),
                     reasonifother VARCHAR(300),
                     leaveapprovername VARCHAR(255),
@@ -4711,6 +4717,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     id INT,
                     firstname VARCHAR(100),
                     surname VARCHAR(100),
+                    department VARCHAR(255),
                     leavetype VARCHAR(255),
                     reasonifother VARCHAR(300),
                     leaveapprovername VARCHAR(255),
@@ -4738,6 +4745,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     id INT,
                     firstname VARCHAR(100),
                     surname VARCHAR(100),
+                    department VARCHAR(255),
                     leavetype VARCHAR(255),
                     reasonifother VARCHAR(300),
                     leaveapprovername VARCHAR(255),
@@ -4765,6 +4773,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     id INT,
                     firstname VARCHAR(100),
                     surname VARCHAR(100),
+                    department VARCHAR(255),
                     leavetype VARCHAR(255),
                     reasonifother VARCHAR(300),
                     leaveapprovername VARCHAR(255),
@@ -4925,7 +4934,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     print(f"Table Found: {table_name}")
                     print(rows)
 
-                    table_df = pd.DataFrame(rows, columns=['id', 'firstname', 'surname', 'whatsapp', 'address', 'email', 'password', 'role', 'leaveapprovername', 'leaveapproverid', 'leaveapproveremail','leaveapproverwhatsapp','currentleavedaysbalance', 'monthlyaccumulation'])
+                    table_df = pd.DataFrame(rows, columns=['id', 'firstname', 'surname', 'whatsapp', 'address', 'email', 'password', 'department', 'role', 'leaveapprovername', 'leaveapproverid', 'leaveapproveremail','leaveapproverwhatsapp','currentleavedaysbalance', 'monthlyaccumulation'])
 
                     if table_df.iat[0, 6] == password:
                         user_uuid = uuid.uuid4()
@@ -5011,7 +5020,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     print(f"Table Found: {table_name}")
                     print(rows)
 
-                    table_df = pd.DataFrame(rows, columns=['id', 'firstname', 'surname', 'whatsapp', 'address', 'email', 'password', 'role', 'leaveapprovername', 'leaveapproverid', 'leaveapproveremail','leaveapproverwhatsapp','currentleavedaysbalance', 'monthlyaccumulation'])
+                    table_df = pd.DataFrame(rows, columns=['id', 'firstname', 'surname', 'whatsapp', 'address', 'email', 'password', 'department', 'role', 'leaveapprovername', 'leaveapproverid', 'leaveapproveremail','leaveapproverwhatsapp','currentleavedaysbalance', 'monthlyaccumulation'])
                     empid = table_df.iat[0,0]
 
                     update_query = f"UPDATE {table_name} SET password = %s WHERE email = %s;"
@@ -5063,6 +5072,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             employee_number = request.form.get('employee_number')
             first_name = request.form.get('first_name_app')
             surname = request.form.get('surname')
+            department = request.form.get('department')
             date_applied = request.form.get('dateapplied')
             approver_name = request.form.get('approvername')
             approver_id = request.form.get('approverid')
@@ -5111,7 +5121,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             print(f"Leave Specify: {leave_specify}")
             print(f"Start Date: {start_date}")
             print(f"End Date: {end_date}")
-            
+            print(f"Department: {department}")
+
             leavedaysbalancebf = int(leave_days_balance) - int(leave_days)
 
             table_name_apps_pending_approval = f"{company_name}appspendingapproval"
@@ -5127,18 +5138,18 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 status = "Pending"
 
                 insert_query = f"""
-                INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                 """
-                cursor.execute(insert_query, (employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, int(leavedaysbalancebf), status))
+                cursor.execute(insert_query, (employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, int(leavedaysbalancebf), status))
                 connection.commit()
 
 
-                query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+                query = f"SELECT id, firstname, surname, whatsapp, email, address, role, department, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
                 cursor.execute(query)
                 rows = cursor.fetchall()
 
-                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
+                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Department","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
                 print(df_employees)
                 userdf = df_employees[df_employees['id'] == int(np.int64(employee_number))].reset_index()
                 print("yeaarrrrr")
@@ -5166,7 +5177,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 leaveappid = df_employees.iat[0,0]
 
 
-                send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                     f"Your Leave Application ID is `{leaveappid}`.\n\n"
                     f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
                     "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
@@ -5179,7 +5190,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     ]
                     send_whatsapp_message(
                         f"263{leaveapproverwhatsapp}", 
-                        f"Hey {approovvver}! 😊. New `{leave_type}` Leave Application from `{first_name} {surname}` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
+                        f"Hey {approovvver}! 😊. New `{leave_type}` Leave Application from `{first_name} {surname}` in {department} department for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
                         f"Select an option below to either approve or disapprove the application."         
                         , 
                         buttons
