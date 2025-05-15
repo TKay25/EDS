@@ -3526,6 +3526,140 @@ def webhook():
 
                                                 continue
 
+                                            elif selected_option == "Book":
+                                                
+                                                table_name = f"{company_reg}main"
+
+                                                query = f"SELECT id, firstname, surname, whatsapp, email, address ,role,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
+                                                cursor.execute(query)
+                                                rows = cursor.fetchall()
+
+                                                df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
+                                                df_employees = df_employees.sort_values(by="ID", ascending=True)
+
+                                                print(df_employees)
+
+
+                                                def upload_excel_to_whatsapp(excel_bytes, company_reg, first_name, last_name, reference_number=None):
+                                                    """Uploads an Excel file to WhatsApp servers and returns the media ID"""
+                                                    compxxy = company_reg.replace("_"," ").title()
+                                                    
+                                                    if reference_number:
+                                                        filename = f"leave_records_{reference_number}_{first_name}_{last_name}_{compxxy}.xlsx"
+                                                    else:
+                                                        filename = f"leave_records_{first_name}_{last_name}_{compxxy}.xlsx"
+                                                    
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                    }
+
+                                                    files = {
+                                                        "file": (filename, io.BytesIO(excel_bytes), 
+                                                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+                                                        "type": (None, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+                                                        "messaging_product": (None, "whatsapp")
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, files=files)
+                                                    print("📊 Excel upload response:", response.text)  # Debugging
+                                                    response.raise_for_status()
+                                                    return response.json()["id"]
+
+                                                def send_whatsapp_excel_by_media_id(recipient_number, media_id, company_reg, first_name, last_name, reference_number=None, caption=None):
+                                                    """Sends an Excel file via WhatsApp using the uploaded media ID"""
+                                                    compxxy = company_reg.replace("_"," ").title()
+                                                    
+                                                    if reference_number:
+                                                        filename = f"leave_records_{reference_number}_{first_name}_{last_name}_{compxxy}.xlsx"
+                                                    else:
+                                                        filename = f"leave_records_{first_name}_{last_name}_{compxxy}.xlsx"
+                                                    
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+                                                    
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": recipient_number,
+                                                        "type": "document",
+                                                        "document": {
+                                                            "id": media_id,
+                                                            "filename": filename
+                                                        }
+                                                    }
+                                                    
+                                                    if caption:
+                                                        payload["document"]["caption"] = caption
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+                                                    response.raise_for_status()
+                                                    return response.json()
+
+                                                output = BytesIO()
+                                                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                                                    df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
+                                                output.seek(0)
+                                                excel_bytes = output.getvalue()
+                                                
+                                                try:
+                                                    media_id = upload_excel_to_whatsapp(
+                                                        excel_bytes=excel_bytes,
+                                                        company_reg=company_reg,
+                                                        first_name=first_name,
+                                                        last_name=last_name
+                                                    )
+                                                    
+                                                    send_whatsapp_excel_by_media_id(
+                                                        recipient_number=sender_id,
+                                                        media_id=media_id,
+                                                        company_reg=company_reg,
+                                                        first_name=first_name,
+                                                        last_name=last_name,
+                                                        caption=f"Employee Leave Records as of {today_date}"
+                                                    )
+                                                    
+                                                    send_whatsapp_message(
+                                                        sender_id, 
+                                                        f"Excel file with leave records has been sent, {first_name}.\n\n"
+                                                        "When would you like your leave to start?\n"
+                                                        "Please use format: `start 24 january 2025`"
+                                                    )
+                                                except Exception as e:
+                                                    print(f"Error sending Excel file: {str(e)}")
+                                                    send_whatsapp_message(
+                                                        sender_id,
+                                                        f"Sorry {first_name}, we encountered an error preparing your document. Please try again later."
+                                                    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                pass
+
                                             elif selected_option == "Pending":
 
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -5010,46 +5144,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         buttons
                     )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 results = run1(table_name, empid)
                 return render_template('adminpage.html', **results)
 
@@ -5058,7 +5152,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 return jsonify(response), 400  
 
     
-
     @app.route('/update_employee_details', methods=['POST'])
     def update_employee_details():
         user_uuid = session.get('user_uuid')
