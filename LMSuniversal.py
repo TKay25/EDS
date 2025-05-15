@@ -3529,6 +3529,7 @@ def webhook():
                                             elif selected_option == "Book":
                                                 
                                                 table_name = f"{company_reg}main"
+                                                appsapproved = f"{company_reg}appsapproved"
 
                                                 query = f"SELECT id, firstname, surname, whatsapp, email, address ,role,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
                                                 cursor.execute(query)
@@ -3537,6 +3538,16 @@ def webhook():
                                                 df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
                                                 df_employees = df_employees.sort_values(by="ID", ascending=True)
 
+                                                query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, statusdate, leavedaysbalancebf  FROM {appsapproved};"
+                                                cursor.execute(query)
+                                                rows2 = cursor.fetchall()
+
+                                                df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved","Leave Days Balance"])
+                                                df_apps = df_apps.sort_values(by="AppID", ascending=False)
+
+
+
+
                                                 print(df_employees)
 
 
@@ -3544,10 +3555,7 @@ def webhook():
                                                     """Uploads an Excel file to WhatsApp servers and returns the media ID"""
                                                     compxxy = company_reg.replace("_"," ").title()
                                                     
-                                                    if reference_number:
-                                                        filename = f"leave_records_{reference_number}_{first_name}_{last_name}_{compxxy}.xlsx"
-                                                    else:
-                                                        filename = f"leave_records_{first_name}_{last_name}_{compxxy}.xlsx"
+                                                    filename = f"leave_records_{compxxy}.xlsx"
                                                     
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                     headers = {
@@ -3570,10 +3578,7 @@ def webhook():
                                                     """Sends an Excel file via WhatsApp using the uploaded media ID"""
                                                     compxxy = company_reg.replace("_"," ").title()
                                                     
-                                                    if reference_number:
-                                                        filename = f"leave_records_{reference_number}_{first_name}_{last_name}_{compxxy}.xlsx"
-                                                    else:
-                                                        filename = f"leave_records_{first_name}_{last_name}_{compxxy}.xlsx"
+                                                    filename = f"leave_records_{compxxy}.xlsx"
                                                     
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                     headers = {
@@ -3601,6 +3606,8 @@ def webhook():
                                                 output = BytesIO()
                                                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
                                                     df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
+                                                    df_apps.to_excel(writer, index=False, sheet_name=f'All Approved')
+
                                                 output.seek(0)
                                                 excel_bytes = output.getvalue()
                                                 
@@ -3624,9 +3631,9 @@ def webhook():
                                                     send_whatsapp_message(
                                                         sender_id, 
                                                         f"Excel file with leave records has been sent, {first_name}.\n\n"
-                                                        "When would you like your leave to start?\n"
-                                                        "Please use format: `start 24 january 2025`"
+                                                        "Send `hello` to see your LMS Options."
                                                     )
+
                                                 except Exception as e:
                                                     print(f"Error sending Excel file: {str(e)}")
                                                     send_whatsapp_message(
@@ -3658,7 +3665,7 @@ def webhook():
 
 
 
-                                                pass
+                                            
 
                                             elif selected_option == "Pending":
 
