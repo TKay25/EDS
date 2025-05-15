@@ -3551,6 +3551,44 @@ def webhook():
                                                 print(df_employees)
 
 
+                                                df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
+                                                df_apps['Leave End Date'] = pd.to_datetime(df_apps['Leave End Date'])
+
+                                                # Function to expand dates and exclude Sundays
+                                                def expand_leave_days(row):
+                                                    dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
+                                                    # Exclude Sundays (weekday=6)
+                                                    dates = [d for d in dates if d.weekday() != 6]
+                                                    return dates
+
+                                                # Apply the function and explode the DataFrame
+                                                df_apps['Leave Dates'] = df_apps.apply(expand_leave_days, axis=1)
+                                                df_exploded = df_apps.explode('Leave Dates')
+
+                                                # Extract month and year for grouping
+                                                df_exploded['Month'] = df_exploded['Leave Dates'].dt.to_period('M')
+
+                                                # Group by Employee and Month
+                                                result = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month']).size().reset_index(name='Leave Days Taken')
+
+                                                # Pivot to MoM format (months as columns)
+                                                mom_leave = result.pivot_table(
+                                                    index=['Emp ID', 'First Name', 'Surname'],
+                                                    columns='Month',
+                                                    values='Leave Days Taken',
+                                                    fill_value=0
+                                                ).reset_index()
+
+                                                # Rename columns for clarity
+                                                mom_leave.columns.name = None
+                                                mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"Leave Days ({col.strftime('%b %Y')})" for col in mom_leave.columns[3:]]
+
+                                                print(mom_leave)
+
+
+
+
+
                                                 def upload_excel_to_whatsapp(excel_bytes, company_reg, first_name, last_name, reference_number=None):
                                                     """Uploads an Excel file to WhatsApp servers and returns the media ID"""
                                                     compxxy = company_reg.replace("_"," ").title()
@@ -3607,6 +3645,7 @@ def webhook():
                                                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
                                                     df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
                                                     df_apps.to_excel(writer, index=False, sheet_name=f'All Approved')
+                                                    mom_leave.to_excel(writer, index=False, sheet_name=f'Month on Month')
 
                                                 output.seek(0)
                                                 excel_bytes = output.getvalue()
