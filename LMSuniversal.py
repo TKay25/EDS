@@ -3538,7 +3538,7 @@ def webhook():
                                                 df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
                                                 df_employees = df_employees.sort_values(by="ID", ascending=True)
 
-                                                query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, statusdate, leavedaysbalancebf  FROM {appsapproved};"
+                                                query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, leavedaysappliedfor,   TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, leavedaysbalancebf  FROM {appsapproved};"
                                                 cursor.execute(query)
                                                 rows2 = cursor.fetchall()
 
