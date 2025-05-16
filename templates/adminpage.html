@@ -1413,13 +1413,71 @@
       </div>
     </div>
   </div>
+
+
+  <div class="modal fade" id="editModaldepartment" tabindex="-1" role="dialog" aria-labelledby="editModaldepartmentLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModaldepartmentLabel">EMPLOYEE DEPARTMENT EDITOR </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+        </div>
+        <div class="modal-body">
+          <form id="editdepartmentForm">
+            <div class="form-group">
+                <label for="department-emp" id="content-edit-department"></label>
+                <select id="department-emp" class="form-control form-control-blue" name="department-emp" style="margin-top: 20px;">
+                    <option value="" disabled selected>Select Employee's Department</option>
+                    <option value="Human Resources and Administration">Human Resources and Administration</option>
+                    <option value="Finance and Accounting">Finance and Accounting</option>
+                    <option value="Sales and Marketing">Sales and Marketing</option>
+                    <option value="Operations and Production">Operations and Production</option>
+                    <option value="Procurement and Purchasing">Procurement and Purchasing</option>
+                    <option value="Customer Service and Support">Customer Service and Support</option>
+                    <option value="IT and Digital Infrastructure">IT and Digital Infrastructure</option>
+                    <option value="Risk Management">Risk Management</option>
+                    <option value="Legal and Compliance">Legal and Compliance</option>
+                    <option value="Health, Safety and Environment">Health, Safety and Environment</option>
+                    <option value="Research, Analytics and Reporting">Research, Analytics and Reporting</option>
+                </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="savedepartment" style="width: 35%;">Save Changes</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="closedepartment">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="confirmationModaldepartment" tabindex="-1" role="dialog" aria-labelledby="confirmationModaldepartmentLabel" >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmationModaldepartmentLabel">DEPARTMENT ASSIGNMENT CONFIRMATION</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmationMessagedepartment" style="text-align: center;font-size: 13pt;"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="savedepartmentconfirm">Yes</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <div class="dropdown-overlay"></div>
 
   <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" >
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="confirmationModalLabel">Role ASSIGNMENT CONFIRMATION</h5>
+          <h5 class="modal-title" id="confirmationModalLabel">ROLE ASSIGNMENT CONFIRMATION</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -1829,6 +1887,7 @@ $(document).ready(function() {
 
 
 let currentIdeditrole = null;
+let currentIdeditdepartment = null;
 let currentIdchangeapprover = null;
 let currentIdeditbalance = null;
 
@@ -1844,6 +1903,18 @@ $(document).on('click', '.edit-priv-btn', function() {
 
     var message = `Select New Role for <strong>${currentFirstName} -- ID: ${currentIdeditrole}</strong>`;
     $('#content-edit-priv').html(message);
+});
+
+$(document).on('click', '.edit-department-btn', function() {
+    currentIdeditdepartment = $(this).data('id'); 
+    $('#emp-id').text('ID: ' + currentIdeditdepartment);
+
+    var row = $(this).closest('tr'); 
+
+    currentFirstName = row.find('td').eq(1).text(); 
+
+    var message = `Select New Deaprtment for <strong>${currentFirstName} -- ID: ${currentIdeditdepartment}</strong>`;
+    $('#content-edit-department').html(message);
 });
 
 $(document).on('click', '.change-approver-btn', function() {
@@ -1949,6 +2020,51 @@ $('#closeaccumulators').on('click', function() {
 
 $('#cancel_add_emplyee_manual').on('click', function() {
     $('#manualaddemployeeModal').modal('hide'); 
+});
+
+
+
+$('#savedepartmentconfirm').on('click', function() {
+    var newdepartment = $('#department-emp').val();  // Get the selected role
+    var companyname = $('#company_name').val();  // Get the company name from the hidden input
+
+    if (!newdepartment || !companyname) {
+        alert("Please fill in all required fields.");
+        return;  // Prevent further execution if fields are empty
+    }
+
+    $('#edsLoader').show();
+
+    
+    if (newdepartment) {
+        // Send the data to the Flask endpoint
+        $.ajax({
+            url: '/update_department',  // Change to your desired endpoint
+            method: 'POST',
+            data: {
+                role: newdepartment,
+                currentId: currentIdeditdepartment,  // Include the currentId in the request
+                companyname: companyname  // Include the company_name in the request
+            },
+            success: function(response) {
+                // Handle the response from Flask (e.g., show success message or refresh data)
+                $('#editModaldepartment').modal('hide');  // Hide the modal after success
+                $('#edsLoader').hide();
+
+                setTimeout(function() {
+                    alert('Department updated successfully.');
+                }, 100);  // 100ms delay to ensure UI update before alert
+                location.reload();  
+            },
+            error: function(xhr, status, error) {
+                // Handle any errors (e.g., alert user)
+                alert('Error: ' + error);
+            }
+        });
+    } else {
+        // If no role is selected
+        alert("Please select a department before saving.");
+    }
 });
 
 
@@ -3457,6 +3573,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedOption = this.options[this.selectedIndex];
         console.log(`Updated Selection: ${selectedOption.value} (${selectedOption.text})`);
     });
+
+    document.getElementById('savedepartment').addEventListener('click', function () {
+    // Get the role dropdown element
+        const departmentDropdown = document.getElementById('department-emp');
+
+        // Get the selected option
+        const selectedOption = departmentDropdown.options[departmentDropdown.selectedIndex];
+
+        // Check if a valid role is selected
+        if (selectedOption && selectedOption.value !== "") {
+            // Update the confirmation message with the selected option's text
+            document.getElementById('confirmationMessagedepartment').innerHTML =
+                `Proceed to assign <strong><span style="margin-top:8px;">${currentFirstName}</span></strong> to the <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${selectedOption.text}</strong> department?`;
+
+            const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModaldepartment'));
+            confirmationModal.show();
+        } else {
+            // Show alert if no valid option is selected
+            alert("Please select a valid department before proceeding.");
+        }
+    });
+
+    // Update selected value dynamically (optional, for reference or debugging)
+    document.getElementById('department-emp').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        console.log(`Updated Selection: ${selectedOption.value} (${selectedOption.text})`);
+    });
+
 
 
     document.getElementById('saveapprover').addEventListener('click', function () {
