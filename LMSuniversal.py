@@ -5432,7 +5432,41 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             return redirect(url_for('landingpage'))  
         
 
+    @app.route('/update_department', methods=['POST'])
+    def update_department():
+    
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+            empid = session.get('empid')
+    
 
+            department = request.form.get('department')
+            current_id = request.form.get('currentId')
+            company_name_w_space = request.form.get('companyname')
+            company_name = company_name_w_space.replace(' ', '_')
+
+            print(department)
+            print(current_id)
+            print(company_name)
+            table_name = company_name + 'main'
+
+            update_query = f"""
+            UPDATE {table_name}
+            SET department = %s WHERE id = %s;
+            """
+
+            cursor.execute(update_query, (department, current_id))
+            
+            connection.commit()
+
+            results = run1(table_name, empid)  # Replace with your actual table name
+
+            return render_template('adminpage.html', **results, id= empid, company_name=company_name)
+
+            '''return jsonify({'message': 'role updated successfully'}), 200'''
+
+        else:
+            return redirect(url_for('landingpage')) 
 
     
     @app.route('/update_approver', methods=['POST'])
