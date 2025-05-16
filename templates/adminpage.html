@@ -2042,7 +2042,7 @@ $('#savedepartmentconfirm').on('click', function() {
             url: '/update_department',  // Change to your desired endpoint
             method: 'POST',
             data: {
-                role: newdepartment,
+                department: newdepartment,
                 currentId: currentIdeditdepartment,  // Include the currentId in the request
                 companyname: companyname  // Include the company_name in the request
             },
