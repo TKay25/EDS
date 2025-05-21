@@ -3768,32 +3768,6 @@ def webhook():
                                                         f"Sorry {first_name}, we encountered an error preparing your document. Please try again later."
                                                     )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                            
-
                                             elif selected_option == "Pending":
 
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
