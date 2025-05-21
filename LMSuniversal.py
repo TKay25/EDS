@@ -636,8 +636,8 @@ def webhook():
                                                         if leaveapproverwhatsapp:
             
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": "approve", "title": "Approve"}},
-                                                                {"type": "reply", "reply": {"id": "disapprove", "title": "Disapprove"}},
+                                                                {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
@@ -2184,8 +2184,8 @@ def webhook():
                                                         if leaveapproverwhatsapp:
             
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": "approve", "title": "Approve"}},
-                                                                {"type": "reply", "reply": {"id": "disapprove", "title": "Disapprove"}},
+                                                                {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
@@ -3138,8 +3138,8 @@ def webhook():
                                                         if leaveapproverwhatsapp:
             
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": "approve", "title": "Approve"}},
-                                                                {"type": "reply", "reply": {"id": "disapprove", "title": "Disapprove"}},
+                                                                {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
