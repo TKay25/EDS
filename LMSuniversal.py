@@ -5338,10 +5338,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 if record_exists == 0:
                     insert_query = f"""
                         INSERT INTO {table_name} 
-                        (firstname, surname, whatsapp, email, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp,currentleavedaysbalance, monthlyaccumulation)
+                        (firstname, surname, whatsapp, email, role, department, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp,currentleavedaysbalance, monthlyaccumulation)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                     """
-                    cursor.execute(insert_query, (firstname, surname, whatsapp, email, role, name_part, id_part, leaveapproveremail, leaveapproverwhatsapp, current_leave_days, monthly_accumulation))
+                    cursor.execute(insert_query, (firstname, surname, whatsapp, email, role, department, name_part, id_part, leaveapproveremail, leaveapproverwhatsapp, current_leave_days, monthly_accumulation))
                     connection.commit()
                 else:
                     return "Record already exists", 400
