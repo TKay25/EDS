@@ -223,8 +223,8 @@ def webhook():
                                             whatsapp_foc_8 = f"0{result[3]}"
                                             email_foc_8 = result[4]
                                             address_foc_8 = result[5]
-                                            role_foc_8 = result[7]
-                                            days_days_balance = result[12]
+                                            role_foc_8 = result[8]
+                                            days_days_balance = result[13]
                                             company_reg = table_name[:-4]  
 
                                             print(id_user)
