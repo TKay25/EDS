@@ -5300,7 +5300,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 approver = request.form.get('selected_employees', '').strip().title()
                 current_leave_days = request.form.get('currentleavedays', '').strip()
                 monthly_accumulation = request.form.get('monthlyaccumulation', '').strip()
-                
+                print('whoaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+                print(department)
                 if not all([firstname, surname, whatsapp, email, department, role, approver, current_leave_days, monthly_accumulation]):
                     return "All fields are required", 400
 
