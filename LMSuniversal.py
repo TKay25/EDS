@@ -387,131 +387,134 @@ def webhook():
                                                     all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                     all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
                                                     all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
-                                                    print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
 
-                                                    if all_approved_declined_cancelled.iat[0,8] == "Approved":
+                                                    if len(all_approved_declined_cancelled) > 0:
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
-                                                        )
+                                                        print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
+
+                                                        if all_approved_declined_cancelled.iat[0,8] == "Approved":
+
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
+                                                            )
 
 
-                                                        def generate_leave_pdf():
-                                                            app = {
-                                                                'company_logo': 44,
-                                                                'company_name': company_reg.replace("_"," ").title(),
-                                                                'employee_name': f"{first_name} {last_name}",
-                                                                'leave_type': all_approved_declined_cancelled.iat[0,2],
-                                                                'generated_on': today_date,
-                                                                'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
-                                                                'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
-                                                                'reference_number': all_approved_declined_cancelled.iat[0,0],
-                                                                'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
-                                                                'new_balance': all_approved_declined_cancelled.iat[0,10],
-                                                                'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
-                                                                'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
-                                                                'days_requested':  all_approved_declined_cancelled.iat[0,7], 
-                                                                'address': address_foc_8, 
-                                                                'whatsapp': whatsapp_foc_8, 
-                                                                'email': email_foc_8, 
-                                                                'status': 'Approved'
-                                                            }
-
-                                                            html_out = render_template("leave_pdf_template.html", app=app)
-                                                            
-                                                            # ✅ Return as bytes instead of saving to file
-                                                            pdf_bytes = HTML(string=html_out).write_pdf()
-                                                            return pdf_bytes
-
-                                                        
-                                                        global ACCESS_TOKEN
-                                                        global PHONE_NUMBER_ID
-
-                                                        def upload_pdf_to_whatsapp(pdf_bytes):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                        
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
-                                                            }
-
-                                                            files = {
-                                                                "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                                                                "type": (None, "application/pdf"),
-                                                                "messaging_product": (None, "whatsapp")
-                                                            }
-
-                                                            response = requests.post(url, headers=headers, files=files)
-                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
-                                                            response.raise_for_status()
-                                                            return response.json()["id"]
-
-                                                                                                        
-                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                "Content-Type": "application/json"
-                                                            }
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": recipient_number,
-                                                                "type": "document",
-                                                                "document": {
-                                                                    "id": media_id,            # Media ID from upload step
-                                                                    "filename": filename       # Desired file name on recipient's phone
+                                                            def generate_leave_pdf():
+                                                                app = {
+                                                                    'company_logo': 44,
+                                                                    'company_name': company_reg.replace("_"," ").title(),
+                                                                    'employee_name': f"{first_name} {last_name}",
+                                                                    'leave_type': all_approved_declined_cancelled.iat[0,2],
+                                                                    'generated_on': today_date,
+                                                                    'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
+                                                                    'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
+                                                                    'reference_number': all_approved_declined_cancelled.iat[0,0],
+                                                                    'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
+                                                                    'new_balance': all_approved_declined_cancelled.iat[0,10],
+                                                                    'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
+                                                                    'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
+                                                                    'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                    'address': address_foc_8, 
+                                                                    'whatsapp': whatsapp_foc_8, 
+                                                                    'email': email_foc_8, 
+                                                                    'status': 'Approved'
                                                                 }
-                                                            }
 
-                                                            response = requests.post(url, headers=headers, json=payload)
-                                                            response.raise_for_status()
-                                                            return response.json()
+                                                                html_out = render_template("leave_pdf_template.html", app=app)
+                                                                
+                                                                # ✅ Return as bytes instead of saving to file
+                                                                pdf_bytes = HTML(string=html_out).write_pdf()
+                                                                return pdf_bytes
+
+                                                            
+                                                            global ACCESS_TOKEN
+                                                            global PHONE_NUMBER_ID
+
+                                                            def upload_pdf_to_whatsapp(pdf_bytes):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                            
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                                }
+
+                                                                files = {
+                                                                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                    "type": (None, "application/pdf"),
+                                                                    "messaging_product": (None, "whatsapp")
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, files=files)
+                                                                print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                response.raise_for_status()
+                                                                return response.json()["id"]
+
+                                                                                                            
+                                                            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "document",
+                                                                    "document": {
+                                                                        "id": media_id,            # Media ID from upload step
+                                                                        "filename": filename       # Desired file name on recipient's phone
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
 
 
-                                                        pdf_path = generate_leave_pdf()
-                                                        media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                            pdf_path = generate_leave_pdf()
+                                                            media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                            send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "Select an option below to continue 👇",
-                                                            buttons
-                                                        )
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Declined":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
                                                     else:
 
@@ -522,7 +525,7 @@ def webhook():
                                                         companyxx = company_reg.replace("_"," ").title()
                                                         send_whatsapp_message(
                                                             sender_id, 
-                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n You have not applied for any leave days yet.", 
                                                             buttons
                                                         )
 
@@ -1080,132 +1083,136 @@ def webhook():
                             
                                                     all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                     all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                    all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
-                                                    print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
+                                                    all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False) 
 
-                                                    if all_approved_declined_cancelled.iat[0,8] == "Approved":
-
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
-                                                        )
+                                                    if len(all_approved_declined_cancelled) > 0:
 
 
-                                                        def generate_leave_pdf():
-                                                            app = {
-                                                                'company_logo': 44,
-                                                                'company_name': company_reg.replace("_"," ").title(),
-                                                                'employee_name': f"{first_name} {last_name}",
-                                                                'leave_type': all_approved_declined_cancelled.iat[0,2],
-                                                                'generated_on': today_date,
-                                                                'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
-                                                                'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
-                                                                'reference_number': all_approved_declined_cancelled.iat[0,0],
-                                                                'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
-                                                                'new_balance': all_approved_declined_cancelled.iat[0,10],
-                                                                'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
-                                                                'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
-                                                                'days_requested':  all_approved_declined_cancelled.iat[0,7], 
-                                                                'address': address_foc_8, 
-                                                                'whatsapp': whatsapp_foc_8, 
-                                                                'email': email_foc_8, 
-                                                                'status': 'Approved'
-                                                            }
+                                                        print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
 
-                                                            html_out = render_template("leave_pdf_template.html", app=app)
-                                                            
-                                                            # ✅ Return as bytes instead of saving to file
-                                                            pdf_bytes = HTML(string=html_out).write_pdf()
-                                                            return pdf_bytes
+                                                        if all_approved_declined_cancelled.iat[0,8] == "Approved":
 
-                                                        
-                                                        global ACCESS_TOKEN
-                                                        global PHONE_NUMBER_ID
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
+                                                            )
 
-                                                        def upload_pdf_to_whatsapp(pdf_bytes):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                        
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
-                                                            }
 
-                                                            files = {
-                                                                "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                                                                "type": (None, "application/pdf"),
-                                                                "messaging_product": (None, "whatsapp")
-                                                            }
-
-                                                            response = requests.post(url, headers=headers, files=files)
-                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
-                                                            response.raise_for_status()
-                                                            return response.json()["id"]
-
-                                                                                                        
-                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                "Content-Type": "application/json"
-                                                            }
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": recipient_number,
-                                                                "type": "document",
-                                                                "document": {
-                                                                    "id": media_id,            # Media ID from upload step
-                                                                    "filename": filename       # Desired file name on recipient's phone
+                                                            def generate_leave_pdf():
+                                                                app = {
+                                                                    'company_logo': 44,
+                                                                    'company_name': company_reg.replace("_"," ").title(),
+                                                                    'employee_name': f"{first_name} {last_name}",
+                                                                    'leave_type': all_approved_declined_cancelled.iat[0,2],
+                                                                    'generated_on': today_date,
+                                                                    'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
+                                                                    'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
+                                                                    'reference_number': all_approved_declined_cancelled.iat[0,0],
+                                                                    'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
+                                                                    'new_balance': all_approved_declined_cancelled.iat[0,10],
+                                                                    'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
+                                                                    'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
+                                                                    'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                    'address': address_foc_8, 
+                                                                    'whatsapp': whatsapp_foc_8, 
+                                                                    'email': email_foc_8, 
+                                                                    'status': 'Approved'
                                                                 }
-                                                            }
 
-                                                            response = requests.post(url, headers=headers, json=payload)
-                                                            response.raise_for_status()
-                                                            return response.json()
+                                                                html_out = render_template("leave_pdf_template.html", app=app)
+                                                                
+                                                                # ✅ Return as bytes instead of saving to file
+                                                                pdf_bytes = HTML(string=html_out).write_pdf()
+                                                                return pdf_bytes
+
+                                                            
+                                                            global ACCESS_TOKEN
+                                                            global PHONE_NUMBER_ID
+
+                                                            def upload_pdf_to_whatsapp(pdf_bytes):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                            
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                                }
+
+                                                                files = {
+                                                                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                    "type": (None, "application/pdf"),
+                                                                    "messaging_product": (None, "whatsapp")
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, files=files)
+                                                                print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                response.raise_for_status()
+                                                                return response.json()["id"]
+
+                                                                                                            
+                                                            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "document",
+                                                                    "document": {
+                                                                        "id": media_id,            # Media ID from upload step
+                                                                        "filename": filename       # Desired file name on recipient's phone
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
 
 
-                                                        pdf_path = generate_leave_pdf()
-                                                        media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                            pdf_path = generate_leave_pdf()
+                                                            media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                            send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "Select an option below to continue 👇",
-                                                            buttons
-                                                        )
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Declined":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,9]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,9]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
                                                     else:
 
@@ -1219,7 +1226,7 @@ def webhook():
 
                                                         send_whatsapp_message(
                                                             sender_id, 
-                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave days yet.", 
                                                             buttons 
                                                         )
 
@@ -1900,132 +1907,135 @@ def webhook():
                             
                                                     all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                     all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                    all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
-                                                    print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
+                                                    all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)
 
-                                                    if all_approved_declined_cancelled.iat[0,8] == "Approved":
+                                                    if len(all_approved_declined_cancelled) > 0:
+  
+                                                        print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
-                                                        )
+                                                        if all_approved_declined_cancelled.iat[0,8] == "Approved":
+
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
+                                                            )
 
 
-                                                        def generate_leave_pdf():
-                                                            app = {
-                                                                'company_logo': 44,
-                                                                'company_name': company_reg.replace("_"," ").title(),
-                                                                'employee_name': f"{first_name} {last_name}",
-                                                                'leave_type': all_approved_declined_cancelled.iat[0,2],
-                                                                'generated_on': today_date,
-                                                                'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
-                                                                'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
-                                                                'reference_number': all_approved_declined_cancelled.iat[0,0],
-                                                                'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
-                                                                'new_balance': all_approved_declined_cancelled.iat[0,10],
-                                                                'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
-                                                                'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
-                                                                'days_requested':  all_approved_declined_cancelled.iat[0,7], 
-                                                                'address': address_foc_8, 
-                                                                'whatsapp': whatsapp_foc_8, 
-                                                                'email': email_foc_8, 
-                                                                'status': 'Approved'
-                                                            }
-
-                                                            html_out = render_template("leave_pdf_template.html", app=app)
-                                                            
-                                                            # ✅ Return as bytes instead of saving to file
-                                                            pdf_bytes = HTML(string=html_out).write_pdf()
-                                                            return pdf_bytes
-
-                                                        
-                                                        global ACCESS_TOKEN
-                                                        global PHONE_NUMBER_ID
-
-                                                        def upload_pdf_to_whatsapp(pdf_bytes):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                        
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
-                                                            }
-
-                                                            files = {
-                                                                "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                                                                "type": (None, "application/pdf"),
-                                                                "messaging_product": (None, "whatsapp")
-                                                            }
-
-                                                            response = requests.post(url, headers=headers, files=files)
-                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
-                                                            response.raise_for_status()
-                                                            return response.json()["id"]
-
-                                                                                                        
-                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                "Content-Type": "application/json"
-                                                            }
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": recipient_number,
-                                                                "type": "document",
-                                                                "document": {
-                                                                    "id": media_id,            # Media ID from upload step
-                                                                    "filename": filename       # Desired file name on recipient's phone
+                                                            def generate_leave_pdf():
+                                                                app = {
+                                                                    'company_logo': 44,
+                                                                    'company_name': company_reg.replace("_"," ").title(),
+                                                                    'employee_name': f"{first_name} {last_name}",
+                                                                    'leave_type': all_approved_declined_cancelled.iat[0,2],
+                                                                    'generated_on': today_date,
+                                                                    'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
+                                                                    'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
+                                                                    'reference_number': all_approved_declined_cancelled.iat[0,0],
+                                                                    'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
+                                                                    'new_balance': all_approved_declined_cancelled.iat[0,10],
+                                                                    'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
+                                                                    'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
+                                                                    'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                    'address': address_foc_8, 
+                                                                    'whatsapp': whatsapp_foc_8, 
+                                                                    'email': email_foc_8, 
+                                                                    'status': 'Approved'
                                                                 }
-                                                            }
 
-                                                            response = requests.post(url, headers=headers, json=payload)
-                                                            response.raise_for_status()
-                                                            return response.json()
+                                                                html_out = render_template("leave_pdf_template.html", app=app)
+                                                                
+                                                                # ✅ Return as bytes instead of saving to file
+                                                                pdf_bytes = HTML(string=html_out).write_pdf()
+                                                                return pdf_bytes
+
+                                                            
+                                                            global ACCESS_TOKEN
+                                                            global PHONE_NUMBER_ID
+
+                                                            def upload_pdf_to_whatsapp(pdf_bytes):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                            
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                                }
+
+                                                                files = {
+                                                                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                    "type": (None, "application/pdf"),
+                                                                    "messaging_product": (None, "whatsapp")
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, files=files)
+                                                                print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                response.raise_for_status()
+                                                                return response.json()["id"]
+
+                                                                                                            
+                                                            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "document",
+                                                                    "document": {
+                                                                        "id": media_id,            # Media ID from upload step
+                                                                        "filename": filename       # Desired file name on recipient's phone
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
 
 
-                                                        pdf_path = generate_leave_pdf()
-                                                        media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                            pdf_path = generate_leave_pdf()
+                                                            media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                            send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "Select an option below to continue 👇",
-                                                            buttons
-                                                        )
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Declined":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
                                                     
                                                     else:
 
@@ -2047,7 +2057,7 @@ def webhook():
 
                                                         send_whatsapp_list_message(
                                                             sender_id, 
-                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave days yet.", 
                                                             "Administrator Options",
                                                             sections
                                                         )
@@ -2081,7 +2091,7 @@ def webhook():
 
                                                     send_whatsapp_list_message(
                                                         sender_id, 
-                                                        f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                        f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave days yet.", 
                                                     "Administrator Options",
                                                     sections)
 
@@ -2832,132 +2842,136 @@ def webhook():
                                                     all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                     all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
                                                     all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
-                                                    print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
-
-                                                    if all_approved_declined_cancelled.iat[0,8] == "Approved":
-
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
-                                                        )
 
 
-                                                        def generate_leave_pdf():
-                                                            app = {
-                                                                'company_logo': 44,
-                                                                'company_name': company_reg.replace("_"," ").title(),
-                                                                'employee_name': f"{first_name} {last_name}",
-                                                                'leave_type': all_approved_declined_cancelled.iat[0,2],
-                                                                'generated_on': today_date,
-                                                                'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
-                                                                'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
-                                                                'reference_number': all_approved_declined_cancelled.iat[0,0],
-                                                                'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
-                                                                'new_balance': all_approved_declined_cancelled.iat[0,10],
-                                                                'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
-                                                                'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
-                                                                'days_requested':  all_approved_declined_cancelled.iat[0,7], 
-                                                                'department':  all_approved_declined_cancelled.iat[0,11], 
-                                                                'address': address_foc_8, 
-                                                                'whatsapp': whatsapp_foc_8, 
-                                                                'email': email_foc_8, 
-                                                                'status': 'Approved'
-                                                            }
+                                                    if len(all_approved_declined_cancelled) > 0:
 
-                                                            html_out = render_template("leave_pdf_template.html", app=app)
-                                                            
-                                                            # ✅ Return as bytes instead of saving to file
-                                                            pdf_bytes = HTML(string=html_out).write_pdf()
-                                                            return pdf_bytes
+                                                        print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
 
-                                                        
-                                                        global ACCESS_TOKEN
-                                                        global PHONE_NUMBER_ID
+                                                        if all_approved_declined_cancelled.iat[0,8] == "Approved":
 
-                                                        def upload_pdf_to_whatsapp(pdf_bytes):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                        
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
-                                                            }
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
+                                                            )
 
-                                                            files = {
-                                                                "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                                                                "type": (None, "application/pdf"),
-                                                                "messaging_product": (None, "whatsapp")
-                                                            }
 
-                                                            response = requests.post(url, headers=headers, files=files)
-                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
-                                                            response.raise_for_status()
-                                                            return response.json()["id"]
-
-                                                                                                        
-                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                "Content-Type": "application/json"
-                                                            }
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": recipient_number,
-                                                                "type": "document",
-                                                                "document": {
-                                                                    "id": media_id,            # Media ID from upload step
-                                                                    "filename": filename       # Desired file name on recipient's phone
+                                                            def generate_leave_pdf():
+                                                                app = {
+                                                                    'company_logo': 44,
+                                                                    'company_name': company_reg.replace("_"," ").title(),
+                                                                    'employee_name': f"{first_name} {last_name}",
+                                                                    'leave_type': all_approved_declined_cancelled.iat[0,2],
+                                                                    'generated_on': today_date,
+                                                                    'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
+                                                                    'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
+                                                                    'reference_number': all_approved_declined_cancelled.iat[0,0],
+                                                                    'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
+                                                                    'new_balance': all_approved_declined_cancelled.iat[0,10],
+                                                                    'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
+                                                                    'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
+                                                                    'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                    'department':  all_approved_declined_cancelled.iat[0,11], 
+                                                                    'address': address_foc_8, 
+                                                                    'whatsapp': whatsapp_foc_8, 
+                                                                    'email': email_foc_8, 
+                                                                    'status': 'Approved'
                                                                 }
-                                                            }
 
-                                                            response = requests.post(url, headers=headers, json=payload)
-                                                            response.raise_for_status()
-                                                            return response.json()
+                                                                html_out = render_template("leave_pdf_template.html", app=app)
+                                                                
+                                                                # ✅ Return as bytes instead of saving to file
+                                                                pdf_bytes = HTML(string=html_out).write_pdf()
+                                                                return pdf_bytes
+
+                                                            
+                                                            global ACCESS_TOKEN
+                                                            global PHONE_NUMBER_ID
+
+                                                            def upload_pdf_to_whatsapp(pdf_bytes):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                            
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                                }
+
+                                                                files = {
+                                                                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                    "type": (None, "application/pdf"),
+                                                                    "messaging_product": (None, "whatsapp")
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, files=files)
+                                                                print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                response.raise_for_status()
+                                                                return response.json()["id"]
+
+                                                                                                            
+                                                            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "document",
+                                                                    "document": {
+                                                                        "id": media_id,            # Media ID from upload step
+                                                                        "filename": filename       # Desired file name on recipient's phone
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
 
 
-                                                        pdf_path = generate_leave_pdf()
-                                                        media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                            pdf_path = generate_leave_pdf()
+                                                            media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                            send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "Select an option below to continue 👇",
-                                                            buttons
-                                                        )
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Declined":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
                                                     else:
 
@@ -2979,7 +2993,7 @@ def webhook():
 
                                                         send_whatsapp_list_message(
                                                             sender_id, 
-                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave days yet.", 
                                                             "Administrator Options",
                                                             sections
                                                         )
@@ -3859,133 +3873,136 @@ def webhook():
                             
                                                     all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                     all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                    all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
-                                                    print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
+                                                    all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False) 
 
-                                                    if all_approved_declined_cancelled.iat[0,8] == "Approved":
+                                                    if len(all_approved_declined_cancelled) > 0:
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
-                                                        )
+                                                        print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
+
+                                                        if all_approved_declined_cancelled.iat[0,8] == "Approved":
+
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
+                                                            )
 
 
-                                                        def generate_leave_pdf():
-                                                            app = {
-                                                                'company_logo': 44,
-                                                                'company_name': company_reg.replace("_"," ").title(),
-                                                                'employee_name': f"{first_name} {last_name}",
-                                                                'leave_type': all_approved_declined_cancelled.iat[0,2],
-                                                                'generated_on': today_date,
-                                                                'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
-                                                                'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
-                                                                'reference_number': all_approved_declined_cancelled.iat[0,0],
-                                                                'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
-                                                                'new_balance': all_approved_declined_cancelled.iat[0,10],
-                                                                'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
-                                                                'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
-                                                                'days_requested':  all_approved_declined_cancelled.iat[0,7], 
-                                                                'department': all_approved_declined_cancelled.iat[0,11],
-                                                                'address': address_foc_8, 
-                                                                'whatsapp': whatsapp_foc_8, 
-                                                                'email': email_foc_8, 
-                                                                'status': 'Approved'
-                                                            }
-
-                                                            html_out = render_template("leave_pdf_template.html", app=app)
-                                                            
-                                                            # ✅ Return as bytes instead of saving to file
-                                                            pdf_bytes = HTML(string=html_out).write_pdf()
-                                                            return pdf_bytes
-
-                                                        
-                                                        global ACCESS_TOKEN
-                                                        global PHONE_NUMBER_ID
-
-                                                        def upload_pdf_to_whatsapp(pdf_bytes):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                        
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
-                                                            }
-
-                                                            files = {
-                                                                "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                                                                "type": (None, "application/pdf"),
-                                                                "messaging_product": (None, "whatsapp")
-                                                            }
-
-                                                            response = requests.post(url, headers=headers, files=files)
-                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
-                                                            response.raise_for_status()
-                                                            return response.json()["id"]
-
-                                                                                                        
-                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                "Content-Type": "application/json"
-                                                            }
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": recipient_number,
-                                                                "type": "document",
-                                                                "document": {
-                                                                    "id": media_id,            # Media ID from upload step
-                                                                    "filename": filename       # Desired file name on recipient's phone
+                                                            def generate_leave_pdf():
+                                                                app = {
+                                                                    'company_logo': 44,
+                                                                    'company_name': company_reg.replace("_"," ").title(),
+                                                                    'employee_name': f"{first_name} {last_name}",
+                                                                    'leave_type': all_approved_declined_cancelled.iat[0,2],
+                                                                    'generated_on': today_date,
+                                                                    'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
+                                                                    'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
+                                                                    'reference_number': all_approved_declined_cancelled.iat[0,0],
+                                                                    'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
+                                                                    'new_balance': all_approved_declined_cancelled.iat[0,10],
+                                                                    'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
+                                                                    'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
+                                                                    'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                    'department': all_approved_declined_cancelled.iat[0,11],
+                                                                    'address': address_foc_8, 
+                                                                    'whatsapp': whatsapp_foc_8, 
+                                                                    'email': email_foc_8, 
+                                                                    'status': 'Approved'
                                                                 }
-                                                            }
 
-                                                            response = requests.post(url, headers=headers, json=payload)
-                                                            response.raise_for_status()
-                                                            return response.json()
+                                                                html_out = render_template("leave_pdf_template.html", app=app)
+                                                                
+                                                                # ✅ Return as bytes instead of saving to file
+                                                                pdf_bytes = HTML(string=html_out).write_pdf()
+                                                                return pdf_bytes
+
+                                                            
+                                                            global ACCESS_TOKEN
+                                                            global PHONE_NUMBER_ID
+
+                                                            def upload_pdf_to_whatsapp(pdf_bytes):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                            
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                                }
+
+                                                                files = {
+                                                                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                    "type": (None, "application/pdf"),
+                                                                    "messaging_product": (None, "whatsapp")
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, files=files)
+                                                                print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                response.raise_for_status()
+                                                                return response.json()["id"]
+
+                                                                                                            
+                                                            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "document",
+                                                                    "document": {
+                                                                        "id": media_id,            # Media ID from upload step
+                                                                        "filename": filename       # Desired file name on recipient's phone
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
 
 
-                                                        pdf_path = generate_leave_pdf()
-                                                        media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                            pdf_path = generate_leave_pdf()
+                                                            media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                            send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "Select an option below to continue 👇",
-                                                            buttons
-                                                        )
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Declined":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
-                                                    elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
+                                                        elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
-                                                            buttons 
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
+                                                                buttons 
+                                                            )
 
 
                                                     else:
@@ -4008,7 +4025,7 @@ def webhook():
 
                                                         send_whatsapp_list_message(
                                                             sender_id, 
-                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave days yet.", 
                                                             "Administrator Options",
                                                             sections
                                                         )
