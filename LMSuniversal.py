@@ -5339,7 +5339,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     insert_query = f"""
                         INSERT INTO {table_name} 
                         (firstname, surname, whatsapp, email, role, department, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp,currentleavedaysbalance, monthlyaccumulation)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                     """
                     cursor.execute(insert_query, (firstname, surname, whatsapp, email, role, department, name_part, id_part, leaveapproveremail, leaveapproverwhatsapp, current_leave_days, monthly_accumulation))
                     connection.commit()
