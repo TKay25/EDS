@@ -1336,7 +1336,7 @@ def webhook():
                                                         if leaveapproverwhatsapp:
             
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": f"Approveappwa_{leaveappid}", "title": "Approve"}},
+                                                                {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
                                                                 {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
                                                             ]
                                                             
@@ -1486,7 +1486,7 @@ def webhook():
                                                 app_id = button_id.split("_")[1]
                                                 print(app_id)
 
-                                                if "approve" in button_id.lower():
+                                                if "approve5" in button_id.lower():
 
                                                     try:
                                                        
@@ -1677,21 +1677,9 @@ def webhook():
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
                                                 else:
-                                                    pass
+
+                                                    print("disapproved")
 
 
 
