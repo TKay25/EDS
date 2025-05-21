@@ -513,6 +513,20 @@ def webhook():
                                                             buttons 
                                                         )
 
+                                                    else:
+
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            buttons
+                                                        )
+
+
                                                 elif len(df_employeesappspendingcheck) > 0:
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
@@ -1193,6 +1207,21 @@ def webhook():
                                                             buttons 
                                                         )
 
+                                                    else:
+
+
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Apps Pending My Approval"}},
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            buttons 
+                                                        )
 
                                                 elif len(df_employeesappspendingcheck) > 0:
                                                     buttons = [
@@ -1698,7 +1727,7 @@ def webhook():
 
                                             sections = [
                                                 {
-                                                    "title": "Administrator Options",
+                                                    "title": "Approver Options",
                                                     "rows": [
                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                         {"id": "Track", "title": "Track My Application"},
@@ -1997,6 +2026,32 @@ def webhook():
                                                             f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
                                                             buttons 
                                                         )
+                                                    
+                                                    else:
+
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Administrator Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "Template", "title": "Add Employees"},
+                                                                    {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                                    {"id": "Book", "title": "Extract Leave Book"}
+                                                                ]
+                                                            }
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            "Administrator Options",
+                                                            sections
+                                                        )
+
 
                                                 elif len(df_employeesappspendingcheck) > 0:
                                                     buttons = [
@@ -2011,6 +2066,33 @@ def webhook():
                                                         , 
                                                         buttons
                                                     )
+
+                                                else:
+
+                                                    sections = [
+                                                        {
+                                                            "title": "Administrator Options",
+                                                            "rows": [
+                                                                {"id": "Apply", "title": "Apply for Leave"},
+                                                                {"id": "Checkbal", "title": "Check Days Balance"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_message(
+                                                        sender_id, 
+                                                        f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                    "Administrator Options",
+                                                    sections)
+
+
+
+
+
+
+
+
+
 
                                             elif button_id == "Submitapp":
                                     
@@ -2875,6 +2957,31 @@ def webhook():
                                                             sender_id, 
                                                             f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
                                                             buttons 
+                                                        )
+
+                                                    else:
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Administrator Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                    {"id": "Template", "title": "Add Employees"},
+                                                                    {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                                    {"id": "Book", "title": "Extract Leave Book"}
+                                                                ]
+                                                            }
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            "Administrator Options",
+                                                            sections
                                                         )
 
                                                 elif len(df_employeesappspendingcheck) > 0:
@@ -3904,6 +4011,32 @@ def webhook():
                                                             sender_id, 
                                                             f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
                                                             buttons 
+                                                        )
+
+
+                                                    else:
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Administrator Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                    {"id": "Template", "title": "Add Employees"},
+                                                                    {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                                    {"id": "Book", "title": "Extract Leave Book"}
+                                                                ]
+                                                            }
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave yet.", 
+                                                            "Administrator Options",
+                                                            sections
                                                         )
 
                                                 elif len(df_employeesappspendingcheck) > 0:
