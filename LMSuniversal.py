@@ -608,6 +608,36 @@ def webhook():
                                                         department = userdf.iat[0,14]
                                                         print('check')
 
+                                                        departmentdf = df_employees[df_employees['Department'] == department].reset_index()
+                                                        numberindepartment = len(departmentdf)
+                                                        leave_dates = pd.date_range(startdate, enddate)
+
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_approved} WHERE department = {department};"
+                                                        cursor.execute(query)
+                                                        rows = cursor.fetchall()
+                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+
+                                                        # Create daily impact report
+                                                        impact_report = []
+
+                                                        for date in leave_dates:
+
+                                                            on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
+                                                            remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
+                                                            impact_report.append({
+                                                                "date": date.strftime("%Y-%m-%d"),
+                                                                "on leave (including new)": on_leave + 1,
+                                                                "employees remaining": remaining
+                                                            })
+
+                                                        # Convert to DataFrame for display
+                                                        impact_df = pd.DataFrame(impact_report)
+                                                        print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
+                                                        print(impact_df)
+
+
+
+
                                                         leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
 
                                                         status = "Pending"
@@ -642,6 +672,10 @@ def webhook():
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
                                                                 f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                
+                                                            
+                                                                f"If you approve this leave application, the `{department}` department will be left with.\n\n"         
+
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
