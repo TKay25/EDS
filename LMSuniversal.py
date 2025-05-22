@@ -613,9 +613,16 @@ def webhook():
                                                         numberindepartment = len(departmentdf)
                                                         leave_dates = pd.date_range(startdate, enddate)
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_approved} WHERE department = {department};"
-                                                        cursor.execute(query)
+                                                        query = f"""
+                                                            SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                                                leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                                                leavedaysbalancebf, department
+                                                            FROM {table_name_apps_approved}
+                                                            WHERE department = %s;
+                                                        """
+                                                        cursor.execute(query, (department,))
                                                         rows = cursor.fetchall()
+
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
 
                                                         # Create daily impact report
@@ -1348,9 +1355,16 @@ def webhook():
                                                         numberindepartment = len(departmentdf)
                                                         leave_dates = pd.date_range(startdate, enddate)
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_approved} WHERE department = {department};"
-                                                        cursor.execute(query)
+                                                        query = f"""
+                                                            SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                                                leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                                                leavedaysbalancebf, department
+                                                            FROM {table_name_apps_approved}
+                                                            WHERE department = %s;
+                                                        """
+                                                        cursor.execute(query, (department,))
                                                         rows = cursor.fetchall()
+
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
 
                                                         # Create daily impact report
@@ -2225,9 +2239,16 @@ def webhook():
                                                         numberindepartment = len(departmentdf)
                                                         leave_dates = pd.date_range(startdate, enddate)
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_approved} WHERE department = {department};"
-                                                        cursor.execute(query)
+                                                        query = f"""
+                                                            SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                                                leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                                                leavedaysbalancebf, department
+                                                            FROM {table_name_apps_approved}
+                                                            WHERE department = %s;
+                                                        """
+                                                        cursor.execute(query, (department,))
                                                         rows = cursor.fetchall()
+                                                        
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
 
                                                         # Create daily impact report
@@ -3207,9 +3228,16 @@ def webhook():
                                                         numberindepartment = len(departmentdf)
                                                         leave_dates = pd.date_range(startdate, enddate)
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_approved} WHERE department = {department};"
-                                                        cursor.execute(query)
+                                                        query = f"""
+                                                            SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                                                leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                                                leavedaysbalancebf, department
+                                                            FROM {table_name_apps_approved}
+                                                            WHERE department = %s;
+                                                        """
+                                                        cursor.execute(query, (department,))
                                                         rows = cursor.fetchall()
+
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
 
                                                         # Create daily impact report
