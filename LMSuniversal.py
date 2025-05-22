@@ -6635,11 +6635,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             company_name = table_name.replace("main","")
 
 
-            query = f"SELECT id, firstname, surname, whatsapp, email, address ,role,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
+            query = f"SELECT id, firstname, surname, whatsapp, email, address ,role, department,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
             cursor.execute(query)
             rows = cursor.fetchall()
 
-            df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
+            df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role", "Department","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
             df_employees = df_employees.sort_values(by="ID", ascending=True)
 
             print(df_employees)
@@ -6669,11 +6669,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             company_name = table_name.replace("main", "").strip()
 
-            query = f"SELECT id, firstname, surname, whatsapp, email, role, leaveapprovername, leaveapproverid, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+            query = f"SELECT id, firstname, surname, whatsapp, email, role, department, leaveapprovername, leaveapproverid, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
             cursor.execute(query)
             rows = cursor.fetchall()
 
-            df_employees = pd.DataFrame(rows, columns=["ID", "First Name", "Surname", "WhatsApp", "Email", "Role", "Leave Approver Name","Leave Approver ID", "Leave Days Balance", "Days Accumulated per Month" ])
+            df_employees = pd.DataFrame(rows, columns=["ID", "First Name", "Surname", "WhatsApp", "Email", "Role", "Department", "Leave Approver Name","Leave Approver ID", "Leave Days Balance", "Days Accumulated per Month" ])
             df_employees = df_employees.sort_values(by="ID", ascending=True)
 
             df_html = df_employees.to_html(index=False, classes='table table-bordered', escape=False)
