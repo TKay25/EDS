@@ -1656,20 +1656,21 @@ def webhook():
                                                             buttonsapproval
                                                         )
 
+                                                        if whatsappemp:
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
 
-                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been Approved ✅ by `{app_namexx}`!")
-                                                        send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "Select an option below to continue 👇",
-                                                            buttons
-                                                        )
+                                                            send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been Approved ✅ by `{app_namexx}`!")
+                                                            send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
+                                                            send_whatsapp_message(
+                                                                f"263{whatsappemp}",
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )
 
 
                                                     except Exception as e:
@@ -3429,19 +3430,21 @@ def webhook():
                                                             buttonsapproval
                                                         )
 
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                        ]
+                                                        if whatsappemp:
 
-                                                        send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been Approved ✅ by `{app_namexx}`!")
-                                                        send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
-                                                        send_whatsapp_message(
-                                                            f"263{whatsappemp}",
-                                                            "Select an option below to continue 👇, or Type `Hello` to view all User Options",
-                                                            buttons
-                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+
+                                                            send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been Approved ✅ by `{app_namexx}`!")
+                                                            send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
+                                                            send_whatsapp_message(
+                                                                f"263{whatsappemp}",
+                                                                "Select an option below to continue 👇, or Type `Hello` to view all User Options",
+                                                                buttons
+                                                            )
                                                     
                                                     except Exception as e:
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
