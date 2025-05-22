@@ -6243,10 +6243,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             company_name = table_name.replace("main","")
             try:
                 table_name_apps_approved = company_name + 'appsapproved'
-                query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, leavedaysbalancebf, leaveapproverid FROM {table_name_apps_approved} WHERE appid = %s;"""
+                query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, leavedaysbalancebf, leaveapproverid, department FROM {table_name_apps_approved} WHERE appid = %s;"""
                 cursor.execute(query, (app_id,))  
                 rows = cursor.fetchall()
-                df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver", "Status Date","New Leave Days Balance", "Leave Approver ID"])
+                df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver", "Status Date","New Leave Days Balance", "Leave Approver ID", "Department"])
 
                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
                 cursor.execute(query)
@@ -6276,6 +6276,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     'date_applied': df_leave_appsmain_approved.iat[0,5],
                     'approver_name': df_leave_appsmain_approved.iat[0,9].title(),
                     'approver_id': df_leave_appsmain_approved.iat[0,12],
+                    'department': df_leave_appsmain_approved.iat[0,13],
                     'reference_number': app_id,
                     'approved_date': df_leave_appsmain_approved.iat[0,10],
                     'new_balance': df_leave_appsmain_approved.iat[0,11],
