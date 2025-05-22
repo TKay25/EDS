@@ -549,6 +549,7 @@ def webhook():
                                                 try:
 
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                    table_name_apps_approved = f"{company_reg}appsapproved"
 
                                                     query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
@@ -1283,6 +1284,7 @@ def webhook():
                                                 try:
 
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                    table_name_apps_approved = f"{company_reg}appsapproved"
 
                                                     query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
@@ -2159,7 +2161,8 @@ def webhook():
                                                 try:
 
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-
+                                                    table_name_apps_approved =  f"{company_reg}appsapproved"
+                                                    
                                                     query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
@@ -3140,6 +3143,7 @@ def webhook():
                                                 try:
 
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                    table_name_apps_approved = f"{company_reg}appsapproved"
 
                                                     query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
