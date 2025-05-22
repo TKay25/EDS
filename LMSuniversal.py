@@ -611,7 +611,11 @@ def webhook():
 
                                                         departmentdf = df_employees[df_employees['Department'] == department].reset_index()
                                                         numberindepartment = len(departmentdf)
-                                                        leave_dates = pd.date_range(startdate, enddate)
+
+                                                        startdatex = pd.Timestamp(startdate)
+                                                        enddatex = pd.Timestamp(enddate)
+
+                                                        leave_dates = pd.date_range(startdatex, enddatex)
 
                                                         query = f"""
                                                             SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
@@ -1353,7 +1357,11 @@ def webhook():
 
                                                         departmentdf = df_employees[df_employees['Department'] == department].reset_index()
                                                         numberindepartment = len(departmentdf)
-                                                        leave_dates = pd.date_range(startdate, enddate)
+
+                                                        startdatex = pd.Timestamp(startdate)
+                                                        enddatex = pd.Timestamp(enddate)
+
+                                                        leave_dates = pd.date_range(startdatex, enddatex)
 
                                                         query = f"""
                                                             SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
@@ -2237,7 +2245,11 @@ def webhook():
 
                                                         departmentdf = df_employees[df_employees['Department'] == department].reset_index()
                                                         numberindepartment = len(departmentdf)
-                                                        leave_dates = pd.date_range(startdate, enddate)
+
+                                                        startdatex = pd.Timestamp(startdate)
+                                                        enddatex = pd.Timestamp(enddate)
+
+                                                        leave_dates = pd.date_range(startdatex, enddatex)
 
                                                         query = f"""
                                                             SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
@@ -2248,7 +2260,7 @@ def webhook():
                                                         """
                                                         cursor.execute(query, (department,))
                                                         rows = cursor.fetchall()
-                                                        
+
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
 
                                                         # Create daily impact report
@@ -3226,7 +3238,11 @@ def webhook():
 
                                                         departmentdf = df_employees[df_employees['Department'] == department].reset_index()
                                                         numberindepartment = len(departmentdf)
-                                                        leave_dates = pd.date_range(startdate, enddate)
+                                                        
+                                                        startdatex = pd.Timestamp(startdate)
+                                                        enddatex = pd.Timestamp(enddate)
+
+                                                        leave_dates = pd.date_range(startdatex, enddatex)
 
                                                         query = f"""
                                                             SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
@@ -5337,7 +5353,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 start_date = datetime.strptime(start_date, '%Y-%m-%d')
                 end_date = datetime.strptime(end_date, '%Y-%m-%d')
-
 
                 # Initialize count for non-Sundays
                 leave_days = 0
