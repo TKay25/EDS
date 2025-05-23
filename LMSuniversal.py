@@ -723,10 +723,10 @@ def webhook():
                                                     else:
                                                         print("leave app submission failed")
 
-                                                except ValueError:
+                                                except ValueError as e:
                                                     send_whatsapp_message(
                                                         sender_id,
-                                                        "❌ No, incorrect message format. Please use:\n"
+                                                        f"{e}, ❌ No, incorrect message format. Please use:\n"
                                                         "`end 24 january 2025`\n"
                                                         "Example: `end 15 march 2024`"
                                                     )
@@ -1493,10 +1493,10 @@ def webhook():
                                                     else:
                                                         print("leave app submission failed")
 
-                                                except ValueError:
+                                                except ValueError as e:
                                                     send_whatsapp_message(
                                                         sender_id,
-                                                        "❌ No, incorrect message format. Please use:\n"
+                                                        f"{e}, ❌ No, incorrect message format. Please use:\n"
                                                         "`end 24 january 2025`\n"
                                                         "Example: `end 15 march 2024`"
                                                     )
@@ -2410,10 +2410,10 @@ def webhook():
                                                     else:
                                                         print("leave app submission failed")
 
-                                                except ValueError:
+                                                except ValueError as e:
                                                     send_whatsapp_message(
                                                         sender_id,
-                                                        "❌ No, incorrect message format. Please use:\n"
+                                                        f"{e}, ❌ No, incorrect message format. Please use:\n"
                                                         "`end 24 january 2025`\n"
                                                         "Example: `end 15 march 2024`"
                                                     )
@@ -3433,10 +3433,10 @@ def webhook():
                                                     else:
                                                         print("leave app submission failed")
 
-                                                except ValueError:
+                                                except ValueError as e:
                                                     send_whatsapp_message(
                                                         sender_id,
-                                                        "❌ No, incorrect message format. Please use:\n"
+                                                        f"{e}, ❌ No, incorrect message format. Please use:\n"
                                                         "`end 24 january 2025`\n"
                                                         "Example: `end 15 march 2024`"
                                                     )
