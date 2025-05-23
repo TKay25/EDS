@@ -654,6 +654,7 @@ def webhook():
                                                         impact_df = pd.DataFrame(impact_report)
                                                         print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
                                                         print(impact_df)
+                                                        print(numberindepartment)
 
 
 
@@ -1408,6 +1409,7 @@ def webhook():
                                                         impact_df = pd.DataFrame(impact_report)
                                                         print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
                                                         print(impact_df)
+                                                        print(numberindepartment)
 
                                                         leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
 
@@ -2304,6 +2306,7 @@ def webhook():
                                                         impact_df = pd.DataFrame(impact_report)
                                                         print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
                                                         print(impact_df)
+                                                        print(numberindepartment)
 
                                                         leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
 
@@ -3289,7 +3292,7 @@ def webhook():
 
                                                             df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
                                                             df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
-                                                            
+
                                                             print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
                                                             print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
 
@@ -3305,6 +3308,7 @@ def webhook():
                                                         impact_df = pd.DataFrame(impact_report)
                                                         print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
                                                         print(impact_df)
+                                                        print(numberindepartment)
 
                                                         leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
 
