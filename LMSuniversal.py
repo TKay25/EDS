@@ -636,6 +636,10 @@ def webhook():
                                             
                                                             date = pd.Timestamp(date)
 
+                                                            print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                                            print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
+
+
                                                             on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
                                                             remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
                                                             impact_report.append({
@@ -1383,6 +1387,9 @@ def webhook():
                                                         for date in leave_dates:
 
                                                             date = pd.Timestamp(date)
+
+                                                            print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                                            print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
 
                                                             on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
                                                             remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
@@ -2273,6 +2280,9 @@ def webhook():
                                                         for date in leave_dates:
 
                                                             date = pd.Timestamp(date)
+
+                                                            print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                                            print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
 
                                                             on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
                                                             remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
@@ -3268,6 +3278,9 @@ def webhook():
                                                         for date in leave_dates:
 
                                                             date = pd.Timestamp(date)
+
+                                                            print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                                            print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
 
                                                             on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
                                                             remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
