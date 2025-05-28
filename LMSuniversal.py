@@ -7025,19 +7025,19 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
                 cursor.execute(query, (app_id,))
                 result = cursor.fetchone()
-                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
+                app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
                 print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
                 print(employee_number)
                 print(approver_name)
                 try:
                     insert_query = f"""
                     INSERT INTO {table_name_apps_declined} 
-                    (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                     """
                     
                     cursor.execute(insert_query, (
-                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                        app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
                         approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
                         end_date, leave_days, leavedaysbalancebf, status, statusdate
                     ))
@@ -7056,9 +7056,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             
             except Exception as e:
                 return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
-            
-
-
 
 
     @app.route('/export_lms_book_excel')
