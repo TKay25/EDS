@@ -4890,15 +4890,7 @@ def run1(table_name, empid):
     df_leave_appsmain['Employee Name'] = df_leave_appsmain['First Name'] + ' ' + df_leave_appsmain['Surname']
     df_leave_appsmain = df_leave_appsmain[["App ID","Employee Name", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]].fillna('')
 
-
-
     table_leave_apps_html = df_leave_appsmain.to_html(classes="table table-bordered table-theme", table_id="leaveappsTable", index=False,  escape=False,)
-
-
-
-
-
-
 
     query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor FROM {table_name_apps_pending_approval} WHERE leaveapproverid = {empid};"""
     cursor.execute(query)
@@ -4926,9 +4918,6 @@ def run1(table_name, empid):
     df_leave_apps_declined_by_me['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Declined</p>'
     df_leave_apps_declined_by_me = df_leave_apps_declined_by_me[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days", "Approval Status","ACTION"]]
 
-
-
-
     df_leave_apps_approved_declined_by_me = df_leave_apps_approved_by_me._append(df_leave_apps_declined_by_me)
     df_leave_apps_approved_declined_pending_by_me = df_leave_apps_approved_declined_by_me._append(df_leave_apps_pending_my_approval_fin).fillna('')   
     df_leave_apps_approved_declined_pending_by_me['Employee Name'] = df_leave_apps_approved_declined_pending_by_me['First Name'] + ' ' + df_leave_apps_approved_declined_pending_by_me['Surname']
@@ -4936,11 +4925,6 @@ def run1(table_name, empid):
 
     table_leave_apps_approved_by_me_html = df_leave_apps_approved_declined_pending_by_me.to_html(classes="table table-bordered table-theme", table_id="leaveappsTableapprovedbyme", index=False,  escape=False,)
  
-
-
-
-
-
     query = f"""SELECT id, appid, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername FROM {table_name_apps_approved};"""
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -4962,7 +4946,6 @@ def run1(table_name, empid):
     df_my_leave_apps_declined['ACTION'] =  df_my_leave_apps_declined['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 reapply-app-btn" data-bs-toggle="modal" data-bs-target="#reapplyappModal" data-name="{x}" data-ID="{x}">Re-Apply</button>''') 
     df_my_leave_apps_declined_fin_declined =  df_my_leave_apps_declined[["App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Approval Status","Leave Approver","ACTION"]]
 
-
     query = f"""SELECT id, appid, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername FROM {table_name_apps_cancelled};"""
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -4977,14 +4960,12 @@ def run1(table_name, empid):
     df_my_leave_apps_approved_declined_fin1 = df_my_leave_apps_approved_approved_fin._append(df_my_leave_apps_declined_fin_declined)
     df_my_leave_apps_approved_declined_fin = df_my_leave_apps_approved_declined_fin1._append(df_my_leave_apps_cancelled_fin)
 
-    
     userleaveapppending = df_leave_appsmain_pending_approval[df_leave_appsmain_pending_approval['ID'] == empid].reset_index()
     userleaveapppending['ACTION'] = userleaveapppending['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 edit-priv-btn" data-bs-toggle="modal" data-bs-target="#remindapproverModal" data-name="{x}" data-ID="{x}">Remind Approver</button> <button class="btn btn-primary3 cancel-app-btn" data-bs-toggle="modal" data-bs-target="#cancelappModal" data-name="{x}" data-ID="{x}">Cancel Application</button> </div>''') 
     userleaveapppending = userleaveapppending[["App ID","Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status", "ACTION"]]
     df_my_leave_apps_approved_declined_pending_fin = df_my_leave_apps_approved_declined_fin._append(userleaveapppending)
 
     table_my_leave_apps_html = df_my_leave_apps_approved_declined_pending_fin.to_html(classes="table table-bordered table-theme", table_id="myleaveappsTable", index=False,  escape=False,)
-
 
     def generate_leave_status_chart():
 
@@ -6427,11 +6408,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                             connection.commit()
 
-                            query = f"SELECT appid, id, whatsapp FROM {table_name} WHERE id = {str(employee_number)} ;"
+                            query = f"SELECT id, whatsapp FROM {table_name} WHERE id = {str(employee_number)} ;"
                             cursor.execute(query, )
                             rows = cursor.fetchall()
 
-                            df_employees = pd.DataFrame(rows, columns=["appid","id", "whatsapp"])
+                            df_employees = pd.DataFrame(rows, columns=["id", "whatsapp"])
                             leaveappid = df_employees.iat[0,0]
                             whatsapp = df_employees.iat[0, 2]
                             approovvver = approver_name.title()
@@ -6493,11 +6474,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             connection.commit()
 
 
-                            query = f"SELECT appid, id, whatsapp FROM {table_name} WHERE id = {str(employee_number)} ;"
+                            query = f"SELECT id, whatsapp FROM {table_name} WHERE id = {str(employee_number)} ;"
                             cursor.execute(query, )
                             rows = cursor.fetchall()
 
-                            df_employees = pd.DataFrame(rows, columns=["appid","id", "whatsapp"])
+                            df_employees = pd.DataFrame(rows, columns=["id", "whatsapp"])
                             leaveappid = df_employees.iat[0,0]
                             whatsapp = df_employees.iat[0, 2]
                             approovvver = approver_name.title()
