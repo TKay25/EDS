@@ -5675,6 +5675,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             leavedaysbalancebf = int(leave_days_balance) - int(leave_days)
 
             table_name_apps_pending_approval = f"{company_name}appspendingapproval"
+            table_name_apps_approved = f"{company_name}appsapproved"
 
             query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {empid};"
             cursor.execute(query)
@@ -5717,6 +5718,75 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 leavedaysbalance = userdf.iat[0,12]
                 print('check')
                 approovvver = leaveapprovername.title()
+
+
+                departmentdf = df_employees[df_employees['Department'] == department].reset_index()
+                numberindepartment = len(departmentdf)
+
+                startdatex = pd.Timestamp(start_date)
+                enddatex = pd.Timestamp(end_date)
+
+                leave_dates = pd.date_range(startdatex, enddatex)
+
+                query = f"""
+                    SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                        leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                        leavedaysbalancebf, department
+                    FROM {table_name_apps_approved}
+                    WHERE department = %s;
+                """
+                cursor.execute(query, (department,))
+                rows = cursor.fetchall()
+
+                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+
+                # Create daily impact report
+                impact_report = []
+
+                for date in leave_dates:
+    
+                    date = pd.Timestamp(date)
+
+                    df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                    df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+
+                    print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                    print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
+
+                    on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
+                    remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
+                    impact_report.append({
+                        "date": date.strftime("%Y-%m-%d"),
+                        "on leave (including new)": on_leave + 1,
+                        "employees remaining": remaining
+                    })
+
+                # Convert to DataFrame for display
+                impact_df = pd.DataFrame(impact_report)
+                print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
+                print(impact_df)
+                print(numberindepartment)
+
+                impact_df["date"] = pd.to_datetime(impact_df["date"], dayfirst=True)
+                impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+
+                impact_df["group"] = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1).cumsum()
+
+                statements = []
+                for _, group_df in impact_df.groupby("group"):
+                    start = group_df["date"].iloc[0].strftime("%d %B %Y")
+                    end = group_df["date"].iloc[-1].strftime("%d %B %Y")
+                    on_leave = group_df["on leave"].iloc[0]
+                    remaining = group_df["employees remaining"].iloc[0]
+                    
+                    if start == end:
+                        statements.append(f"On {start}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                    else:
+                        statements.append(f"From {start} to {end}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+
+                # Print output
+                for s in statements:
+                    print(s)
 
                 query = f"SELECT appid, id FROM {table_name_apps_pending_approval} WHERE id = {str(employee_number)} ;"
                 cursor.execute(query, )
