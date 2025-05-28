@@ -4288,7 +4288,7 @@ def webhook():
                                                     end_date2 = df_employeesappspendingcheck.iat[0,8]
 
                                                     buttons = [
-                                                        {"type": "reply", "reply": {"id": f"Approveappwa_{appid}", "title": "Approve"}},
+                                                        {"type": "reply", "reply": {"id": f"Approve5appwa_{appid}", "title": "Approve"}},
                                                         {"type": "reply", "reply": {"id": f"Disapproveappwa_{appid}", "title": "Disapprove"}},
                                                     ]
 
@@ -5753,7 +5753,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 if leaveapproverwhatsapp:
 
                     buttons = [
-                        {"type": "reply", "reply": {"id": f"Approveappwa_{leaveappid}", "title": "Approve"}},
+                        {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
                         {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
                     ]
                     send_whatsapp_message(
@@ -6426,6 +6426,36 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             cursor.execute(query, (app_id,))
 
                             connection.commit()
+
+                            query = f"SELECT appid, id, whatsapp FROM {table_name} WHERE id = {str(employee_number)} ;"
+                            cursor.execute(query, )
+                            rows = cursor.fetchall()
+
+                            df_employees = pd.DataFrame(rows, columns=["appid","id", "whatsapp"])
+                            leaveappid = df_employees.iat[0,0]
+                            whatsapp = df_employees.iat[0, 2]
+                            approovvver = approver_name.title()
+                            companyxx = table_name.replace("main", "").replace("_", " ").title()
+
+                            send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                f"A Notification has been sent to `{approovvver}`  on `+263{approver_whatsapp}` to decide on  your application.\n\n"
+                                "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+                            
+                            if approver_whatsapp:
+
+                                buttons = [
+                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                ]
+                                send_whatsapp_message(
+                                    f"263{approver_whatsapp}", 
+                                    f"Hey {approovvver}! 😊. New `{leave_type}` Leave Application from `{first_name} {surname}` in {department} department for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
+                                    f"Select an option below to either approve or disapprove the application."         
+                                    , 
+                                    buttons
+                                )
+
                             print("Insert successful!")
 
                         except Exception as e:
@@ -6461,6 +6491,37 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             cursor.execute(query, (app_id,))
                             
                             connection.commit()
+
+
+                            query = f"SELECT appid, id, whatsapp FROM {table_name} WHERE id = {str(employee_number)} ;"
+                            cursor.execute(query, )
+                            rows = cursor.fetchall()
+
+                            df_employees = pd.DataFrame(rows, columns=["appid","id", "whatsapp"])
+                            leaveappid = df_employees.iat[0,0]
+                            whatsapp = df_employees.iat[0, 2]
+                            approovvver = approver_name.title()
+                            companyxx = table_name.replace("main", "").replace("_", " ").title()
+
+                            send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                f"A Notification has been sent to `{approovvver}`  on `+263{approver_whatsapp}` to decide on  your application.\n\n"
+                                "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+                            
+                            if approver_whatsapp:
+
+                                buttons = [
+                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                ]
+                                send_whatsapp_message(
+                                    f"263{approver_whatsapp}", 
+                                    f"Hey {approovvver}! 😊. New `{leave_type}` Leave Application from `{first_name} {surname}` in {department} department for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
+                                    f"Select an option below to either approve or disapprove the application."         
+                                    , 
+                                    buttons
+                                )
+
                             print("Insert successful!")
 
                         except Exception as e:
