@@ -6413,21 +6413,20 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             rows = cursor.fetchall()
 
                             df_employees = pd.DataFrame(rows, columns=["id", "whatsapp"])
-                            leaveappid = df_employees.iat[0,0]
-                            whatsapp = df_employees.iat[0, 2]
+                            whatsapp = df_employees.iat[0, 1]
                             approovvver = approver_name.title()
                             companyxx = table_name.replace("main", "").replace("_", " ").title()
 
                             send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                f"Your Leave Application ID is `{app_id}`.\n\n"
                                 f"A Notification has been sent to `{approovvver}`  on `+263{approver_whatsapp}` to decide on  your application.\n\n"
                                 "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
                             
                             if approver_whatsapp:
 
                                 buttons = [
-                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{app_id}", "title": "Approve"}},
+                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{app_id}", "title": "Disapprove"}},
                                 ]
                                 send_whatsapp_message(
                                     f"263{approver_whatsapp}", 
@@ -6479,21 +6478,20 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             rows = cursor.fetchall()
 
                             df_employees = pd.DataFrame(rows, columns=["id", "whatsapp"])
-                            leaveappid = df_employees.iat[0,0]
-                            whatsapp = df_employees.iat[0, 2]
+                            whatsapp = df_employees.iat[0, 1]
                             approovvver = approver_name.title()
                             companyxx = table_name.replace("main", "").replace("_", " ").title()
 
                             send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                f"Your Leave Application ID is `{app_id}`.\n\n"
                                 f"A Notification has been sent to `{approovvver}`  on `+263{approver_whatsapp}` to decide on  your application.\n\n"
                                 "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
                             
                             if approver_whatsapp:
 
                                 buttons = [
-                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{app_id}", "title": "Approve"}},
+                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{app_id}", "title": "Disapprove"}},
                                 ]
                                 send_whatsapp_message(
                                     f"263{approver_whatsapp}", 
