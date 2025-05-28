@@ -669,9 +669,10 @@ def webhook():
                                                             remaining = group_df["employees remaining"].iloc[0]
                                                             
                                                             if start == end:
-                                                                statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
                                                             else:
-                                                                statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+
                                                         # Combine all statements into a single variable
                                                         final_summary = "\n".join(statements)
                                                         # Print output
@@ -1440,9 +1441,10 @@ def webhook():
                                                             remaining = group_df["employees remaining"].iloc[0]
                                                             
                                                             if start == end:
-                                                                statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
                                                             else:
-                                                                statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+
                                                         # Combine all statements into a single variable
                                                         final_summary = "\n".join(statements)
                                                         # Print output
@@ -2360,9 +2362,10 @@ def webhook():
                                                             remaining = group_df["employees remaining"].iloc[0]
                                                             
                                                             if start == end:
-                                                                statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
                                                             else:
-                                                                statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                
                                                         # Combine all statements into a single variable
                                                         final_summary = "\n".join(statements)
                                                         # Print output
@@ -3385,10 +3388,10 @@ def webhook():
                                                             remaining = group_df["employees remaining"].iloc[0]
                                                             
                                                             if start == end:
-                                                                statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
                                                             else:
-                                                                statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
-                                                        # Combine all statements into a single variable
+                                                                statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                # Combine all statements into a single variable
                                                         final_summary = "\n".join(statements)
                                                         # Print output
                                                         for s in statements:
@@ -5784,9 +5787,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     remaining = group_df["employees remaining"].iloc[0]
                     
                     if start == end:
-                        statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                        statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
                     else:
-                        statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                        statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
                 # Combine all statements into a single variable
                 final_summary = "\n".join(statements)
                 # Print output
@@ -6553,9 +6556,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                                 remaining = group_df["employees remaining"].iloc[0]
                                 
                                 if start == end:
-                                    statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                    statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
                                 else:
-                                    statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                    statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
                             # Combine all statements into a single variable
                             final_summary = "\n".join(statements)
                             # Print output
