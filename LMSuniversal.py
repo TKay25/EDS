@@ -713,7 +713,7 @@ def webhook():
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
                                                                 f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n"                 
-                                                                f"If you approve this leave application, {final_summary}.\n\n"  
+                                                                f"If you approve this leave application, {final_summary}\n\n"  
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
@@ -1486,7 +1486,7 @@ def webhook():
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
                                                                 f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                f"If you approve this leave application, {final_summary}.\n\n"  
+                                                                f"If you approve this leave application, {final_summary}\n\n"  
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
@@ -2406,7 +2406,7 @@ def webhook():
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
                                                                 f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                f"If you approve this leave application, {final_summary}.\n\n"  
+                                                                f"If you approve this leave application, {final_summary}\n\n"  
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
@@ -3431,7 +3431,7 @@ def webhook():
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
                                                                 f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                f"If you approve this leave application, {final_summary}.\n\n"  
+                                                                f"If you approve this leave application, {final_summary}\n\n"  
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
@@ -5818,7 +5818,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     send_whatsapp_message(
                         f"263{leaveapproverwhatsapp}", 
                         f"Hey {approovvver}! 😊. New `{leave_type}` Leave Application from `{first_name} {surname}` in {department} department for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
-                        f"If you approve this leave application, {final_summary}.\n\n"  
+                        f"If you approve this leave application, {final_summary}\n\n"  
                         f"Select an option below to either approve or disapprove the application."         
                         , 
                         buttons
@@ -6594,7 +6594,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                                 send_whatsapp_message(
                                     f"263{approver_whatsapp}", 
                                     f"Hey {approovvver}! 😊. New `{leave_type}` Leave Application from `{first_name} {surname}` in {department} department for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
-                                    f"If you approve this leave application, {final_summary}.\n\n"  
+                                    f"If you approve this leave application, {final_summary}\n\n"  
                                     f"Select an option below to either approve or disapprove the application."         
                                     , 
                                     buttons
