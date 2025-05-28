@@ -3505,9 +3505,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 100);  // 100ms delay to ensure UI update before alert
                 location.reload();  // Reload the page or update the DOM as needed
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
+                $('#edsLoader').hide();
+                let errorMsg = "Failed to approve the leave application.";
+                try {
+                    const responseJSON = JSON.parse(xhr.responseText);
+                    if (responseJSON.message) {
+                        errorMsg = responseJSON.message;
+                    }
+                    if (responseJSON.error) {
+                        errorMsg += "\nDetails: " + responseJSON.error;
+                    }
+                } catch (e) {
+                    errorMsg += "\nCould not parse error response.";
+                }
                 console.error("Error:", error);
-                alert("Failed to approve the leave application. Please try again.");
+                alert(errorMsg);
             }
         });
     });
