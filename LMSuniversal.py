@@ -6399,7 +6399,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     result = cursor.fetchone()
                     
                     if result :
-                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
+                        app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
                         print("cancelled yes")
                         print(result)
 
@@ -6412,12 +6412,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         try:
                             insert_query = f"""
                             INSERT INTO {table_name_apps_pending_approval} 
-                            (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                            (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                             """
                             
                             cursor.execute(insert_query, (
-                                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                                app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
                                 approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
                                 end_date, leave_days, leavedaysbalancebf, status
                             ))
@@ -6437,7 +6437,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         query = f"SELECT * FROM {table_name_apps_declined} WHERE appid = %s;"
                         cursor.execute(query, (app_id,))
                         result = cursor.fetchone()
-                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
+                        app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
         
                         print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
                         print(employee_number)
@@ -6446,12 +6446,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         try:
                             insert_query = f"""
                             INSERT INTO {table_name_apps_pending_approval} 
-                            (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                            (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                             """
                             
                             cursor.execute(insert_query, (
-                                app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                                app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
                                 approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
                                 end_date, leave_days, leavedaysbalancebf, status
                             ))
