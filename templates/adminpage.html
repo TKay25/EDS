@@ -3160,7 +3160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             error: function (xhr, status, error) {
             // Handle errors gracefully
-            $('#reviveappModal').modal('hide');
+            $('#revokeapproverappModal').modal('hide');
             $('#edsLoader').hide();
             alert('Error: Unable to revoke the leave application.');
         }
@@ -3258,33 +3258,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
-
-
-    $(document).on('click', '#confirmreapplyleaveapp', function() {
-
-        $('#edsLoader').show();  // Hide loading overlay
+    $(document).on('click', '#confirmreapplyleaveapp', function () {
+        $('#edsLoader').show();
 
         $.ajax({
-            url: '/reapply_leave_application',  // Flask route to handle cancellation
+            url: '/reapply_leave_application',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ app_id: currentIdreapplyapp }),
-            success: function(response) {
-                $('#reapplyappModal').modal('hide');  // Close the modal
-                $('#edsLoader').hide();  // Hide loading overlay
-                setTimeout(function() {
+
+            success: function (response) {
+                $('#reapplyappModal').modal('hide');
+                $('#edsLoader').hide();
+                setTimeout(function () {
                     alert(response.message);
-                }, 100);  // 100ms delay to ensure UI update before alert
-                location.reload();  // Reload the page or update the DOM as needed
+                    location.reload();
+                }, 100);
             },
+
             error: function (xhr, status, error) {
-            // Handle errors gracefully
-            $('#reapplyappModal').modal('hide');
-            $('#edsLoader').hide();
-            alert('Error: Unable to submit your leave application. Please make sure that you do not have any pending leave applications and try again.');
-        }
+                $('#reapplyappModal').modal('hide');
+                $('#edsLoader').hide();
+
+                let errorMsg = "Unable to reapply for leave.";
+
+                try {
+                    const responseJSON = JSON.parse(xhr.responseText);
+                    if (responseJSON.message) {
+                        errorMsg = responseJSON.message;
+                    }
+                    if (responseJSON.error) {
+                        errorMsg += "\nDetails: " + responseJSON.error;
+                    }
+                } catch (e) {
+                    errorMsg += "\nUnexpected error format.";
+                }
+
+                alert("Error: " + errorMsg);
+            }
         });
     });
+
 
 
 
