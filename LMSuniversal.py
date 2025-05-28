@@ -669,10 +669,11 @@ def webhook():
                                                             remaining = group_df["employees remaining"].iloc[0]
                                                             
                                                             if start == end:
-                                                                statements.append(f"On {start}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
                                                             else:
-                                                                statements.append(f"From {start} to {end}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
-
+                                                                statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                        # Combine all statements into a single variable
+                                                        final_summary = "\n".join(statements)
                                                         # Print output
                                                         for s in statements:
                                                             print(s)
@@ -710,11 +711,8 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
-                                                                f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                
-                                                            
-                                                                f"If you approve this leave application, the `{department}` department will be left with.\n\n"         
-
+                                                                f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n"                 
+                                                                f"If you approve this leave application, {final_summary}.\n\n"  
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
@@ -1442,10 +1440,11 @@ def webhook():
                                                             remaining = group_df["employees remaining"].iloc[0]
                                                             
                                                             if start == end:
-                                                                statements.append(f"On {start}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
                                                             else:
-                                                                statements.append(f"From {start} to {end}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
-
+                                                                statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                        # Combine all statements into a single variable
+                                                        final_summary = "\n".join(statements)
                                                         # Print output
                                                         for s in statements:
                                                             print(s)
@@ -1485,6 +1484,7 @@ def webhook():
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
                                                                 f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                f"If you approve this leave application, {final_summary}.\n\n"  
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
@@ -2360,10 +2360,11 @@ def webhook():
                                                             remaining = group_df["employees remaining"].iloc[0]
                                                             
                                                             if start == end:
-                                                                statements.append(f"On {start}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
                                                             else:
-                                                                statements.append(f"From {start} to {end}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
-
+                                                                statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                        # Combine all statements into a single variable
+                                                        final_summary = "\n".join(statements)
                                                         # Print output
                                                         for s in statements:
                                                             print(s)
@@ -2402,6 +2403,7 @@ def webhook():
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
                                                                 f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                f"If you approve this leave application, {final_summary}.\n\n"  
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
@@ -3383,10 +3385,11 @@ def webhook():
                                                             remaining = group_df["employees remaining"].iloc[0]
                                                             
                                                             if start == end:
-                                                                statements.append(f"On {start}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                                statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
                                                             else:
-                                                                statements.append(f"From {start} to {end}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
-
+                                                                statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                                        # Combine all statements into a single variable
+                                                        final_summary = "\n".join(statements)
                                                         # Print output
                                                         for s in statements:
                                                             print(s)
@@ -3425,6 +3428,7 @@ def webhook():
                                                             send_whatsapp_message(
                                                                 f"263{leaveapproverwhatsapp}", 
                                                                 f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                f"If you approve this leave application, {final_summary}.\n\n"  
                                                                 f"Select an option below to either approve or disapprove the application."         
                                                                 , 
                                                                 buttons
@@ -5780,10 +5784,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     remaining = group_df["employees remaining"].iloc[0]
                     
                     if start == end:
-                        statements.append(f"On {start}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                        statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
                     else:
-                        statements.append(f"From {start} to {end}, the department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
-
+                        statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                # Combine all statements into a single variable
+                final_summary = "\n".join(statements)
                 # Print output
                 for s in statements:
                     print(s)
@@ -5810,6 +5815,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     send_whatsapp_message(
                         f"263{leaveapproverwhatsapp}", 
                         f"Hey {approovvver}! 😊. New `{leave_type}` Leave Application from `{first_name} {surname}` in {department} department for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
+                        f"If you approve this leave application, {final_summary}.\n\n"  
                         f"Select an option below to either approve or disapprove the application."         
                         , 
                         buttons
@@ -6425,6 +6431,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             table_name_apps_pending_approval = f"{company_name}appspendingapproval"
             table_name_apps_cancelled = f"{company_name}appscancelled"
             table_name_apps_declined = f"{company_name}appsdeclined"
+            table_name_apps_approved = f"{company_name}appsapproved"
 
 
             query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE id = %s;"
@@ -6448,6 +6455,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     query = f"SELECT * FROM {table_name_apps_cancelled} WHERE appid = %s;"
                     cursor.execute(query, (app_id,))
                     result = cursor.fetchone()
+
+
                     
                     if result :
                         app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre, status_date = result
@@ -6478,6 +6487,87 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                             connection.commit()
 
+                            query = f"SELECT id, firstname, surname, whatsapp, email, address, role, department, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
+                            cursor.execute(query)
+                            rows = cursor.fetchall()
+
+                            df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Department","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
+
+                            departmentdf = df_employees[df_employees['Department'] == department].reset_index()
+                            numberindepartment = len(departmentdf)
+
+                            startdatex = pd.Timestamp(start_date)
+                            enddatex = pd.Timestamp(end_date)
+
+                            leave_dates = pd.date_range(startdatex, enddatex)
+
+                            query = f"""
+                                SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                    leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                    leavedaysbalancebf, department
+                                FROM {table_name_apps_approved}
+                                WHERE department = %s;
+                            """
+                            cursor.execute(query, (department,))
+                            rows = cursor.fetchall()
+
+                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+
+                            # Create daily impact report
+                            impact_report = []
+
+                            for date in leave_dates:
+                
+                                date = pd.Timestamp(date)
+
+                                df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+
+                                print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
+
+                                on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
+                                remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
+                                impact_report.append({
+                                    "date": date.strftime("%Y-%m-%d"),
+                                    "on leave (including new)": on_leave + 1,
+                                    "employees remaining": remaining
+                                })
+
+                            # Convert to DataFrame for display
+                            impact_df = pd.DataFrame(impact_report)
+                            print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
+                            print(impact_df)
+                            print(numberindepartment)
+
+                            impact_df["date"] = pd.to_datetime(impact_df["date"], dayfirst=True)
+                            impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+
+                            impact_df["group"] = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1).cumsum()
+
+                            statements = []
+                            for _, group_df in impact_df.groupby("group"):
+                                start = group_df["date"].iloc[0].strftime("%d %B %Y")
+                                end = group_df["date"].iloc[-1].strftime("%d %B %Y")
+                                on_leave = group_df["on leave"].iloc[0]
+                                remaining = group_df["employees remaining"].iloc[0]
+                                
+                                if start == end:
+                                    statements.append(f"On {start}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                                else:
+                                    statements.append(f"From {start} to {end}, the {department} department will have {on_leave} employee(s) on leave and {remaining} remaining at work.")
+                            # Combine all statements into a single variable
+                            final_summary = "\n".join(statements)
+                            # Print output
+                            for s in statements:
+                                print(s)
+
+                            query = f"SELECT appid, id FROM {table_name_apps_pending_approval} WHERE id = {str(employee_number)} ;"
+                            cursor.execute(query, )
+                            rows = cursor.fetchall()
+
+                            df_employees = pd.DataFrame(rows, columns=["appid","id"])
+
                             query = f"SELECT id, whatsapp FROM {table_name} WHERE id = {str(employee_number)} ;"
                             cursor.execute(query, )
                             rows = cursor.fetchall()
@@ -6501,6 +6591,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                                 send_whatsapp_message(
                                     f"263{approver_whatsapp}", 
                                     f"Hey {approovvver}! 😊. New `{leave_type}` Leave Application from `{first_name} {surname}` in {department} department for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
+                                    f"If you approve this leave application, {final_summary}.\n\n"  
                                     f"Select an option below to either approve or disapprove the application."         
                                     , 
                                     buttons
