@@ -5106,8 +5106,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
     @app.route('/download-excel-template-add-employees')
     def download_excel_template_add_employees():
+
         user_uuid = session.get('user_uuid')
         if user_uuid:
+
             table_name = session.get('table_name')
             company_name = table_name.replace("main", "")
 
@@ -5115,42 +5117,40 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             ws = wb.active
             ws.title = "Employee Details"
 
-            headers = [
-                "FirstName", "Surname", "WhatsApp", "Email", 
-                "Role", "Department", 
-                "Current Leave Days Balance", "Monthly Leave Days Accumulation"
-            ]
+            headers = ["FirstName", "Surname", "WhatsApp", "Email", "Role", "Department", "Current Leave Days Balance", "Monthly Leave Days Accumulation"]  # 'Status' column will have dropdowns
             ws.append(headers)
 
-            # Apply styles to headers
+        # Apply styles to header row
             dark_blue = "003366"
             white = "FFFFFF"
+            
+            # Setting header row background color and font color
             for col in range(1, len(headers) + 1):
                 cell = ws.cell(row=1, column=col)
                 cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
                 cell.font = Font(color=white, bold=True)
 
-            # Create separate data validation for 'Role'
-            role_dv = DataValidation(type="list", formula1='"Administrator,Ordinary User"', allow_blank=False)
-            ws.add_data_validation(role_dv)
-            for row in range(2, 300):
-                role_dv.add(ws[f"E{row}"])
+            dropdown_options = '"Administrator,Ordinary User"' 
+            dv = DataValidation(type="list", formula1=dropdown_options, allow_blank=False)
+            ws.add_data_validation(dv)
 
-            dept_dv = DataValidation(type="list", formula1='"Human Resources and Administration,Finance and Accounting,Sales and Marketing,Operations and Production,Procurement and Purchasing,Customer Service and Support,IT and Digital Infrastructure,Risk Management,Legal and Compliance,Health and Safety and Environment,Research and Analytics and Reporting"', allow_blank=False)
-            ws.add_data_validation(dept_dv)
-            for row in range(2, 300):
-                dept_dv.add(ws[f"F{row}"])
+            for row in range(2, 500):  # Adjust range as needed
+                dv.add(ws[f"E{row}"])
 
-            # Save to a BytesIO stream
-            output = io.BytesIO()
-            wb.save(output)
-            output.seek(0)
+            dropdown_options2 = '"Human Resources and Administration,Finance and Accounting,Sales and Marketing,Operations and Production,Procurement and Purchasing,Customer Service and Support,IT and Digital Infrastructure,Risk Management,Legal and Compliance,Health and Safety and Environment,Research and Analytics and Reporting"' 
+            dv2 = DataValidation(type="list", formula1=dropdown_options2, allow_blank=False)
+            ws.add_data_validation(dv2)
 
-            filename = f"{company_name.strip()}_Employee_Details_Template.xlsx"
-            return send_file(output, download_name=filename, as_attachment=True)
+            for row in range(2, 500):  # Adjust range as needed
+                dv2.add(ws[f"F{row}"])
 
+            file_path = f"{company_name} Employee Details Template.xlsx"
+            wb.save(file_path)
+
+            return send_file(file_path, as_attachment=True)
+        
         else:
-            return redirect(url_for('landingpage'))
+            return redirect(url_for('landingpage')) 
 
     @app.route('/admin_sign_up', methods=['POST'])
     def submit_form():
