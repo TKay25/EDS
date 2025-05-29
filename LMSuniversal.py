@@ -5117,7 +5117,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             ws = wb.active
             ws.title = "Employee Details"
 
-            headers = ["FirstName", "Surname", "WhatsApp", "Email", "Role", "Current Leave Days Balance", "Monthly Leave Days Accumulation"]  # 'Status' column will have dropdowns
+            headers = ["FirstName", "Surname", "WhatsApp", "Email", "Role", "Department", "Current Leave Days Balance", "Monthly Leave Days Accumulation"]  # 'Status' column will have dropdowns
             ws.append(headers)
 
         # Apply styles to header row
@@ -5136,6 +5136,13 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             for row in range(2, 3000):  # Adjust range as needed
                 dv.add(ws[f"E{row}"])
+
+            dropdown_options2 = '"Human Resources and Administration,Finance and Accounting,Sales and Marketing,Operations and Production,Procurement and Purchasing,Customer Service and Support,IT and Digital Infrastructure,Risk Management,Legal and Compliance,Health and Safety and Environment,Research and Analytics and Reporting"' 
+            dv = DataValidation(type="list", formula1=dropdown_options2, allow_blank=False)
+            ws.add_data_validation(dv)
+
+            for row in range(2, 3000):  # Adjust range as needed
+                dv.add(ws[f"F{row}"])
 
             file_path = f"{company_name} Employee Details Template.xlsx"
             wb.save(file_path)
