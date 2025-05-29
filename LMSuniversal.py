@@ -155,6 +155,10 @@ def send_whatsapp_list_message(recipient, text, list_title, sections):
     print("List message response:", response.json())
     return response
 
+@app.errorhandler(400)
+def bad_request(e):
+    return jsonify({'status': 'error', 'message': str(e)}), 400
+
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
     if request.method == "GET":
