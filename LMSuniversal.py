@@ -5133,19 +5133,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             # Create separate data validation for 'Role'
             role_dv = DataValidation(type="list", formula1='"Administrator,Ordinary User"', allow_blank=False)
             ws.add_data_validation(role_dv)
-            for row in range(2, 3000):
+            for row in range(2, 300):
                 role_dv.add(ws[f"E{row}"])
 
-            # Create separate data validation for 'Department'
-            departments = (
-                "Human Resources and Administration,Finance and Accounting,Sales and Marketing,"
-                "Operations and Production,Procurement and Purchasing,Customer Service and Support,"
-                "IT and Digital Infrastructure,Risk Management,Legal and Compliance,"
-                "Health and Safety and Environment,Research and Analytics and Reporting"
-            )
-            dept_dv = DataValidation(type="list", formula1=f'"{departments}"', allow_blank=False)
+            dept_dv = DataValidation(type="list", formula1='"Human Resources and Administration,Finance and Accounting,Sales and Marketing,Operations and Production,Procurement and Purchasing,Customer Service and Support,IT and Digital Infrastructure,Risk Management,Legal and Compliance,Health and Safety and Environment,Research and Analytics and Reporting"', allow_blank=False)
             ws.add_data_validation(dept_dv)
-            for row in range(2, 3000):
+            for row in range(2, 300):
                 dept_dv.add(ws[f"F{row}"])
 
             # Save to a BytesIO stream
