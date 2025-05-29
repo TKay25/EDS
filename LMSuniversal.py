@@ -5696,13 +5696,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             if len(df_employeesappspendingcheck) == 0:
 
-                query = f"""
-                    SELECT id, startdate, enddate
-                    FROM `{table_name}appsapproved`
-                    WHERE id = %s
-                    AND startdate <= %s
-                    AND enddate >= %s
-                """
+                query = f"""SELECT appid, id, startdate, enddate FROM {table_name_apps_approved} WHERE id = %s AND startdate <= %s AND enddate >= %s"""
 
                 cursor.execute(query, (employee_number, end_date, start_date))
                 results = cursor.fetchall()
@@ -5711,7 +5705,15 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 if results:
                     print("Overlapping records found:")
 
-                    response = {'status': 'error', 'message': 'Leave application not submitted successfully.'}
+                    overlap_messages = []
+
+                    for row in results:
+                        overlap_messages.append(f"appID: {row[0]}, ID: {row[1]}, Start: {row[2]}, End: {row[3]}")
+
+                    # Combine into one single string (newline-separated)
+                    overlap_info = "\n".join(overlap_messages)
+
+                    response = {'status': 'error', 'message': f'One of your previously approved leave applications include days within the period that you are currently applying for leave; {overlap_info}.'}
                     return jsonify(response), 400  
 
                 else:
