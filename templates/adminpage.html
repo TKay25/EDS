@@ -2018,7 +2018,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const ctx = document.getElementById("leaveByDepartmentChart").getContext("2d");
 
-    const chartData = JSON.parse('{{ leave_status_chart | tojson | safe }}');
+    const chartData = JSON.parse('{{ leave_status_chart_data | tojson | safe }}');
 
     const chartInstance = new Chart(ctx, {
         type: "bar",
