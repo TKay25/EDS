@@ -2015,50 +2015,86 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
+        // Parse the data passed from Flask
+        var leaveByDeptData = JSON.parse('{{ leave_by_department_data | tojson | safe }}');
 
+        var ctx = document.getElementById("leaveByDepartmentChart").getContext("2d");
+        var chartInstance;
 
-    var chartData = JSON.parse('{{ leave_status_chart_data | tojson | safe }}');
+        // Define color mapping for approval statuses
+        var statusColors = {
+            "Approved": "#002244",
+            "Pending": "#6699CC",
+            "Declined": "#E30022",
+            "Cancelled": "#006699"
+        };
 
-    var ctx = document.getElementById("leaveByDepartmentChart").getContext("2d");
+        // Extract unique departments (labels)
+        var labels = Object.keys(leaveByDeptData);
 
+        // Extract unique statuses from the data (keys from any dept)
+        var allStatuses = new Set();
+        labels.forEach(function(dept) {
+            Object.keys(leaveByDeptData[dept]).forEach(function(status) {
+                allStatuses.add(status);
+            });
+        });
+        allStatuses = Array.from(allStatuses);
 
-    var chartInstance = new Chart(ctx, {
-        type: "bar",
-        data: chartData,
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: "Leave Requests by Department and Approval Status"
-                },
-                legend: {
-                    position: "top"
-                },
-                datalabels: {
-                    display: true,
-                    color: "white",
-                    font: {
-                        weight: "bold"
+        // Build datasets array for Chart.js
+        var datasets = allStatuses.map(function(status) {
+            return {
+                label: status,
+                data: labels.map(function(dept) {
+                    return leaveByDeptData[dept][status] || 0;  // fill 0 if no data
+                }),
+                backgroundColor: statusColors[status] || "#ccc"
+            };
+        });
+
+        // Create the stacked bar chart
+        chartInstance = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: "Leave Requests by Department and Approval Status"
                     },
-                    formatter: Math.round
+                    legend: {
+                        position: "top"
+                    },
+                    datalabels: {
+                        display: true,
+                        color: "white",
+                        font: {
+                            weight: "bold"
+                        },
+                        formatter: Math.round
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true
+                    }
                 }
             },
-            scales: {
-                x: {
-                    stacked: true
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true
-                }
-            }
-        },
-        plugins: [ChartDataLabels]
+            plugins: [ChartDataLabels]
+        });
     });
-});
 </script>
+
+
 
 
 <script>

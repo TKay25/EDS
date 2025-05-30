@@ -4745,6 +4745,12 @@ def find_credentials(email, password):
         print("No matching credentials found in any table.")
         return None
 
+
+def generate_leave_by_department_data(df_leave_appsmain_analysis):
+    grouped = df_leave_appsmain_analysis.groupby(['Department', 'Approval Status']).size().unstack(fill_value=0)
+    result = grouped.to_dict(orient='index')
+    return result
+
 def run1(table_name, empid):
     print(empid)
 
@@ -4910,27 +4916,6 @@ def run1(table_name, empid):
 
     df_leave_appsmain_analysis = df_leave_appsmain_declined._append(df_leave_appsmain_approved)
 
-    grouped = df_leave_appsmain_analysis.groupby(['Department', 'Approval Status']).size().unstack(fill_value=0)
-
-    chart_data = {
-            "labels": list(grouped.index),
-            "datasets": []
-        }
-
-    color_map = {
-        "Approved": "#002244",
-        "Pending": "#6699CC",
-        "Declined": "#E30022",
-        "Cancelled": "#006699"
-    }
-
-    for status in grouped.columns:
-        chart_data["datasets"].append({
-            "label": status,
-            "data": list(grouped[status]),
-            "backgroundColor": color_map.get(status, "#ccc")
-        })
-
     df_leave_appsmain1 = df_leave_appsmain_pending_approvalcomb._append(df_leave_appsmain_approvedcomb)
     df_leave_appsmain3 = df_leave_appsmain1._append(df_leave_appsmain_declinedcomb)
     df_leave_appsmain = df_leave_appsmain3._append(df_leave_appsmain_cancelledcomb)
@@ -5076,7 +5061,7 @@ def run1(table_name, empid):
         "leaveapproveremail": leaveapproveremail,
         "leaveapproverwhatsapp": leaveapproverwhatsapp,
         "leave_status_chart": generate_leave_status_chart(),  
-        "leave_status_chart_data": chart_data
+        "leave_by_department_data": generate_leave_by_department_data(df_leave_appsmain_analysis),
     }
 
 
