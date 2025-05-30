@@ -5709,16 +5709,23 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 if results:
                     print("Overlapping records found:")
 
-                    overlap_messages = []
+                    try:
 
-                    for row in results:
-                        overlap_messages.append(f"appID: {row[0]}, ID: {row[1]}, Start: {row[2]}, End: {row[3]}")
+                        overlap_messages = []
 
-                    # Combine into one single string (newline-separated)
-                    overlap_info = "\n".join(overlap_messages)
+                        for row in results:
+                            overlap_messages.append(f"appID: {row[0]}, ID: {row[1]}, Start: {row[2]}, End: {row[3]}")
 
-                    response = {'status': 'error', 'message': f'One of your previously approved leave applications include days within the period that you are currently applying for leave; {overlap_info}.'}
-                    return jsonify(response), 400  
+                        # Combine into one single string (newline-separated)
+                        overlap_info = "\n".join(overlap_messages)
+
+                        response = {'status': 'error', 'message': f'One of your previously approved leave applications include days within the period that you are currently applying for leave; {overlap_info}.'}
+                        return jsonify(response), 400  
+                    
+                    except Exception as e:
+
+                        response = {'status': 'error', 'message': {e}}
+                        return jsonify(response), 400                        
 
                 else:
                     print("No overlapping records found.")
