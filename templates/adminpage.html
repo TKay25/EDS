@@ -2016,11 +2016,14 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const ctx = document.getElementById("leaveByDepartmentChart").getContext("2d");
 
-    const chartData = JSON.parse('{{ leave_status_chart_data | tojson | safe }}');
 
-    const chartInstance = new Chart(ctx, {
+    var chartData = JSON.parse('{{ leave_status_chart_data | tojson | safe }}');
+
+    var ctx = document.getElementById("leaveByDepartmentChart").getContext("2d");
+
+
+    var chartInstance = new Chart(ctx, {
         type: "bar",
         data: chartData,
         options: {
