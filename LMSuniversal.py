@@ -4859,6 +4859,9 @@ def run1(table_name, empid):
     df_leave_appsmain_approvedcomb = df_leave_appsmain_approved[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]]
     approved_requests = len(df_leave_appsmain_approved)
     total_leave_days = df_leave_appsmain_approved["Leave Days"].sum()
+    top_leave_type = df_leave_appsmain_approved['Leave Type'].value_counts().idxmax()
+    longest_leave_days = df_leave_appsmain_approved['Leave Days'].max()
+
 
     query = f"""SELECT dateapplied, statusdate FROM {table_name_apps_approved};"""
     cursor.execute(query)
@@ -4879,8 +4882,14 @@ def run1(table_name, empid):
         axis=1
     )
 
-    avg_approval_time = df_leave_appsmain_approved2["Days (No Sundays)"].mean()
+    avg_approval_time = round(df_leave_appsmain_approved2["Days (No Sundays)"].mean(),0)
+    df_leave_appsmain_approved2['Date Applied'] = pd.to_datetime(df_leave_appsmain_approved2['Date Applied'])
 
+    # Create a new column for month-year
+    df_leave_appsmain_approved2['Month-Year'] = df_leave_appsmain_approved2['Date Applied'].dt.to_period('M')
+
+    # Get the most frequent Month-Year
+    peak_leave_month = df_leave_appsmain_approved2['Month-Year'].mode()[0]
     
 
     query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_declined};"""
@@ -4889,6 +4898,7 @@ def run1(table_name, empid):
     df_leave_appsmain_declined = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
     df_leave_appsmain_declined['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Declined</p>'
     df_leave_appsmain_declinedcomb = df_leave_appsmain_declined[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
+    disapproved_requests = len(df_leave_appsmain_declined)
 
     query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_cancelled};"""
     cursor.execute(query)
@@ -5001,8 +5011,11 @@ def run1(table_name, empid):
         status_counts = df_my_leave_apps_approved_declined_pending_fin["Approval Status"].value_counts().to_dict()
         return status_counts  # Return as dictionary
 
-    leave_utilization_rate = (total_leave_days/ total_days_available) * 100
-    avg_leave_days = total_leave_days/total_employees
+    leave_utilization_rate = round((total_leave_days/ total_days_available) * 100,0)
+    avg_leave_days = round(total_leave_days/total_employees,0)
+    approval_rate = round((approved_requests/(approved_requests + disapproved_requests)) * 100,0)
+
+
     return {
         "table_my_leave_apps_html": table_my_leave_apps_html,
         "table_leave_apps_approved_by_me_html": table_leave_apps_approved_by_me_html,
@@ -5021,6 +5034,10 @@ def run1(table_name, empid):
         "leave_utilization_rate": leave_utilization_rate,
         "avg_leave_days": avg_leave_days,
         "avg_approval_time": avg_approval_time,
+        "approval_rate": approval_rate,
+        "top_leave_type": top_leave_type,
+        "longest_leave_days": longest_leave_days,
+        "peak_leave_month": peak_leave_month,
         "department": department,
         "firstname": firstname,
         "surname": surname,

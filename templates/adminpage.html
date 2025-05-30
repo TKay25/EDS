@@ -654,16 +654,16 @@
 
 
         .dashboard-summary {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 4 columns */
+            gap: 20px;
+            margin-top: 20px;
         }
 
         .summary-card {
             flex: 1 1 calc(33.33% - 10px);
             background-color: #f0f4f8;
-            padding: 10px;
+            padding: 7px;
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -696,7 +696,7 @@
 
         .graph-card {
             background-color: #ffffff;
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             font-size: 12px;
@@ -850,47 +850,77 @@
                     <div class="tab-pane fade show active" id="dashboard-tab">
                         <div class="dashboard-summary">
                             <div class="summary-card">
-                                <div class="icon">&#128101;</div>
+                                <div class="icon"><i class="bi bi-people-fill fs-3" style="color: #003366;"></i></div>
                                 <div class="details">
-                                    <h5>Total Employees</h5>
+                                    <h5 style="font-weight: bolder;">Total Employees</h5>
                                     <p>{{ total_employees }}</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon">&#9203;</div>
+                                <div class="icon"><i class="bi bi-hourglass-split fs-3" style="color: #003366;"></i></div>
                                 <div class="details">
-                                    <h5>Open Leave Requests</h5>
+                                    <h5 style="font-weight: bolder;">Open Leave Requests</h5>
                                     <p>{{ open_requests }}</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon">&#9989;</div>
+                                <div class="icon"><i class="bi bi-calendar2-check-fill fs-3" style="color: #003366;"></i></div>
                                 <div class="details">
-                                    <h5>Approved Leave (YTD)</h5>
+                                    <h5 style="font-weight: bolder;">Approved Leave</h5>
                                     <p>{{ approved_requests }}</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon">&#128200;</div>
+                                <div class="icon"><i class="bi bi-check-circle-fill fs-3" style="color: #003366;"></i></div>
                                 <div class="details">
-                                    <h5>Leave Utilization</h5>
+                                    <h5 style="font-weight: bolder;">Approval Rate</h5>
+                                    <p>{{ approval_rate }}%</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="icon"><i class="bi bi-stopwatch-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="details">
+                                    <h5 style="font-weight: bolder;">Avg Approval Time</h5>
+                                    <p>{{ avg_approval_time }} days</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="icon"><i class="bi bi-graph-up fs-3" style="color: #003366;"></i></div>
+                                <div class="details">
+                                    <h5  style="font-weight: bolder;">Leave Utilization</h5>
                                     <p>{{ leave_utilization_rate }}%</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon">&#128197;</div>
+                                <div class="icon"><i class="bi bi-1-circle-fill fs-3" style="color: #003366;"></i></div>
                                 <div class="details">
-                                    <h5>Avg Leave Days / Emp</h5>
+                                    <h5 style="font-weight: bolder;">Top Leave Type</h5>
+                                    <p>{{ top_leave_type }}</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="icon"><i class="bi bi-calendar2-date-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="details">
+                                    <h5 style="font-weight: bolder;">Avg Leave Days / Emp</h5>
                                     <p>{{ avg_leave_days }}</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon">&#9201;</div>
+                                <div class="icon"><i class="bi bi-clock-fill fs-3" style="color: #003366;"></i></div>
                                 <div class="details">
-                                    <h5>Avg Approval Time</h5>
-                                    <p>{{ avg_approval_time }} days</p>
+                                    <h5 style="font-weight: bolder;">Longest Leave</h5>
+                                    <p>{{ longest_leave_days }} days</p>
                                 </div>
                             </div>
+
+                            <div class="summary-card">
+                                <div class="icon"><i class="bi bi-calendar-month-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="details">
+                                    <h5 style="font-weight: bolder;">Peak Leave Month</h5>
+                                    <p>{{ peak_leave_month }}</p>
+                                </div>
+                            </div>
+
                         </div>
 
                         <div class="dashboard-graphs">
