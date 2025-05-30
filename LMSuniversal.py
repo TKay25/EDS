@@ -4754,6 +4754,9 @@ def run1(table_name, empid):
 
     df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month","Department"])
     print(df_employees)
+    total_days_available = df_employees["Leave Days Balance"].sum()
+
+    total_employees = len(df_employees)
     userdf = df_employees[df_employees['id'] == empid].reset_index()
     print("yeaarrrrr")
     print(userdf)
@@ -4843,7 +4846,7 @@ def run1(table_name, empid):
     df_leave_appsmain_pending_approval = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
     df_leave_appsmain_pending_approval['Approval Status'] = '<p style="color: #ffab00; border: 3px solid #ffab00;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Pending</p>'
     df_leave_appsmain_pending_approvalcomb = df_leave_appsmain_pending_approval[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
-
+    open_requests = len(df_leave_appsmain_pending_approval)
     print(df_leave_appsmain_pending_approval)
 
 
@@ -4854,6 +4857,31 @@ def run1(table_name, empid):
     df_leave_appsmain_approved['Approval Status'] = '<p style="color: #28a745; border: 3px solid #28a745;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Approved</p>'
     df_leave_appsmain_approved['ACTION'] = df_leave_appsmain_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}" onclick="downloadLeaveApp('{x}')">Download</button></div>''')
     df_leave_appsmain_approvedcomb = df_leave_appsmain_approved[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]]
+    approved_requests = len(df_leave_appsmain_approved)
+    total_leave_days = df_leave_appsmain_approved["Leave Days"].sum()
+
+    query = f"""SELECT dateapplied, statusdate FROM {table_name_apps_approved};"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df_leave_appsmain_approved2 = pd.DataFrame(rows, columns=["Date Applied", "Status Date"])
+
+    df_leave_appsmain_approved2["Date Applied"] = pd.to_datetime(df_leave_appsmain_approved2["Date Applied"])
+    df_leave_appsmain_approved2["Status Date"] = pd.to_datetime(df_leave_appsmain_approved2["Status Date"])
+
+    # Function to count days excluding Sundays
+    def count_days_excluding_sundays(start, end):
+        return sum((start + pd.to_timedelta(i, unit='D')).weekday() != 6  # 6 = Sunday
+                for i in range((end - start).days))
+
+    # Apply function to create new column
+    df_leave_appsmain_approved2["Days (No Sundays)"] = df_leave_appsmain_approved2.apply(
+        lambda row: count_days_excluding_sundays(row["Date Applied"], row["Status Date"]),
+        axis=1
+    )
+
+    avg_approval_time = df_leave_appsmain_approved2["Days (No Sundays)"].mean()
+
+    
 
     query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_declined};"""
     cursor.execute(query)
@@ -4972,7 +5000,9 @@ def run1(table_name, empid):
         
         status_counts = df_my_leave_apps_approved_declined_pending_fin["Approval Status"].value_counts().to_dict()
         return status_counts  # Return as dictionary
-    
+
+    leave_utilization_rate = (total_leave_days/ total_days_available) * 100
+    avg_leave_days = total_leave_days/total_employees
     return {
         "table_my_leave_apps_html": table_my_leave_apps_html,
         "table_leave_apps_approved_by_me_html": table_leave_apps_approved_by_me_html,
@@ -4985,6 +5015,12 @@ def run1(table_name, empid):
         "table_rememployees_bulk1_html": table_rememployees_bulk1_html,
         "employees_list": employees_list,
         "role": role,
+        "total_employees": total_employees,
+        "open_requests": open_requests,
+        "approved_requests":  approved_requests,
+        "leave_utilization_rate": leave_utilization_rate,
+        "avg_leave_days": avg_leave_days,
+        "avg_approval_time": avg_approval_time,
         "department": department,
         "firstname": firstname,
         "surname": surname,
