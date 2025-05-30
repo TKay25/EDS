@@ -4876,7 +4876,6 @@ def run1(table_name, empid):
         return sum((start + pd.to_timedelta(i, unit='D')).weekday() != 6  # 6 = Sunday
                 for i in range((end - start).days))
 
-    # Apply function to create new column
     df_leave_appsmain_approved2["Days (No Sundays)"] = df_leave_appsmain_approved2.apply(
         lambda row: count_days_excluding_sundays(row["Date Applied"], row["Status Date"]),
         axis=1
@@ -4885,28 +4884,52 @@ def run1(table_name, empid):
     avg_approval_time = round(df_leave_appsmain_approved2["Days (No Sundays)"].mean(),0)
     df_leave_appsmain_approved2['Date Applied'] = pd.to_datetime(df_leave_appsmain_approved2['Date Applied'])
 
-    # Create a new column for month-year
     df_leave_appsmain_approved2['Month-Year'] = df_leave_appsmain_approved2['Date Applied'].dt.to_period('M')
 
-    # Get the most frequent Month-Year
-    peak_leave_month = df_leave_appsmain_approved2['Month-Year'].mode()[0]
-    
+    peak_leave_monthpp = df_leave_appsmain_approved2['Month-Year'].mode()[0]
+    peak_leave_month = peak_leave_monthpp.to_timestamp().strftime('%B %Y')
 
-    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_declined};"""
+    query = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_declined};"""
     cursor.execute(query)
     rows = cursor.fetchall()
-    df_leave_appsmain_declined = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_declined = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Department", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
     df_leave_appsmain_declined['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Declined</p>'
     df_leave_appsmain_declinedcomb = df_leave_appsmain_declined[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
     disapproved_requests = len(df_leave_appsmain_declined)
 
-    query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_cancelled};"""
+    query = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_cancelled};"""
     cursor.execute(query)
     rows = cursor.fetchall()
-    df_leave_appsmain_cancelled = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_cancelled = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Department", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
     df_leave_appsmain_cancelled['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Cancelled</p>'
     df_leave_appsmain_cancelledcomb = df_leave_appsmain_cancelled[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
 
+
+
+
+
+    df_leave_appsmain_analysis = df_leave_appsmain_declined._append(df_leave_appsmain_approved)
+
+    grouped = df_leave_appsmain_analysis.groupby(['Department', 'Approval Status']).size().unstack(fill_value=0)
+
+    chart_data = {
+            "labels": list(grouped.index),
+            "datasets": []
+        }
+
+    color_map = {
+        "Approved": "#002244",
+        "Pending": "#6699CC",
+        "Declined": "#E30022",
+        "Cancelled": "#006699"
+    }
+
+    for status in grouped.columns:
+        chart_data["datasets"].append({
+            "label": status,
+            "data": list(grouped[status]),
+            "backgroundColor": color_map.get(status, "#ccc")
+        })
 
     df_leave_appsmain1 = df_leave_appsmain_pending_approvalcomb._append(df_leave_appsmain_approvedcomb)
     df_leave_appsmain3 = df_leave_appsmain1._append(df_leave_appsmain_declinedcomb)
@@ -5053,13 +5076,12 @@ def run1(table_name, empid):
         "leaveapproveremail": leaveapproveremail,
         "leaveapproverwhatsapp": leaveapproverwhatsapp,
         "leave_status_chart": generate_leave_status_chart(),  
-
+        "leave_status_chart_data": chart_data
     }
 
 
 
 def check_existing_data(df, table_name):
-    # Query database for existing WhatsApp and Email values
     cursor.execute(f"SELECT whatsapp, email FROM {table_name}")
     existing_data = cursor.fetchall()
 
@@ -5069,7 +5091,6 @@ def check_existing_data(df, table_name):
     existing_whatsapps = [data[0] for data in existing_data]
     existing_emails = [data[1] for data in existing_data]
 
-    # Drop rows where WhatsApp or Email already exists in the database
     df = df[~df['WhatsApp'].isin(existing_whatsapps)]  # Remove rows with existing WhatsApp
     df = df[~df['Email'].isin(existing_emails)]  # Remove rows with existing Email
 

@@ -2015,6 +2015,50 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const ctx = document.getElementById("leaveByDepartmentChart").getContext("2d");
+
+    const chartData = JSON.parse('{{ leave_status_chart | tojson | safe }}');
+
+    const chartInstance = new Chart(ctx, {
+        type: "bar",
+        data: chartData,
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: "Leave Requests by Department and Approval Status"
+                },
+                legend: {
+                    position: "top"
+                },
+                datalabels: {
+                    display: true,
+                    color: "white",
+                    font: {
+                        weight: "bold"
+                    },
+                    formatter: Math.round
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+});
+</script>
+
+
+<script>
 $(document).ready(function () {
     if (sessionStorage.getItem('showAdminModal') === 'true') {
         $('#AdminModal').modal('show');
