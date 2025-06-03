@@ -927,6 +927,8 @@
                             <div class="graph-card">
                                 <h6>Leave Requests by Department</h6>
                                 <canvas id="leaveByDepartmentChart" width="800" height="400"></canvas>
+                                <pre>{{ leave_by_department_data | tojson(indent=2) }}</pre>
+
                             </div>
                             <div class="graph-card">
                                 <h6>Monthly Leave Trend</h6>
@@ -2023,9 +2025,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var statusColors = {
         "Approved": "#002244",
-        "Pending": "#6699CC",
         "Declined": "#E30022",
-        "Cancelled": "#006699"
     };
 
     function loadLeaveByDepartmentChart() {

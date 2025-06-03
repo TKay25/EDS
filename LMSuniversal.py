@@ -4746,10 +4746,10 @@ def find_credentials(email, password):
         return None
 
 
-def generate_leave_by_department_data(df_leave_appsmain_analysis):
-    grouped = df_leave_appsmain_analysis.groupby(['Department', 'Approval Status']).size().unstack(fill_value=0)
-    result = grouped.to_dict(orient='index')
-    return result
+def generate_leave_by_department_data(df_filtered_for_bar_chart):
+    grouped = df_filtered_for_bar_chart.groupby(['Department', 'Approval Status']).size().unstack(fill_value=0)
+    resultxx = grouped.to_dict(orient='index')
+    return resultxx
 
 def run1(table_name, empid):
     print(empid)
@@ -4862,7 +4862,6 @@ def run1(table_name, empid):
     df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
     df_leave_appsmain_approved_chart = df_leave_appsmain_approved
     df_leave_appsmain_approved_chart['Approval Status'] = "Approved"
-
     df_leave_appsmain_approved['Approval Status'] = '<p style="color: #28a745; border: 3px solid #28a745;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Approved</p>'
     df_leave_appsmain_approved['ACTION'] = df_leave_appsmain_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}" onclick="downloadLeaveApp('{x}')">Download</button></div>''')
     df_leave_appsmain_approvedcomb = df_leave_appsmain_approved[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]]
@@ -4921,6 +4920,7 @@ def run1(table_name, empid):
 
     df_leave_appsmain_analysis = df_leave_appsmain_declined_chart._append(df_leave_appsmain_approved_chart)
 
+    df_filtered_for_bar_chart = df_leave_appsmain_analysis[['Department', 'Approval Status']].copy()
 
 
 
@@ -5075,7 +5075,7 @@ def run1(table_name, empid):
         "leaveapproveremail": leaveapproveremail,
         "leaveapproverwhatsapp": leaveapproverwhatsapp,
         "leave_status_chart": generate_leave_status_chart(),  
-        "leave_by_department_data": generate_leave_by_department_data(df_leave_appsmain_analysis),
+        "leave_by_department_data": generate_leave_by_department_data(df_filtered_for_bar_chart),
     }
 
 
