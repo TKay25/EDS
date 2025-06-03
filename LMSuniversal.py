@@ -4915,10 +4915,24 @@ def run1(table_name, empid):
     df_leave_appsmain_cancelledcomb = df_leave_appsmain_cancelled[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
 
 
+    queryxx = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_declined};"""
+    cursor.execute(queryxx)
+    rows = cursor.fetchall()
+    df_leave_appsmain_declinedxx = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Department", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_declinedxx['Approval Status'] = "Declined"
+
+    queryyy = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_approved};"""
+    cursor.execute(queryyy)
+    rows = cursor.fetchall()
+    df_leave_appsmain_approvedxx = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_approvedxx['Approval Status'] = "Approved"
+    
 
 
 
-    df_leave_appsmain_analysis = df_leave_appsmain_declined_chart._append(df_leave_appsmain_approved_chart)
+
+
+    df_leave_appsmain_analysis = df_leave_appsmain_declinedxx._append(df_leave_appsmain_approvedxx)
 
     df_filtered_for_bar_chart = df_leave_appsmain_analysis[['Department', 'Approval Status']].copy()
 
