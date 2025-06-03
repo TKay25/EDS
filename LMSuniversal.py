@@ -5886,14 +5886,16 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
 
                     # Create daily impact report
+                    df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                    df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+                    df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
+
+
                     impact_report = []
 
                     for date in leave_dates:
         
                         date = pd.Timestamp(date)
-
-                        df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
-                        df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
 
                         print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
                         print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
