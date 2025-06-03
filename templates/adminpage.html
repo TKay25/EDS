@@ -926,7 +926,9 @@
                         <div class="dashboard-graphs">
                             <div class="graph-card">
                                 <h6>Leave Requests by Department</h6>
-                                <canvas id="leaveByDepartmentChart"></canvas>
+                                <canvas id="leaveByDepartmentChart" width="800" height="400"></canvas>
+                                <pre>{{ leave_by_department_data | tojson(indent=2) }}</pre>
+
                             </div>
                             <div class="graph-card">
                                 <h6>Monthly Leave Trend</h6>
@@ -2014,14 +2016,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // Parse the data passed from Flask
     var leaveByDeptData = JSON.parse('{{ leave_by_department_data | tojson | safe }}');
-
     var ctx = document.getElementById("leaveByDepartmentChart").getContext("2d");
+    var chartInstance;
 
-    // Define color mapping for approval statuses
     var statusColors = {
         "Approved": "#002244",
         "Pending": "#6699CC",
@@ -2029,69 +2030,75 @@ document.addEventListener("DOMContentLoaded", function () {
         "Cancelled": "#006699"
     };
 
-    // Extract department labels
-    var labels = Object.keys(leaveByDeptData);
+    function loadLeaveByDepartmentChart() {
+        var labels = Object.keys(leaveByDeptData);
 
-    // Gather all unique approval statuses
-    var allStatuses = new Set();
-    labels.forEach(function(dept) {
-        Object.keys(leaveByDeptData[dept]).forEach(function(status) {
-            allStatuses.add(status);
+        var allStatuses = new Set();
+        labels.forEach(function(dept) {
+            Object.keys(leaveByDeptData[dept]).forEach(function(status) {
+                allStatuses.add(status);
+            });
         });
-    });
-    allStatuses = Array.from(allStatuses);
+        allStatuses = Array.from(allStatuses);
 
-    // Build datasets
-    var datasets = allStatuses.map(function(status) {
-        return {
-            label: status,
-            data: labels.map(function(dept) {
-                return leaveByDeptData[dept][status] || 0;
-            }),
-            backgroundColor: statusColors[status] || "#ccc"
-        };
-    });
+        var datasets = allStatuses.map(function(status) {
+            return {
+                label: status,
+                data: labels.map(function(dept) {
+                    return leaveByDeptData[dept][status] || 0;
+                }),
+                backgroundColor: statusColors[status] || "#ccc"
+            };
+        });
 
-    // Create the stacked bar chart
-    new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: datasets
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: "Leave Requests by Department and Approval Status"
-                },
-                legend: {
-                    position: "top"
-                },
-                datalabels: {
-                    display: true,
-                    color: "white",
-                    font: {
-                        weight: "bold"
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: "Leave Requests by Department and Approval Status"
                     },
-                    formatter: Math.round
+                    legend: {
+                        position: "top"
+                    },
+                    datalabels: {
+                        display: true,
+                        color: "white",
+                        font: {
+                            weight: "bold"
+                        },
+                        formatter: Math.round
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true
+                    }
                 }
             },
-            scales: {
-                x: {
-                    stacked: true
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true
-                }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
+            plugins: [ChartDataLabels]
+        });
+    }
+
+    // Initial chart render
+    loadLeaveByDepartmentChart();
 });
 </script>
+
 
 
 
