@@ -632,16 +632,16 @@ def webhook():
                                                         rows = cursor.fetchall()
 
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
-
+                                                        df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                                        df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+        
+                                                        df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
                                                         # Create daily impact report
                                                         impact_report = []
 
                                                         for date in leave_dates:
                                             
                                                             date = pd.Timestamp(date)
-
-                                                            df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
-                                                            df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
 
                                                             print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
                                                             print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
@@ -650,7 +650,7 @@ def webhook():
                                                             remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
                                                             impact_report.append({
                                                                 "date": date.strftime("%Y-%m-%d"),
-                                                                "on leave (including new)": on_leave + 1,
+                                                                "on leave": on_leave + 1,
                                                                 "employees remaining": remaining
                                                             })
 
@@ -1405,15 +1405,17 @@ def webhook():
 
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
 
+                                                        df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                                        df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+        
+                                                        df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
+
                                                         # Create daily impact report
                                                         impact_report = []
 
                                                         for date in leave_dates:
 
                                                             date = pd.Timestamp(date)
-
-                                                            df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
-                                                            df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
 
                                                             print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
                                                             print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
@@ -1422,7 +1424,7 @@ def webhook():
                                                             remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
                                                             impact_report.append({
                                                                 "date": date.strftime("%Y-%m-%d"),
-                                                                "on leave (including new)": on_leave + 1,
+                                                                "on leave": on_leave + 1,
                                                                 "employees remaining": remaining
                                                             })
 
@@ -2411,16 +2413,16 @@ def webhook():
                                                         rows = cursor.fetchall()
 
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
-
+                                                        df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                                        df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+        
+                                                        df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
                                                         # Create daily impact report
                                                         impact_report = []
 
                                                         for date in leave_dates:
 
                                                             date = pd.Timestamp(date)
-
-                                                            df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
-                                                            df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
 
                                                             print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
                                                             print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
@@ -2429,7 +2431,7 @@ def webhook():
                                                             remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
                                                             impact_report.append({
                                                                 "date": date.strftime("%Y-%m-%d"),
-                                                                "on leave (including new)": on_leave + 1,
+                                                                "on leave": on_leave + 1,
                                                                 "employees remaining": remaining
                                                             })
 
@@ -3437,16 +3439,16 @@ def webhook():
                                                         rows = cursor.fetchall()
 
                                                         df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
-
+                                                        df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                                        df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+        
+                                                        df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
                                                         # Create daily impact report
                                                         impact_report = []
 
                                                         for date in leave_dates:
 
                                                             date = pd.Timestamp(date)
-
-                                                            df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
-                                                            df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
 
                                                             print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
                                                             print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
@@ -5904,7 +5906,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
                         impact_report.append({
                             "date": date.strftime("%Y-%m-%d"),
-                            "on leave (including new)": on_leave + 1,
+                            "on leave": on_leave + 1,
                             "employees remaining": remaining
                         })
 
@@ -6655,16 +6657,16 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             rows = cursor.fetchall()
 
                             df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+                            df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                            df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
 
+                            df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
                             # Create daily impact report
                             impact_report = []
 
                             for date in leave_dates:
                 
                                 date = pd.Timestamp(date)
-
-                                df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
-                                df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
 
                                 print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
                                 print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
@@ -6673,7 +6675,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                                 remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
                                 impact_report.append({
                                     "date": date.strftime("%Y-%m-%d"),
-                                    "on leave (including new)": on_leave + 1,
+                                    "on leave": on_leave + 1,
                                     "employees remaining": remaining
                                 })
 
