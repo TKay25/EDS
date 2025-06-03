@@ -4919,6 +4919,18 @@ def run1(table_name, empid):
     df_leave_appsmain_declinedxx = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Department", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
     df_leave_appsmain_declinedxx['Approval Status'] = "Declined"
 
+    queryxy = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_pending_approval};"""
+    cursor.execute(queryxy)
+    rows = cursor.fetchall()
+    df_leave_appsmain_pendingxx = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Department", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_pendingxx['Approval Status'] = "Pending"
+
+    queryxyx = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_cancelled};"""
+    cursor.execute(queryxyx)
+    rows = cursor.fetchall()
+    df_leave_appsmain_cancelledxx = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Department", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
+    df_leave_appsmain_cancelledxx['Approval Status'] = "Cancelled"
+
     queryyy = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_approved};"""
     cursor.execute(queryyy)
     rows = cursor.fetchall()
@@ -4930,7 +4942,10 @@ def run1(table_name, empid):
 
 
 
-    df_leave_appsmain_analysis = df_leave_appsmain_declinedxx._append(df_leave_appsmain_approvedxx)
+    df_leave_appsmain_analysis1 = df_leave_appsmain_declinedxx._append(df_leave_appsmain_approvedxx)
+    df_leave_appsmain_analysis2 = df_leave_appsmain_analysis1._append(df_leave_appsmain_pendingxx)
+    df_leave_appsmain_analysis = df_leave_appsmain_analysis2._append(df_leave_appsmain_cancelledxx)
+
 
     df_filtered_for_bar_chart = df_leave_appsmain_analysis[['Department', 'Approval Status']].copy()
 
