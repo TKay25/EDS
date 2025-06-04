@@ -4777,9 +4777,32 @@ def generate_leave_by_department_data(df_filtered_for_bar_chart):
 
 
 def generate_leave_by_type_data(df_filtered_for_bar_chart_type):
-    grouped = df_filtered_for_bar_chart_type.groupby(['Leave Type', 'Approval Status']).size().unstack(fill_value=0)
-    resultxx = grouped.to_dict(orient='index')
-    return resultxx
+    # Ensure 'Date Applied' is a datetime object
+    df_filtered_for_bar_chart_type['Leave Start Date'] = pd.to_datetime(df_filtered_for_bar_chart_type['Leave Start Date'], format='%d %B %Y', errors='coerce')
+
+    grouped = (
+        df_filtered_for_bar_chart_type
+        .groupby(['Leave Type', 'Approval Status', 'Leave Start Date'])
+        .size()
+        .reset_index(name='count')
+    )
+
+    result = {}
+    for _, row in grouped.iterrows():
+        dept = row['Leave Type']
+        status = row['Approval Status']
+        date = row['Leave Start Date'].strftime('%Y-%m-%d')
+        count = row['count']
+
+        if dept not in result:
+            result[dept] = {}
+        if status not in result[dept]:
+            result[dept][status] = []
+
+        result[dept][status].append({'date': date, 'count': count})
+
+    return result
+
 
 def run1(table_name, empid):
     print(empid)
