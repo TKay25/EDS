@@ -4753,6 +4753,11 @@ def generate_leave_by_department_data(df_filtered_for_bar_chart):
     resultxx = grouped.to_dict(orient='index')
     return resultxx
 
+def generate_leave_by_type_data(df_filtered_for_bar_chart_type):
+    grouped = df_filtered_for_bar_chart_type.groupby(['Leave Type', 'Approval Status']).size().unstack(fill_value=0)
+    resultxx = grouped.to_dict(orient='index')
+    return resultxx
+
 def run1(table_name, empid):
     print(empid)
 
@@ -4950,7 +4955,7 @@ def run1(table_name, empid):
 
 
     df_filtered_for_bar_chart = df_leave_appsmain_analysis[['Department', 'Approval Status']].copy()
-
+    df_filtered_for_bar_chart_type = df_leave_appsmain_analysis[['Leave Type', 'Approval Status']].copy()
 
 
 
@@ -5105,6 +5110,7 @@ def run1(table_name, empid):
         "leaveapproverwhatsapp": leaveapproverwhatsapp,
         "leave_status_chart": generate_leave_status_chart(),  
         "leave_by_department_data": generate_leave_by_department_data(df_filtered_for_bar_chart),
+        "leave_by_type_data": generate_leave_by_type_data(df_filtered_for_bar_chart_type),
     }
 
 

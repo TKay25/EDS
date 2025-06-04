@@ -895,7 +895,7 @@
                                 <div class="icon"><i class="bi bi-1-circle-fill fs-3" style="color: #003366;"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Top Leave Type</h5>
-                                    <p>{{ top_leave_type }}</p>
+                                    <p>{{ top_leave_type }} Leave</p>
                                 </div>
                             </div>
                             <div class="summary-card">
@@ -930,13 +930,15 @@
 
                             </div>
                             <div class="graph-card">
+                                <h6>Leave Requests by Leave Type</h6>
+                                <canvas id="leaveByTypeChart" width="800" height="400"></canvas>
+                            </div>
+
+                            <div class="graph-card">
                                 <h6>Monthly Leave Trend</h6>
                                 <canvas id="monthlyLeaveChart"></canvas>
                             </div>
-                            <div class="graph-card">
-                                <h6>Leave Types Distribution</h6>
-                                <canvas id="leaveTypePieChart"></canvas>
-                            </div>
+
 
                             <div class="graph-card">
                                 <h6>Approval Time by Department</h6>
@@ -1015,16 +1017,6 @@
             </div>
         </div>
     </div>
-
-
-
-
-
-
-
-
-
-
 
 
 <div class="leave-days-checker" id="calculator" style="display: none;">
@@ -2015,7 +2007,86 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var leaveByTypeData = JSON.parse('{{ leave_by_type_data | tojson | safe }}');
+    var ctx = document.getElementById("leaveByTypeChart").getContext("2d");
+    var chartInstance;
 
+    var statusColors = {
+        "Approved": "#002244",
+        "Pending": "#6699CC",
+        "Declined": "#E30022",
+        "Cancelled": "#006699"
+    };
+
+    function loadLeaveByTypeChart() {
+        var labels = Object.keys(leaveByTypeData);
+
+        var allStatuses = new Set();
+        labels.forEach(function(type) {
+            Object.keys(leaveByTypeData[type]).forEach(function(status) {
+                allStatuses.add(status);
+            });
+        });
+        allStatuses = Array.from(allStatuses);
+
+        var datasets = allStatuses.map(function(status) {
+            return {
+                label: status,
+                data: labels.map(function(type) {
+                    return leaveByTypeData[type][status] || 0;
+                }),
+                backgroundColor: statusColors[status] || "#ccc"
+            };
+        });
+
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: false,
+                        text: "Leave Requests by Leave Type and Approval Status"
+                    },
+                    legend: {
+                        position: "top"
+                    },
+                    datalabels: {
+                        display: true,
+                        color: "white",
+                        font: {
+                            weight: "bold"
+                        },
+                        formatter: Math.round
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+
+    loadLeaveByTypeChart();
+});
+</script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     var leaveByDeptData = JSON.parse('{{ leave_by_department_data | tojson | safe }}');
