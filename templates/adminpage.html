@@ -2015,13 +2015,11 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    var leaveByTypeData = JSON.parse('{{ leave_by_type_data | tojson | safe }}');
-    var ctx = document.getElementById("leaveByTypeChart").getContext("2d");
-    var chartInstance;
-
+    // Shared variables
     var selectedStartDate = null;
     var selectedEndDate = null;
 
+    // Flatpickr for date range
     flatpickr("#dateRangePicker", {
         mode: "range",
         dateFormat: "d F Y",
@@ -2031,6 +2029,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Shared status colors
     var statusColors = {
         "Approved": "#002244",
         "Pending": "#6699CC",
@@ -2038,18 +2037,23 @@ document.addEventListener("DOMContentLoaded", function () {
         "Cancelled": "#006699"
     };
 
-    function filterDataByDate(startDate, endDate) {
+    // === Leave by Type Chart ===
+    var leaveByTypeData = JSON.parse('{{ leave_by_type_data | tojson | safe }}');
+    var typeCtx = document.getElementById("leaveByTypeChart").getContext("2d");
+    var typeChartInstance;
+
+    function filterTypeDataByDate(startDate, endDate) {
         var result = {};
 
         for (let type in leaveByTypeData) {
             for (let status in leaveByTypeData[type]) {
-                let filteredEntries = leaveByTypeData[type][status].filter(entry => {
+                let filtered = leaveByTypeData[type][status].filter(entry => {
                     let entryDate = new Date(entry.date);
                     return (!startDate || entryDate >= startDate) &&
                            (!endDate || entryDate <= endDate);
                 });
 
-                let total = filteredEntries.reduce((sum, e) => sum + e.count, 0);
+                let total = filtered.reduce((sum, e) => sum + e.count, 0);
 
                 if (!result[type]) result[type] = {};
                 result[type][status] = total;
@@ -2063,49 +2067,30 @@ document.addEventListener("DOMContentLoaded", function () {
         var labels = Object.keys(filteredData);
 
         var allStatuses = new Set();
-        labels.forEach(function(type) {
-            Object.keys(filteredData[type]).forEach(function(status) {
-                allStatuses.add(status);
-            });
+        labels.forEach(type => {
+            Object.keys(filteredData[type]).forEach(status => allStatuses.add(status));
         });
         allStatuses = Array.from(allStatuses);
 
-        var datasets = allStatuses.map(function(status) {
-            return {
-                label: status,
-                data: labels.map(function(type) {
-                    return filteredData[type][status] || 0;
-                }),
-                backgroundColor: statusColors[status] || "#ccc"
-            };
-        });
+        var datasets = allStatuses.map(status => ({
+            label: status,
+            data: labels.map(type => filteredData[type][status] || 0),
+            backgroundColor: statusColors[status] || "#ccc"
+        }));
 
-        if (chartInstance) {
-            chartInstance.destroy();
-        }
+        if (typeChartInstance) typeChartInstance.destroy();
 
-        chartInstance = new Chart(ctx, {
+        typeChartInstance = new Chart(typeCtx, {
             type: "bar",
-            data: {
-                labels: labels,
-                datasets: datasets
-            },
+            data: { labels, datasets },
             options: {
                 responsive: true,
                 plugins: {
-                    title: {
-                        display: false,
-                        text: "Leave Requests by Leave Type and Approval Status"
-                    },
-                    legend: {
-                        position: "top"
-                    },
+                    legend: { position: "top" },
                     datalabels: {
                         display: true,
                         color: "white",
-                        font: {
-                            weight: "bold"
-                        },
+                        font: { weight: "bold" },
                         formatter: Math.round
                     }
                 },
@@ -2118,52 +2103,23 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    document.getElementById("filterBtn").addEventListener("click", function () {
-        var filtered = filterDataByDate(selectedStartDate, selectedEndDate);
-        loadLeaveByTypeChart(filtered);
-    });
-
-    // Load chart initially with all data
-    loadLeaveByTypeChart(filterDataByDate(null, null));
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+    // === Leave by Department Chart ===
     var leaveByDeptData = JSON.parse('{{ leave_by_department_data | tojson | safe }}');
-    var ctx = document.getElementById("leaveByDepartmentChart").getContext("2d");
-    var chartInstance;
+    var deptCtx = document.getElementById("leaveByDepartmentChart").getContext("2d");
+    var deptChartInstance;
 
-    var selectedStartDate = null;
-    var selectedEndDate = null;
-
-    flatpickr("#dateRangePicker", {
-        mode: "range",
-        dateFormat: "d F Y",
-        onChange: function (selectedDates) {
-            selectedStartDate = selectedDates[0] || null;
-            selectedEndDate = selectedDates[1] || null;
-        }
-    });
-
-    var statusColors = {
-        "Approved": "#002244",
-        "Pending": "#6699CC",
-        "Declined": "#E30022",
-        "Cancelled": "#006699"
-    };
-
-    function filterDataByDate(startDate, endDate) {
+    function filterDeptDataByDate(startDate, endDate) {
         var result = {};
 
         for (let dept in leaveByDeptData) {
             for (let status in leaveByDeptData[dept]) {
-                let filteredEntries = leaveByDeptData[dept][status].filter(entry => {
+                let filtered = leaveByDeptData[dept][status].filter(entry => {
                     let entryDate = new Date(entry.date);
                     return (!startDate || entryDate >= startDate) &&
                            (!endDate || entryDate <= endDate);
                 });
 
-                let total = filteredEntries.reduce((sum, e) => sum + e.count, 0);
+                let total = filtered.reduce((sum, e) => sum + e.count, 0);
 
                 if (!result[dept]) result[dept] = {};
                 result[dept][status] = total;
@@ -2177,48 +2133,30 @@ document.addEventListener("DOMContentLoaded", function () {
         var labels = Object.keys(filteredData);
 
         var allStatuses = new Set();
-        labels.forEach(function(dept) {
-            Object.keys(filteredData[dept]).forEach(function(status) {
-                allStatuses.add(status);
-            });
+        labels.forEach(dept => {
+            Object.keys(filteredData[dept]).forEach(status => allStatuses.add(status));
         });
         allStatuses = Array.from(allStatuses);
 
-        var datasets = allStatuses.map(function(status) {
-            return {
-                label: status,
-                data: labels.map(function(dept) {
-                    return filteredData[dept][status] || 0;
-                }),
-                backgroundColor: statusColors[status] || "#ccc"
-            };
-        });
+        var datasets = allStatuses.map(status => ({
+            label: status,
+            data: labels.map(dept => filteredData[dept][status] || 0),
+            backgroundColor: statusColors[status] || "#ccc"
+        }));
 
-        if (chartInstance) {
-            chartInstance.destroy();
-        }
+        if (deptChartInstance) deptChartInstance.destroy();
 
-        chartInstance = new Chart(ctx, {
+        deptChartInstance = new Chart(deptCtx, {
             type: "bar",
-            data: {
-                labels: labels,
-                datasets: datasets
-            },
+            data: { labels, datasets },
             options: {
                 responsive: true,
                 plugins: {
-                    title: {
-                        display: false
-                    },
-                    legend: {
-                        position: "top"
-                    },
+                    legend: { position: "top" },
                     datalabels: {
                         display: true,
                         color: "white",
-                        font: {
-                            weight: "bold"
-                        },
+                        font: { weight: "bold" },
                         formatter: Math.round
                     }
                 },
@@ -2231,22 +2169,27 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // === Filter Button Listener ===
     document.getElementById("filterBtn").addEventListener("click", function () {
-        var filtered = filterDataByDate(selectedStartDate, selectedEndDate);
-        loadLeaveByDepartmentChart(filtered);
+        var filteredTypeData = filterTypeDataByDate(selectedStartDate, selectedEndDate);
+        loadLeaveByTypeChart(filteredTypeData);
+
+        var filteredDeptData = filterDeptDataByDate(selectedStartDate, selectedEndDate);
+        loadLeaveByDepartmentChart(filteredDeptData);
     });
 
-    // Load full chart initially
-    loadLeaveByDepartmentChart(filterDataByDate(null, null));
+    // === Initial Load ===
+    loadLeaveByTypeChart(filterTypeDataByDate(null, null));
+    loadLeaveByDepartmentChart(filterDeptDataByDate(null, null));
 });
 </script>
-
-
-
-
-
-
 <script>
+
+
+
+
+
+
 $(document).ready(function () {
     if (sessionStorage.getItem('showAdminModal') === 'true') {
         $('#AdminModal').modal('show');
