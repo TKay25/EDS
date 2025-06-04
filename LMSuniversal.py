@@ -4761,17 +4761,17 @@ def generate_leave_by_department_data(df_filtered_for_bar_chart):
 
     result = {}
     for _, row in grouped.iterrows():
-        dept = row['Department']
+        type = row['Department']
         status = row['Approval Status']
         date = row['Leave Start Date'].strftime('%Y-%m-%d')
         count = row['count']
 
-        if dept not in result:
-            result[dept] = {}
-        if status not in result[dept]:
-            result[dept][status] = []
+        if type not in result:
+            result[type] = {}
+        if status not in result[type]:
+            result[type][status] = []
 
-        result[dept][status].append({'date': date, 'count': count})
+        result[type][status].append({'date': date, 'count': count})
 
     return result
 
