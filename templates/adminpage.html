@@ -664,15 +664,15 @@
         .summary-card {
             flex: 1 1 calc(33.33% - 10px);
             background-color: #f0f4f8;
-            padding: 7px;
-            border-radius: 8px;
+            padding: 4px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .summary-card .icon {
-            font-size: 20px;
+            font-size: 15px;
             margin-right: 10px;
         }
 
@@ -923,12 +923,13 @@
                             </div>
 
                         </div>
-
+                        <br>
+                        <input id="dateRangePicker" placeholder="Select Date Range" style="width: 250px; padding: 3px; border-radius: 10px;">
+                        <button id="filterBtn"  class="btn btn-primary" style="width:max-content;">Filter</button>
+                        <br>
                         <div class="dashboard-graphs">
                             <div class="graph-card">
                                 <h6>Leave Requests by Department</h6>
-                                <input id="dateRangePicker" placeholder="Select Date Range" style="width: 250px; padding: 3px; border-radius: 5px;">
-                                <button id="filterBtn" style="padding: 8px 16px; margin-left: 10px;">Filter</button>
                                 <canvas id="leaveByDepartmentChart" width="800" height="400"></canvas>
 
                             </div>
@@ -2018,6 +2019,18 @@ document.addEventListener("DOMContentLoaded", function () {
     var ctx = document.getElementById("leaveByTypeChart").getContext("2d");
     var chartInstance;
 
+    var selectedStartDate = null;
+    var selectedEndDate = null;
+
+    flatpickr("#dateRangePicker", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        onChange: function (selectedDates) {
+            selectedStartDate = selectedDates[0] || null;
+            selectedEndDate = selectedDates[1] || null;
+        }
+    });
+
     var statusColors = {
         "Approved": "#002244",
         "Pending": "#6699CC",
@@ -2025,12 +2038,33 @@ document.addEventListener("DOMContentLoaded", function () {
         "Cancelled": "#006699"
     };
 
-    function loadLeaveByTypeChart() {
-        var labels = Object.keys(leaveByTypeData);
+    function filterDataByDate(startDate, endDate) {
+        var result = {};
+
+        for (let type in leaveByTypeData) {
+            for (let status in leaveByTypeData[type]) {
+                let filteredEntries = leaveByTypeData[type][status].filter(entry => {
+                    let entryDate = new Date(entry.date);
+                    return (!startDate || entryDate >= startDate) &&
+                           (!endDate || entryDate <= endDate);
+                });
+
+                let total = filteredEntries.reduce((sum, e) => sum + e.count, 0);
+
+                if (!result[type]) result[type] = {};
+                result[type][status] = total;
+            }
+        }
+
+        return result;
+    }
+
+    function loadLeaveByTypeChart(filteredData) {
+        var labels = Object.keys(filteredData);
 
         var allStatuses = new Set();
         labels.forEach(function(type) {
-            Object.keys(leaveByTypeData[type]).forEach(function(status) {
+            Object.keys(filteredData[type]).forEach(function(status) {
                 allStatuses.add(status);
             });
         });
@@ -2040,7 +2074,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return {
                 label: status,
                 data: labels.map(function(type) {
-                    return leaveByTypeData[type][status] || 0;
+                    return filteredData[type][status] || 0;
                 }),
                 backgroundColor: statusColors[status] || "#ccc"
             };
@@ -2076,20 +2110,21 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 },
                 scales: {
-                    x: {
-                        stacked: true
-                    },
-                    y: {
-                        stacked: true,
-                        beginAtZero: true
-                    }
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true }
                 }
             },
             plugins: [ChartDataLabels]
         });
     }
 
-    loadLeaveByTypeChart();
+    document.getElementById("filterTypeBtn").addEventListener("click", function () {
+        var filtered = filterDataByDate(selectedStartDate, selectedEndDate);
+        loadLeaveByTypeChart(filtered);
+    });
+
+    // Load chart initially with all data
+    loadLeaveByTypeChart(filterDataByDate(null, null));
 });
 </script>
 <script>
