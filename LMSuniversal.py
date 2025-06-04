@@ -5002,7 +5002,7 @@ def run1(table_name, empid):
 
     df_filtered_for_bar_chart = df_leave_appsmain_analysis[['Department', 'Approval Status', 'Leave Start Date']]
 
-    df_filtered_for_bar_chart_type = df_leave_appsmain_analysis[['Leave Type', 'Approval Status']].copy()
+    df_filtered_for_bar_chart_type = df_leave_appsmain_analysis[['Leave Type', 'Approval Status', 'Leave Start Date']]
 
 
 
