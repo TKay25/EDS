@@ -5869,7 +5869,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         overlap_messages = []
 
                         for row in results:
-                            overlap_messages.append(f"appID: {row[0]}, ID: {row[1]}, Start: {row[2]}, End: {row[3]}")
+                            overlap_messages.append(f"appID: {row[0]}, Starting Date: {row[2].strftime("%d %B %Y")}, Ending Date: {row[3].strftime("%d %B %Y")}")
 
                         # Combine into one single string (newline-separated)
                         overlap_info = "\n".join(overlap_messages)
