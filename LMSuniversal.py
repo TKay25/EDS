@@ -1828,7 +1828,7 @@ def webhook():
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
 
 
-                                                else:
+                                                elif "disapprove" in button_id.lower():
 
                                                     print("disapproved")
 
