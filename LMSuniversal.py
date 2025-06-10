@@ -5977,6 +5977,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                     impact_df["group"] = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1).cumsum()
 
+                    print('RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+                    print(impact_df)
+
                     statements = []
                     for _, group_df in impact_df.groupby("group"):
                         start = group_df["date"].iloc[0].strftime("%d %B %Y")
