@@ -5867,13 +5867,15 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     try:
 
                         overlap_messages = []
-                        date_obj = datetime.strptime(row[2], "%Y-%m-%d")
-                        date_obj2 = datetime.strptime(row[3], "%Y-%m-%d")
-
-                        formatted_date_start = date_obj.strftime("%d %B %Y")
-                        formatted_date_end = date_obj2.strftime("%d %B %Y")
 
                         for row in results:
+
+                            date_obj = datetime.strptime(row[2], "%Y-%m-%d")
+                            date_obj2 = datetime.strptime(row[3], "%Y-%m-%d")
+
+                            formatted_date_start = date_obj.strftime("%d %B %Y")
+                            formatted_date_end = date_obj2.strftime("%d %B %Y")
+
                             overlap_messages.append(f"appID: {row[0]}, Starting Date: {formatted_date_start}, Ending Date: {formatted_date_end}")
 
                         # Combine into one single string (newline-separated)
