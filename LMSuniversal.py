@@ -5910,7 +5910,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     address = userdf.iat[0,6]
                     email = userdf.iat[0,5]
                     fullnamedisp = firstname + ' ' + surname
-                    leaveapprovername = userdf.iat[0,8]
+                    leaveapprovername = userdf.iat[0,9]
                     leaveapproverid = userdf.iat[0,9]
                     leaveapproveremail = userdf.iat[0, 10]
                     leaveapproverwhatsapp = userdf.iat[0,12]
