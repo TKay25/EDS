@@ -5855,7 +5855,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             if len(df_employeesappspendingcheck) == 0:
 
-                query = f"""SELECT appid, id, startdate, enddate FROM {table_name_apps_approved} WHERE id = %s AND startdate <= %s AND enddate >= %s"""
+                query = f"""SELECT appid, id, leavestartdate, leaveenddate FROM {table_name_apps_approved} WHERE id = %s AND leavestartdate <= %s AND leaveenddate >= %s"""
 
                 cursor.execute(query, (employee_number, end_date, start_date))
                 results = cursor.fetchall()
