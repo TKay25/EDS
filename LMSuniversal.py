@@ -5870,11 +5870,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                         for row in results:
 
-                            date_obj = datetime.strptime(row[2], "%Y-%m-%d")
-                            date_obj2 = datetime.strptime(row[3], "%Y-%m-%d")
-
-                            formatted_date_start = date_obj.strftime("%d %B %Y")
-                            formatted_date_end = date_obj2.strftime("%d %B %Y")
+                            formatted_date_start = row[2].strftime("%d %B %Y")
+                            formatted_date_end = row[3].strftime("%d %B %Y")
 
                             overlap_messages.append(f"appID: {row[0]}, Starting Date: {formatted_date_start}, Ending Date: {formatted_date_end}")
 
