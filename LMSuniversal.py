@@ -5971,6 +5971,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                     impact_df["date"] = impact_df["date"].astype(str).str.strip()
                     impact_df["date"] = pd.to_datetime(impact_df["date"], dayfirst=True, errors='coerce')
+                    impact_df = impact_df.dropna(subset=["date"])  # Removes rows where 'date' is NaT
+
                     impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                     impact_df["group"] = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1).cumsum()
