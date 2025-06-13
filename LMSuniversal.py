@@ -3505,9 +3505,15 @@ def webhook():
                                                                 # Combine into one single string (newline-separated)
                                                                 overlap_info = "\n".join(overlap_messages)
 
+                                                                buttons = [
+                                                                    {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
+                                                                    {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                                ]
 
                                                                 send_whatsapp_message(sender_id, f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully!\n\n"
-                                                                    f"One of your previously approved leave applications include days within the period that you are currently applying for leave; {overlap_info}")
+                                                                    f"One of your previously approved leave applications include days within the period that you are currently applying for leave; {overlap_info}.\n\n",
+                                                                    buttons
+                                                                    )
                                                             
                                                             except Exception as e:
 
