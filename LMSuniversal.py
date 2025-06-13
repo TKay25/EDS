@@ -1087,7 +1087,7 @@ def webhook():
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "App Pending My Approval"}
+                                                                {"id": "Pending", "title": "Pending My Approval"}
                                                             ]
                                                         }
                                                     ]
@@ -1296,7 +1296,7 @@ def webhook():
                                                         buttons = [
                                                             {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                             {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                            {"type": "reply", "reply": {"id": "Pending", "title": "App Pending My Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
                                                         ]
                                                         companyxx = company_reg.replace("_"," ").title()
 
@@ -1795,7 +1795,7 @@ def webhook():
 
                                                         buttonsapproval = [
                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Approval"}},
-                                                            {"type": "reply", "reply": {"id": "Pending", "title": "App Pending My Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
                                                         ]
 
                                                         send_whatsapp_message(sender_id, f"✅ Great News {approver_name} from {companyxx}! \n\n You have successfully approved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
@@ -1914,7 +1914,7 @@ def webhook():
 
                                                         buttonsapproval = [
                                                             {"type": "reply", "reply": {"id": "Revokedis", "title": "Revoke Disapproval"}},
-                                                            {"type": "reply", "reply": {"id": "Pending", "title": "App Pending My Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
                                                         ]
 
                                                         send_whatsapp_message(sender_id, f"✅ Hey {approver_name} from {companyxx}! \n\n You have successfully disapproved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
@@ -1964,7 +1964,7 @@ def webhook():
                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                         {"id": "Track", "title": "Track My Application"},
                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                        {"id": "Pending", "title": "App Pending My Approval"}
+                                                        {"id": "Pending", "title": "Pending My Approval"}
                                                     ]
                                                 }
                                             ]
@@ -3280,7 +3280,7 @@ def webhook():
                                                                 "rows": [
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                    {"id": "Pending", "title": "App Pending My Approval"},
+                                                                    {"id": "Pending", "title": "Pending My Approval"},
                                                                     {"id": "Template", "title": "Add Employees"},
                                                                     {"id": "Rolechange", "title": "Change Employee's Role"},
                                                                     {"id": "Book", "title": "Extract Leave Book"}
@@ -3621,7 +3621,7 @@ def webhook():
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "App Pending My Approval"},
+                                                                {"id": "Pending", "title": "Pending My Approval"},
                                                                 {"id": "Template", "title": "Add Employees"},
                                                                 {"id": "Rolechange", "title": "Change Employee's Role"},
                                                                 {"id": "Book", "title": "Extract Leave Book"}
@@ -3800,7 +3800,7 @@ def webhook():
 
                                                         buttonsapproval = [
                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Approval"}},
-                                                            {"type": "reply", "reply": {"id": "Pending", "title": "App Pending My Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
                                                         ]
 
                                                         send_whatsapp_message(sender_id, f"✅ Great News {approver_name} from {companyxx}! \n\n You have successfully approved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
@@ -3916,7 +3916,7 @@ def webhook():
 
                                                         buttonsapproval = [
                                                             {"type": "reply", "reply": {"id": "Revokedis", "title": "Revoke Disapproval"}},
-                                                            {"type": "reply", "reply": {"id": "Pending", "title": "App Pending My Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
                                                         ]
 
                                                         send_whatsapp_message(sender_id, f"✅ Hey {approver_name} from {companyxx}! \n\n You have successfully disapproved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
@@ -4252,7 +4252,7 @@ def webhook():
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "App Pending My Approval"},
+                                                                {"id": "Pending", "title": "Pending My Approval"},
                                                                 {"id": "Template", "title": "Add Employees"},
                                                                 {"id": "Rolechange", "title": "Change Employee's Role"},
                                                                 {"id": "Book", "title": "Extract Leave Book"}
@@ -4462,7 +4462,7 @@ def webhook():
                                                                 "rows": [
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                    {"id": "Pending", "title": "App Pending My Approval"},
+                                                                    {"id": "Pending", "title": "Pending My Approval"},
                                                                     {"id": "Template", "title": "Add Employees"},
                                                                     {"id": "Rolechange", "title": "Change Employee's Role"},
                                                                     {"id": "Book", "title": "Extract Leave Book"}
@@ -4503,7 +4503,7 @@ def webhook():
                                                             {"id": "Apply", "title": "Apply for Leave"},
                                                             {"id": "Track", "title": "Track My Application"},
                                                             {"id": "Checkbal", "title": "Check Days Balance"},
-                                                            {"id": "Pending", "title": "App Pending My Approval"},
+                                                            {"id": "Pending", "title": "Pending My Approval"},
                                                             {"id": "Template", "title": "Add Employees"},
                                                             {"id": "Rolechange", "title": "Change Employee's Role"},
                                                             {"id": "Book", "title": "Extract Leave Book"}
@@ -4559,7 +4559,7 @@ def webhook():
                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                         {"id": "Track", "title": "Track My Application"},
                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                        {"id": "Pending", "title": "App Pending My Approval"},
+                                                        {"id": "Pending", "title": "Pending My Approval"},
                                                         {"id": "Template", "title": "Add Employees"},
                                                         {"id": "Rolechange", "title": "Change Employee's Role"},
                                                         {"id": "Book", "title": "Extract Leave Book"}
@@ -7474,7 +7474,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 buttonsapproval = [
                     {"type": "reply", "reply": {"id": "Revokedis", "title": "Revoke Disapproval"}},
-                    {"type": "reply", "reply": {"id": "Pending", "title": "App Pending My Approval"}},
+                    {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
                 ]
 
                 send_whatsapp_message(f"263{whatsappapprover}", f"✅ Hey {approver_name} from {companyxx}! \n\n You have successfully disapproved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
