@@ -3458,6 +3458,7 @@ def webhook():
 
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                     table_name_apps_approved = f"{company_reg}appsapproved"
+                                                    companyxx = company_reg.replace("_", " ").title()
 
                                                     cursor.execute("""
                                                         SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
