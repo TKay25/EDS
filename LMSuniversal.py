@@ -3507,11 +3507,12 @@ def webhook():
 
                                                                 buttons = [
                                                                     {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
+                                                                    {"type": "reply", "reply": {"id": f"ApplyRevoke", "title": "Revoke Conflicting App"}},
                                                                     {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
                                                                 ]
 
                                                                 send_whatsapp_message(sender_id, f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully!\n\n"
-                                                                    f"One of your previously approved leave applications include days within the period that you are currently applying for leave; {overlap_info}.\n\n",
+                                                                    f"One of your previously approved leave applications include days within the period that you are currently applying for.\n\n Leave App; {overlap_info}.\n\n Either restart your application with different dates from these, or apply that this conflicting approved Leave application be Revoked.",
                                                                     buttons
                                                                     )
                                                             
@@ -4111,6 +4112,32 @@ def webhook():
 
                                                 else:
                                                     pass
+
+                                            elif button_id == "Menu":
+
+                                                companyxx = company_reg.replace("_"," ").title()
+                                                
+                                                sections = [
+                                                    {
+                                                        "title": "Administrator Options",
+                                                        "rows": [
+                                                            {"id": "Apply", "title": "Apply for Leave"},
+                                                            {"id": "Track", "title": "Track My Application"},
+                                                            {"id": "Checkbal", "title": "Check Days Balance"},
+                                                            {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                            {"id": "Template", "title": "Add Employees"},
+                                                            {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                            {"id": "Book", "title": "Extract Leave Book"}
+                                                        ]
+                                                    }
+                                                ]
+                                                
+                                                send_whatsapp_list_message(
+                                                    sender_id,
+                                                    f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
+                                                    "Admin/Approver Options",
+                                                    sections
+                                                )
 
                                             elif button_id == "Cancelapp" :
 
