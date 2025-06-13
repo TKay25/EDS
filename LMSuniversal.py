@@ -3507,7 +3507,7 @@ def webhook():
 
                                                                 buttons = [
                                                                     {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
-                                                                    {"type": "reply", "reply": {"id": f"ApplyRevoke", "title": "Revoke Conflicting App"}},
+                                                                    {"type": "reply", "reply": {"id": f"ApplyRevoke", "title": "Revoke Conflictn App"}},
                                                                     {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
                                                                 ]
 
