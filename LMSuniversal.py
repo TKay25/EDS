@@ -5106,7 +5106,7 @@ def run1(table_name, empid):
     df_leave_appsmain_approved['ACTION'] = df_leave_appsmain_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}" onclick="downloadLeaveApp('{x}')">Download</button></div>''')
     df_leave_appsmain_approvedcomb = df_leave_appsmain_approved[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]]
     approved_requests = len(df_leave_appsmain_approved)
-    
+
     if approved_requests > 0:
 
         total_leave_days = df_leave_appsmain_approved["Leave Days"].sum()
@@ -5119,26 +5119,28 @@ def run1(table_name, empid):
     rows = cursor.fetchall()
     df_leave_appsmain_approved2 = pd.DataFrame(rows, columns=["Date Applied", "Status Date"])
 
-    df_leave_appsmain_approved2["Date Applied"] = pd.to_datetime(df_leave_appsmain_approved2["Date Applied"])
-    df_leave_appsmain_approved2["Status Date"] = pd.to_datetime(df_leave_appsmain_approved2["Status Date"])
+    if len(df_leave_appsmain_approved2) > 0:
 
-    # Function to count days excluding Sundays
-    def count_days_excluding_sundays(start, end):
-        return sum((start + pd.to_timedelta(i, unit='D')).weekday() != 6  # 6 = Sunday
-                for i in range((end - start).days))
+        df_leave_appsmain_approved2["Date Applied"] = pd.to_datetime(df_leave_appsmain_approved2["Date Applied"])
+        df_leave_appsmain_approved2["Status Date"] = pd.to_datetime(df_leave_appsmain_approved2["Status Date"])
 
-    df_leave_appsmain_approved2["Days (No Sundays)"] = df_leave_appsmain_approved2.apply(
-        lambda row: count_days_excluding_sundays(row["Date Applied"], row["Status Date"]),
-        axis=1
-    )
+        # Function to count days excluding Sundays
+        def count_days_excluding_sundays(start, end):
+            return sum((start + pd.to_timedelta(i, unit='D')).weekday() != 6  # 6 = Sunday
+                    for i in range((end - start).days))
 
-    avg_approval_time = round(df_leave_appsmain_approved2["Days (No Sundays)"].mean(),0)
-    df_leave_appsmain_approved2['Date Applied'] = pd.to_datetime(df_leave_appsmain_approved2['Date Applied'])
+        df_leave_appsmain_approved2["Days (No Sundays)"] = df_leave_appsmain_approved2.apply(
+            lambda row: count_days_excluding_sundays(row["Date Applied"], row["Status Date"]),
+            axis=1
+        )
 
-    df_leave_appsmain_approved2['Month-Year'] = df_leave_appsmain_approved2['Date Applied'].dt.to_period('M')
+        avg_approval_time = round(df_leave_appsmain_approved2["Days (No Sundays)"].mean(),0)
+        df_leave_appsmain_approved2['Date Applied'] = pd.to_datetime(df_leave_appsmain_approved2['Date Applied'])
 
-    peak_leave_monthpp = df_leave_appsmain_approved2['Month-Year'].mode()[0]
-    peak_leave_month = peak_leave_monthpp.to_timestamp().strftime('%B %Y')
+        df_leave_appsmain_approved2['Month-Year'] = df_leave_appsmain_approved2['Date Applied'].dt.to_period('M')
+
+        peak_leave_monthpp = df_leave_appsmain_approved2['Month-Year'].mode()[0]
+        peak_leave_month = peak_leave_monthpp.to_timestamp().strftime('%B %Y')
 
     query = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_declined};"""
     cursor.execute(query)
