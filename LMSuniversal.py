@@ -5121,6 +5121,7 @@ def run1(table_name, empid):
         avg_leave_days = 0
         avg_approval_time = ""
         top_leave_type = ""
+        approval_rate = ""
 
 
     query = f"""SELECT dateapplied, statusdate FROM {table_name_apps_approved};"""
