@@ -5106,9 +5106,12 @@ def run1(table_name, empid):
     df_leave_appsmain_approved['ACTION'] = df_leave_appsmain_approved['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 download-app-btn" data-ID="{x}" onclick="downloadLeaveApp('{x}')">Download</button></div>''')
     df_leave_appsmain_approvedcomb = df_leave_appsmain_approved[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]]
     approved_requests = len(df_leave_appsmain_approved)
-    total_leave_days = df_leave_appsmain_approved["Leave Days"].sum()
-    top_leave_type = df_leave_appsmain_approved['Leave Type'].value_counts().idxmax()
-    longest_leave_days = df_leave_appsmain_approved['Leave Days'].max()
+    
+    if approved_requests > 0:
+
+        total_leave_days = df_leave_appsmain_approved["Leave Days"].sum()
+        top_leave_type = df_leave_appsmain_approved['Leave Type'].value_counts().idxmax()
+        longest_leave_days = df_leave_appsmain_approved['Leave Days'].max()
 
 
     query = f"""SELECT dateapplied, statusdate FROM {table_name_apps_approved};"""
