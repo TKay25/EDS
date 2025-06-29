@@ -5539,169 +5539,181 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             else:
 
-                create_table_query = f"""
-                CREATE TABLE {table_name} (
-                    id SERIAL PRIMARY KEY,
-                    firstname VARCHAR(100),
-                    surname VARCHAR(100),
-                    whatsapp INT,
-                    address VARCHAR(100),
-                    email VARCHAR(255),
-                    password VARCHAR(255),
-                    department VARCHAR(255),
-                    role VARCHAR(255),
-                    leaveapprovername VARCHAR(255),
-                    leaveapproverid INT,
-                    leaveapproveremail VARCHAR(255),
-                    leaveapproverwhatsapp INT,
-                    currentleavedaysbalance INT,
-                    monthlyaccumulation INT
-                );
-                """
-                cursor.execute(create_table_query)
-                connection.commit()
-                print(f"Table `{table_name}` created successfully!")
+                try:
+
+                    create_table_query = f"""
+                    CREATE TABLE {table_name} (
+                        id SERIAL PRIMARY KEY,
+                        firstname VARCHAR(100),
+                        surname VARCHAR(100),
+                        whatsapp INT,
+                        address VARCHAR(100),
+                        email VARCHAR(255),
+                        password VARCHAR(255),
+                        department VARCHAR(255),
+                        role VARCHAR(255),
+                        leaveapprovername VARCHAR(255),
+                        leaveapproverid INT,
+                        leaveapproveremail VARCHAR(255),
+                        leaveapproverwhatsapp INT,
+                        currentleavedaysbalance INT,
+                        monthlyaccumulation INT
+                    );
+                    """
+                    cursor.execute(create_table_query)
+                    connection.commit()
+                    print(f"Table `{table_name}` created successfully!")
 
 
-                create_table_query = f"""
-                CREATE TABLE {table_name_apps_pending_approval} (
-                    appid SERIAL PRIMARY KEY,
-                    id INT,
-                    firstname VARCHAR(100),
-                    surname VARCHAR(100),
-                    department VARCHAR(255),
-                    leavetype VARCHAR(255),
-                    reasonifother VARCHAR(300),
-                    leaveapprovername VARCHAR(255),
-                    leaveapproverid INT,
-                    leaveapproveremail VARCHAR(255),
-                    leaveapproverwhatsapp INT,
-                    currentleavedaysbalance INT,
-                    dateapplied date,
-                    leavestartdate date,
-                    leaveenddate date,
-                    leavedaysappliedfor INT,
-                    leavedaysbalancebf INT,
-                    approvalstatus VARCHAR(255)
-                );
-                """
-                cursor.execute(create_table_query)
-                connection.commit()
-                print(f"Table `{table_name_apps_pending_approval}` created successfully!")
+                    create_table_query = f"""
+                    CREATE TABLE {table_name_apps_pending_approval} (
+                        appid SERIAL PRIMARY KEY,
+                        id INT,
+                        firstname VARCHAR(100),
+                        surname VARCHAR(100),
+                        department VARCHAR(255),
+                        leavetype VARCHAR(255),
+                        reasonifother VARCHAR(300),
+                        leaveapprovername VARCHAR(255),
+                        leaveapproverid INT,
+                        leaveapproveremail VARCHAR(255),
+                        leaveapproverwhatsapp INT,
+                        currentleavedaysbalance INT,
+                        dateapplied date,
+                        leavestartdate date,
+                        leaveenddate date,
+                        leavedaysappliedfor INT,
+                        leavedaysbalancebf INT,
+                        approvalstatus VARCHAR(255)
+                    );
+                    """
+                    cursor.execute(create_table_query)
+                    connection.commit()
+                    print(f"Table `{table_name_apps_pending_approval}` created successfully!")
 
 
-                create_table_query = f"""
-                CREATE TABLE {table_name_apps_cancelled} (
-                    appid INT,
-                    id INT,
-                    firstname VARCHAR(100),
-                    surname VARCHAR(100),
-                    department VARCHAR(255),
-                    leavetype VARCHAR(255),
-                    reasonifother VARCHAR(300),
-                    leaveapprovername VARCHAR(255),
-                    leaveapproverid INT,
-                    leaveapproveremail VARCHAR(255),
-                    leaveapproverwhatsapp INT,
-                    currentleavedaysbalance INT,
-                    dateapplied date,
-                    leavestartdate date,
-                    leaveenddate date,
-                    leavedaysappliedfor INT,
-                    leavedaysbalancebf INT,
-                    approvalstatus VARCHAR(255),
-                    statusdate date
-                );
-                """
-                cursor.execute(create_table_query)
-                connection.commit()
-                print(f"Table `{table_name_apps_cancelled}` created successfully!")
+                    create_table_query = f"""
+                    CREATE TABLE {table_name_apps_cancelled} (
+                        appid INT,
+                        id INT,
+                        firstname VARCHAR(100),
+                        surname VARCHAR(100),
+                        department VARCHAR(255),
+                        leavetype VARCHAR(255),
+                        reasonifother VARCHAR(300),
+                        leaveapprovername VARCHAR(255),
+                        leaveapproverid INT,
+                        leaveapproveremail VARCHAR(255),
+                        leaveapproverwhatsapp INT,
+                        currentleavedaysbalance INT,
+                        dateapplied date,
+                        leavestartdate date,
+                        leaveenddate date,
+                        leavedaysappliedfor INT,
+                        leavedaysbalancebf INT,
+                        approvalstatus VARCHAR(255),
+                        statusdate date
+                    );
+                    """
+                    cursor.execute(create_table_query)
+                    connection.commit()
+                    print(f"Table `{table_name_apps_cancelled}` created successfully!")
 
 
 
 
-                create_table_query = f"""
-                CREATE TABLE {table_name_apps_approved} (
-                    appid INT,
-                    id INT,
-                    firstname VARCHAR(100),
-                    surname VARCHAR(100),
-                    department VARCHAR(255),
-                    leavetype VARCHAR(255),
-                    reasonifother VARCHAR(300),
-                    leaveapprovername VARCHAR(255),
-                    leaveapproverid INT,
-                    leaveapproveremail VARCHAR(255),
-                    leaveapproverwhatsapp INT,
-                    currentleavedaysbalance INT,
-                    dateapplied date,
-                    leavestartdate date,
-                    leaveenddate date,
-                    leavedaysappliedfor INT,
-                    leavedaysbalancebf INT,
-                    approvalstatus VARCHAR(255),
-                    statusdate date         
-                );
-                """
-                cursor.execute(create_table_query)
-                connection.commit()
-                print(f"Table `{table_name_apps_approved}` created successfully!")
+                    create_table_query = f"""
+                    CREATE TABLE {table_name_apps_approved} (
+                        appid INT,
+                        id INT,
+                        firstname VARCHAR(100),
+                        surname VARCHAR(100),
+                        department VARCHAR(255),
+                        leavetype VARCHAR(255),
+                        reasonifother VARCHAR(300),
+                        leaveapprovername VARCHAR(255),
+                        leaveapproverid INT,
+                        leaveapproveremail VARCHAR(255),
+                        leaveapproverwhatsapp INT,
+                        currentleavedaysbalance INT,
+                        dateapplied date,
+                        leavestartdate date,
+                        leaveenddate date,
+                        leavedaysappliedfor INT,
+                        leavedaysbalancebf INT,
+                        approvalstatus VARCHAR(255),
+                        statusdate date         
+                    );
+                    """
+                    cursor.execute(create_table_query)
+                    connection.commit()
+                    print(f"Table `{table_name_apps_approved}` created successfully!")
 
 
-                create_table_query = f"""
-                CREATE TABLE {table_name_apps_declined} (
-                    appid INT,
-                    id INT,
-                    firstname VARCHAR(100),
-                    surname VARCHAR(100),
-                    department VARCHAR(255),
-                    leavetype VARCHAR(255),
-                    reasonifother VARCHAR(300),
-                    leaveapprovername VARCHAR(255),
-                    leaveapproverid INT,
-                    leaveapproveremail VARCHAR(255),
-                    leaveapproverwhatsapp INT,
-                    currentleavedaysbalance INT,
-                    dateapplied date,
-                    leavestartdate date,
-                    leaveenddate date,
-                    leavedaysappliedfor INT,
-                    leavedaysbalancebf INT,
-                    approvalstatus VARCHAR(255),
-                    statusdate date         
-                );
-                """
-                cursor.execute(create_table_query)
-                connection.commit()
-                print(f"Table `{table_name_apps_declined}` created successfully!")
+                    create_table_query = f"""
+                    CREATE TABLE {table_name_apps_declined} (
+                        appid INT,
+                        id INT,
+                        firstname VARCHAR(100),
+                        surname VARCHAR(100),
+                        department VARCHAR(255),
+                        leavetype VARCHAR(255),
+                        reasonifother VARCHAR(300),
+                        leaveapprovername VARCHAR(255),
+                        leaveapproverid INT,
+                        leaveapproveremail VARCHAR(255),
+                        leaveapproverwhatsapp INT,
+                        currentleavedaysbalance INT,
+                        dateapplied date,
+                        leavestartdate date,
+                        leaveenddate date,
+                        leavedaysappliedfor INT,
+                        leavedaysbalancebf INT,
+                        approvalstatus VARCHAR(255),
+                        statusdate date         
+                    );
+                    """
+                    cursor.execute(create_table_query)
+                    connection.commit()
+                    print(f"Table `{table_name_apps_declined}` created successfully!")
 
 
-                create_table_query = f"""
-                CREATE TABLE {table_name_apps_revoked} (
-                    appid INT,
-                    id INT,
-                    firstname VARCHAR(100),
-                    surname VARCHAR(100),
-                    department VARCHAR(255),
-                    leavetype VARCHAR(255),
-                    reasonifother VARCHAR(300),
-                    leaveapprovername VARCHAR(255),
-                    leaveapproverid INT,
-                    leaveapproveremail VARCHAR(255),
-                    leaveapproverwhatsapp INT,
-                    currentleavedaysbalance INT,
-                    dateapplied date,
-                    leavestartdate date,
-                    leaveenddate date,
-                    leavedaysappliedfor INT,
-                    leavedaysbalancebf INT,
-                    approvalstatus VARCHAR(255),
-                    statusdate date         
-                );
-                """
-                cursor.execute(create_table_query)
-                connection.commit()
-                print(f"Table `{table_name_apps_revoked}` created successfully!")
+                    create_table_query = f"""
+                    CREATE TABLE {table_name_apps_revoked} (
+                        appid INT,
+                        id INT,
+                        firstname VARCHAR(100),
+                        surname VARCHAR(100),
+                        department VARCHAR(255),
+                        leavetype VARCHAR(255),
+                        reasonifother VARCHAR(300),
+                        leaveapprovername VARCHAR(255),
+                        leaveapproverid INT,
+                        leaveapproveremail VARCHAR(255),
+                        leaveapproverwhatsapp INT,
+                        currentleavedaysbalance INT,
+                        dateapplied date,
+                        leavestartdate date,
+                        leaveenddate date,
+                        leavedaysappliedfor INT,
+                        leavedaysbalancebf INT,
+                        approvalstatus VARCHAR(255),
+                        statusdate date         
+                    );
+                    """
+                    cursor.execute(create_table_query)
+                    connection.commit()
+                    print(f"Table `{table_name_apps_revoked}` created successfully!")
+
+
+                except psycopg2.errors.DuplicateTable:
+                    connection.rollback()  # Roll back the failed CREATE
+                    print("Table already exists, redirecting...")
+                    return render_template('index.html')  
+                    # Call your other function here
+
+
+
                 admin = "Administrator"
 
                 
