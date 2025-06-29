@@ -5155,7 +5155,7 @@ def run1(table_name, empid):
     df_leave_appsmain_declinedcomb = df_leave_appsmain_declined[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
     disapproved_requests = len(df_leave_appsmain_declined)
 
-    if len(approved_requests)>0 and len(disapproved_requests)>0:
+    if approved_requests>0 and disapproved_requests>0:
 
         approval_rate = round((approved_requests/(approved_requests + disapproved_requests)) * 100,0)
 
