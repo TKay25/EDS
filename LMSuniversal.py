@@ -5123,6 +5123,7 @@ def run1(table_name, empid):
         top_leave_type = ""
         approval_rate = ""
         longest_leave_days = 0
+        peak_leave_month = ""
 
 
     query = f"""SELECT dateapplied, statusdate FROM {table_name_apps_approved};"""
