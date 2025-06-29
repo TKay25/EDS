@@ -5116,6 +5116,10 @@ def run1(table_name, empid):
         leave_utilization_rate = round((total_leave_days/ total_days_available) * 100,0)
         avg_leave_days = round(total_leave_days/total_employees,0)
 
+    elif approved_requests == 0:
+        leave_utilization_rate = 0
+        avg_leave_days = 0
+
 
     query = f"""SELECT dateapplied, statusdate FROM {table_name_apps_approved};"""
     cursor.execute(query)
