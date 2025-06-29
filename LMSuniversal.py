@@ -577,7 +577,7 @@ def webhook():
 
                                                         query = f"""SELECT appid, id, leavestartdate, leaveenddate FROM {table_name_apps_approved} WHERE id = %s AND leavestartdate <= %s AND leaveenddate >= %s"""
 
-                                                        cursor.execute(query, (employee_number, end_date, start_date))
+                                                        cursor.execute(query, (id_user, end_date, start_date))
                                                         results = cursor.fetchall()
 
                                                         # Process results
