@@ -50,7 +50,7 @@ VERIFY_TOKEN = "521035180620700"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
 create_table_query = f"""
-CREATE TABLE whatsapptempapplication (
+CREATE TABLE IF NOT EXISTS whatsapptempapplication (
     id SERIAL PRIMARY KEY,
     empidwa INT,
     leavetypewa VARCHAR (100),
@@ -58,16 +58,14 @@ CREATE TABLE whatsapptempapplication (
     enddate date
 );
 """
-#cursor.execute(create_table_query)
-#connection.commit()
+cursor.execute(create_table_query)
+connection.commit()
 
 cursor.execute("""
     ALTER TABLE whatsapptempapplication
     ADD COLUMN IF NOT EXISTS companynamewa VARCHAR(255);
 """)
 
-
-#cursor.execute(create_table_query)
 connection.commit()
 print(f"column added to Table whatsapptempapplication successfully!")
 
