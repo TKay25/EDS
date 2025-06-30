@@ -549,7 +549,7 @@ def webhook():
                                             elif button_id == "Submitapp":
                                     
                                                 try:
-                                                    
+
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                     table_name_apps_approved = f"{company_reg}appsapproved"
                                                     companyxx = company_reg.replace("_", " ").title()
@@ -1388,9 +1388,10 @@ def webhook():
                                             elif button_id == "Submitapp":
                                     
                                                 try:
-
+                                                    
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                     table_name_apps_approved = f"{company_reg}appsapproved"
+                                                    companyxx = company_reg.replace("_", " ").title()
 
                                                     cursor.execute("""
                                                         SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
@@ -1437,181 +1438,197 @@ def webhook():
                                                                 # Combine into one single string (newline-separated)
                                                                 overlap_info = "\n".join(overlap_messages)
 
+                                                                buttons = [
+                                                                    {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
+                                                                    {"type": "reply", "reply": {"id": f"ApplyRevoke", "title": "Revoke Conflictn App"}},
+                                                                    {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                                ]
 
                                                                 send_whatsapp_message(sender_id, f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully!\n\n"
-                                                                    f"One of your previously approved leave applications include days within the period that you are currently applying for leave; {overlap_info}")
+                                                                    f"One of your previously approved leave applications include days within the period that you are currently applying for.\n\n Leave App; {overlap_info}.\n\n Either restart your application with different dates from these, or apply that this conflicting approved Leave application be Revoked.",
+                                                                    buttons
+                                                                    )
                                                             
                                                             except Exception as e:
 
-                                                                send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully !\n\n Error; {e}")
+                                                                send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
+                                                        
                                                         else:
-                                                            print("No overlapping records found.")
 
+                                                            print("No Overlapping records found:")
 
-                                                            cursor.execute("""
-                                                                SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                WHERE empidwa = %s
-                                                            """, (str(id_user)))
-                                                    
-                                                            result = cursor.fetchone()
+                                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                            table_name_apps_approved = f"{company_reg}appsapproved"
 
-                                                            appid = result[0]
-                                                            id_user = result[1]
-                                                            leavetype = result[2]
-                                                            startdate = result[3]
-                                                            enddate = result[4]
-                                                            table_name = f"{company_reg}main"
-
-                                                            if isinstance(startdate, str):
-                                                                startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                            if isinstance(enddate, str):
-                                                                enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                            business_days = 0
-                                                            current_date = startdate
-
-                                                            while current_date <= enddate:
-                                                                if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                    business_days += 1
-                                                                current_date += timedelta(days=1)  # Use timedelta directly
-
-                                                            query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
+                                                            query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
 
-                                                            df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month", "Department"])
-                                                            print(df_employees)
-                                                            userdf = df_employees[df_employees['id'] == int(np.int64(id_user))].reset_index()
-                                                            print("yeaarrrrr")
-                                                            print(userdf)
-                                                            firstname = userdf.iat[0,2]
-                                                            surname = userdf.iat[0,3]
-                                                            whatsapp = userdf.iat[0,4]
-                                                            address = userdf.iat[0,6]
-                                                            email = userdf.iat[0,5]
-                                                            fullnamedisp = firstname + ' ' + surname
-                                                            leaveapprovername = userdf.iat[0,8]
-                                                            leaveapproverid = userdf.iat[0,9]
-                                                            leaveapproveremail = userdf.iat[0, 10]
-                                                            leaveapproverwhatsapp = userdf.iat[0,11]
-                                                            role = userdf.iat[0,7]
-                                                            leavedaysbalance = userdf.iat[0,12]
-                                                            department = userdf.iat[0,14]
-                                                            print('check')
+                                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])    
 
-                                                            departmentdf = df_employees[df_employees['Department'] == department].reset_index()
-                                                            numberindepartment = len(departmentdf)
+                                                            if len(df_employeesappspendingcheck) == 0:
 
-                                                            startdatex = pd.Timestamp(startdate)
-                                                            enddatex = pd.Timestamp(enddate)
+                                                                cursor.execute("""
+                                                                    SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                                    WHERE empidwa = %s
+                                                                """, (str(id_user)))
+                                                        
+                                                                result = cursor.fetchone()
 
-                                                            leave_dates = pd.date_range(startdatex, enddatex)
+                                                                appid = result[0]
+                                                                leavetype = result[2]
+                                                                startdate = result[3]
+                                                                enddate = result[4]
+                                                                table_name = f"{company_reg}main"
 
-                                                            query = f"""
-                                                                SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
-                                                                    leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
-                                                                    leavedaysbalancebf, department
-                                                                FROM {table_name_apps_approved}
-                                                                WHERE department = %s;
-                                                            """
-                                                            cursor.execute(query, (department,))
-                                                            rows = cursor.fetchall()
+                                                                if isinstance(startdate, str):
+                                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                                if isinstance(enddate, str):
+                                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
 
-                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+                                                                business_days = 0
+                                                                current_date = startdate
 
-                                                            df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
-                                                            df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
-            
-                                                            df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
+                                                                while current_date <= enddate:
+                                                                    if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                                        business_days += 1
+                                                                    current_date += timedelta(days=1)  # Use timedelta directly
 
-                                                            # Create daily impact report
-                                                            impact_report = []
+                                                                query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
+                                                                cursor.execute(query)
+                                                                rows = cursor.fetchall()
 
-                                                            for date in leave_dates:
+                                                                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month", "Department"])
+                                                                print(df_employees)
+                                                                userdf = df_employees[df_employees['id'] == int(np.int64(id_user))].reset_index()
+                                                                print("yeaarrrrr")
+                                                                print(userdf)
+                                                                firstname = userdf.iat[0,2]
+                                                                surname = userdf.iat[0,3]
+                                                                whatsapp = userdf.iat[0,4]
+                                                                address = userdf.iat[0,6]
+                                                                email = userdf.iat[0,5]
+                                                                fullnamedisp = firstname + ' ' + surname
+                                                                leaveapprovername = userdf.iat[0,8]
+                                                                leaveapproverid = userdf.iat[0,9]
+                                                                leaveapproveremail = userdf.iat[0, 10]
+                                                                leaveapproverwhatsapp = userdf.iat[0,11]
+                                                                role = userdf.iat[0,7]
+                                                                leavedaysbalance = userdf.iat[0,12]
+                                                                department = userdf.iat[0,14] 
+                                                                print('check')
 
-                                                                date = pd.Timestamp(date)
-
-                                                                print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
-                                                                print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
-
-                                                                on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
-                                                                remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
-                                                                impact_report.append({
-                                                                    "date": date.strftime("%Y-%m-%d"),
-                                                                    "on leave": on_leave + 1,
-                                                                    "employees remaining": remaining
-                                                                })
-
-                                                            # Convert to DataFrame for display
-                                                            impact_df = pd.DataFrame(impact_report)
-                                                            print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
-                                                            print(impact_df)
-                                                            print(numberindepartment)
-
-                                                            impact_df["date"] = pd.to_datetime(impact_df["date"], dayfirst=True)
-                                                            impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
-
-                                                            impact_df["group"] = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1).cumsum()
-
-                                                            statements = []
-                                                            for _, group_df in impact_df.groupby("group"):
-                                                                start = group_df["date"].iloc[0].strftime("%d %B %Y")
-                                                                end = group_df["date"].iloc[-1].strftime("%d %B %Y")
-                                                                on_leave = group_df["on leave"].iloc[0]
-                                                                remaining = group_df["employees remaining"].iloc[0]
+                                                                departmentdf = df_employees[df_employees['Department'] == department].reset_index()
+                                                                numberindepartment = len(departmentdf)
                                                                 
-                                                                if start == end:
-                                                                    statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
-                                                                else:
-                                                                    statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                startdatex = pd.Timestamp(startdate)
+                                                                enddatex = pd.Timestamp(enddate)
 
-                                                            # Combine all statements into a single variable
-                                                            final_summary = "\n".join(statements)
-                                                            # Print output
-                                                            for s in statements:
-                                                                print(s)
+                                                                leave_dates = pd.date_range(startdatex, enddatex)
 
-                                                            leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+                                                                query = f"""
+                                                                    SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                                                        leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                                                        leavedaysbalancebf, department
+                                                                    FROM {table_name_apps_approved}
+                                                                    WHERE department = %s;
+                                                                """
+                                                                cursor.execute(query, (department,))
+                                                                rows = cursor.fetchall()
 
-                                                            status = "Pending"
-
-                                                            insert_query = f"""
-                                                            INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                            """
-                                                            cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), int(np.int64(leavedaysbalance)), today_date, startdate, enddate, int(np.int64(business_days)), int(np.int64(leavedaysbalancebf)), status))
-                                                            connection.commit()
-
-                                                            query = f"SELECT appid, id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)} ;"
-                                                            cursor.execute(query, )
-                                                            rows = cursor.fetchall()
-
-                                                            df_employees = pd.DataFrame(rows, columns=["appid","id"])
-                                                            leaveappid = df_employees.iat[0,0]
-                                                            companyxx = company_reg.replace("_"," ").title()
-                                                            approovvver = leaveapprovername.title()
-
-                                                            send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                                                f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
-                                                                "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
-                                                            
-                                                            if leaveapproverwhatsapp:
+                                                                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+                                                                df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                                                df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
                 
-                                                                buttons = [
-                                                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
-                                                                ]
-                                                                
-                                                                send_whatsapp_message(
-                                                                    f"263{leaveapproverwhatsapp}", 
-                                                                    f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                    f"If you approve this leave application, {final_summary}\n\n"  
-                                                                    f"Select an option below to either approve or disapprove the application."         
-                                                                    , 
-                                                                    buttons
-                                                                )
+                                                                df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
+                                                                # Create daily impact report
+                                                                impact_report = []
 
+                                                                for date in leave_dates:
+
+                                                                    date = pd.Timestamp(date)
+
+                                                                    print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                                                    print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
+
+                                                                    on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
+                                                                    remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
+                                                                    impact_report.append({
+                                                                        "date": date.strftime("%Y-%m-%d"),
+                                                                        "on leave": on_leave + 1,
+                                                                        "employees remaining": remaining
+                                                                    })
+
+                                                                # Convert to DataFrame for display
+                                                                impact_df = pd.DataFrame(impact_report)
+                                                                print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
+                                                                print(impact_df)
+                                                                print(numberindepartment)
+
+                                                                impact_df["date"] = pd.to_datetime(impact_df["date"], dayfirst=True)
+                                                                impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+
+                                                                impact_df["group"] = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1).cumsum()
+
+                                                                statements = []
+                                                                for _, group_df in impact_df.groupby("group"):
+                                                                    start = group_df["date"].iloc[0].strftime("%d %B %Y")
+                                                                    end = group_df["date"].iloc[-1].strftime("%d %B %Y")
+                                                                    on_leave = group_df["on leave"].iloc[0]
+                                                                    remaining = group_df["employees remaining"].iloc[0]
+                                                                    
+                                                                    if start == end:
+                                                                        statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                    else:
+                                                                        statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                        # Combine all statements into a single variable
+                                                                final_summary = "\n".join(statements)
+                                                                # Print output
+                                                                for s in statements:
+                                                                    print(s)
+
+                                                                leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+
+                                                                status = "Pending"
+
+                                                                insert_query = f"""
+                                                                INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                                """
+                                                                cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), int(np.int64(leavedaysbalance)), today_date, startdate, enddate, int(np.int64(business_days)), int(np.int64(leavedaysbalancebf)), status))
+                                                                connection.commit()
+
+                                                                query = f"SELECT appid FROM {table_name_apps_pending_approval};"
+                                                                cursor.execute(query)
+                                                                rows = cursor.fetchall()
+
+                                                                df_employees = pd.DataFrame(rows, columns=["id"])
+                                                                leaveappid = df_employees.iat[0,0]
+                                                                companyxx = company_reg.replace("_"," ").title()
+                                                                approovvver = leaveapprovername.title()
+
+                                                                send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                                                    f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                                                    f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
+                                                                    "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+                                                                
+                                                                if leaveapproverwhatsapp:
+                    
+                                                                    buttons = [
+                                                                        {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                        {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                    ]
+                                                                    send_whatsapp_message(
+                                                                        f"263{leaveapproverwhatsapp}", 
+                                                                        f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                        f"If you approve this leave application, {final_summary}\n\n"  
+                                                                        f"Select an option below to either approve or disapprove the application."         
+                                                                        , 
+                                                                        buttons
+                                                                    )
+
+                                                            else:
+                                                                print("leave app submission failed")
 
                                                 except ValueError as e:
                                                     send_whatsapp_message(
