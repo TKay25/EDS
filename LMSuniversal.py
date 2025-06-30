@@ -3656,7 +3656,7 @@ def webhook():
                                                                     on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
                                                                     remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
                                                                     impact_report.append({
-                                                                        "date": date.strftime("%Y-%m-%d"),
+                                                                        "date": date,  # <=== Keep as datetime, don't convert to string
                                                                         "on leave": on_leave + 1,
                                                                         "employees remaining": remaining
                                                                     })
@@ -3667,13 +3667,13 @@ def webhook():
                                                                 print(impact_df)
                                                                 print(numberindepartment)
 
-                                                                impact_df["date"] = pd.to_datetime(impact_df["date"], dayfirst=True)
+                                                                impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
                                                                 impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                                 change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                                 change.iloc[0] = True  # ensure the first row starts a group
                                                                 impact_df["group"] = change.cumsum()
-                                                                
+
                                                                 statements = []
                                                                 for _, group_df in impact_df.groupby("group"):
                                                                     start = group_df["date"].iloc[0].strftime("%d %B %Y")
