@@ -1935,7 +1935,7 @@ def webhook():
                                                         send_whatsapp_pdf_by_media_id(sender_id, media_id)
                                                         send_whatsapp_message(
                                                             sender_id,
-                                                            "Select an option below to continue 👇y, or Type `Hello` to view all Approver options",
+                                                            "Select an option below to continue 👇, or Type `Hello` to view all Approver Options",
                                                             buttonsapproval
                                                         )
 
@@ -1951,10 +1951,9 @@ def webhook():
                                                             send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
                                                             send_whatsapp_message(
                                                                 f"263{whatsappemp}",
-                                                                "Select an option below to continue 👇",
+                                                                "Select an option below to continue 👇, or Type `Hello` to view all Approver Options",
                                                                 buttons
                                                             )
-
 
                                                     except Exception as e:
                                                         print(e)
