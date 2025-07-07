@@ -213,7 +213,7 @@ def webhooktt():
                             "text": {"body": text}
                         }
 
-                    response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
+                    response = requests.post(f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_IDcc}/messages", headers=headers, json=data)
                     
                     # Debugging logs
                     print("✅ Sending message to:", to)
@@ -346,6 +346,7 @@ def webhooktt():
                                             print(f"📨 Message from {sender_id}: {text}")
                                             
                                             print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+                                            print("hereherehere")
 
 
                                             if "hello" in text.lower():
