@@ -373,124 +373,124 @@ def webhook():
                                                         "Leave Type Options",
                                                         sections)         
 
+                                        else:
+
+                                            text = message.get("text", {}).get("body", "").lower()
+                                            print(f"📨 Message from {sender_id}: {text}")
+                                            
+                                            print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+
+
+                                            if "hello" in text.lower():
+
+
+                                                sections = [
+                                                    {
+                                                        "title": "Leave Type Options",
+                                                        "rows": [
+                                                            {"id": "Book", "title": "Book A Bus Ticket"},
+                                                            {"id": "View", "title": "Sick Leave"},
+                                                            {"id": "Contact", "title": "Study Leave"},
+                                                            {"id": "FAQs", "title": "FAQs"},
+                                                        ]
+                                                    }
+                                                ]
+
+                                                send_whatsapp_list_messagecc(
+                                                    sender_id, 
+                                                    f"Kindly select an option for enquiry.", 
+                                                    "Options",
+                                                    sections) 
+                                            
+
+
+                                            elif "start" in text.lower():
+
+                                                date_part = text.split("start", 1)[1].strip()
+
+
+
+                                                #cursor.execute("""
+                                                #    SELECT empidwa, leavetypewa FROM whatsapptempapplication
+                                                #    WHERE empidwa = %s
+                                                #""", (str(id_user)))
+                                        
+                                                result = cursor.fetchone()
+
+                                                if result:
+                                                    leavetypewa = result[1] 
+
+                                                cursor.execute("SELECT * FROM whatsapptempapplication")
+                                                columns = [desc[0] for desc in cursor.description]
+                                                records = cursor.fetchall()
+                                                
+                                                df = pd.DataFrame(records, columns=columns)
+                                                
+                                                print("\n📊 whatsapptempapplication Table:")
+                                                print(df)
+                                                
+                                                try:
+                                                    parsed_date = datetime.strptime(date_part, "%d %B %Y")
+                                                    send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
+                                                        f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
+                                                        "`end 24 january 2025`"                      
+                                                                        )
+                                                    
+                                                except ValueError:
+                                                    send_whatsapp_message(
+                                                        sender_id,
+                                                        f"❌ No, incorrect message format. Please use:\n"
+                                                        "`start 24 january 2025`\n"
+                                                        "Example: `start 15 march 2024`"
+                                                    )
+
+                                            elif "end" in text.lower():
+
+                                                date_part = text.split("end", 1)[1].strip()
+
+                                                cursor.execute("""
+                                                    SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                    WHERE empidwa = %s
+                                                """, "tt")
+                                        
+                                                result = cursor.fetchone()
+
+                                                appid = result[0]
+                                                leavetype = result[2]
+                                                startdate = result[3]
+                                                enddate = result[4]
+
+                                                if isinstance(startdate, str):
+                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                if isinstance(enddate, str):
+                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                business_days = 0
+                                                current_date = startdate
+
+                                                while current_date <= enddate:
+                                                    if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                        business_days += 1
+                                                    current_date += timedelta(days=1)  # Use timedelta directly
+
+                                                print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
+
+
+                                                buttons = [
+                                                    {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                    {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                ]
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`?", 
+                                                    buttons
+                                                )
+
                                             else:
-
-                                                text = message.get("text", {}).get("body", "").lower()
-                                                print(f"📨 Message from {sender_id}: {text}")
-                                                
-                                                print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
-
-
-                                                if "hello" in text.lower():
-
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "Sick Leave"},
-                                                                {"id": "Contact", "title": "Study Leave"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Kindly select an option for enquiry.", 
-                                                        "Options",
-                                                        sections) 
-                                                
-
-
-                                                elif "start" in text.lower():
-
-                                                    date_part = text.split("start", 1)[1].strip()
-
-
-
-                                                    #cursor.execute("""
-                                                    #    SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                    #    WHERE empidwa = %s
-                                                    #""", (str(id_user)))
-                                            
-                                                    result = cursor.fetchone()
-
-                                                    if result:
-                                                        leavetypewa = result[1] 
-
-                                                    cursor.execute("SELECT * FROM whatsapptempapplication")
-                                                    columns = [desc[0] for desc in cursor.description]
-                                                    records = cursor.fetchall()
-                                                    
-                                                    df = pd.DataFrame(records, columns=columns)
-                                                    
-                                                    print("\n📊 whatsapptempapplication Table:")
-                                                    print(df)
-                                                    
-                                                    try:
-                                                        parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                                        send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
-                                                            f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
-                                                            "`end 24 january 2025`"                      
-                                                                            )
-                                                        
-                                                    except ValueError:
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            f"❌ No, incorrect message format. Please use:\n"
-                                                            "`start 24 january 2025`\n"
-                                                            "Example: `start 15 march 2024`"
-                                                        )
-
-                                                elif "end" in text.lower():
-
-                                                    date_part = text.split("end", 1)[1].strip()
-
-                                                    cursor.execute("""
-                                                        SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, "tt")
-                                            
-                                                    result = cursor.fetchone()
-
-                                                    appid = result[0]
-                                                    leavetype = result[2]
-                                                    startdate = result[3]
-                                                    enddate = result[4]
-
-                                                    if isinstance(startdate, str):
-                                                        startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                    if isinstance(enddate, str):
-                                                        enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                    business_days = 0
-                                                    current_date = startdate
-
-                                                    while current_date <= enddate:
-                                                        if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                            business_days += 1
-                                                        current_date += timedelta(days=1)  # Use timedelta directly
-
-                                                    print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
-
-
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                    ]
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`?", 
-                                                        buttons
-                                                    )
-
-                                                else:
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        "Echelon Bot Here 😎. Say 'hello' to start!"
-                                                    )
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    "Echelon Bot Here 😎. Say 'hello' to start!"
+                                                )
 
 
 
@@ -6054,7 +6054,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         leaveapproveremail VARCHAR(255),
                         leaveapproverwhatsapp INT,
                         currentleavedaysbalance INT,
-                        monthlyaccumulation INT
+                        monthlyaccumulation INT,
                     );
                     """
                     cursor.execute(create_table_query)
