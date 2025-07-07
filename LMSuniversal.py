@@ -163,7 +163,7 @@ def send_whatsapp_list_message(recipient, text, list_title, sections):
 @app.route("/webhooktt", methods=["GET", "POST"])
 def webhooktt():
     VERIFY_TOKENcc = "1412803596375322"
-    #ACCESS_TOKENcc = "EAAUppTRo5q4BPNBWoylJUER0QcTeQCE25ZBs5ZA8juDjgBONOJPx1bApeCG7YDTbG1s8wXPLAFgzWNXlmhMOOEZAVO1vnb0SuDkr5JzCOYZCK0B75RH8VxZBSZBaF2AQBRSPwsMhXRQ902tNJAtyWsIBtNZC9XfasLgle9rIBaXUtxY1u4PDs65wmiOxxsYeqcZBeojj9giMubp2miOXfq915BgIP1rHstaXGDzSujlo8acRWwZDZD"
+    ACCESS_TOKENcc = "EAAUppTRo5q4BPHPDAi7ZCQRHZA6ukVJBZAZAJNZAATrQAJrchKqCepH2LZCt4W6OM5SxIzSZASS7dRFkyQDmszocrF7vzrJQUUjZB6UjZBAaFq14GaOYbdqalHXNi5zZCP1OHSMfPbaXZBm1L1WPWCiqbOZCCZBl6cqWZCKKZB5eUrSe6dLdzw3wlQeFCJAvmltw64t68crkuX7RbNa4ZBpwxCQQAVk9ZA2AjjySRXONcZAZAWFmFGYuXJmXQZDZD"
     PHONE_NUMBER_IDcc = "618334968023252"
 
     if request.method == "GET":
@@ -186,7 +186,7 @@ def webhooktt():
                 def send_whatsapp_messagecc(to, text, buttons=None):
                     """Function to send a WhatsApp message using Meta API, with optional buttons."""
                     headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
                         "Content-Type": "application/json"
                     }
 
@@ -230,7 +230,7 @@ def webhooktt():
 
                 def send_whatsapp_list_messagecc(recipient, text, list_title, sections):
                     headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
                         "Content-Type": "application/json"
                     }
                     
