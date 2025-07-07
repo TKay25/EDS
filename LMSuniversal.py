@@ -164,7 +164,7 @@ def webhookclienttest():
     PHONE_NUMBER_IDctest = "618334968023252"
     WHATSAPP_API_URLctest = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_IDctest}/messages"
 
-    def send_whatsapp_message(to, text, buttons=None):
+    def send_whatsapp_messagectest(to, text, buttons=None):
         """Function to send a WhatsApp message using Meta API, with optional buttons."""
         headers = {
             "Authorization": f"Bearer {ACCESS_TOKENctest}",
@@ -259,7 +259,7 @@ def webhookclienttest():
                                         if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
                                             button_id_leave_type = str(selected_option)
 
-                                            send_whatsapp_message(
+                                            send_whatsapp_messagectest(
                                                 sender_id, 
                                                 f"Ok. When would you like your {selected_option} Leave to start?\n\n"
                                                 "Please enter your response using the format: 👇🏻\n"
@@ -309,7 +309,7 @@ def webhookclienttest():
                                                     {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                     {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                 ]
-                                                send_whatsapp_message(
+                                                send_whatsapp_messagectest(
                                                     sender_id, 
                                                     f"Oops! 🥲. Sorry , you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
                                                     f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
@@ -335,7 +335,7 @@ def webhookclienttest():
                                                 {"type": "reply", "reply": {"id": "Contact", "title": "Contact Support"}},
                                                 {"type": "reply", "reply": {"id": "FQAs", "title": "FQAs"}}
                                             ]
-                                            send_whatsapp_message(
+                                            send_whatsapp_messagectest(
                                                 sender_id, 
                                                 f"Hello \n\n Echelon Bot Here 😎. How can I assist you?", 
                                                 buttons
