@@ -382,17 +382,26 @@ def webhook():
 
 
                                                 if "hello" in text.lower():
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Book", "title": "Book A Bus Ticket"}},
-                                                        {"type": "reply", "reply": {"id": "View", "title": "View Routes & Time"}},
-                                                        {"type": "reply", "reply": {"id": "Contact", "title": "Contact Support"}},
-                                                        {"type": "reply", "reply": {"id": "FQAs", "title": "FQAs"}}
+
+
+                                                    sections = [
+                                                        {
+                                                            "title": "Leave Type Options",
+                                                            "rows": [
+                                                                {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                {"id": "View", "title": "Sick Leave"},
+                                                                {"id": "Contact", "title": "Study Leave"},
+                                                                {"id": "FAQs", "title": "FAQs"},
+                                                            ]
+                                                        }
                                                     ]
-                                                    send_whatsapp_messagecc(
+
+                                                    send_whatsapp_list_messagecc(
                                                         sender_id, 
-                                                        f"Hello \n\n Echelon Bot Here 😎. How can I assist you?", 
-                                                        buttons
-                                                    )
+                                                        f"Kindly select an option for enquiry.", 
+                                                        "Options",
+                                                        sections) 
+                                                
 
 
                                                 elif "start" in text.lower():
