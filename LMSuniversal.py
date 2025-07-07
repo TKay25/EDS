@@ -24,6 +24,7 @@ import json
 import requests
 import pdfkit
 from weasyprint import HTML
+import re
 
 
 
@@ -158,316 +159,6 @@ def send_whatsapp_list_message(recipient, text, list_title, sections):
 
 
 
-
-
-@app.route("/webhooktt", methods=["GET", "POST"])
-def webhooktt():
-    VERIFY_TOKENcc = "1412803596375322"
-    ACCESS_TOKENcc = "EAAUppTRo5q4BPHPDAi7ZCQRHZA6ukVJBZAZAJNZAATrQAJrchKqCepH2LZCt4W6OM5SxIzSZASS7dRFkyQDmszocrF7vzrJQUUjZB6UjZBAaFq14GaOYbdqalHXNi5zZCP1OHSMfPbaXZBm1L1WPWCiqbOZCCZBl6cqWZCKKZB5eUrSe6dLdzw3wlQeFCJAvmltw64t68crkuX7RbNa4ZBpwxCQQAVk9ZA2AjjySRXONcZAZAWFmFGYuXJmXQZDZD"
-    PHONE_NUMBER_IDcc = "618334968023252"
-
-    if request.method == "GET":
-        if request.args.get("hub.verify_token") == VERIFY_TOKENcc:
-            return request.args.get("hub.challenge")
-        return "Verification failed", 403
-
-    if request.method == "POST":
-        global today_date
-        data = request.get_json()
-
-        try:
-            # Navigate the JSON structure to get the display_phone_number
-            display_phone_number = data["entry"][0]["changes"][0]["value"]["metadata"]["display_phone_number"]
-
-            # Example condition: check if it's a specific number
-            if display_phone_number == "15556291389":
-                print(display_phone_number)
-
-                def send_whatsapp_messagecc(to, text, buttons=None):
-                    """Function to send a WhatsApp message using Meta API, with optional buttons."""
-                    headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
-                        "Content-Type": "application/json"
-                    }
-
-                    # If buttons are provided, send an interactive message
-                    if buttons:
-                        data = {
-                            "messaging_product": "whatsapp",
-                            "to": to,
-                            "type": "interactive",
-                            "interactive": {
-                                "type": "button",
-                                "body": {"text": text},
-                                "action": {
-                                    "buttons": buttons
-                                }
-                            }
-                        }
-                    else:
-                        # Send a normal text message
-                        data = {
-                            "messaging_product": "whatsapp",
-                            "to": to,
-                            "type": "text",
-                            "text": {"body": text}
-                        }
-
-                    response = requests.post(f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_IDcc}/messages", headers=headers, json=data)
-                    
-                    # Debugging logs
-                    print("✅ Sending message to:", to)
-                    print("📩 Message body:", text)
-                    print("📡 WhatsApp API Response Status:", response.status_code)
-
-                    try:
-                        response_json = response.json()
-                        print("📝 WhatsApp API Response Data:", response_json)
-                    except Exception as e:
-                        print("❌ Error parsing response JSON:", e)
-
-                    return response.json()
-
-                def send_whatsapp_list_messagecc(recipient, text, list_title, sections):
-                    headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
-                        "Content-Type": "application/json"
-                    }
-                    
-                    payload = {
-                        "messaging_product": "whatsapp",
-                        "recipient_type": "individual",
-                        "to": recipient,
-                        "type": "interactive",
-                        "interactive": {
-                            "type": "list",
-                            "header": {
-                                "type": "text",
-                                "text": list_title
-                            },
-                            "body": {
-                                "text": text
-                            },
-                            "action": {
-                                "button": "Select Option",
-                                "sections": sections
-                            }
-                        }
-                    }
-                    
-                    response = requests.post(
-                        f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_IDcc}/messages",
-                        headers=headers,
-                        json=payload
-                    )
-                    
-                    print("List message response:", response.json())
-                    return response
-
-                if data and "entry" in data:
-                    for entry in data["entry"]:
-                        for change in entry["changes"]:
-                            if "messages" in change["value"]:
-                                for message in change["value"]["messages"]:
-
-                                    conversation_id = str(uuid.uuid4())
-                                    session['conversation_id'] = conversation_id
-                                
-
-                                    sender_id = message["from"]
-                                    sender_number = sender_id[-9:]
-                                    print(f"📱 Conversation {conversation_id}: Sender's WhatsApp number: {sender_number}")
-                                    session['client'] = str(sender_number)
-
-                                    external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
-
-
-                                    try:
-                                        connection = psycopg2.connect(external_database_url)
-                                        cursor = connection.cursor()   
-
-                                        if message.get("type") == "interactive":
-                                            interactive = message.get("interactive", {})
-
-
-                                            if interactive.get("type") == "list_reply":
-                                                selected_option = interactive.get("list_reply", {}).get("id")
-                                                print(f"📋 User selected: {selected_option}")
-
-                                                if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    send_whatsapp_messagecc(
-                                                        sender_id, 
-                                                        f"Ok. When would you like your {selected_option} Leave to start?\n\n"
-                                                        "Please enter your response using the format: 👇🏻\n"
-                                                        "`start 24 january 2025`"
-                                                    )
-
-                                                    continue
-
-
-
-                                            elif interactive.get("type") == "button_reply":
-                                                button_id = interactive.get("button_reply", {}).get("id")
-                                                print(f"🔘 Button clicked: {button_id}")
-                                                
-                                                if button_id == "Apply":
-
-                                                    query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM ;"
-                                                    cursor.execute(query)
-                                                    rows = cursor.fetchall()
-
-                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Annual", "title": "Annual Leave"},
-                                                                {"id": "Sick", "title": "Sick Leave"},
-                                                                {"id": "Study", "title": "Study Leave"},
-                                                                {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                {"id": "Parental", "title": "Parental Leave"},
-                                                                {"id": "Other", "title": "Other"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"kindly select the type of Leave that you are applying for.", 
-                                                        "Leave Type Options",
-                                                        sections)         
-
-                                        else:
-
-                                            text = message.get("text", {}).get("body", "").lower()
-                                            print(f"📨 Message from {sender_id}: {text}")
-                                            
-                                            print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
-                                            print("hereherehere")
-
-
-                                            if "hello" in text.lower():
-
-                                                sections = [
-                                                    {
-                                                        "title": "Leave Type Options",
-                                                        "rows": [
-                                                            {"id": "Book", "title": "Book A Bus Ticket"},
-                                                            {"id": "View", "title": "Sick Leave"},
-                                                            {"id": "Contact", "title": "Study Leave"},
-                                                            {"id": "FAQs", "title": "FAQs"},
-                                                        ]
-                                                    }
-                                                ]
-
-                                                send_whatsapp_list_messagecc(
-                                                    sender_id, 
-                                                    f"Kindly select an option for enquiry.", 
-                                                    "Options",
-                                                    sections) 
-                                            
-
-
-                                            elif "start" in text.lower():
-
-                                                date_part = text.split("start", 1)[1].strip()
-
-
-
-                                                #cursor.execute("""
-                                                #    SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                #    WHERE empidwa = %s
-                                                #""", (str(id_user)))
-                                        
-                                                result = cursor.fetchone()
-
-                                                if result:
-                                                    leavetypewa = result[1] 
-
-                                                cursor.execute("SELECT * FROM whatsapptempapplication")
-                                                columns = [desc[0] for desc in cursor.description]
-                                                records = cursor.fetchall()
-                                                
-                                                df = pd.DataFrame(records, columns=columns)
-                                                
-                                                print("\n📊 whatsapptempapplication Table:")
-                                                print(df)
-                                                
-                                                try:
-                                                    parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                                    send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
-                                                        f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
-                                                        "`end 24 january 2025`"                      
-                                                                        )
-                                                    
-                                                except ValueError:
-                                                    send_whatsapp_message(
-                                                        sender_id,
-                                                        f"❌ No, incorrect message format. Please use:\n"
-                                                        "`start 24 january 2025`\n"
-                                                        "Example: `start 15 march 2024`"
-                                                    )
-
-                                            elif "end" in text.lower():
-
-                                                date_part = text.split("end", 1)[1].strip()
-
-                                                cursor.execute("""
-                                                    SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                    WHERE empidwa = %s
-                                                """, "tt")
-                                        
-                                                result = cursor.fetchone()
-
-                                                appid = result[0]
-                                                leavetype = result[2]
-                                                startdate = result[3]
-                                                enddate = result[4]
-
-                                                if isinstance(startdate, str):
-                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                if isinstance(enddate, str):
-                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                business_days = 0
-                                                current_date = startdate
-
-                                                while current_date <= enddate:
-                                                    if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                        business_days += 1
-                                                    current_date += timedelta(days=1)  # Use timedelta directly
-
-                                                print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
-
-
-                                                buttons = [
-                                                    {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                    {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                ]
-                                                send_whatsapp_message(
-                                                    sender_id, 
-                                                    f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`?", 
-                                                    buttons
-                                                )
-
-                                            else:
-                                                send_whatsapp_message(
-                                                    sender_id, 
-                                                    "Echelon Bot Here 😎. Say 'hello' to start!"
-                                                )
-
-
-
-                                    finally:
-                                        if connection:
-                                            print('DONE')
-
-
-        except:
-            print("failed")
 
 
 
@@ -683,7 +374,7 @@ def webhook():
                                                     send_whatsapp_list_messagecc(
                                                         sender_id, 
                                                         "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
-                                                        "City/Town of Departure",
+                                                        "City of Departure",
                                                         sections) 
                                                     
                                                 elif selected_option.startswith("st"):
@@ -726,8 +417,8 @@ def webhook():
 
                                                     send_whatsapp_list_messagecc(
                                                         sender_id,
-                                                        f"Great! You selected **{city_selected}** as your departure city. What is your destination?",
-                                                        "City/Town of Destination",
+                                                        f"You selected *{city_selected}* as your departure city. What is your destination?",
+                                                        "City of Destination",
                                                         sections)
                                                     
                                                 elif selected_option.startswith("dt"):
@@ -751,25 +442,40 @@ def webhook():
 
                                                     send_whatsapp_messagecc(
                                                         sender_id, 
-                                                        f"Great! You selected **{city_selected}** as your destination city. A bus will be departing from {departure_city} to {city_selected} and costs USD 13.\n\n"
+                                                        f"You selected *{city_selected}* as your destination city. A bus will be departing from *{departure_city}* to *{city_selected}* and costs USD 13.\n\n"
                                                         "When would you like to travel?\n\n"
-                                                        "Kindly provide the date in the format `3 July 2025`"
+                                                        "Kindly provide the date in the format 👇 \n\n `3 July 2025`"
                                                     )
 
 
 
+
+
+
+
+
                                                 elif selected_option.startswith("dt"):
+
                                                     city_selected = selected_option[2:]  
                                                     print(f"🚌 User selected city of destination: {city_selected}")
 
-                                                    
+                                                    cursor.execute(
+                                                        "SELECT departure_city, destination_city FROM ticketbookingstemp WHERE user_id = %s",
+                                                        (sender_number,)
+                                                    )
+                                                    result = cursor.fetchone()
+
+                                                    departure_city = result[0]
+                                                    destination_city = result[1]
+
+
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
                                                         {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}}
                                                     ]
                                                     send_whatsapp_messagecc(
                                                         sender_id, 
-                                                        f"Great! You selected **{city_selected}** as your destination city. A bus will be departing from {city_selected} to {city_selected} at 11.00am and costs USD 13.\n\n"
+                                                        f"Great News! Seats are still available on the bus that will be departing from {departure_city} to {destination_city} at 11.00am and costs USD 13.\n\n"
                                                         "Proceed to book ticket?",
                                                         buttons
                                                     )                                             
@@ -885,8 +591,46 @@ def webhook():
                                             
                                             print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
 
+                                            if re.fullmatch(r'\d{1,2}\s+[a-zA-Z]+\s+\d{4}', re.sub(r'\s+', ' ', message.get("text", {}).get("body", "")).strip()):
+                                                try:
+                                                    date_str = re.sub(r'\s+', ' ', message.get("text", {}).get("body", "")).strip().title()
+                                                    parsed_date = datetime.strptime(date_str, "%d %B %Y").date()
+                                                    print("✅ Valid date message:", parsed_date)
 
-                                            if "hello" in text.lower():
+                                                    cursor.execute(
+                                                        "UPDATE ticketbookingstemp SET travel_date = %s WHERE user_id = %s",
+                                                        (parsed_date, sender_number)
+                                                    )
+                                                    connection.commit()
+                                                    print(f"✅ travel_date {parsed_date} saved for user_id {sender_number}")
+
+                                                    cursor.execute(
+                                                        "SELECT departure_city, destination_city FROM ticketbookingstemp WHERE user_id = %s",
+                                                        (sender_number,)
+                                                    )
+                                                    result = cursor.fetchone()
+
+                                                    departure_city = result[0]
+                                                    destination_city = result[1]
+
+
+
+
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": "7am", "title": "7 a.m"}},
+                                                        {"type": "reply", "reply": {"id": "10am", "title": "10 a.m"}},
+                                                        {"type": "reply", "reply": {"id": "2pm", "title": "2 p.m"}}
+                                                    ]
+                                                    send_whatsapp_messagecc(
+                                                        sender_id, 
+                                                        f"Kindly select your preferred departure time on the bus that will be departing from {departure_city} to {destination_city} on parsed_date.",
+                                                        buttons
+                                                    )      
+
+                                                except ValueError:
+                                                    print("❌ Looks like a date but couldn't parse")
+
+                                            elif "hello" in text.lower():
 
                                                 sections = [
                                                     {
