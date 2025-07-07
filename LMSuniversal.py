@@ -528,7 +528,7 @@ def webhook():
                 def send_whatsapp_messagecc(to, text, buttons=None):
                     """Function to send a WhatsApp message using Meta API, with optional buttons."""
                     headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
                         "Content-Type": "application/json"
                     }
 
@@ -572,7 +572,7 @@ def webhook():
 
                 def send_whatsapp_list_messagecc(recipient, text, list_title, sections):
                     headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
                         "Content-Type": "application/json"
                     }
                     
