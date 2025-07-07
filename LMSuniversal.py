@@ -641,17 +641,17 @@ def webhook():
 
                                                     sections = [
                                                         {
-                                                            "title": "City/Town of Departure Options",
+                                                            "title": "City of Departure",
                                                             "rows": [
-                                                                {"id": "Harare", "title": "Harare"},
-                                                                {"id": "Chegutu", "title": "Chegutu"},
-                                                                {"id": "Kadoma", "title": "Kadoma"},
-                                                                {"id": "Kwekwe", "title": "Kwekwe"},
-                                                                {"id": "Gweru", "title": "Gweru"},
-                                                                {"id": "Bulawayo", "title": "Bulawayo"},
-                                                                {"id": "Chitungwiza", "title": "Mvuma"},
-                                                                {"id": "Masvingo", "title": "Masvingo"},
-                                                                {"id": "VictoriaFalls", "title": "Victoria Falls"},
+                                                                {"id": "stHarare", "title": "Harare"},
+                                                                {"id": "stChegutu", "title": "Chegutu"},
+                                                                {"id": "stKadoma", "title": "Kadoma"},
+                                                                {"id": "stKwekwe", "title": "Kwekwe"},
+                                                                {"id": "stGweru", "title": "Gweru"},
+                                                                {"id": "stBulawayo", "title": "Bulawayo"},
+                                                                {"id": "stChitungwiza", "title": "Mvuma"},
+                                                                {"id": "stMasvingo", "title": "Masvingo"},
+                                                                {"id": "stVictoriaFalls", "title": "Victoria Falls"},
                                                             ]
                                                         }
                                                     ]
@@ -661,6 +661,49 @@ def webhook():
                                                         "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
                                                         "City/Town of Departure",
                                                         sections) 
+                                                    
+                                                elif selected_option.startswith("st"):
+                                                    city_selected = selected_option[2:]  
+                                                    print(f"🚌 User selected city of departure: {city_selected}")
+
+                                                    sections = [
+                                                        {
+                                                            "title": "City of Destination",
+                                                            "rows": [
+                                                                {"id": "dtHarare", "title": "Harare"},
+                                                                {"id": "dtChegutu", "title": "Chegutu"},
+                                                                {"id": "dtKadoma", "title": "Kadoma"},
+                                                                {"id": "dtKwekwe", "title": "Kwekwe"},
+                                                                {"id": "dtGweru", "title": "Gweru"},
+                                                                {"id": "dtBulawayo", "title": "Bulawayo"},
+                                                                {"id": "dtChitungwiza", "title": "Mvuma"},
+                                                                {"id": "dtMasvingo", "title": "Masvingo"},
+                                                                {"id": "dtVictoriaFalls", "title": "Victoria Falls"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id,
+                                                        f"Great! You selected **{city_selected}** as your departure city. What is your destination?",
+                                                        "City/Town of Destination",
+                                                        sections)
+                                                    
+                                                elif selected_option.startswith("dt"):
+                                                    city_selected = selected_option[2:]  
+                                                    print(f"🚌 User selected city of destination: {city_selected}")
+
+                                                    
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
+                                                        {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}}
+                                                    ]
+                                                    send_whatsapp_messagecc(
+                                                        sender_id, 
+                                                        f"Great! You selected **{city_selected}** as your destination city. A bus will be departing from {city_selected} to {city_selected} at 11.00am and costs USD 13.\n\n"
+                                                        "Proceed to book ticket?",
+                                                        buttons
+                                                    )
                                                 
 
                                                 elif selected_option == "FAQS":
@@ -683,6 +726,28 @@ def webhook():
                                                         "Ok. Select a FAQ for more info...", 
                                                         "FAQs",
                                                         sections) 
+                                                    
+                                                elif selected_option == "Fares":
+                                                    button_id_leave_type = str(selected_option)
+
+                                                    sections = [
+                                                        {
+                                                            "title": "FAQs",
+                                                            "rows": [
+                                                                {"id": "Fares", "title": "Fares"},
+                                                                {"id": "BusTypes", "title": "Bus Types"},
+                                                                {"id": "Privatehires", "title": "Do you do private hires?"},
+                                                                {"id": "Sunday", "title": "Do you work on Sundays"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id, 
+                                                        "Ok. Select a FAQ for more info...", 
+                                                        "FAQs",
+                                                        sections) 
+
 
                                                 elif selected_option == "Contact":
                                                     button_id_leave_type = str(selected_option)
