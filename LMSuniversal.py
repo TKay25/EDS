@@ -153,6 +153,330 @@ def send_whatsapp_list_message(recipient, text, list_title, sections):
     print("List message response:", response.json())
     return response
 
+
+##################### client test ####################################################################################################
+
+@app.route("/webhookclienttest", methods=["GET", "POST"])
+def webhookclienttest():
+
+    VERIFY_TOKENctest = "1412803596375322"
+    PHONE_NUMBER_IDctest = "618334968023252"
+    WHATSAPP_API_URLctest = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_IDctest}/messages"
+
+    def send_whatsapp_message(to, text, buttons=None):
+        """Function to send a WhatsApp message using Meta API, with optional buttons."""
+        headers = {
+            "Authorization": f"Bearer {ACCESS_TOKEN}",
+            "Content-Type": "application/json"
+        }
+
+        # If buttons are provided, send an interactive message
+        if buttons:
+            data = {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "interactive",
+                "interactive": {
+                    "type": "button",
+                    "body": {"text": text},
+                    "action": {
+                        "buttons": buttons
+                    }
+                }
+            }
+        else:
+            # Send a normal text message
+            data = {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "text",
+                "text": {"body": text}
+            }
+
+        response = requests.post(WHATSAPP_API_URLctest, headers=headers, json=data)
+        
+        # Debugging logs
+        print("✅ Sending message to:", to)
+        print("📩 Message body:", text)
+        print("📡 WhatsApp API Response Status:", response.status_code)
+
+        try:
+            response_json = response.json()
+            print("📝 WhatsApp API Response Data:", response_json)
+        except Exception as e:
+            print("❌ Error parsing response JSON:", e)
+
+        return response.json()
+
+
+
+
+
+
+
+    if request.method == "GET":
+        if request.args.get("hub.verify_token") == VERIFY_TOKENctest:
+            return request.args.get("hub.challenge")
+        return "Verification failed", 403
+
+    if request.method == "POST":
+        global today_date
+        data = request.get_json()
+        print("📥 Full incoming data:", json.dumps(data, indent=2))
+
+
+        if data and "entry" in data:
+            for entry in data["entry"]:
+                for change in entry["changes"]:
+                    if "messages" in change["value"]:
+                        for message in change["value"]["messages"]:
+
+                            conversation_id = str(uuid.uuid4())
+                            session['conversation_id'] = conversation_id
+                        
+
+                            sender_id = message["from"]
+                            sender_number = sender_id[-9:]
+                            print(f"📱 Conversation {conversation_id}: Sender's WhatsApp number: {sender_number}")
+                            session['client'] = str(sender_number)
+
+                            external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
+
+
+                            try:
+                                connection = psycopg2.connect(external_database_url)
+                                cursor = connection.cursor()   
+
+                                if message.get("type") == "interactive":
+                                    interactive = message.get("interactive", {})
+
+
+                                    if interactive.get("type") == "list_reply":
+                                        selected_option = interactive.get("list_reply", {}).get("id")
+                                        print(f"📋 User selected: {selected_option}")
+
+                                        if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
+                                            button_id_leave_type = str(selected_option)
+
+                                            send_whatsapp_message(
+                                                sender_id, 
+                                                f"Ok. When would you like your {selected_option} Leave to start?\n\n"
+                                                "Please enter your response using the format: 👇🏻\n"
+                                                "`start 24 january 2025`"
+                                            )
+
+                                            continue
+
+
+
+                                    elif interactive.get("type") == "button_reply":
+                                        button_id = interactive.get("button_reply", {}).get("id")
+                                        print(f"🔘 Button clicked: {button_id}")
+                                        
+                                        if button_id == "Apply":
+
+                                            query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM ;"
+                                            cursor.execute(query)
+                                            rows = cursor.fetchall()
+
+                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+
+                                            if len(df_employeesappspendingcheck) == 0:
+
+                                                sections = [
+                                                    {
+                                                        "title": "Leave Type Options",
+                                                        "rows": [
+                                                            {"id": "Annual", "title": "Annual Leave"},
+                                                            {"id": "Sick", "title": "Sick Leave"},
+                                                            {"id": "Study", "title": "Study Leave"},
+                                                            {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                            {"id": "Parental", "title": "Parental Leave"},
+                                                            {"id": "Other", "title": "Other"},
+                                                        ]
+                                                    }
+                                                ]
+
+                                                send_whatsapp_list_message(
+                                                    sender_id, 
+                                                    f"kindly select the type of Leave that you are applying for.", 
+                                                    "Leave Type Options",
+                                                    sections) 
+
+                                            elif len(df_employeesappspendingcheck) > 0:
+                                                buttons = [
+                                                    {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                    {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                ]
+                                                send_whatsapp_message(
+                                                    sender_id, 
+                                                    f"Oops! 🥲. Sorry , you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
+                                                    f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                    f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
+                                                    , 
+                                                    buttons
+                                                )
+
+ 
+
+                                    else:
+
+                                        text = message.get("text", {}).get("body", "").lower()
+                                        print(f"📨 Message from {sender_id}: {text}")
+                                        
+                                        print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+
+
+                                        if "hello" in text.lower():
+                                            buttons = [
+                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                            ]
+                                            send_whatsapp_message(
+                                                sender_id, 
+                                                f"Hello \n\n Echelon Bot Here 😎. How can I assist you?", 
+                                                buttons
+                                            )
+
+
+                                        elif "start" in text.lower():
+
+                                            date_part = text.split("start", 1)[1].strip()
+
+
+
+                                            #cursor.execute("""
+                                            #    SELECT empidwa, leavetypewa FROM whatsapptempapplication
+                                            #    WHERE empidwa = %s
+                                            #""", (str(id_user)))
+                                    
+                                            result = cursor.fetchone()
+
+                                            if result:
+                                                leavetypewa = result[1] 
+
+                                            cursor.execute("SELECT * FROM whatsapptempapplication")
+                                            columns = [desc[0] for desc in cursor.description]
+                                            records = cursor.fetchall()
+                                            
+                                            df = pd.DataFrame(records, columns=columns)
+                                            
+                                            print("\n📊 whatsapptempapplication Table:")
+                                            print(df)
+                                            
+                                            try:
+                                                parsed_date = datetime.strptime(date_part, "%d %B %Y")
+                                                send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
+                                                    f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
+                                                    "`end 24 january 2025`"                      
+                                                                    )
+                                                
+                                            except ValueError:
+                                                send_whatsapp_message(
+                                                    sender_id,
+                                                    f"❌ No, incorrect message format. Please use:\n"
+                                                    "`start 24 january 2025`\n"
+                                                    "Example: `start 15 march 2024`"
+                                                )
+
+                                        elif "end" in text.lower():
+
+                                            date_part = text.split("end", 1)[1].strip()
+
+                                            cursor.execute("""
+                                                UPDATE whatsapptempapplication
+                                                SET enddate = %s
+                                                WHERE empidwa = %s
+                                            """, (date_part, id_user))
+
+                                            connection.commit()
+
+                                            cursor.execute("""
+                                                SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                WHERE empidwa = %s
+                                            """, (str(id_user)))
+                                    
+                                            result = cursor.fetchone()
+
+                                            appid = result[0]
+                                            leavetype = result[2]
+                                            startdate = result[3]
+                                            enddate = result[4]
+
+                                            if isinstance(startdate, str):
+                                                startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
+                                            if isinstance(enddate, str):
+                                                enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                            business_days = 0
+                                            current_date = startdate
+
+                                            while current_date <= enddate:
+                                                if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                    business_days += 1
+                                                current_date += timedelta(days=1)  # Use timedelta directly
+
+                                            print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
+
+
+                                            buttons = [
+                                                {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                            ]
+                                            send_whatsapp_message(
+                                                sender_id, 
+                                                f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
+                                                buttons
+                                            )
+
+                                        else:
+                                            send_whatsapp_message(
+                                                sender_id, 
+                                                "Echelon Bot Here 😎. Say 'hello' to start!"
+                                            )
+
+
+
+                            finally:
+                                if connection:
+                                    print('DONE')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.errorhandler(400)
 def bad_request(e):
     return jsonify({'status': 'error', 'message': str(e)}), 400
