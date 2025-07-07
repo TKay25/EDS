@@ -512,10 +512,6 @@ def webhook():
                                                 
                                                 if button_id == "changeroute":
 
-                                                    query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM ;"
-                                                    cursor.execute(query)
-                                                    rows = cursor.fetchall()
-
                                                     sections = [
                                                         {
                                                             "title": "City of Departure",
@@ -536,7 +532,7 @@ def webhook():
                                                     send_whatsapp_list_messagecc(
                                                         sender_id, 
                                                         "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
-                                                        "City/Town of Departure",
+                                                        "City of Departure",
                                                         sections)     
 
 
@@ -584,7 +580,7 @@ def webhook():
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
-                                                        {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}}
+                                                        {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}},
                                                     ]
                                                     send_whatsapp_messagecc(
                                                         sender_id, 
@@ -632,7 +628,7 @@ def webhook():
                                                     ]
                                                     send_whatsapp_messagecc(
                                                         sender_id, 
-                                                        f"Kindly select your preferred departure time on the bus that will be departing from *{departure_city}* to *{destination_city}* on {parsed_date}.",
+                                                        f"Kindly select your preferred departure time on the bus that will be departing from *{departure_city}* to *{destination_city}* on {date_str}.",
                                                         buttons
                                                     )      
 
