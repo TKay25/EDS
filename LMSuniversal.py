@@ -158,6 +158,7 @@ def send_whatsapp_list_message(recipient, text, list_title, sections):
 
 @app.route("/webhookclienttest", methods=["GET", "POST"])
 def webhookclienttest():
+    ACCESS_TOKENctest = "EAATESj1oB5YBPGqHl6q4VzEkIrqewJLJabzKEAu3ZBCkrKd6T2uBF0bN4coqQQ4cmlHdEqWAarN6YVkBDBEpuognC3QcBgVi3c1kJUiyqECS6Cql0n7bytNGVArgIkr15fGvHhFZBX8l0KNG3dOQKsiX6nKPSiyqrPlTyQDB3BMxCMtQVx7kIYc0qZCgqEZBEAahZCTSHCVuqJsfw4t2Su7kVFTJbDehc6OhtmNHQdpq1JvB3"
 
     VERIFY_TOKENctest = "1412803596375322"
     PHONE_NUMBER_IDctest = "618334968023252"
@@ -166,7 +167,7 @@ def webhookclienttest():
     def send_whatsapp_message(to, text, buttons=None):
         """Function to send a WhatsApp message using Meta API, with optional buttons."""
         headers = {
-            "Authorization": f"Bearer {ACCESS_TOKEN}",
+            "Authorization": f"Bearer {ACCESS_TOKENctest}",
             "Content-Type": "application/json"
         }
 
@@ -385,17 +386,9 @@ def webhookclienttest():
                                             date_part = text.split("end", 1)[1].strip()
 
                                             cursor.execute("""
-                                                UPDATE whatsapptempapplication
-                                                SET enddate = %s
-                                                WHERE empidwa = %s
-                                            """, (date_part, id_user))
-
-                                            connection.commit()
-
-                                            cursor.execute("""
                                                 SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
                                                 WHERE empidwa = %s
-                                            """, (str(id_user)))
+                                            """, "tt")
                                     
                                             result = cursor.fetchone()
 
@@ -426,7 +419,7 @@ def webhookclienttest():
                                             ]
                                             send_whatsapp_message(
                                                 sender_id, 
-                                                f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
+                                                f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`?", 
                                                 buttons
                                             )
 
