@@ -637,6 +637,30 @@ def webhook():
                                                 print(f"📋 User selected: {selected_option}")
 
                                                 if selected_option == "Book":
+
+                                                    try:
+
+                                                        # Create table if it doesn't exist
+                                                        create_table_query = """
+                                                        CREATE TABLE IF NOT EXISTS ticketbookingstemp (
+                                                            id SERIAL PRIMARY KEY,
+                                                            user_id VARCHAR(50),
+                                                            departure_city VARCHAR(100),
+                                                            destination_city VARCHAR(100),
+                                                            travel_date DATE,
+                                                            booking_status VARCHAR(20) DEFAULT 'pending',
+                                                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                                        );
+                                                        """
+
+                                                        cursor.execute(create_table_query)
+                                                        connection.commit()
+                                                        print("✅ Table 'ticketbookingstemp' created or already exists.")
+
+                                                    except Exception as e:
+                                                        print("❌ Failed to connect or create table:", e)
+
+
                                                     button_id_leave_type = str(selected_option)
 
                                                     sections = [
@@ -666,6 +690,23 @@ def webhook():
                                                     city_selected = selected_option[2:]  
                                                     print(f"🚌 User selected city of departure: {city_selected}")
 
+                                                    cursor.execute("SELECT 1 FROM ticketbookingstemp WHERE user_id = %s", (sender_number,))
+                                                    exists = cursor.fetchone()
+
+                                                    if exists:
+                                                        # Delete the existing row
+                                                        cursor.execute("DELETE FROM ticketbookingstemp WHERE user_id = %s", (sender_number,))
+                                                        print(f"🗑️ Deleted existing row for {sender_number}")
+
+                                                    # Insert new row with departure_city = 'ccc'
+                                                    cursor.execute(
+                                                        "INSERT INTO ticketbookingstemp (user_id, departure_city) VALUES (%s, %s)",
+                                                        (sender_number, city_selected)
+                                                    )
+                                                    connection.commit()
+
+                                                    print(f"✅ Inserted {sender_number} with departure_city = {city_selected}")
+
                                                     sections = [
                                                         {
                                                             "title": "City of Destination",
@@ -693,6 +734,34 @@ def webhook():
                                                     city_selected = selected_option[2:]  
                                                     print(f"🚌 User selected city of destination: {city_selected}")
 
+                                                    cursor.execute(
+                                                        "UPDATE ticketbookingstemp SET destination_city = %s WHERE user_id = %s",
+                                                        (city_selected, sender_number)
+                                                    )
+                                                    connection.commit()
+                                                    print(f"✅ Updated destination_city to '{city_selected}' for user_id {sender_number}")
+
+                                                    cursor.execute(
+                                                        "SELECT departure_city FROM ticketbookingstemp WHERE user_id = %s",
+                                                        (sender_number,)
+                                                    )
+                                                    result = cursor.fetchone()
+
+                                                    departure_city = result[0]
+
+                                                    send_whatsapp_messagecc(
+                                                        sender_id, 
+                                                        f"Great! You selected **{city_selected}** as your destination city. A bus will be departing from {departure_city} to {city_selected} and costs USD 13.\n\n"
+                                                        "When would you like to travel?\n\n"
+                                                        "Kindly provide the date in the format `3 July 2025`"
+                                                    )
+
+
+
+                                                elif selected_option.startswith("dt"):
+                                                    city_selected = selected_option[2:]  
+                                                    print(f"🚌 User selected city of destination: {city_selected}")
+
                                                     
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
@@ -703,8 +772,7 @@ def webhook():
                                                         f"Great! You selected **{city_selected}** as your destination city. A bus will be departing from {city_selected} to {city_selected} at 11.00am and costs USD 13.\n\n"
                                                         "Proceed to book ticket?",
                                                         buttons
-                                                    )
-                                                
+                                                    )                                             
 
                                                 elif selected_option == "FAQS":
                                                     button_id_leave_type = str(selected_option)
@@ -758,33 +826,57 @@ def webhook():
                                                 button_id = interactive.get("button_reply", {}).get("id")
                                                 print(f"🔘 Button clicked: {button_id}")
                                                 
-                                                if button_id == "Apply":
+                                                if button_id == "changeroute":
 
                                                     query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM ;"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
 
-                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
-
                                                     sections = [
                                                         {
-                                                            "title": "Leave Type Options",
+                                                            "title": "City of Departure",
                                                             "rows": [
-                                                                {"id": "Annual", "title": "Annual Leave"},
-                                                                {"id": "Sick", "title": "Sick Leave"},
-                                                                {"id": "Study", "title": "Study Leave"},
-                                                                {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                {"id": "Parental", "title": "Parental Leave"},
-                                                                {"id": "Other", "title": "Other"},
+                                                                {"id": "stHarare", "title": "Harare"},
+                                                                {"id": "stChegutu", "title": "Chegutu"},
+                                                                {"id": "stKadoma", "title": "Kadoma"},
+                                                                {"id": "stKwekwe", "title": "Kwekwe"},
+                                                                {"id": "stGweru", "title": "Gweru"},
+                                                                {"id": "stBulawayo", "title": "Bulawayo"},
+                                                                {"id": "stChitungwiza", "title": "Mvuma"},
+                                                                {"id": "stMasvingo", "title": "Masvingo"},
+                                                                {"id": "stVictoriaFalls", "title": "Victoria Falls"},
                                                             ]
                                                         }
                                                     ]
 
                                                     send_whatsapp_list_messagecc(
                                                         sender_id, 
-                                                        f"kindly select the type of Leave that you are applying for.", 
-                                                        "Leave Type Options",
-                                                        sections)         
+                                                        "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
+                                                        "City/Town of Departure",
+                                                        sections)     
+
+
+                                                if button_id == "ticketbook":
+
+                                                    sections = [
+                                                        {
+                                                            "title": "Payment for Ticket",
+                                                            "rows": [
+                                                                {"id": "EcoCash", "title": "EcoCash"},
+                                                                {"id": "OneMoney", "title": "OneMoney"},
+                                                                {"id": "PayNow", "title": "Bank Card"},
+                                                                {"id": "Cash", "title": "Cash"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id, 
+                                                        "Great! You may proceed to pay for your ticket and reserve a seat. Select a method of Payment below.", 
+                                                        "Payment for Ticket",
+                                                        sections)  
+                                                    
+
 
                                         else:
 
