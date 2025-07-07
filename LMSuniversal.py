@@ -330,9 +330,10 @@ def webhookclienttest():
 
                                         if "hello" in text.lower():
                                             buttons = [
-                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                {"type": "reply", "reply": {"id": "Book", "title": "Book A Bus Ticket"}},
+                                                {"type": "reply", "reply": {"id": "View", "title": "View Routes & Time"}},
+                                                {"type": "reply", "reply": {"id": "Contact", "title": "Contact Support"}},
+                                                {"type": "reply", "reply": {"id": "FQAs", "title": "FQAs"}}
                                             ]
                                             send_whatsapp_message(
                                                 sender_id, 
