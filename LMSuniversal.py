@@ -521,10 +521,14 @@ def webhook():
             if display_phone_number == "15556291389":
                 print(display_phone_number)
 
+                VERIFY_TOKENcc = "1412803596375322"
+                ACCESS_TOKENcc = "EAAUppTRo5q4BPNBWoylJUER0QcTeQCE25ZBs5ZA8juDjgBONOJPx1bApeCG7YDTbG1s8wXPLAFgzWNXlmhMOOEZAVO1vnb0SuDkr5JzCOYZCK0B75RH8VxZBSZBaF2AQBRSPwsMhXRQ902tNJAtyWsIBtNZC9XfasLgle9rIBaXUtxY1u4PDs65wmiOxxsYeqcZBeojj9giMubp2miOXfq915BgIP1rHstaXGDzSujlo8acRWwZDZD"
+                PHONE_NUMBER_IDcc = "618334968023252"
+
                 def send_whatsapp_messagecc(to, text, buttons=None):
                     """Function to send a WhatsApp message using Meta API, with optional buttons."""
                     headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
                         "Content-Type": "application/json"
                     }
 
@@ -551,7 +555,7 @@ def webhook():
                             "text": {"body": text}
                         }
 
-                    response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
+                    response = requests.post(f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_IDcc}/messages", headers=headers, json=data)
                     
                     # Debugging logs
                     print("✅ Sending message to:", to)
@@ -568,7 +572,7 @@ def webhook():
 
                 def send_whatsapp_list_messagecc(recipient, text, list_title, sections):
                     headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
                         "Content-Type": "application/json"
                     }
                     
@@ -594,7 +598,7 @@ def webhook():
                     }
                     
                     response = requests.post(
-                        f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
+                        f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_IDcc}/messages",
                         headers=headers,
                         json=payload
                     )
@@ -735,13 +739,13 @@ def webhook():
                                                 
                                                 try:
                                                     parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                                    send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
+                                                    send_whatsapp_messagecc(sender_id, "✅ Yes! Valid start date format.\n\n"
                                                         f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
                                                         "`end 24 january 2025`"                      
                                                                         )
                                                     
                                                 except ValueError:
-                                                    send_whatsapp_message(
+                                                    send_whatsapp_messagecc(
                                                         sender_id,
                                                         f"❌ No, incorrect message format. Please use:\n"
                                                         "`start 24 january 2025`\n"
@@ -784,14 +788,14 @@ def webhook():
                                                     {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
                                                     {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
                                                 ]
-                                                send_whatsapp_message(
+                                                send_whatsapp_messagecc(
                                                     sender_id, 
                                                     f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`?", 
                                                     buttons
                                                 )
 
                                             else:
-                                                send_whatsapp_message(
+                                                send_whatsapp_messagecc(
                                                     sender_id, 
                                                     "Echelon Bot Here 😎. Say 'hello' to start!"
                                                 )
