@@ -213,14 +213,11 @@ def webhook():
             # Example condition: check if it's a specific number
             if display_phone_number == "15556291389":
                 print(display_phone_number)
-                whatsapp_api_url = f"https://graph.facebook.com/v18.0/{display_phone_number}/messages"
-                ACCESS_TOKENcc = "EAAPNHHH5e1EBPGbPsH4hBkbIGYYnK5KKBmoDD1201k6IDlhZAAEdO8KtNsRtIZBU10zD7WCn2EjBkWKFeS463REGZAJoVu3XwDXPPbRY1NHlPHYBPynBvq8ZClvLjLEFmacmBMgLR7CfIpZC5QKubASKn2nZAQwC6fDkCl6szfIbhxFmB8nYlPRmgzTOvq7mDpNZAyaEMgfH1yvju9uYqSMP7ZBTAl26vquuc0ZCdVpZApm8Clfz8ZD"
-
 
                 def send_whatsapp_messagecc(to, text, buttons=None):
                     """Function to send a WhatsApp message using Meta API, with optional buttons."""
                     headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
                         "Content-Type": "application/json"
                     }
 
@@ -247,7 +244,7 @@ def webhook():
                             "text": {"body": text}
                         }
 
-                    response = requests.post(whatsapp_api_url, headers=headers, json=data)
+                    response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
                     
                     # Debugging logs
                     print("✅ Sending message to:", to)
@@ -264,7 +261,7 @@ def webhook():
 
                 def send_whatsapp_list_messagecc(recipient, text, list_title, sections):
                     headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKENcc}",
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
                         "Content-Type": "application/json"
                     }
                     
@@ -290,7 +287,7 @@ def webhook():
                     }
                     
                     response = requests.post(
-                        f"https://graph.facebook.com/v18.0/{whatsapp_api_url}/messages",
+                        f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
                         headers=headers,
                         json=payload
                     )
