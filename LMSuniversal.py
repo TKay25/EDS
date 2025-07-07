@@ -636,19 +636,57 @@ def webhook():
                                                 selected_option = interactive.get("list_reply", {}).get("id")
                                                 print(f"📋 User selected: {selected_option}")
 
-                                                if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
+                                                if selected_option == "Book":
                                                     button_id_leave_type = str(selected_option)
 
-                                                    send_whatsapp_messagecc(
+                                                    sections = [
+                                                        {
+                                                            "title": "City/Town of Departure Options",
+                                                            "rows": [
+                                                                {"id": "Harare", "title": "Harare"},
+                                                                {"id": "Chegutu", "title": "Chegutu"},
+                                                                {"id": "Kadoma", "title": "Kadoma"},
+                                                                {"id": "Kwekwe", "title": "Kwekwe"},
+                                                                {"id": "Gweru", "title": "Gweru"},
+                                                                {"id": "Bulawayo", "title": "Bulawayo"},
+                                                                {"id": "Mvuma", "title": "Mvuma"},
+                                                                {"id": "Masvingo", "title": "Masvingo"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
                                                         sender_id, 
-                                                        f"Ok. When would you like your {selected_option} Leave to start?\n\n"
-                                                        "Please enter your response using the format: 👇🏻\n"
-                                                        "`start 24 january 2025`"
-                                                    )
+                                                        "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
+                                                        "City/Town of Departure",
+                                                        sections) 
+                                                
 
-                                                    continue
+                                                elif selected_option == "FAQS":
+                                                    button_id_leave_type = str(selected_option)
 
+                                                    sections = [
+                                                        {
+                                                            "title": "FAQs",
+                                                            "rows": [
+                                                                {"id": "Fares", "title": "Fares"},
+                                                                {"id": "BusTypes", "title": "Bus Types"},
+                                                                {"id": "Privatehires", "title": "Do you do private hires?"},
+                                                                {"id": "Sunday", "title": "Do you work on Sundays"},
+                                                            ]
+                                                        }
+                                                    ]
 
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id, 
+                                                        "Ok. Select a FAQ for more info...", 
+                                                        "FAQs",
+                                                        sections) 
+
+                                                elif selected_option == "Contact":
+                                                    button_id_leave_type = str(selected_option)
+
+                                                    send_whatsapp_messagecc(sender_id, "✅ Okay. A Customer Representative has been notified to assit you. They will contact you shortly.")
 
                                             elif interactive.get("type") == "button_reply":
                                                 button_id = interactive.get("button_reply", {}).get("id")
@@ -697,8 +735,8 @@ def webhook():
                                                         "title": "Leave Type Options",
                                                         "rows": [
                                                             {"id": "Book", "title": "Book A Bus Ticket"},
-                                                            {"id": "View", "title": "Sick Leave"},
-                                                            {"id": "Contact", "title": "Study Leave"},
+                                                            {"id": "View", "title": "View Route & Times"},
+                                                            {"id": "Contact", "title": "Contact Support"},
                                                             {"id": "FAQs", "title": "FAQs"},
                                                         ]
                                                     }
