@@ -346,7 +346,15 @@ def webhook():
 
                                                         cursor.execute(create_table_query)
                                                         connection.commit()
-                                                        print("✅ Table 'ticketbookingstemp' created or already exists.")
+
+                                                        alter_column_query = """
+                                                        ALTER TABLE ticketbookingstemp
+                                                        ADD COLUMN IF NOT EXISTS time_dep_bus VARCHAR(255);
+                                                        """
+
+                                                        cursor.execute(alter_column_query)
+                                                        connection.commit()
+                                                        print("✅ Column 'fff' added to 'ticketbookingstemp' (if not already present).")
 
                                                     except Exception as e:
                                                         print("❌ Failed to connect or create table:", e)
@@ -448,37 +456,7 @@ def webhook():
                                                     )
 
 
-
-
-
-
-
-
-                                                elif selected_option.startswith("dt"):
-
-                                                    city_selected = selected_option[2:]  
-                                                    print(f"🚌 User selected city of destination: {city_selected}")
-
-                                                    cursor.execute(
-                                                        "SELECT departure_city, destination_city FROM ticketbookingstemp WHERE user_id = %s",
-                                                        (sender_number,)
-                                                    )
-                                                    result = cursor.fetchone()
-
-                                                    departure_city = result[0]
-                                                    destination_city = result[1]
-
-
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
-                                                        {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}}
-                                                    ]
-                                                    send_whatsapp_messagecc(
-                                                        sender_id, 
-                                                        f"Great News! Seats are still available on the bus that will be departing from {departure_city} to {destination_city} at 11.00am and costs USD 13.\n\n"
-                                                        "Proceed to book ticket?",
-                                                        buttons
-                                                    )                                             
+                                            
 
                                                 elif selected_option == "FAQS":
                                                     button_id_leave_type = str(selected_option)
@@ -562,7 +540,7 @@ def webhook():
                                                         sections)     
 
 
-                                                if button_id == "ticketbook":
+                                                elif button_id == "ticketbook":
 
                                                     sections = [
                                                         {
@@ -580,9 +558,40 @@ def webhook():
                                                         sender_id, 
                                                         "Great! You may proceed to pay for your ticket and reserve a seat. Select a method of Payment below.", 
                                                         "Payment for Ticket",
-                                                        sections)  
-                                                    
+                                                        sections) 
 
+                                                elif button_id in ["7am", "10am", "2pm"]:
+
+                                                    print(f"🕒 User selected time: {button_id}") 
+
+                                                    cursor.execute(
+                                                        "UPDATE ticketbookingstemp SET time_dep_bus = %s WHERE user_id = %s",
+                                                        (button_id, sender_number)
+                                                    )
+                                                    connection.commit()
+
+
+                                                    cursor.execute(
+                                                        "SELECT departure_city, destination_city, travel_date FROM ticketbookingstemp WHERE user_id = %s",
+                                                        (sender_number,)
+                                                    )
+                                                    result = cursor.fetchone()
+
+                                                    departure_city = result[0]
+                                                    destination_city = result[1]
+                                                    travel_date = result[2]
+
+
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
+                                                        {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}}
+                                                    ]
+                                                    send_whatsapp_messagecc(
+                                                        sender_id, 
+                                                        f"Great News! Seats are still available on the bus that will be departing from *{departure_city}* to *{destination_city}* on *{travel_date}* at *{button_id}* and costs USD 13.\n\n"
+                                                        "Proceed to book ticket?",
+                                                        buttons
+                                                    ) 
 
                                         else:
 
@@ -623,7 +632,7 @@ def webhook():
                                                     ]
                                                     send_whatsapp_messagecc(
                                                         sender_id, 
-                                                        f"Kindly select your preferred departure time on the bus that will be departing from {departure_city} to {destination_city} on parsed_date.",
+                                                        f"Kindly select your preferred departure time on the bus that will be departing from *{departure_city}* to *{destination_city}* on {parsed_date}.",
                                                         buttons
                                                     )      
 
