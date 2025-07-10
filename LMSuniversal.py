@@ -491,14 +491,16 @@ def webhook():
                                                     button_id_leave_type = str(selected_option)
 
                                                     table_message = (
+                                                            "```"
                                                             "*🚌 Bus Fares*\n\n"
-                                                            "Cities/Towns            | Fare\n"
-                                                            "------------------------|-----\n"
-                                                            "Harare ↔️ Bulawayo      | $15\n"
-                                                            "Harare ↔️ Kariba        | $14\n"
-                                                            "Harare ↔️ Victoria Falls| $25\n"
-                                                            "Chitungwiza ↔️ Mutare   | $10\n"
-                                                            "Harare ↔️ Gokwe         | $15"
+                                                            "Cities/Towns              | Fare\n"
+                                                            "--------------------------|-----\n"
+                                                            "Harare ↔️ Bulawayo       | $15\n"
+                                                            "Harare ↔️ Kariba         | $14\n"
+                                                            "Harare ↔️ Victoria Falls | $25\n"
+                                                            "Chitungwiza ↔️ Mutare    | $10\n"
+                                                            "Harare ↔️ Gokwe          | $15"
+                                                            "```"
                                                         )
 
                                                     payload = {
