@@ -1886,9 +1886,6 @@ def webhook():
                                                                         pdf_bytes = HTML(string=html_out).write_pdf()
                                                                         return pdf_bytes
 
-                                                                    
-                                                                    global ACCESS_TOKEN
-                                                                    global PHONE_NUMBER_ID
 
                                                                     def upload_pdf_to_whatsapp(pdf_bytes):
                                                                         compxxy = company_reg.replace("_"," ").title()
@@ -2491,8 +2488,6 @@ def webhook():
                                                                     return pdf_bytes
 
                                                                 
-                                                                global ACCESS_TOKEN
-                                                                global PHONE_NUMBER_ID
 
                                                                 def upload_pdf_to_whatsapp(pdf_bytes):
                                                                     filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
@@ -2654,8 +2649,6 @@ def webhook():
                                                                 df_employeesappsapprovedcheck["dateapplied"] = pd.to_datetime(df_employeesappsapprovedcheck["dateapplied"], errors='coerce')
                                                                 df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="dateapplied", ascending=False)
                                                                 
-                                                                global ACCESS_TOKEN
-                                                                global PHONE_NUMBER_ID
 
                                                                 buttonsapproval = [
                                                                     {"type": "reply", "reply": {"id": "Revokedis", "title": "Revoke Disapproval"}},
@@ -2923,9 +2916,7 @@ def webhook():
                                                                         pdf_bytes = HTML(string=html_out).write_pdf()
                                                                         return pdf_bytes
 
-                                                                    
-                                                                    global ACCESS_TOKEN
-                                                                    global PHONE_NUMBER_ID
+                                                                
 
                                                                     def upload_pdf_to_whatsapp(pdf_bytes):
                                                                         compxxy = company_reg.replace("_"," ").title()
@@ -3626,9 +3617,7 @@ def webhook():
                                                                     pdf_bytes = HTML(string=html_out).write_pdf()
                                                                     return pdf_bytes
 
-                                                                
-                                                                global ACCESS_TOKEN
-                                                                global PHONE_NUMBER_ID
+                                                            
 
                                                                 def upload_pdf_to_whatsapp(pdf_bytes):
                                                                     compxxy = company_reg.replace("_"," ").title()
@@ -3996,8 +3985,6 @@ def webhook():
                                                                         return pdf_bytes
 
                                                                     
-                                                                    global ACCESS_TOKEN
-                                                                    global PHONE_NUMBER_ID
 
                                                                     def upload_pdf_to_whatsapp(pdf_bytes):
                                                                         compxxy = company_reg.replace("_"," ").title()
@@ -4627,8 +4614,6 @@ def webhook():
                                                                     return pdf_bytes
 
                                                                 
-                                                                global ACCESS_TOKEN
-                                                                global PHONE_NUMBER_ID
 
                                                                 def upload_pdf_to_whatsapp(pdf_bytes):
                                                                     filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
@@ -4788,8 +4773,6 @@ def webhook():
                                                                 df_employeesappsapprovedcheck["dateapplied"] = pd.to_datetime(df_employeesappsapprovedcheck["dateapplied"], errors='coerce')
                                                                 df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="dateapplied", ascending=False)
                                                                 
-                                                                global ACCESS_TOKEN
-                                                                global PHONE_NUMBER_ID
 
                                                                 buttonsapproval = [
                                                                     {"type": "reply", "reply": {"id": "Revokedis", "title": "Revoke Disapproval"}},
@@ -5273,8 +5256,6 @@ def webhook():
                                                                         return pdf_bytes
 
                                                                     
-                                                                    global ACCESS_TOKEN
-                                                                    global PHONE_NUMBER_ID
 
                                                                     def upload_pdf_to_whatsapp(pdf_bytes):
                                                                         compxxy = company_reg.replace("_"," ").title()
