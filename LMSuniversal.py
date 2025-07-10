@@ -588,17 +588,71 @@ def webhook():
                                                 elif selected_option == "vkariba":
                                                     button_id_leave_type = str(selected_option)
 
-                                                    send_whatsapp_messagecc(sender_id, "Departures from Mbare Musika Rank. \n\n Departure Times: 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM.")
+                                                    sections = [
+                                                        {
+                                                            "title": "Leave Type Options",
+                                                            "rows": [
+                                                                {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                {"id": "View", "title": "View Route & Times"},
+                                                                {"id": "Contact", "title": "Contact Support"},
+                                                                {"id": "FAQs", "title": "FAQs"},
+                                                                {"id": "Download", "title": "Download Brochure"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id, 
+                                                        f"Departures from Mbare Musika Rank. \n\n Departure Times: 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM.\n\n Kindly select an option for enquiry.", 
+                                                        "Bus Abc Options",
+                                                        sections) 
+                                                    
 
                                                 elif selected_option == "vbulawayo":
                                                     button_id_leave_type = str(selected_option)
 
-                                                    send_whatsapp_messagecc(sender_id, "Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.")
+                                                    sections = [
+                                                        {
+                                                            "title": "Leave Type Options",
+                                                            "rows": [
+                                                                {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                {"id": "View", "title": "View Route & Times"},
+                                                                {"id": "Contact", "title": "Contact Support"},
+                                                                {"id": "FAQs", "title": "FAQs"},
+                                                                {"id": "Download", "title": "Download Brochure"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id, 
+                                                        f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
+                                                        "Bus Abc Options",
+                                                        sections) 
 
                                                 elif selected_option == "vmutare":
                                                     button_id_leave_type = str(selected_option)
 
-                                                    send_whatsapp_messagecc(sender_id, "Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.")
+                                                    sections = [
+                                                        {
+                                                            "title": "Leave Type Options",
+                                                            "rows": [
+                                                                {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                {"id": "View", "title": "View Route & Times"},
+                                                                {"id": "Contact", "title": "Contact Support"},
+                                                                {"id": "FAQs", "title": "FAQs"},
+                                                                {"id": "Download", "title": "Download Brochure"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id, 
+                                                        f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
+                                                        "Bus Abc Options",
+                                                        sections)
+                                                    
+
 
                                             elif interactive.get("type") == "button_reply":
                                                 button_id = interactive.get("button_reply", {}).get("id")
