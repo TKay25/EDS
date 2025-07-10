@@ -545,52 +545,42 @@ def webhook():
                                                 elif selected_option == "View":
                                                     button_id_leave_type = str(selected_option)
 
-                                                    FILE_URL = 'https://dl.dropboxusercontent.com/scl/fi/4wespl0ur6y9t6hwbymok/Harare_Bus_Schedule.pdf'
-
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "document",
-                                                        "document": {
-                                                            "link": FILE_URL,
-                                                            "filename": "Bus_ABC_Schedule.pdf"
-                                                        }
-                                                    }
-
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
                                                         "Content-Type": "application/json"
                                                     }
 
-                                                    response = requests.post(
-                                                        f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages",
-                                                        headers=headers,
-                                                        json=payload
-                                                    )
-
-                                                    if response.status_code == 200:
-                                                        # Only send list message if the document was successfully sent
-                                                        sections = [
-                                                            {
-                                                                "title": "Leave Type Options",
-                                                                "rows": [
-                                                                    {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                    {"id": "View", "title": "View Route & Times"},
-                                                                    {"id": "Contact", "title": "Contact Support"},
-                                                                    {"id": "FAQs", "title": "FAQs"},
-                                                                    {"id": "Download", "title": "Download Brochure"},
-                                                                ]
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": { "type": "text", "text": "🚌 Bus ABC Schedule" },
+                                                            "body": { "text": "Select a destination to view bus times:" },
+                                                            "action": {
+                                                                "button": "View Routes",
+                                                                "sections": [{
+                                                                    "title": "Available Routes",
+                                                                    "rows": [
+                                                                        { "id": "kariba", "title": "Harare → Kariba", "description": "US$14" },
+                                                                        { "id": "bulawayo", "title": "Harare → Bulawayo", "description": "US$15" },
+                                                                        { "id": "victoria", "title": "Harare → Victoria Falls", "description": "US$25" },
+                                                                        { "id": "mutare", "title": "Chitungwiza → Mutare", "description": "6:00 AM" },
+                                                                        { "id": "gokwe", "title": "Harare → Gokwe", "description": "10 daily buses" },
+                                                                        { "id": "karoi", "title": "Harare → Karoi / Magunje", "description": "7 departures" },
+                                                                        { "id": "honde", "title": "Harare → Honde Valley", "description": "10 departures" },
+                                                                        { "id": "chirundu", "title": "Harare → Chirundu", "description": "9:00 AM" },
+                                                                        { "id": "mukumbura", "title": "Harare → Mukumbura", "description": "9 departures" },
+                                                                        { "id": "all", "title": "📄 View Full Schedule PDF", "description": "Download file" }
+                                                                    ]
+                                                                }]
                                                             }
-                                                        ]
+                                                        }
+                                                    }
 
-                                                        send_whatsapp_list_messagecc(
-                                                            sender_id, 
-                                                            "Kindly select an option for enquiry.", 
-                                                            "Bus Abc Options",
-                                                            sections
-                                                        )
-                                                    else:
-                                                        print(f"Failed to send document. Status Code: {response.status_code}, Response: {response.text}")
+                                                    requests.post(url, headers=headers, json=payload)
                                                                                                         
 
 
@@ -738,13 +728,14 @@ def webhook():
                                                             {"id": "View", "title": "View Route & Times"},
                                                             {"id": "Contact", "title": "Contact Support"},
                                                             {"id": "FAQs", "title": "FAQs"},
+                                                            {"id": "Download", "title": "Download Brochure"},
                                                         ]
                                                     }
                                                 ]
 
                                                 send_whatsapp_list_messagecc(
                                                     sender_id, 
-                                                    f"Kindly select an option for enquiry.", 
+                                                    f"Hello! Welcome to Bus Abc Chatbot😊.\n Kindly select an option for enquiry.", 
                                                     "Bus Abc Options",
                                                     sections) 
                                             
