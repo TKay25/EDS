@@ -541,6 +541,54 @@ def webhook():
                                                         "Bus Abc Options",
                                                         sections) 
 
+
+                                                elif selected_option == "View":
+                                                    button_id_leave_type = str(selected_option)
+
+                                                    FILE_URL = 'https://www.dropbox.com/scl/fi/4wespl0ur6y9t6hwbymok/Harare_Bus_Schedule.pdf?rlkey=er7npb88j1nkfwerq6f0j52mr&st=9mab0dy8&dl=0.pdf'
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "document",
+                                                        "document": {
+                                                            "link": FILE_URL,
+                                                            "filename": "Bus_ABC_Schedule.pdf"
+                                                        }
+                                                    }
+
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages",
+                                                        headers=headers,
+                                                        json=payload
+                                                    )
+
+                                                    sections = [
+                                                        {
+                                                            "title": "Leave Type Options",
+                                                            "rows": [
+                                                                {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                {"id": "View", "title": "View Route & Times"},
+                                                                {"id": "Contact", "title": "Contact Support"},
+                                                                {"id": "FAQs", "title": "FAQs"},
+                                                                {"id": "Download", "title": "Download Brochure"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id, 
+                                                        f"Kindly select an option for enquiry.", 
+                                                        "Bus Abc Options",
+                                                        sections) 
+                                                    
+
+
                                                 elif selected_option == "Contact":
                                                     button_id_leave_type = str(selected_option)
 
@@ -692,7 +740,7 @@ def webhook():
                                                 send_whatsapp_list_messagecc(
                                                     sender_id, 
                                                     f"Kindly select an option for enquiry.", 
-                                                    "Options",
+                                                    "Bus Abc Options",
                                                     sections) 
                                             
 
