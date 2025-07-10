@@ -484,7 +484,7 @@ def webhook():
                                                     send_whatsapp_list_messagecc(
                                                         sender_id, 
                                                         "Ok. Select a FAQ for more info...", 
-                                                        "FAQs",
+                                                        "Bus Abc FAQs",
                                                         sections) 
                                                     
                                                 elif selected_option == "Fares":
@@ -520,6 +520,23 @@ def webhook():
 
                                                     response = requests.post(url, headers=headers, json=payload)
 
+                                                    sections = [
+                                                        {
+                                                            "title": "Leave Type Options",
+                                                            "rows": [
+                                                                {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                {"id": "View", "title": "View Route & Times"},
+                                                                {"id": "Contact", "title": "Contact Support"},
+                                                                {"id": "FAQs", "title": "FAQs"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_messagecc(
+                                                        sender_id, 
+                                                        f"Kindly select an option for enquiry.", 
+                                                        "Bus Abc Options",
+                                                        sections) 
 
                                                 elif selected_option == "Contact":
                                                     button_id_leave_type = str(selected_option)
