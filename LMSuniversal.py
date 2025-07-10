@@ -204,6 +204,9 @@ def webhook():
         global today_date
         data = request.get_json()
 
+        global ACCESS_TOKEN
+        global PHONE_NUMBER_ID
+
         try:
             # Navigate the JSON structure to get the display_phone_number
             display_phone_number = data["entry"][0]["changes"][0]["value"]["metadata"]["display_phone_number"]
@@ -1046,8 +1049,7 @@ def webhook():
                                                                         return pdf_bytes
 
                                                                     
-                                                                    global ACCESS_TOKEN
-                                                                    global PHONE_NUMBER_ID
+
 
                                                                     def upload_pdf_to_whatsapp(pdf_bytes):
                                                                         compxxy = company_reg.replace("_"," ").title()
