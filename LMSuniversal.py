@@ -369,10 +369,10 @@ def webhook():
                                                         {
                                                             "title": "City/Town of Departure",
                                                             "rows": [
-                                                                {"id": "stHarare", "title": "Harare"},
-                                                                {"id": "stBulawayo", "title": "Bulawayo"},
-                                                                {"id": "stVictoriaFalls", "title": "Victoria Falls"},
-                                                                {"id": "stMutare", "title": "Mutare"},
+                                                                #{"id": "stHarare", "title": "Harare"},
+                                                                #{"id": "stBulawayo", "title": "Bulawayo"},
+                                                                #{"id": "stVictoriaFalls", "title": "Victoria Falls"},
+                                                                #{"id": "stMutare", "title": "Mutare"},
                                                                 {"id": "stKadoma", "title": "Kadoma"},
                                                                 {"id": "stKwekwe", "title": "Kwekwe"},
                                                                 {"id": "stKaroi", "title": "Karoi"},
