@@ -369,20 +369,16 @@ def webhook():
                                                         {
                                                             "title": "City/Town of Departure",
                                                             "rows": [
-                                                                #{"id": "stHarare", "title": "Harare"},
-                                                                #{"id": "stBulawayo", "title": "Bulawayo"},
-                                                                #{"id": "stVictoriaFalls", "title": "Victoria Falls"},
-                                                                #{"id": "stMutare", "title": "Mutare"},
+                                                                {"id": "stHarare", "title": "Harare"},
+                                                                {"id": "stBulawayo", "title": "Bulawayo"},
+                                                                {"id": "stVictoriaFalls", "title": "Victoria Falls"},
+                                                                {"id": "stMutare", "title": "Mutare"},
                                                                 {"id": "stKadoma", "title": "Kadoma"},
                                                                 {"id": "stKwekwe", "title": "Kwekwe"},
                                                                 {"id": "stKaroi", "title": "Karoi"},
                                                                 {"id": "stGweru", "title": "Gweru"},
-                                                                {"id": "stChitungwiza", "title": "Chitungwiza"},
-                                                                {"id": "stChirundu", "title": "Chirundu"},
-                                                                {"id": "stMukumbura", "title": "Mukumbura"},
                                                                 {"id": "stGokwe", "title": "Gokwe"},
                                                                 {"id": "stMasvingo", "title": "Masvingo"},
-                                                                {"id": "stHondeValley", "title": "Honde Valley"},
                                                             ]
                                                         }
                                                     ]
@@ -564,16 +560,16 @@ def webhook():
                                                                 "sections": [{
                                                                     "title": "Available Routes",
                                                                     "rows": [
-                                                                        { "id": "kariba", "title": "Harare → Kariba", "description": "US$14" },
-                                                                        { "id": "bulawayo", "title": "Harare → Bulawayo", "description": "US$15" },
-                                                                        { "id": "victoria", "title": "Harare → Victoria Falls", "description": "US$25" },
-                                                                        { "id": "mutare", "title": "Chitungwiza → Mutare", "description": "6:00 AM" },
-                                                                        { "id": "gokwe", "title": "Harare → Gokwe", "description": "10 daily buses" },
-                                                                        { "id": "karoi", "title": "Harare → Karoi / Magunje", "description": "7 departures" },
-                                                                        { "id": "honde", "title": "Harare → Honde Valley", "description": "10 departures" },
-                                                                        { "id": "chirundu", "title": "Harare → Chirundu", "description": "9:00 AM" },
-                                                                        { "id": "mukumbura", "title": "Harare → Mukumbura", "description": "9 departures" },
-                                                                        { "id": "all", "title": "📄 View Full Schedule PDF", "description": "Download file" }
+                                                                        { "id": "vbulawayo", "title": "Harare → Bulawayo", "description": "US$15" },
+                                                                        { "id": "vmutare", "title": "Chitungwiza → Mutare", "description": "6:00 AM" },
+                                                                        { "id": "vkariba", "title": "Harare → Kariba", "description": "US$14" },
+                                                                        { "id": "vvictoria", "title": "Harare → Victoria Falls", "description": "US$25" },
+                                                                        { "id": "vgokwe", "title": "Harare → Gokwe", "description": "10 daily buses" },
+                                                                        { "id": "vkaroi", "title": "Harare → Karoi / Magunje", "description": "7 departures" },
+                                                                        { "id": "vhonde", "title": "Harare → Honde Valley", "description": "10 departures" },
+                                                                        { "id": "vchirundu", "title": "Harare → Chirundu", "description": "9:00 AM" },
+                                                                        { "id": "vmukumbura", "title": "Harare → Mukumbura", "description": "9 departures" },
+                                                                        { "id": "vall", "title": "📄 View Full Schedule PDF", "description": "Download file" }
                                                                     ]
                                                                 }]
                                                             }
@@ -588,6 +584,21 @@ def webhook():
                                                     button_id_leave_type = str(selected_option)
 
                                                     send_whatsapp_messagecc(sender_id, "✅ Okay. A Customer Representative has been notified to assit you. They will contact you shortly.")
+
+                                                elif selected_option == "vkariba":
+                                                    button_id_leave_type = str(selected_option)
+
+                                                    send_whatsapp_messagecc(sender_id, "Departures from Mbare Musika Rank. \n\n Departure Times: 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM.")
+
+                                                elif selected_option == "vbulawayo":
+                                                    button_id_leave_type = str(selected_option)
+
+                                                    send_whatsapp_messagecc(sender_id, "Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.")
+
+                                                elif selected_option == "vmutare":
+                                                    button_id_leave_type = str(selected_option)
+
+                                                    send_whatsapp_messagecc(sender_id, "Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.")
 
                                             elif interactive.get("type") == "button_reply":
                                                 button_id = interactive.get("button_reply", {}).get("id")
