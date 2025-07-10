@@ -466,7 +466,7 @@ def webhook():
 
                                             
 
-                                                elif selected_option == "FAQS":
+                                                elif selected_option == "FAQs":
                                                     button_id_leave_type = str(selected_option)
 
                                                     sections = [
