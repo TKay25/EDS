@@ -364,17 +364,22 @@ def webhook():
 
                                                     sections = [
                                                         {
-                                                            "title": "City of Departure",
+                                                            "title": "City/Town of Departure",
                                                             "rows": [
                                                                 {"id": "stHarare", "title": "Harare"},
-                                                                {"id": "stChegutu", "title": "Chegutu"},
+                                                                {"id": "stBulawayo", "title": "Bulawayo"},
+                                                                {"id": "stVictoriaFalls", "title": "Victoria Falls"},
+                                                                {"id": "stMutare", "title": "Mutare"},
                                                                 {"id": "stKadoma", "title": "Kadoma"},
                                                                 {"id": "stKwekwe", "title": "Kwekwe"},
+                                                                {"id": "stKaroi", "title": "Karoi"},
                                                                 {"id": "stGweru", "title": "Gweru"},
-                                                                {"id": "stBulawayo", "title": "Bulawayo"},
-                                                                {"id": "stChitungwiza", "title": "Mvuma"},
+                                                                {"id": "stChitungwiza", "title": "Chitungwiza"},
+                                                                {"id": "stChirundu", "title": "Chirundu"},
+                                                                {"id": "stMukumbura", "title": "Mukumbura"},
+                                                                {"id": "stGokwe", "title": "Gokwe"},
                                                                 {"id": "stMasvingo", "title": "Masvingo"},
-                                                                {"id": "stVictoriaFalls", "title": "Victoria Falls"},
+                                                                {"id": "stHondeValley", "title": "Honde Valley"},
                                                             ]
                                                         }
                                                     ]
@@ -482,23 +487,35 @@ def webhook():
                                                 elif selected_option == "Fares":
                                                     button_id_leave_type = str(selected_option)
 
-                                                    sections = [
-                                                        {
-                                                            "title": "FAQs",
-                                                            "rows": [
-                                                                {"id": "Fares", "title": "Fares"},
-                                                                {"id": "BusTypes", "title": "Bus Types"},
-                                                                {"id": "Privatehires", "title": "Do you do private hires?"},
-                                                                {"id": "Sunday", "title": "Do you work on Sundays"},
-                                                            ]
-                                                        }
-                                                    ]
+                                                    table_message = (
+                                                            "*🚌 Bus Fares*\n\n"
+                                                            "Cities/Towns | Fare\n"
+                                                            "------------------------|------\n"
+                                                            "Harare ↔️ Bulawayo               | $15\n"
+                                                            "Harare ↔️ Kariba     | $14\n"
+                                                            "Harare ↔️ Victoria Falls      | $25\n"
+                                                            "Chitungwiza ↔️ Mutare                  | $10\n"
+                                                            "Harare ↔️ Gokwe     | $15"
+                                                        )
 
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        "Ok. Select a FAQ for more info...", 
-                                                        "FAQs",
-                                                        sections) 
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "text",
+                                                        "text": {
+                                                            "body": table_message,
+                                                            "preview_url": False
+                                                        }
+                                                    }
+
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+
+                                                    response = requests.post(url, headers=headers, json=payload)
 
 
                                                 elif selected_option == "Contact":
