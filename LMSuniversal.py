@@ -545,7 +545,7 @@ def webhook():
                                                 elif selected_option == "View":
                                                     button_id_leave_type = str(selected_option)
 
-                                                    FILE_URL = 'https://www.dropbox.com/scl/fi/4wespl0ur6y9t6hwbymok/Harare_Bus_Schedule.pdf?rlkey=er7npb88j1nkfwerq6f0j52mr&st=9mab0dy8&dl=0.pdf'
+                                                    FILE_URL = 'https://dl.dropboxusercontent.com/scl/fi/4wespl0ur6y9t6hwbymok/Harare_Bus_Schedule.pdf'
 
                                                     payload = {
                                                         "messaging_product": "whatsapp",
@@ -568,25 +568,30 @@ def webhook():
                                                         json=payload
                                                     )
 
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "View Route & Times"},
-                                                                {"id": "Contact", "title": "Contact Support"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                                {"id": "Download", "title": "Download Brochure"},
-                                                            ]
-                                                        }
-                                                    ]
+                                                    if response.status_code == 200:
+                                                        # Only send list message if the document was successfully sent
+                                                        sections = [
+                                                            {
+                                                                "title": "Leave Type Options",
+                                                                "rows": [
+                                                                    {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                    {"id": "View", "title": "View Route & Times"},
+                                                                    {"id": "Contact", "title": "Contact Support"},
+                                                                    {"id": "FAQs", "title": "FAQs"},
+                                                                    {"id": "Download", "title": "Download Brochure"},
+                                                                ]
+                                                            }
+                                                        ]
 
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Kindly select an option for enquiry.", 
-                                                        "Bus Abc Options",
-                                                        sections) 
-                                                    
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            "Kindly select an option for enquiry.", 
+                                                            "Bus Abc Options",
+                                                            sections
+                                                        )
+                                                    else:
+                                                        print(f"Failed to send document. Status Code: {response.status_code}, Response: {response.text}")
+                                                                                                        
 
 
                                                 elif selected_option == "Contact":
