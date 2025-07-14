@@ -6403,8 +6403,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         leaveapproverid INT,
                         leaveapproveremail VARCHAR(255),
                         leaveapproverwhatsapp INT,
-                        currentleavedaysbalance INT,
-                        monthlyaccumulation INT,
+                        currentleavedaysbalance NUMERIC(5, 1),
+                        monthlyaccumulation NUMERIC(5, 1)
                     );
                     """
                     cursor.execute(create_table_query)
@@ -6425,12 +6425,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         leaveapproverid INT,
                         leaveapproveremail VARCHAR(255),
                         leaveapproverwhatsapp INT,
-                        currentleavedaysbalance INT,
+                        currentleavedaysbalance NUMERIC(5, 1),
                         dateapplied date,
                         leavestartdate date,
                         leaveenddate date,
                         leavedaysappliedfor INT,
-                        leavedaysbalancebf INT,
+                        leavedaysbalancebf NUMERIC(5, 1),
                         approvalstatus VARCHAR(255)
                     );
                     """
@@ -6452,12 +6452,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         leaveapproverid INT,
                         leaveapproveremail VARCHAR(255),
                         leaveapproverwhatsapp INT,
-                        currentleavedaysbalance INT,
+                        currentleavedaysbalance NUMERIC(5, 1),
                         dateapplied date,
                         leavestartdate date,
                         leaveenddate date,
                         leavedaysappliedfor INT,
-                        leavedaysbalancebf INT,
+                        leavedaysbalancebf NUMERIC(5, 1),
                         approvalstatus VARCHAR(255),
                         statusdate date
                     );
@@ -6482,12 +6482,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         leaveapproverid INT,
                         leaveapproveremail VARCHAR(255),
                         leaveapproverwhatsapp INT,
-                        currentleavedaysbalance INT,
+                        currentleavedaysbalance NUMERIC(5, 1),
                         dateapplied date,
                         leavestartdate date,
                         leaveenddate date,
                         leavedaysappliedfor INT,
-                        leavedaysbalancebf INT,
+                        leavedaysbalancebf NUMERIC(5, 1),
                         approvalstatus VARCHAR(255),
                         statusdate date         
                     );
@@ -6510,12 +6510,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         leaveapproverid INT,
                         leaveapproveremail VARCHAR(255),
                         leaveapproverwhatsapp INT,
-                        currentleavedaysbalance INT,
+                        currentleavedaysbalance NUMERIC(5, 1),
                         dateapplied date,
                         leavestartdate date,
                         leaveenddate date,
                         leavedaysappliedfor INT,
-                        leavedaysbalancebf INT,
+                        leavedaysbalancebf NUMERIC(5, 1),
                         approvalstatus VARCHAR(255),
                         statusdate date         
                     );
@@ -6538,12 +6538,12 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         leaveapproverid INT,
                         leaveapproveremail VARCHAR(255),
                         leaveapproverwhatsapp INT,
-                        currentleavedaysbalance INT,
+                        currentleavedaysbalance NUMERIC(5, 1),
                         dateapplied date,
                         leavestartdate date,
                         leaveenddate date,
                         leavedaysappliedfor INT,
-                        leavedaysbalancebf INT,
+                        leavedaysbalancebf NUMERIC(5, 1),
                         approvalstatus VARCHAR(255),
                         statusdate date         
                     );
