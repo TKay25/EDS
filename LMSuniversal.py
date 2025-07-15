@@ -6253,7 +6253,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         for index, row in df.iterrows():
                             first_name = row['FirstName']
                             surname = row['Surname']
-                            whatsapp = row['WhatsApp']
+                            whatsapp_raw = str(row['WhatsApp']).replace(" ", "")
+                            whatsapp = whatsapp_raw[-9:] if len(whatsapp_raw) >= 9 else whatsapp_raw
                             email = row['Email']
                             role = row['Role']
                             department = row['Department']
