@@ -6243,6 +6243,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 df = pd.read_excel(file, usecols=range(8))
                 df = check_existing_data(df, table_name)
+                df = df.dropna(subset=['FirstName'])
 
                 print(df)
 
