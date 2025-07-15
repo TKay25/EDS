@@ -50,6 +50,16 @@ PHONE_NUMBER_ID = "558392750697195"
 VERIFY_TOKEN = "521035180620700"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
+create_table_query_comp_creation = f"""
+CREATE TABLE IF NOT EXISTS companyreg (
+    compid SERIAL PRIMARY KEY,
+    companyname VARCHAR (100),
+    datecreated date
+);
+"""
+cursor.execute(create_table_query_comp_creation)
+connection.commit()
+
 create_table_query = f"""
 CREATE TABLE IF NOT EXISTS whatsapptempapplication (
     id SERIAL PRIMARY KEY,
@@ -6573,6 +6583,13 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
 
                 admin = "Administrator"
+
+                insert_query_compreg = f"""
+                INSERT INTO companyreg (companyname, datecreated)
+                VALUES (%s, %s);
+                """
+                cursor.execute(insert_query_compreg, (table_name, today_date))
+                connection.commit()
 
                 
                 insert_query = f"""
