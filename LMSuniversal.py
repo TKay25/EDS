@@ -7253,7 +7253,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     whatsapp_raw = str(int(float(whatsapp))).replace(" ", "")
                     whatsapp = whatsapp_raw[-9:] if len(whatsapp_raw) >= 9 else whatsapp_raw
                     current_leave_days = int(current_leave_days)
-                    monthly_accumulation = int(monthly_accumulation)
+                    monthly_accumulation = float(monthly_accumulation)
 
                 except ValueError:
                     return "Invalid input for numeric fields", 400
