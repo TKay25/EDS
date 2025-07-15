@@ -6228,55 +6228,46 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
-            try:
+            table_name = session.get('table_name')
+            empid = session.get('empid')
 
-                table_name = session.get('table_name')
-                empid = session.get('empid')
+            if 'file' not in request.files:
+                return jsonify({"status": "error", "message": "No file part"}), 400
+            
+            file = request.files['file']
+            
+            if file.filename == '':
+                return jsonify({"status": "error", "message": "No selected file"}), 400
+            
+            if file and allowed_file(file.filename):
 
-                if 'file' not in request.files:
-                    return jsonify({"status": "error", "message": "No file part"}), 400
-                
-                file = request.files['file']
-                
-                if file.filename == '':
-                    return jsonify({"status": "error", "message": "No selected file"}), 400
-                
-                if file and allowed_file(file.filename):
+                df = pd.read_excel(file, usecols=range(8))
+                df = check_existing_data(df, table_name)
 
-                    df = pd.read_excel(file, usecols=range(8))
-                    df = check_existing_data(df, table_name)
+                print(df)
 
-                    print(df)
+                if len(df) > 0:
 
-                    if len(df) > 0:
+                    for index, row in df.iterrows():
+                        first_name = row['FirstName']
+                        surname = row['Surname']
+                        whatsapp_raw = str(row['WhatsApp']).replace(" ", "")
+                        whatsapp = whatsapp_raw[-9:] if len(whatsapp_raw) >= 9 else whatsapp_raw
+                        email = row['Email']
+                        role = row['Role']
+                        department = row['Department']
+                        current_leave_days_balance = row['Current Leave Days Balance']
+                        monthly_accumulation = row['Monthly Leave Days Accumulation']
 
-                        for index, row in df.iterrows():
-                            first_name = row['FirstName']
-                            surname = row['Surname']
-                            whatsapp_raw = str(row['WhatsApp']).replace(" ", "")
-                            whatsapp = whatsapp_raw[-9:] if len(whatsapp_raw) >= 9 else whatsapp_raw
-                            email = row['Email']
-                            role = row['Role']
-                            department = row['Department']
-                            current_leave_days_balance = row['Current Leave Days Balance']
-                            monthly_accumulation = row['Monthly Leave Days Accumulation']
-
-                            cursor.execute(f"""
-                                INSERT INTO {table_name} (firstname, surname, whatsapp, email, role, department, currentleavedaysbalance, monthlyaccumulation)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                            """, (first_name, surname, whatsapp, email, role, department, current_leave_days_balance, monthly_accumulation))
-                        
-                        connection.commit()
-
-                    return redirect(url_for('Dashboard'))
-                
-            except Error as e:
-                print(e)
+                        cursor.execute(f"""
+                            INSERT INTO {table_name} (firstname, surname, whatsapp, email, role, department, currentleavedaysbalance, monthlyaccumulation)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        """, (first_name, surname, whatsapp, email, role, department, current_leave_days_balance, monthly_accumulation))
+                    
+                    connection.commit()
 
                 return redirect(url_for('Dashboard'))
-
-        
-
+    
         else:
             return redirect(url_for('landingpage')) 
 
