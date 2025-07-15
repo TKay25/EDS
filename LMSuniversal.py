@@ -6696,6 +6696,28 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     table_names = [table[0] for table in tables]
 
                     df_tables = pd.DataFrame(table_names, columns=['Table Name'])
+
+                    print(df_tables)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           
                     return render_template('edslmsadmin.html')
 
