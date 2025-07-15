@@ -6583,12 +6583,14 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
 
                 admin = "Administrator"
+                company_name_compreg = table_name.lower()
+
 
                 insert_query_compreg = f"""
                 INSERT INTO companyreg (companyname, datecreated)
                 VALUES (%s, %s);
                 """
-                cursor.execute(insert_query_compreg, (table_name, today_date))
+                cursor.execute(insert_query_compreg, (company_name_compreg, today_date))
                 connection.commit()
 
                 insert_query = f"""
@@ -6737,7 +6739,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
 
                     merged_df = pd.merge(df_main_counts, compsreg, left_on='Company', right_on='Company Name', how='outer')
-
+                    merged_df = merged_df.drop(columns=['Company Name'])
+                    merged_df = merged_df[["Company ID","Company", "Date Registered","Employees"]]
                     print(merged_df)
 
 
