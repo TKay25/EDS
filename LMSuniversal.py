@@ -5884,9 +5884,12 @@ def run1(table_name, empid):
     selected_columns_accumulators = df_employees[['id','Employee Name', "Days Accumulated per Month"]]
     selected_columns_accumulators.columns = ['ID','EMPLOYEE NAME','DAYS ACCUMULATED PER MONTH']
     selected_columns_accumulators.loc[:, 'LEAVE DAYS ACCUMULATED PER MONTH'] = selected_columns_accumulators.apply(
-        lambda row: f'<input type="number" step="0.5" class="editable-field" value="{f'{row['DAYS ACCUMULATED PER MONTH']:.1f}' if row['DAYS ACCUMULATED PER MONTH'] is not None else '0.0'}" data-id="{row["ID"]}" style="width: 100%;"/>',
+        lambda row: f'<input type="number" step="0.5" class="editable-field" value="{row["DAYS ACCUMULATED PER MONTH"]:.1f}" data-id="{row["ID"]}" style="width: 100%;"/>'
+        if row["DAYS ACCUMULATED PER MONTH"] is not None
+        else f'<input type="number" step="0.5" class="editable-field" value="0.0" data-id="{row["ID"]}" style="width: 100%;"/>',
         axis=1
     )
+
 
     seacc = selected_columns_accumulators[['ID','EMPLOYEE NAME','LEAVE DAYS ACCUMULATED PER MONTH']]
 
