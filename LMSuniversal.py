@@ -6228,44 +6228,53 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
-            table_name = session.get('table_name')
-            empid = session.get('empid')
+            try:
 
-            if 'file' not in request.files:
-                return jsonify({"status": "error", "message": "No file part"}), 400
-            
-            file = request.files['file']
-            
-            if file.filename == '':
-                return jsonify({"status": "error", "message": "No selected file"}), 400
-            
-            if file and allowed_file(file.filename):
+                table_name = session.get('table_name')
+                empid = session.get('empid')
 
-                df = pd.read_excel(file, usecols=range(8))
-                df = check_existing_data(df, table_name)
+                if 'file' not in request.files:
+                    return jsonify({"status": "error", "message": "No file part"}), 400
+                
+                file = request.files['file']
+                
+                if file.filename == '':
+                    return jsonify({"status": "error", "message": "No selected file"}), 400
+                
+                if file and allowed_file(file.filename):
 
-                print(df)
+                    df = pd.read_excel(file, usecols=range(8))
+                    df = check_existing_data(df, table_name)
 
-                if len(df) > 0:
+                    print(df)
 
-                    for index, row in df.iterrows():
-                        first_name = row['FirstName']
-                        surname = row['Surname']
-                        whatsapp = row['WhatsApp']
-                        email = row['Email']
-                        role = row['Role']
-                        department = row['Department']
-                        current_leave_days_balance = row['Current Leave Days Balance']
-                        monthly_accumulation = row['Monthly Leave Days Accumulation']
+                    if len(df) > 0:
 
-                        cursor.execute(f"""
-                            INSERT INTO {table_name} (firstname, surname, whatsapp, email, role, department, currentleavedaysbalance, monthlyaccumulation)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        """, (first_name, surname, whatsapp, email, role, department, current_leave_days_balance, monthly_accumulation))
-                    
-                    connection.commit()
+                        for index, row in df.iterrows():
+                            first_name = row['FirstName']
+                            surname = row['Surname']
+                            whatsapp = row['WhatsApp']
+                            email = row['Email']
+                            role = row['Role']
+                            department = row['Department']
+                            current_leave_days_balance = row['Current Leave Days Balance']
+                            monthly_accumulation = row['Monthly Leave Days Accumulation']
+
+                            cursor.execute(f"""
+                                INSERT INTO {table_name} (firstname, surname, whatsapp, email, role, department, currentleavedaysbalance, monthlyaccumulation)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (first_name, surname, whatsapp, email, role, department, current_leave_days_balance, monthly_accumulation))
+                        
+                        connection.commit()
+
+                    return redirect(url_for('Dashboard'))
+                
+            except Error as e:
+                print(e)
 
                 return redirect(url_for('Dashboard'))
+
+        
 
         else:
             return redirect(url_for('landingpage')) 
@@ -6274,73 +6283,82 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
     @app.route('/download-excel-template-add-employees')
     def download_excel_template_add_employees():
+
         user_uuid = session.get('user_uuid')
         if not user_uuid:
             return redirect(url_for('landingpage'))
+        
 
-        table_name = session.get('table_name')
-        company_name = table_name.replace("main", "")
+        try:
 
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Employee Details"
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main", "")
 
-        # Add headers
-        headers = [
-            "FirstName", "Surname", "WhatsApp", "Email", 
-            "Role", "Department", 
-            "Current Leave Days Balance", "Monthly Leave Days Accumulation"
-        ]
-        ws.append(headers)
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Employee Details"
 
-        # Style headers
-        dark_blue = "003366"
-        white = "FFFFFF"
-        for col in range(1, len(headers) + 1):
-            cell = ws.cell(row=1, column=col)
-            cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
-            cell.font = Font(color=white, bold=True)
+            # Add headers
+            headers = [
+                "FirstName", "Surname", "WhatsApp", "Email", 
+                "Role", "Department", 
+                "Current Leave Days Balance", "Monthly Leave Days Accumulation"
+            ]
+            ws.append(headers)
 
-        # Role dropdown (inline, short list)
-        role_dv = DataValidation(type="list", formula1='"Administrator,Ordinary User"', allow_blank=False)
-        ws.add_data_validation(role_dv)
-        for row in range(2, 500):
-            role_dv.add(ws[f"E{row}"])
+            # Style headers
+            dark_blue = "003366"
+            white = "FFFFFF"
+            for col in range(1, len(headers) + 1):
+                cell = ws.cell(row=1, column=col)
+                cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
+                cell.font = Font(color=white, bold=True)
 
-        # Department options (long list) - write to column Z
-        departments = [
-            "Human Resources and Administration",
-            "Finance and Accounting",
-            "Sales and Marketing",
-            "Operations and Production",
-            "Procurement and Purchasing",
-            "Customer Service and Support",
-            "IT and Digital Infrastructure",
-            "Risk Management",
-            "Legal and Compliance",
-            "Health, Safety and Environment",
-            "Research, Analytics and Reporting"
-        ]
+            # Role dropdown (inline, short list)
+            role_dv = DataValidation(type="list", formula1='"Administrator,Ordinary User"', allow_blank=False)
+            ws.add_data_validation(role_dv)
+            for row in range(2, 500):
+                role_dv.add(ws[f"E{row}"])
 
-        for i, dept in enumerate(departments, start=1):
-            ws[f"Z{i}"] = dept
+            # Department options (long list) - write to column Z
+            departments = [
+                "Human Resources and Administration",
+                "Finance and Accounting",
+                "Sales and Marketing",
+                "Operations and Production",
+                "Procurement and Purchasing",
+                "Customer Service and Support",
+                "IT and Digital Infrastructure",
+                "Risk Management",
+                "Legal and Compliance",
+                "Health, Safety and Environment",
+                "Research, Analytics and Reporting"
+            ]
 
-        # Department dropdown using cell range
-        dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
-        ws.add_data_validation(dept_dv)
-        for row in range(2, 500):
-            dept_dv.add(ws[f"F{row}"])
+            for i, dept in enumerate(departments, start=1):
+                ws[f"Z{i}"] = dept
 
-        # Hide the reference column
-        ws.column_dimensions['Z'].hidden = True
+            # Department dropdown using cell range
+            dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
+            ws.add_data_validation(dept_dv)
+            for row in range(2, 500):
+                dept_dv.add(ws[f"F{row}"])
 
-        # Save workbook to memory stream
-        output = io.BytesIO()
-        wb.save(output)
-        output.seek(0)
+            # Hide the reference column
+            ws.column_dimensions['Z'].hidden = True
 
-        filename = f"{company_name.strip()}_Employee_Details_Template.xlsx"
-        return send_file(output, download_name=filename, as_attachment=True)
+            # Save workbook to memory stream
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
+
+            filename = f"{company_name.strip()}_Employee_Details_Template.xlsx"
+            return send_file(output, download_name=filename, as_attachment=True)
+        
+        except Error as e:
+            print(e)
+
+            return redirect(url_for('Dashboard'))
 
 
 
@@ -6612,40 +6630,49 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
-            table_name = session.get('table_name')
-            empid = session.get('empid')
+            try:
 
-            companyname = table_name.replace("main", "")
-            company_name = companyname.replace('_', ' ')
+                table_name = session.get('table_name')
+                empid = session.get('empid')
 
-            results = run1(table_name, empid)  
+                companyname = table_name.replace("main", "")
+                company_name = companyname.replace('_', ' ')
 
-            print("Back from adventures")
-            if results["role"] == 'Administrator':
-                role_narr = "LMS ADMINISTRATOR"
+                results = run1(table_name, empid)  
 
-                return render_template('adminpage.html', **results, id= empid, company_name=company_name, role_narr = role_narr)
+                print("Back from adventures")
+                if results["role"] == 'Administrator':
+                    role_narr = "LMS ADMINISTRATOR"
 
-            if results["role"] == 'Ordinary User':
+                    return render_template('adminpage.html', **results, id= empid, company_name=company_name, role_narr = role_narr)
 
-                query = f"SELECT id FROM {table_name} WHERE leaveapproverid = {empid};"
-                cursor.execute(query)
-                rows = cursor.fetchall()
+                if results["role"] == 'Ordinary User':
 
-                df_employeesempapp = pd.DataFrame(rows, columns=["id"])
+                    query = f"SELECT id FROM {table_name} WHERE leaveapproverid = {empid};"
+                    cursor.execute(query)
+                    rows = cursor.fetchall()
 
-                if len(df_employeesempapp) > 0:
+                    df_employeesempapp = pd.DataFrame(rows, columns=["id"])
 
-                    role_narr = "LMS LEAVE APPLICATIONS APPROVER"
-                    hide_element = True
-                    return render_template('adminpage.html', **results, id= empid, company_name=company_name, hide_element=hide_element, role_narr = role_narr)
+                    if len(df_employeesempapp) > 0:
 
-                elif len(df_employeesempapp) == 0:
+                        role_narr = "LMS LEAVE APPLICATIONS APPROVER"
+                        hide_element = True
+                        return render_template('adminpage.html', **results, id= empid, company_name=company_name, hide_element=hide_element, role_narr = role_narr)
+
+                    elif len(df_employeesempapp) == 0:
+                        
+                        role_narr = "LMS USER"
+                        hide_element = True
+                        hide_element2 = True
+                        return render_template('adminpage.html', **results, id= empid, company_name=company_name, hide_element=hide_element, hide_element2 = hide_element2, role_narr = role_narr)
                     
-                    role_narr = "LMS USER"
-                    hide_element = True
-                    hide_element2 = True
-                    return render_template('adminpage.html', **results, id= empid, company_name=company_name, hide_element=hide_element, hide_element2 = hide_element2, role_narr = role_narr)
+            except Error as e:
+
+                print(e)
+
+                return redirect(url_for('landingpage'))
+
 
         
         else:
@@ -6809,7 +6836,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     return redirect(url_for('Dashboard'))
 
                 else:
-                    print('Incorrect passwor')
+                    print('Incorrect password')
                     return jsonify({'success': False, 'message': 'Email is not registered, Kindly communicate issue to your LMS Asdministrator.'}), 401
 
 
