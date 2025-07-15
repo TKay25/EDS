@@ -6743,21 +6743,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     merged_df = merged_df[["Company ID","Company", "Date Registered","Employees"]]
                     print(merged_df)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+                    table_companies_html = merged_df.to_html(classes="table table-bordered table-theme", table_id="companiesTable", index=False,  escape=False,)
           
-                    return render_template('edslmsadmin.html', today_date = today_date)
+                    return render_template('edslmsadmin.html', today_date = today_date, table_companies_html=table_companies_html)
 
 
                 # Query tables with the 'email' column
