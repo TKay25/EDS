@@ -6695,11 +6695,23 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     tables = cursor.fetchall()
                     table_names = [table[0] for table in tables]
 
-                    df_tables = pd.DataFrame(table_names, columns=['Table Name'])
+                    df_tables = pd.DataFrame(table_names, columns=['Company'])
 
                     print(df_tables)
 
+                    main_tables = [name for name in table_names if name.endswith('main')]
 
+                    table_counts = []
+                    for table_name in main_tables:
+                        try:
+                            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                            count = cursor.fetchone()[0]
+                            table_counts.append({'Company': table_name, 'Employees': count})
+                        except Exception as e:
+                            table_counts.append({'Company': table_name, 'Employees': f'Error: {e}'})
+
+                    df_main_counts = pd.DataFrame(table_counts)
+                    print(df_main_counts)
 
 
 
@@ -6719,7 +6731,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
 
           
-                    return render_template('edslmsadmin.html')
+                    return render_template('edslmsadmin.html', today_date = today_date)
 
 
                 # Query tables with the 'email' column
