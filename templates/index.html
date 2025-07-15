@@ -1133,7 +1133,7 @@
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body" style="font-size: 15px;">
-                <form id="admincompsignup" method="POST" action="/admin_sign_up">
+                <form method="POST" action="/admin_sign_up">
                   <div class="form-group">
                     <label for="company_name">Company Name</label>
                     <input type="text" class="form-control" name="company_name" id="company_name" placeholder="Enter Company Name" required>
@@ -1274,20 +1274,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
 
-    <script>
-        document.getElementById("admincompsignup").addEventListener("submit", function(event) {
-            const tableName = document.getElementById("company_name").value;
-
-            // Regex: starts with letter or underscore, followed by letters, numbers, or underscores
-            const validName = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
-
-            if (!validName.test(tableName)) {
-            alert("Invalid Company Name! Must start with a letter or underscore, and only contain letters, numbers, or underscores.");
-            event.preventDefault(); // stop form submission
-            }
-        });
-    </script>
-
 
     <script>
         // Initialize Owl Carousel for testimonials
@@ -1397,6 +1383,14 @@
                     alert('Please fill out all required fields.');
                     return;
                 }
+
+                const validName = /^[a-zA-Z][a-zA-Z0-9_]{0,63}$/;
+
+                if (!validName.test(companyName)) {
+                alert("Invalid Company Name! Must start with a letter or underscore, and only contain letters, numbers, or underscores.");
+                    return;
+                }
+
 
                 $('#edsLoader2').show();
                 $('#signupModal').find('form').submit();
