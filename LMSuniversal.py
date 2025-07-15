@@ -6381,7 +6381,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             company_name = company_name_w_space.replace(' ', '_')
             firstname = request.form.get('firstname')
             surname = request.form.get('surname')
-            whatsapp = int(request.form['whatsapp'])
+
+            whatsapp_raw = str(int(float(request.form['whatsapp']))).replace(" ", "")
+            whatsapp = whatsapp_raw[-9:] if len(whatsapp_raw) >= 9 else whatsapp_raw
             email = request.form.get('email')
             password = request.form.get('password')
 
