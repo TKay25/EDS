@@ -965,6 +965,9 @@ def webhook():
                                                 AND table_name = %s
                                                 AND column_name IN ('password')
                                             """, (table_name,))
+
+                                            print(table_name)
+                                            print(sender_number)
                                             
                                             if cursor.fetchone()[0] == 1:
                                                 query = f"""
