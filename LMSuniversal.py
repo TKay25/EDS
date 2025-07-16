@@ -50,6 +50,12 @@ PHONE_NUMBER_ID = "558392750697195"
 VERIFY_TOKEN = "521035180620700"
 WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
+PHONE_NUMBER_ID_Alluire = "756962384159644"
+VERIFY_TOKEN_Alluire = "2644686099068373"
+WHATSAPP_API_URL_Alluire = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID_Alluire}/messages"
+
+
+
 create_table_query_comp_creation = f"""
 CREATE TABLE IF NOT EXISTS companyreg (
     compid SERIAL PRIMARY KEY,
@@ -80,7 +86,19 @@ cursor.execute("""
 connection.commit()
 print(f"column added to Table whatsapptempapplication successfully!")
 
-def send_whatsapp_message(to, text, buttons=None):
+
+
+
+
+
+def send_whatsapp_message(to, text, buttons=None, display_phone_number=None):
+
+    if display_phone_number == "263789339777": 
+        WHATSAPP_API_URL = WHATSAPP_API_URL_Alluire
+
+    else:
+        WHATSAPP_API_URL = WHATSAPP_API_URL
+
     """Function to send a WhatsApp message using Meta API, with optional buttons."""
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -115,6 +133,7 @@ def send_whatsapp_message(to, text, buttons=None):
     # Debugging logs
     print("✅ Sending message to:", to)
     print("📩 Message body:", text)
+    print("📞 Sent from display phone number:", display_phone_number)
     print("📡 WhatsApp API Response Status:", response.status_code)
 
     try:
@@ -918,7 +937,7 @@ def webhook():
 
             else:
 
-
+                display_phone_number = data["entry"][0]["changes"][0]["value"]["metadata"]["display_phone_number"]
 
                 print("📥 Full incoming data:", json.dumps(data, indent=2))
 
