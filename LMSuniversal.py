@@ -949,9 +949,10 @@ def webhook():
                                         cursor = connection.cursor()
 
                                         cursor.execute("""
-                                            SELECT table_name 
-                                            FROM information_schema.tables 
+                                            SELECT DISTINCT table_name
+                                            FROM information_schema.columns
                                             WHERE table_schema = 'public'
+                                            AND column_name = 'password'
                                         """)
                                         tables = cursor.fetchall()
 
@@ -959,14 +960,6 @@ def webhook():
 
                                         for table in tables:
                                             table_name = table[0]  
-                                            
-                                            cursor.execute("""
-                                                SELECT COUNT(*)
-                                                FROM information_schema.columns
-                                                WHERE table_schema = 'public'
-                                                AND table_name = %s
-                                                AND column_name IN ('password')
-                                            """, (table_name,))
 
                                             print(table_name)
                                             print(sender_number)
@@ -1011,8 +1004,6 @@ def webhook():
                                                 sender_id, 
                                                 "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
                                             )
-
-                                        return jsonify({"status": "received"}), 200 
                                                     
                                     finally:
                                         if connection:
