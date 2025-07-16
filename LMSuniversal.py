@@ -45,7 +45,7 @@ connection = psycopg2.connect(external_database_url)
 cursor = connection.cursor()
 
 # WhatsApp API Credentials (Replace with your actual credentials)
-ACCESS_TOKEN = "EAATESj1oB5YBOyIVfVPEAIZAZA7sgPboDN36Wa2Or11uZCBEZCVWaNAZB0exkYYG6gcIdiYbvPCST9tKjS54ib1NqXbNg7UvJYaZCIZAjxgTBQwvyoWE8cZCMgje1wkrUyb335TMwNwYSTA3rNwppRZAeQGt3M7s5x15nZCbZBtEfZBtSIu3p7ZCHOcF0pMTuLgjQreLz2QZDZD"
+#ACCESS_TOKEN = "EAATESj1oB5YBOyIVfVPEAIZAZA7sgPboDN36Wa2Or11uZCBEZCVWaNAZB0exkYYG6gcIdiYbvPCST9tKjS54ib1NqXbNg7UvJYaZCIZAjxgTBQwvyoWE8cZCMgje1wkrUyb335TMwNwYSTA3rNwppRZAeQGt3M7s5x15nZCbZBtEfZBtSIu3p7ZCHOcF0pMTuLgjQreLz2QZDZD"
 #PHONE_NUMBER_ID = "558392750697195"
 #VERIFY_TOKEN = "521035180620700"
 #WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
@@ -123,6 +123,7 @@ def bad_request(e):
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
     if request.method == "GET":
+        print("ouch")
         if request.args.get("hub.verify_token") == VERIFY_TOKEN:
             return request.args.get("hub.challenge")
         return "Verification failed", 403
@@ -131,8 +132,8 @@ def webhook():
         global today_date
         data = request.get_json()
 
-        global ACCESS_TOKEN
-        global PHONE_NUMBER_ID
+        #global ACCESS_TOKEN
+        #global PHONE_NUMBER_ID
 
         try:
             # Navigate the JSON structure to get the display_phone_number
@@ -833,7 +834,7 @@ def webhook():
 
 ################### end of test #########################
 
-            elif display_phone_number == "789339777":
+            elif display_phone_number == "263789339777":
                 ACCESS_TOKEN = "EAATESj1oB5YBPCByIueVJZAtW9o6UJl9tb4fx8nKbailkZBwREZCQUNHa1vIYDbyA1v9rEYD6AlfhL3qtHanRtRPZB8ZBPZA7iWOO3mZC1xZAmeknXniWD4P7ZAZC49fXRlCuQzDDwk3bxm2qmQK4nC3HeQlhIDUurPOFaM32SJ5G0NW6shBQ5bBVwIvw9QFeMAfpbEhju2LydMIr3VhNIALt9ZATnbUJ07quGyM9dMRy5eoQa0FIgZD"
                 PHONE_NUMBER_ID = "756962384159644"
                 VERIFY_TOKEN = "2644686099068373"
