@@ -955,6 +955,8 @@ def webhook():
                                         """)
                                         tables = cursor.fetchall()
 
+                                        found = False
+
                                         for table in tables:
                                             table_name = table[0]  
                                             
@@ -980,6 +982,9 @@ def webhook():
                                                 print(result)
 
                                                 if result:
+
+                                                    found = True 
+
                                                     id_user = result[0]  
                                                     first_name = result[1]  
                                                     last_name = result[2]  
@@ -998,17 +1003,16 @@ def webhook():
                                                     print(f"Credentials found in table: {table_name}")
                                                     first_column_value = result[0]
                                                     print(f"First column value: {first_column_value}")
-                                                    continue
+
+                                                    break  
                                                 
-                                                else: 
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
-                                                    )
-                                                    
-                                                    return jsonify({"status": "received"}), 200 
-                                                    
-                                                return jsonify({"status": "received"}), 200    
+                                        if not found:
+                                            send_whatsapp_message(
+                                                sender_id, 
+                                                "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
+                                            )
+
+                                        return jsonify({"status": "received"}), 200 
                                                     
                                     finally:
                                         if connection:
