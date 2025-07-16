@@ -91,13 +91,7 @@ print(f"column added to Table whatsapptempapplication successfully!")
 
 
 
-def send_whatsapp_message(to, text, buttons=None, display_phone_number=None):
-
-    if display_phone_number == "263789339777": 
-        WHATSAPP_API_URL = WHATSAPP_API_URL_Alluire
-
-    else:
-        WHATSAPP_API_URL = WHATSAPP_API_URL
+def send_whatsapp_message(to, text, buttons=None):
 
     """Function to send a WhatsApp message using Meta API, with optional buttons."""
     headers = {
@@ -133,7 +127,6 @@ def send_whatsapp_message(to, text, buttons=None, display_phone_number=None):
     # Debugging logs
     print("✅ Sending message to:", to)
     print("📩 Message body:", text)
-    print("📞 Sent from display phone number:", display_phone_number)
     print("📡 WhatsApp API Response Status:", response.status_code)
 
     try:
@@ -147,7 +140,16 @@ def send_whatsapp_message(to, text, buttons=None, display_phone_number=None):
 
 
 
-def send_whatsapp_list_message(recipient, text, list_title, sections):
+def send_whatsapp_list_message(recipient, text, list_title, sections, display_phone_number):
+
+
+    if display_phone_number == "263789339777": 
+        WHATSAPP_API_URL = WHATSAPP_API_URL_Alluire
+
+    else:
+        WHATSAPP_API_URL = WHATSAPP_API_URL
+
+
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json"
@@ -174,12 +176,13 @@ def send_whatsapp_list_message(recipient, text, list_title, sections):
         }
     }
     
-    response = requests.post(
-        f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
-        headers=headers,
-        json=payload
-    )
-    
+    response = requests.post(WHATSAPP_API_URL,headers=headers,json=payload)
+
+    print("✅ Sending message to:", recipient)
+    print("📩 Message body:", text)
+    print("📡 WhatsApp API Response Status:", response.status_code)  
+    print("📞 Sent from display phone number:", display_phone_number)
+
     print("List message response:", response.json())
     return response
 
@@ -1014,7 +1017,7 @@ def webhook():
                                                 else: 
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
+                                                        "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance.", display_phone_number
                                                     )
                                                     
                                                     return jsonify({"status": "received"}), 200 
@@ -5613,7 +5616,7 @@ def webhook():
                                                         sender_id,
                                                         f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
                                                         "Admin/Approver Options",
-                                                        sections
+                                                        sections, display_phone_number
                                                     )
 
                                                 elif "start" in text.lower():
