@@ -93,6 +93,12 @@ print(f"column added to Table whatsapptempapplication successfully!")
 
 def send_whatsapp_message(to, text, display_phone_number, buttons=None):
 
+    if display_phone_number == "263789339777": 
+        WHATSAPP_API_URL = WHATSAPP_API_URL_Alluire
+
+    else:
+        WHATSAPP_API_URL = WHATSAPP_API_URL
+
     """Function to send a WhatsApp message using Meta API, with optional buttons."""
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
