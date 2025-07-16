@@ -46,13 +46,9 @@ cursor = connection.cursor()
 
 # WhatsApp API Credentials (Replace with your actual credentials)
 ACCESS_TOKEN = "EAATESj1oB5YBOyIVfVPEAIZAZA7sgPboDN36Wa2Or11uZCBEZCVWaNAZB0exkYYG6gcIdiYbvPCST9tKjS54ib1NqXbNg7UvJYaZCIZAjxgTBQwvyoWE8cZCMgje1wkrUyb335TMwNwYSTA3rNwppRZAeQGt3M7s5x15nZCbZBtEfZBtSIu3p7ZCHOcF0pMTuLgjQreLz2QZDZD"
-PHONE_NUMBER_ID = "558392750697195"
-VERIFY_TOKEN = "521035180620700"
-WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
-
-PHONE_NUMBER_ID_Alluire = "756962384159644"
-VERIFY_TOKEN_Alluire = "2644686099068373"
-WHATSAPP_API_URL_Alluire = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID_Alluire}/messages"
+#PHONE_NUMBER_ID = "558392750697195"
+#VERIFY_TOKEN = "521035180620700"
+#WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
 
 
@@ -85,113 +81,6 @@ cursor.execute("""
 
 connection.commit()
 print(f"column added to Table whatsapptempapplication successfully!")
-
-
-
-
-
-
-def send_whatsapp_message(to, text, display_phone_number, buttons=None):
-
-    if display_phone_number == "263789339777": 
-        WHATSAPP_API_URL = WHATSAPP_API_URL_Alluire
-
-    else:
-        WHATSAPP_API_URL = WHATSAPP_API_URL
-
-    """Function to send a WhatsApp message using Meta API, with optional buttons."""
-    headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-    # If buttons are provided, send an interactive message
-    if buttons:
-        data = {
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "interactive",
-            "interactive": {
-                "type": "button",
-                "body": {"text": text},
-                "action": {
-                    "buttons": buttons
-                }
-            }
-        }
-    else:
-        # Send a normal text message
-        data = {
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "text",
-            "text": {"body": text}
-        }
-
-    response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
-    
-    # Debugging logs
-    print("✅ Sending message to:", to)
-    print("📩 Message body:", text)
-    print("📡 WhatsApp API Response Status:", response.status_code)
-
-    try:
-        response_json = response.json()
-        print("📝 WhatsApp API Response Data:", response_json)
-    except Exception as e:
-        print("❌ Error parsing response JSON:", e)
-
-    return response.json()
-
-
-
-
-def send_whatsapp_list_message(recipient, text, list_title, sections, display_phone_number):
-
-
-    if display_phone_number == "263789339777": 
-        WHATSAPP_API_URL = WHATSAPP_API_URL_Alluire
-
-    else:
-        WHATSAPP_API_URL = WHATSAPP_API_URL
-
-
-    headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "messaging_product": "whatsapp",
-        "recipient_type": "individual",
-        "to": recipient,
-        "type": "interactive",
-        "interactive": {
-            "type": "list",
-            "header": {
-                "type": "text",
-                "text": list_title
-            },
-            "body": {
-                "text": text
-            },
-            "action": {
-                "button": "Select Option",
-                "sections": sections
-            }
-        }
-    }
-    
-    response = requests.post(WHATSAPP_API_URL,headers=headers,json=payload)
-
-    print("✅ Sending message to:", recipient)
-    print("📩 Message body:", text)
-    print("📡 WhatsApp API Response Status:", response.status_code)  
-    print("📞 Sent from display phone number:", display_phone_number)
-
-    print("List message response:", response.json())
-    return response
-
 
 ##################### client test ####################################################################################################
 
@@ -944,7 +833,96 @@ def webhook():
 
 ################### end of test #########################
 
-            else:
+            elif display_phone_number == "789339777":
+
+                PHONE_NUMBER_ID = "756962384159644"
+                VERIFY_TOKEN = "2644686099068373"
+                WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
+
+                def send_whatsapp_message(to, text, buttons=None):
+
+                    """Function to send a WhatsApp message using Meta API, with optional buttons."""
+                    headers = {
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Content-Type": "application/json"
+                    }
+
+                    # If buttons are provided, send an interactive message
+                    if buttons:
+                        data = {
+                            "messaging_product": "whatsapp",
+                            "to": to,
+                            "type": "interactive",
+                            "interactive": {
+                                "type": "button",
+                                "body": {"text": text},
+                                "action": {
+                                    "buttons": buttons
+                                }
+                            }
+                        }
+                    else:
+                        # Send a normal text message
+                        data = {
+                            "messaging_product": "whatsapp",
+                            "to": to,
+                            "type": "text",
+                            "text": {"body": text}
+                        }
+
+                    response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
+                    
+                    # Debugging logs
+                    print("✅ Sending message to:", to)
+                    print("📩 Message body:", text)
+                    print("📡 WhatsApp API Response Status:", response.status_code)
+
+                    try:
+                        response_json = response.json()
+                        print("📝 WhatsApp API Response Data:", response_json)
+                    except Exception as e:
+                        print("❌ Error parsing response JSON:", e)
+
+                    return response.json()
+
+
+                def send_whatsapp_list_message(recipient, text, list_title, sections):
+
+                    headers = {
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Content-Type": "application/json"
+                    }
+                    
+                    payload = {
+                        "messaging_product": "whatsapp",
+                        "recipient_type": "individual",
+                        "to": recipient,
+                        "type": "interactive",
+                        "interactive": {
+                            "type": "list",
+                            "header": {
+                                "type": "text",
+                                "text": list_title
+                            },
+                            "body": {
+                                "text": text
+                            },
+                            "action": {
+                                "button": "Select Option",
+                                "sections": sections
+                            }
+                        }
+                    }
+                    
+                    response = requests.post(WHATSAPP_API_URL,headers=headers,json=payload)
+
+                    print("✅ Sending message to:", recipient)
+                    print("📩 Message body:", text)
+                    print("📡 WhatsApp API Response Status:", response.status_code)  
+
+                    print("List message response:", response.json())
+                    return response
+
 
                 print("📥 Full incoming data:", json.dumps(data, indent=2))
 
@@ -1021,7 +999,7 @@ def webhook():
                                                 else: 
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance.", display_phone_number = display_phone_number
+                                                        "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
                                                     )
                                                     
                                                     return jsonify({"status": "received"}), 200 
@@ -5620,7 +5598,7 @@ def webhook():
                                                         sender_id,
                                                         f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
                                                         "Admin/Approver Options",
-                                                        sections, display_phone_number
+                                                        sections
                                                     )
 
                                                 elif "start" in text.lower():
@@ -7150,7 +7128,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     leaveappid = df_employees.iat[0,0]
 
 
-                    send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                    """send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                         f"Your Leave Application ID is `{leaveappid}`.\n\n"
                         f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
                         "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
@@ -7168,7 +7146,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             f"Select an option below to either approve or disapprove the application."         
                             , 
                             buttons
-                        )
+                        )"""
 
                     results = run1(table_name, empid)
                     return render_template('adminpage.html', **results)
@@ -7929,7 +7907,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             approovvver = approver_name.title()
                             companyxx = table_name.replace("main", "").replace("_", " ").title()
 
-                            send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                            """send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                                 f"Your Leave Application ID is `{app_id}`.\n\n"
                                 f"A Notification has been sent to `{approovvver}`  on `+263{approver_whatsapp}` to decide on  your application.\n\n"
                                 "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
@@ -7947,7 +7925,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                                     f"Select an option below to either approve or disapprove the application."         
                                     , 
                                     buttons
-                                )
+                                )"""
 
                             print("Insert successful!")
 
@@ -7995,7 +7973,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             approovvver = approver_name.title()
                             companyxx = table_name.replace("main", "").replace("_", " ").title()
 
-                            send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                            """send_whatsapp_message(f"263{whatsapp}", f"✅ Great News {first_name} from {companyxx}'s {department} department! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                                 f"Your Leave Application ID is `{app_id}`.\n\n"
                                 f"A Notification has been sent to `{approovvver}`  on `+263{approver_whatsapp}` to decide on  your application.\n\n"
                                 "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
@@ -8012,7 +7990,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                                     f"Select an option below to either approve or disapprove the application."         
                                     , 
                                     buttons
-                                )
+                                )"""
 
                             print("Insert successful!")
 
@@ -8463,8 +8441,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
 
-                send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
-
+                """send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
+"""
 
                 def generate_leave_pdf():
                     app = {
@@ -8625,7 +8603,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     {"type": "reply", "reply": {"id": "Pending", "title": "Apps Pending My Approval"}},
                 ]
 
-                send_whatsapp_message(f"263{whatsappapprover}", f"✅ Hey {approver_name} from {companyxx}! \n\n You have successfully disapproved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
+                """send_whatsapp_message(f"263{whatsappapprover}", f"✅ Hey {approver_name} from {companyxx}! \n\n You have successfully disapproved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
                 send_whatsapp_message(
                     f"263{whatsappapprover}",
                     "Select an option below to continue 👇y, or Type `Hello` to view all Approver options",
@@ -8645,7 +8623,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         f"263{whatsappemp}",
                         "Select an option below to continue 👇",
                         buttons
-                    )
+                    )"""
 
                 return jsonify({"message": f"Leave Application {app_id} declined successfully."})
             
