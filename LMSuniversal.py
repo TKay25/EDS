@@ -2400,6 +2400,8 @@ def webhook():
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                         {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+
                                                         ]
 
                                                         send_whatsapp_message(
@@ -3462,6 +3464,7 @@ def webhook():
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                         {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
                                                         ]
 
                                                         send_whatsapp_message(
@@ -4554,6 +4557,7 @@ def webhook():
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                         {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
                                                         ]
 
                                                         send_whatsapp_message(
