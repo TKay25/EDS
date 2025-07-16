@@ -91,7 +91,7 @@ print(f"column added to Table whatsapptempapplication successfully!")
 
 
 
-def send_whatsapp_message(to, text, buttons=None):
+def send_whatsapp_message(to, text, display_phone_number, buttons=None):
 
     """Function to send a WhatsApp message using Meta API, with optional buttons."""
     headers = {
@@ -940,8 +940,6 @@ def webhook():
 
             else:
 
-                display_phone_number = data["entry"][0]["changes"][0]["value"]["metadata"]["display_phone_number"]
-
                 print("📥 Full incoming data:", json.dumps(data, indent=2))
 
                 if data and "entry" in data:
@@ -1017,7 +1015,7 @@ def webhook():
                                                 else: 
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance.", display_phone_number
+                                                        "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance.", display_phone_number = display_phone_number
                                                     )
                                                     
                                                     return jsonify({"status": "received"}), 200 
