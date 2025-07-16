@@ -964,47 +964,46 @@ def webhook():
                                             print(table_name)
                                             print(sender_number)
                                             
-                                            if cursor.fetchone()[0] == 1:
-                                                query = f"""
-                                                    SELECT * FROM {table_name}
-                                                    WHERE whatsapp::TEXT LIKE %s
-                                                """
-                                                cursor.execute(query, (f"%{sender_number}",))
-                                                result = cursor.fetchone()
+                                            query = f"""
+                                                SELECT * FROM {table_name}
+                                                WHERE whatsapp::TEXT LIKE %s
+                                            """
+                                            cursor.execute(query, (f"%{sender_number}",))
+                                            result = cursor.fetchone()
 
-                                                print(result)
+                                            print(result)
 
-                                                if result:
+                                            if result:
 
-                                                    found = True 
+                                                found = True 
 
-                                                    id_user = result[0]  
-                                                    first_name = result[1]  
-                                                    last_name = result[2]  
-                                                    whatsapp_foc_8 = f"0{result[3]}"
-                                                    email_foc_8 = result[4]
-                                                    address_foc_8 = result[5]
-                                                    role_foc_8 = result[8]
-                                                    days_days_balance = result[13]
-                                                    company_reg = table_name[:-4]  
+                                                id_user = result[0]  
+                                                first_name = result[1]  
+                                                last_name = result[2]  
+                                                whatsapp_foc_8 = f"0{result[3]}"
+                                                email_foc_8 = result[4]
+                                                address_foc_8 = result[5]
+                                                role_foc_8 = result[8]
+                                                days_days_balance = result[13]
+                                                company_reg = table_name[:-4]  
 
-                                                    print(id_user)
-                                                    print(first_name)
-                                                    print(last_name)
-                                                    print(role_foc_8)
+                                                print(id_user)
+                                                print(first_name)
+                                                print(last_name)
+                                                print(role_foc_8)
 
-                                                    print(f"Credentials found in table: {table_name}")
-                                                    first_column_value = result[0]
-                                                    print(f"First column value: {first_column_value}")
+                                                print(f"Credentials found in table: {table_name}")
+                                                first_column_value = result[0]
+                                                print(f"First column value: {first_column_value}")
 
-                                                    break  
+                                                break  
                                                 
                                         if not found:
                                             send_whatsapp_message(
                                                 sender_id, 
                                                 "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
                                             )
-                                            
+
                                             return jsonify({"status": "received"}), 200
   
                                     finally:
