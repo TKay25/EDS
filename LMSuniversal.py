@@ -1549,10 +1549,15 @@ def webhook():
                                                                             companyxx = company_reg.replace("_"," ").title()
                                                                             approovvver = leaveapprovername.title()
 
+                                                                            buttons = [
+                                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                            ]
+
                                                                             send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                                                                                 f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
-                                                                                "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n", 
+                                                                                buttons)
                                                                             
                                                                             if leaveapproverwhatsapp:
                                 
@@ -1587,6 +1592,7 @@ def webhook():
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                         {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                         ]
 
                                                         send_whatsapp_message(
