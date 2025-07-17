@@ -842,6 +842,8 @@ def webhook():
 
                 def send_whatsapp_message(to, text, buttons=None):
 
+                    print("send mess initialised")
+
                     """Function to send a WhatsApp message using Meta API, with optional buttons."""
                     headers = {
                         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -883,6 +885,15 @@ def webhook():
                         print("📝 WhatsApp API Response Data:", response_json)
                     except Exception as e:
                         print("❌ Error parsing response JSON:", e)
+
+                    try:
+                        response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
+                        response.raise_for_status()
+                        print("✅ Message sent successfully.")
+                        return response.json()
+                    except requests.exceptions.RequestException as e:
+                        print("❌ WhatsApp API Error:", e)
+                        return {"error": str(e)}
 
                     return response.json()
 
@@ -1702,7 +1713,11 @@ def webhook():
 
                                                 elif "start" in text.lower():
 
+                                                    print('start date provided')
+
                                                     date_part = text.split("start", 1)[1].strip()
+
+                                                    print(date_part)
 
                                                     cursor.execute("""
                                                         UPDATE whatsapptempapplication
@@ -1711,6 +1726,8 @@ def webhook():
                                                     """, (date_part, id_user))
 
                                                     connection.commit()
+
+                                                    print("committed")
 
                                                     cursor.execute("""
                                                         SELECT empidwa, leavetypewa FROM whatsapptempapplication
