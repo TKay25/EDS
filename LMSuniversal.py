@@ -876,7 +876,6 @@ def webhook():
                     # Debugging logs
                     print("✅ Sending message to:", to)
                     print("📩 Message body:", text)
-                    print("📡 WhatsApp API Response Status:", response.status_code)
 
                     """try:
                         response_json = response.json()
@@ -886,9 +885,14 @@ def webhook():
 
                     try:
                         response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
-                        response.raise_for_status()
+                        print("📡 WhatsApp API Response Status:", response.status_code)
+
+                        response.raise_for_status()  # will throw if not 2xx
+
                         print("✅ Message sent successfully.")
-                        return response
+                        print("📝 Response JSON:", response.json())
+                        return response.json()
+                    
                     except requests.exceptions.RequestException as e:
                         print("❌ WhatsApp API Error:", e)
                         return {"error": str(e)}
