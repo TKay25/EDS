@@ -1789,6 +1789,8 @@ def webhook():
 
                                                     date_part = text.split("end", 1)[1].strip()
 
+                                                    print(date_part)
+
                                                     cursor.execute("""
                                                         UPDATE whatsapptempapplication
                                                         SET enddate = %s
@@ -1796,6 +1798,8 @@ def webhook():
                                                     """, (date_part, id_user))
 
                                                     connection.commit()
+
+                                                    print("committed end")
 
                                                     try:
 
@@ -1805,6 +1809,8 @@ def webhook():
                                                         """, (str(id_user)))
                                                 
                                                         result = cursor.fetchone()
+
+                                                        print("fetched")
 
                                                         print(result)
 
