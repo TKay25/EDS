@@ -1806,10 +1806,16 @@ def webhook():
                                                 
                                                         result = cursor.fetchone()
 
+                                                        print(result)
+
                                                         appid = result[0]
                                                         leavetype = result[2]
                                                         startdate = result[3]
                                                         enddate = result[4]
+                                                        print(startdate)
+                                                        print(enddate)
+
+                                                        print("converting")
 
                                                         if isinstance(startdate, str):
                                                             startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
