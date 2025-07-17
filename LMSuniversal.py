@@ -1702,11 +1702,19 @@ def webhook():
                                                         {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
                                                     ]
                                                     companyxx = company_reg.replace("_"," ").title()
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        f"Hello {first_name} {last_name} from {companyxx}!\n\n Echelon Bot Here 😎. How can I assist you?", 
-                                                        buttons
-                                                    )
+
+                                                    try: 
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n Echelon Bot Here 😎. How can I assist you?", 
+                                                            buttons
+                                                        )
+
+                                                        return "Greeting sent", 200  # ✅ Add this
+                                                    
+                                                    except:
+                                                        return "Greeting not sent", 200
 
 
                                                 elif "start" in text.lower():
