@@ -6054,15 +6054,6 @@ def run1(table_name, empid):
         leave_utilization_rate = round((total_leave_days/ total_days_available) * 100,0)
         avg_leave_days = round(total_leave_days/total_employees,0)
 
-    elif approved_requests == 0:
-        leave_utilization_rate = 0
-        avg_leave_days = 0
-        avg_approval_time = ""
-        top_leave_type = ""
-        approval_rate = ""
-        longest_leave_days = 0
-        peak_leave_month = ""
-
 
     query = f"""SELECT dateapplied, statusdate FROM {table_name_apps_approved};"""
     cursor.execute(query)
@@ -6105,6 +6096,17 @@ def run1(table_name, empid):
     if approved_requests>0 and disapproved_requests>0:
 
         approval_rate = round((approved_requests/(approved_requests + disapproved_requests)) * 100,0)
+
+    elif approved_requests == 0:
+        leave_utilization_rate = 0
+        avg_leave_days = 0
+        avg_approval_time = ""
+        top_leave_type = ""
+        longest_leave_days = 0
+        peak_leave_month = ""
+
+    elif approved_requests == 0 or disapproved_requests == 0:
+        approval_rate = ""
 
     query = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_cancelled};"""
     cursor.execute(query)
