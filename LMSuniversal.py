@@ -1806,7 +1806,7 @@ def webhook():
                                                         cursor.execute("""
                                                             SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
                                                             WHERE empidwa = %s
-                                                        """, (str(id_user)))
+                                                        """, id_user)
                                                 
                                                         result = cursor.fetchone()
 
