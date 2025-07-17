@@ -1330,7 +1330,7 @@ def webhook():
                                                             cursor.execute("""
                                                                 SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
                                                                 WHERE empidwa = %s
-                                                            """, (str(id_user)))
+                                                            """, (id_user))
                                                     
                                                             result = cursor.fetchone()
 
@@ -1394,7 +1394,7 @@ def webhook():
                                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                                     table_name_apps_approved = f"{company_reg}appsapproved"
 
-                                                                    query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                                    query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {id_user};"
                                                                     cursor.execute(query)
                                                                     rows = cursor.fetchall()
 
