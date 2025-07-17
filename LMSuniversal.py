@@ -3,7 +3,7 @@ import uuid
 import os
 import numpy as np
 from mysql.connector import Error
-from flask import Flask, request, jsonify, session, render_template, redirect, url_for, send_file,flash, make_response
+from flask import Flask, request, jsonify, session, render_template, redirect, url_for, send_file,flash, make_response, after_this_request
 from datetime import datetime, timedelta
 import pandas as pd
 from xhtml2pdf import pisa
@@ -5837,6 +5837,7 @@ def delete_all_tables():
 
 # Run the function
 
+
 def find_credentials(email, password):
     connection.reconnect()
     cursor = connection.cursor()
@@ -8110,6 +8111,43 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             return jsonify({"message": "All tables deleted successfully"}), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+        
+
+    @app.route('/export_all_tables')
+    def export_all_tables():
+        file_path = "exported_tables.xlsx"
+        try:
+            # Connect to PostgreSQL
+            connection = psycopg2.connect(external_database_url)
+            cursor = connection.cursor()
+
+            # Get all table names in 'public' schema
+            cursor.execute("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_type='BASE TABLE';
+            """)
+            tables = [row[0] for row in cursor.fetchall()]
+
+            with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+                for table in tables:
+                    df = pd.read_sql(f'SELECT * FROM "{table}"', connection)
+                    df.to_excel(writer, sheet_name=table[:31], index=False)
+
+            cursor.close()
+            connection.close()
+        except Exception as e:
+            return f"Error: {str(e)}"
+
+        @after_this_request
+        def cleanup(response):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print("Could not delete file:", e)
+            return response
+
+        return send_file(file_path, as_attachment=True)
 
 
     @app.route('/revoke_leave_application', methods=['POST'])

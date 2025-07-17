@@ -592,6 +592,11 @@
                 <div class="col-md-8">
                     <div class="card">
                         <h4><i class="bi bi-bar-chart-line"></i> PORTFOLIO</h4>
+                        <h2>Export All Tables from Database</h2>
+
+                        <button id="exportBtn">Export to Excel</button>
+
+
                     <div class="container mt-5">
                         <div class="container2" style="overflow-y: auto;">
                             {{ table_companies_html |safe }}
@@ -970,6 +975,18 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('exportBtn').addEventListener('click', function () {
+            // Create a temporary link to download the file
+            const link = document.createElement('a');
+            link.href = '/export_all_tables';
+            link.download = 'all_tables.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
     
     <script>
         document.getElementById('deleteButton').addEventListener('click', async function() {
