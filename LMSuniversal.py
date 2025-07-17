@@ -2243,6 +2243,69 @@ def webhook():
                                                                 buttons
                                                             )
 
+                                                    elif button_id == "Apply":
+
+                                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+
+                                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                        cursor.execute(query)
+                                                        rows = cursor.fetchall()
+
+                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+
+                                                        if len(df_employeesappspendingcheck) == 0:
+
+                                                            sections = [
+                                                                {
+                                                                    "title": "Leave Type Options",
+                                                                    "rows": [
+                                                                        {"id": "Annual", "title": "Annual Leave"},
+                                                                        {"id": "Sick", "title": "Sick Leave"},
+                                                                        {"id": "Study", "title": "Study Leave"},
+                                                                        {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                                        {"id": "Parental", "title": "Parental Leave"},
+                                                                        {"id": "Other", "title": "Other"},
+                                                                    ]
+                                                                }
+                                                            ]
+
+                                                            send_whatsapp_list_message(
+                                                                sender_id, 
+                                                                f"{first_name}, kindly select the type of Leave that you are applying for.", 
+                                                                "Leave Type Options",
+                                                                sections) 
+
+                                                        elif len(df_employeesappspendingcheck) > 0:
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                                {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
+                                                                f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                                f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
+                                                                , 
+                                                                buttons
+                                                            )
+
+                                                    elif button_id == "Menu":
+
+                                                        companyxx = company_reg.replace("_"," ").title()
+                                                        
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
+                                                            buttons
+                                                        )
+
                                                     elif button_id == "Submitapp":
                                             
                                                         try:
@@ -2469,10 +2532,15 @@ def webhook():
                                                                             companyxx = company_reg.replace("_"," ").title()
                                                                             approovvver = leaveapprovername.title()
 
+                                                                            buttons = [
+                                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                            ]
+
                                                                             send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                                                                                 f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
-                                                                                "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
+                                                                                buttons)
                                                                             
                                                                             if leaveapproverwhatsapp:
                                 
@@ -3321,7 +3389,68 @@ def webhook():
                                                             "Administrator Options",
                                                             sections)
 
+                                                    elif button_id == "Menu":
 
+                                                        companyxx = company_reg.replace("_"," ").title()
+                                                        
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
+                                                            buttons
+                                                        )
+
+                                                    elif button_id == "Apply":
+
+                                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+
+                                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                        cursor.execute(query)
+                                                        rows = cursor.fetchall()
+
+                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+
+                                                        if len(df_employeesappspendingcheck) == 0:
+
+                                                            sections = [
+                                                                {
+                                                                    "title": "Leave Type Options",
+                                                                    "rows": [
+                                                                        {"id": "Annual", "title": "Annual Leave"},
+                                                                        {"id": "Sick", "title": "Sick Leave"},
+                                                                        {"id": "Study", "title": "Study Leave"},
+                                                                        {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                                        {"id": "Parental", "title": "Parental Leave"},
+                                                                        {"id": "Other", "title": "Other"},
+                                                                    ]
+                                                                }
+                                                            ]
+
+                                                            send_whatsapp_list_message(
+                                                                sender_id, 
+                                                                f"{first_name}, kindly select the type of Leave that you are applying for.", 
+                                                                "Leave Type Options",
+                                                                sections) 
+
+                                                        elif len(df_employeesappspendingcheck) > 0:
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                                {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
+                                                                f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                                f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
+                                                                , 
+                                                                buttons
+                                                            )
 
                                                     elif button_id == "Submitapp":
                                             
@@ -3548,10 +3677,15 @@ def webhook():
                                                                             companyxx = company_reg.replace("_"," ").title()
                                                                             approovvver = leaveapprovername.title()
 
+                                                                            buttons = [
+                                                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                                ]
+
                                                                             send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                                                                                 f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
-                                                                                "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
+                                                                                buttons)
                                                                             
                                                                             if leaveapproverwhatsapp:
                                 
@@ -4657,10 +4791,15 @@ def webhook():
                                                                             companyxx = company_reg.replace("_"," ").title()
                                                                             approovvver = leaveapprovername.title()
 
+                                                                            buttons = [
+                                                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                                ]
+
                                                                             send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
                                                                                 f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n"
-                                                                                "To Check the approval status of your leave application, type `Hello` then select `Track Application`.")
+                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
+                                                                                buttons)
                                                                             
                                                                             if leaveapproverwhatsapp:
                                 
