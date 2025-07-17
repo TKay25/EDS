@@ -866,6 +866,8 @@ def webhook():
                         }
                     else:
                         # Send a normal text message
+                        print("inside else")
+
                         data = {
                             "messaging_product": "whatsapp",
                             "to": to,
@@ -884,6 +886,8 @@ def webhook():
                         print("❌ Error parsing response JSON:", e)"""
 
                     try:
+                        print("trying in def")
+
                         response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
                         print("📡 WhatsApp API Response Status:", response.status_code)
 
@@ -891,6 +895,8 @@ def webhook():
 
                         print("✅ Message sent successfully.")
                         print("📝 Response JSON:", response.json())
+
+                        print("done trying")
                         return response.json()
                     
                     except requests.exceptions.RequestException as e:
@@ -1749,9 +1755,13 @@ def webhook():
                                                     
                                                     print("\n📊 whatsapptempapplication Table:")
                                                     print(df)
+
+                                                    print("still good")
                                                     
                                                     try:
                                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
+
+                                                        print("trying")
                                                         send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
                                                             f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
                                                             "`end 24 january 2025`"                      
