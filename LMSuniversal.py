@@ -888,12 +888,10 @@ def webhook():
                         response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
                         response.raise_for_status()
                         print("✅ Message sent successfully.")
-                        return response.json()
+                        return response
                     except requests.exceptions.RequestException as e:
                         print("❌ WhatsApp API Error:", e)
                         return {"error": str(e)}
-
-                    return response
 
 
                 def send_whatsapp_list_message(recipient, text, list_title, sections):
