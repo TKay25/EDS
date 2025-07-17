@@ -6162,6 +6162,7 @@ def run1(table_name, empid):
         approval_rate = round((approved_requests/(approved_requests + disapproved_requests)) * 100,0)
 
     elif approved_requests == 0:
+        
         leave_utilization_rate = 0
         avg_leave_days = 0
         avg_approval_time = ""
@@ -6169,8 +6170,6 @@ def run1(table_name, empid):
         longest_leave_days = 0
         peak_leave_month = ""
 
-    elif approved_requests == 0 or disapproved_requests == 0:
-        approval_rate = ""
 
     query = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_cancelled};"""
     cursor.execute(query)
@@ -6328,6 +6327,9 @@ def run1(table_name, empid):
         status_counts = df_my_leave_apps_approved_declined_pending_fin["Approval Status"].value_counts().to_dict()
         return status_counts  # Return as dictionary
 
+ 
+    if not approval_rate:
+        approval_rate = ""
 
     return {
         "table_my_leave_apps_html": table_my_leave_apps_html,
