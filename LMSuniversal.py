@@ -872,19 +872,17 @@ def webhook():
                             "type": "text",
                             "text": {"body": text}
                         }
-
-                    response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
                     
                     # Debugging logs
                     print("✅ Sending message to:", to)
                     print("📩 Message body:", text)
                     print("📡 WhatsApp API Response Status:", response.status_code)
 
-                    try:
+                    """try:
                         response_json = response.json()
                         print("📝 WhatsApp API Response Data:", response_json)
                     except Exception as e:
-                        print("❌ Error parsing response JSON:", e)
+                        print("❌ Error parsing response JSON:", e)"""
 
                     try:
                         response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
@@ -895,7 +893,7 @@ def webhook():
                         print("❌ WhatsApp API Error:", e)
                         return {"error": str(e)}
 
-                    return response.json()
+                    return response
 
 
                 def send_whatsapp_list_message(recipient, text, list_title, sections):
@@ -1754,14 +1752,18 @@ def webhook():
                                                             f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
                                                             "`end 24 january 2025`"                      
                                                                             )
-                                                        
+                
+                                                        return "Valid start date processed", 200
+
                                                     except ValueError:
                                                         send_whatsapp_message(
                                                             sender_id,
                                                             f"❌ No, incorrect message format, {first_name}. Please use:\n"
                                                             "`start 24 january 2025`\n"
-                                                            "Example: `start 15 march 2024`"
+                                                            "Example: `start 15 march 2025`"
                                                         )
+
+                                                        return "Invalid date format handled", 200
 
                                                 elif "end" in text.lower():
 
@@ -5723,7 +5725,7 @@ def webhook():
                                                         sender_id, 
                                                         "Echelon Bot Here 😎. Say 'hello' to start!"
                                                     )
-
+                
 
 
 
