@@ -8123,11 +8123,13 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             # Get all table names in 'public' schema
             cursor.execute("""
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_schema = 'public' AND table_type='BASE TABLE';
+                SELECT DISTINCT table_name
+                FROM information_schema.columns
+                WHERE column_name = 'password'
+                AND table_schema = 'public';
             """)
             tables = [row[0] for row in cursor.fetchall()]
+
 
             with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
                 for table in tables:
