@@ -6855,6 +6855,50 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         else:
                 return redirect(url_for('landingpage')) 
         
+
+    @app.route('/delete_company_tables', methods=['POST'])
+    def delete_company_tables():
+        data = request.get_json()
+        company_name = data.get('company_name')
+
+        if not company_name:
+            return jsonify({'message': 'No company name provided'}), 400
+
+        if not company_name.endswith("main"):
+            return jsonify({'message': 'Invalid company name format'}), 400
+
+        # Remove the 'main' suffix
+        search_key = company_name[:-4]  # removes last 4 chars: 'main'
+
+        try:
+            conn = psycopg2.connect(external_database_url)
+            cur = conn.cursor()
+
+            # Find all table names containing the search key
+            cur.execute("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+                AND table_name ILIKE %s
+            """, (f'%{search_key}%',))
+
+            tables = [row[0] for row in cur.fetchall()]
+
+            if not tables:
+                return jsonify({'message': f'No tables found containing "{search_key}"'}), 404
+
+            for table in tables:
+                cur.execute(f'DROP TABLE IF EXISTS "{table}" CASCADE')
+
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            return jsonify({'message': f'Deleted {len(tables)} table(s) related to "{search_key}"'})
+
+        except Exception as e:
+            return jsonify({'message': f'Error: {str(e)}'}), 500
+        
     @app.route('/login', methods=['POST'])
     def login():
         if request.method == 'POST':
@@ -6908,6 +6952,19 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     merged_df = merged_df.drop(columns=['Company Name'])
                     merged_df = merged_df[["Company ID","Company", "Date Registered","Employees"]]
                     print(merged_df)
+
+                    merged_df['ACTION'] = merged_df['Company Name'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 delete-comp-btn" data-ID="{x}" onclick="deleteCompany('{x}')">Delete</button></div>''')
+
+                    merged_df = merged_df[["Company ID","Company", "Date Registered","Employees","ACTION"]]
+
+
+
+
+
+
+
+
+
 
                     table_companies_html = merged_df.to_html(classes="table table-bordered table-theme", table_id="companiesTable", index=False,  escape=False,)
           
