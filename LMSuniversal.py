@@ -6894,8 +6894,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 cur.execute(f'DROP TABLE IF EXISTS "{table}" CASCADE')
 
             conn.commit()
-            cur.close()
-            conn.close()
 
             return jsonify({'message': f'Deleted {len(tables)} table(s) related to "{search_key}"'})
 
@@ -8259,8 +8257,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     df = pd.read_sql(f'SELECT * FROM "{table}"', connection)
                     df.to_excel(writer, sheet_name=table[:31], index=False)
 
-            cursor.close()
-            connection.close()
+
         except Exception as e:
             return f"Error: {str(e)}"
 
