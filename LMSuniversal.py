@@ -1756,9 +1756,6 @@ def webhook():
                                                             f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
                                                             "`end 24 january 2025`"                      
                                                                             )
-                
-                                                        return "Valid start date processed", 200
-
                                                     except ValueError:
                                                         send_whatsapp_message(
                                                             sender_id,
@@ -1766,8 +1763,6 @@ def webhook():
                                                             "`start 24 january 2025`\n"
                                                             "Example: `start 15 march 2025`"
                                                         )
-
-                                                        return "Invalid date format handled", 200
 
                                                 elif "end" in text.lower():
 
