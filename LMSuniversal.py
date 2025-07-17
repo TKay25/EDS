@@ -1797,43 +1797,48 @@ def webhook():
 
                                                     connection.commit()
 
-                                                    cursor.execute("""
-                                                        SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (str(id_user)))
-                                            
-                                                    result = cursor.fetchone()
+                                                    try:
 
-                                                    appid = result[0]
-                                                    leavetype = result[2]
-                                                    startdate = result[3]
-                                                    enddate = result[4]
+                                                        cursor.execute("""
+                                                            SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (str(id_user)))
+                                                
+                                                        result = cursor.fetchone()
 
-                                                    if isinstance(startdate, str):
-                                                        startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                    if isinstance(enddate, str):
-                                                        enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                        appid = result[0]
+                                                        leavetype = result[2]
+                                                        startdate = result[3]
+                                                        enddate = result[4]
 
-                                                    business_days = 0
-                                                    current_date = startdate
+                                                        if isinstance(startdate, str):
+                                                            startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                        if isinstance(enddate, str):
+                                                            enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
 
-                                                    while current_date <= enddate:
-                                                        if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                            business_days += 1
-                                                        current_date += timedelta(days=1)  # Use timedelta directly
+                                                        business_days = 0
+                                                        current_date = startdate
 
-                                                    print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
+                                                        while current_date <= enddate:
+                                                            if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                                business_days += 1
+                                                            current_date += timedelta(days=1)  # Use timedelta directly
+
+                                                        print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
 
 
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                    ]
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
-                                                        buttons
-                                                    )
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
+                                                            buttons
+                                                        )
+
+                                                    except Exception as e:
+                                                        print("🔴 ERROR before 'still good':", e)
 
                                                 else:
                                                     send_whatsapp_message(
