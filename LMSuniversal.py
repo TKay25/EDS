@@ -1119,6 +1119,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
@@ -1326,6 +1327,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             approoooover = df_employeesappspendingcheck.iat[0,2].title()
                                                             send_whatsapp_message(
@@ -1982,6 +1984,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
@@ -2233,6 +2236,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             approoooover = df_employeesappspendingcheck.iat[0,2].title()
                                                             send_whatsapp_message(
@@ -2279,6 +2283,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
@@ -3361,6 +3366,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             approoooover = df_employeesappspendingcheck.iat[0,2].title()
                                                             send_whatsapp_message(
@@ -3442,6 +3448,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
@@ -3918,6 +3925,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
@@ -4117,6 +4125,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             approoooover = df_employeesappspendingcheck.iat[0,2].title()
                                                             send_whatsapp_message(
@@ -4509,6 +4518,8 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+
                                                             ]
                                                             approoooover = df_employeesappspendingcheck.iat[0,2].title()
                                                             send_whatsapp_message(
@@ -4555,6 +4566,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
@@ -5367,6 +5379,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
@@ -5803,6 +5816,7 @@ def webhook():
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
                                                             approoooover = df_employeesappspendingcheck.iat[0,2].title()
                                                             send_whatsapp_message(
