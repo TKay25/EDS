@@ -6157,6 +6157,8 @@ def run1(table_name, empid):
     df_leave_appsmain_declinedcomb = df_leave_appsmain_declined[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
     disapproved_requests = len(df_leave_appsmain_declined)
 
+    approval_rate = ""
+
     if approved_requests>0 and disapproved_requests>0:
 
         approval_rate = round((approved_requests/(approved_requests + disapproved_requests)) * 100,0)
@@ -6169,7 +6171,6 @@ def run1(table_name, empid):
         top_leave_type = ""
         longest_leave_days = 0
         peak_leave_month = ""
-
 
     query = f"""SELECT appid, id, firstname, surname, department, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_cancelled};"""
     cursor.execute(query)
