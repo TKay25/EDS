@@ -1764,6 +1764,13 @@ def webhook():
                                                             "Example: `start 15 march 2025`"
                                                         )
 
+                                                    except Exception as e:
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "⚠️ Something went wrong while processing your date. Please try again or contact support."
+                                                        )
+                                                        print("🔴 Unexpected error during date parsing:", e)
+
                                                 elif "end" in text.lower():
 
                                                     date_part = text.split("end", 1)[1].strip()
