@@ -819,7 +819,7 @@ def webhook():
                                             else:
                                                 send_whatsapp_messagecc(
                                                     sender_id, 
-                                                    "Echelon Bot Here 😎. Say 'hello' to start!"
+                                                    "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                 )
 
 
@@ -1128,6 +1128,23 @@ def webhook():
                                                                 , 
                                                                 buttons
                                                             )
+
+                                                    elif button_id == "Menu":
+
+                                                        companyxx = company_reg.replace("_"," ").title()
+                                                        
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
+                                                            buttons
+                                                        )
 
                                                     elif button_id == "Track":
 
@@ -1727,7 +1744,7 @@ def webhook():
 
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hello {first_name} {last_name} from {companyxx}!\n\n Echelon Bot Here 😎. How can I assist you?", 
+                                                        f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
                                                         buttons
                                                     )
                                                     
@@ -1869,7 +1886,7 @@ def webhook():
                                                 else:
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        "Echelon Bot Here 😎. Say 'hello' to start!"
+                                                        "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
 
 
@@ -2925,7 +2942,7 @@ def webhook():
 
                                                     send_whatsapp_list_message(
                                                         sender_id, 
-                                                        f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n Echelon Bot Here 😎. How can I assist you?", 
+                                                        f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
                                                     "User Options",
                                                     sections)
 
@@ -3029,7 +3046,7 @@ def webhook():
                                                 else:
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        "Echelon Bot Here 😎. Say 'hello' to start!"
+                                                        "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
 
                                     elif role_foc_8 == "Administrator":
@@ -3998,7 +4015,7 @@ def webhook():
                                                     
                                                     send_whatsapp_list_message(
                                                         sender_id,
-                                                        f"Hello {first_name} {last_name}, LMS Administrator from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
+                                                        f"Hello {first_name} {last_name}, LMS Administrator from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?",
                                                         "Administrator Options",
                                                         sections
                                                     )
@@ -4102,7 +4119,7 @@ def webhook():
                                                 else:
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        "Echelon Bot Here 😎. Say 'hello' to start!"
+                                                        "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
 
 
@@ -5048,7 +5065,7 @@ def webhook():
                                                         
                                                         send_whatsapp_list_message(
                                                             sender_id,
-                                                            f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
+                                                            f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?",
                                                             "Admin/Approver Options",
                                                             sections
                                                         )
@@ -5670,7 +5687,7 @@ def webhook():
                                                     
                                                     send_whatsapp_list_message(
                                                         sender_id,
-                                                        f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\nEchelon Bot Here 😎. How can I assist you?",
+                                                        f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?",
                                                         "Admin/Approver Options",
                                                         sections
                                                     )
@@ -5774,7 +5791,7 @@ def webhook():
                                                 else:
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        "Echelon Bot Here 😎. Say 'hello' to start!"
+                                                        "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
                 
 
