@@ -6953,7 +6953,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     merged_df = merged_df[["Company ID","Company", "Date Registered","Employees"]]
                     print(merged_df)
 
-                    merged_df['ACTION'] = merged_df['Company Name'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 delete-comp-btn" data-ID="{x}" onclick="deleteCompany('{x}')">Delete</button></div>''')
+                    merged_df['ACTION'] = merged_df['Company'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 delete-comp-btn" data-ID="{x}" onclick="deleteCompany('{x}')">Delete</button></div>''')
 
                     merged_df = merged_df[["Company ID","Company", "Date Registered","Employees","ACTION"]]
 
