@@ -1737,26 +1737,30 @@ def webhook():
 
                                                     print("committed")
 
-                                                    cursor.execute("""
-                                                        SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (str(id_user)))
-                                            
-                                                    result = cursor.fetchone()
+                                                    try:
+                                                        cursor.execute("""
+                                                            SELECT empidwa, leavetypewa FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (str(id_user),))
 
-                                                    if result:
-                                                        leavetypewa = result[1] 
+                                                        result = cursor.fetchone()
 
-                                                    cursor.execute("SELECT * FROM whatsapptempapplication")
-                                                    columns = [desc[0] for desc in cursor.description]
-                                                    records = cursor.fetchall()
-                                                    
-                                                    df = pd.DataFrame(records, columns=columns)
-                                                    
-                                                    print("\n📊 whatsapptempapplication Table:")
-                                                    print(df)
+                                                        if result:
+                                                            leavetypewa = result[1]  # might fail if result is None
 
-                                                    print("still good")
+                                                        cursor.execute("SELECT * FROM whatsapptempapplication")
+                                                        columns = [desc[0] for desc in cursor.description]
+                                                        records = cursor.fetchall()
+                                                        
+                                                        df = pd.DataFrame(records, columns=columns)
+
+                                                        print("\n📊 whatsapptempapplication Table:")
+                                                        print(df)
+
+                                                        print("still good")
+
+                                                    except Exception as e:
+                                                        print("🔴 ERROR before 'still good':", e)
                                                     
                                                     try:
                                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
