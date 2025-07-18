@@ -1283,7 +1283,7 @@ def webhook():
                                                                         buttons
                                                                     )
 
-                                                                elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                                elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
@@ -2190,7 +2190,7 @@ def webhook():
                                                                         buttons
                                                                     )
 
-                                                                elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                                elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
@@ -3308,7 +3308,7 @@ def webhook():
                                                                         buttons
                                                                     )
 
-                                                                elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                                elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
@@ -4095,7 +4095,7 @@ def webhook():
                                                                     buttons
                                                                 )
 
-                                                            elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                            elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
                                                                 buttons = [
                                                                     {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
@@ -4463,7 +4463,7 @@ def webhook():
                                                                         buttons
                                                                     )
 
-                                                                elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                                elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
@@ -5760,7 +5760,7 @@ def webhook():
                                                                         buttons
                                                                     )
 
-                                                                elif all_approved_declined_cancelled.iat[0,8] == "Declined":
+                                                                elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
