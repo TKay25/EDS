@@ -8772,6 +8772,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
         if user_uuid:
 
+            ACCESS_TOKEN = "EAATESj1oB5YBPIzFCv7ulvosr2S2ZAiWBJrFp7bti6L0ZCWS2AOz5dUABlJ6q16a4hRwEXdq5vZAP5tp4rGXfOQ2sx0hg1EOwMpL002eqUrygbPc3jkY8FPOzR7c6tMvKJxT3XxXP8Qp9U1n30MIMVcNy9JUCZB8UyIwaAZBAjf2U32TVTwSBJlSeHoNYrGH0dwZDZD"
+            PHONE_NUMBER_ID = "756962384159644"
+            VERIFY_TOKEN = "2644686099068373"
+            WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
+
             try:
                 data = request.get_json()
                 app_id = data.get("app_id")
@@ -8847,8 +8852,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
 
-                """send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!")
-"""
+                """send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {firstname} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Approved ✅ by `{app_namexx}`!") """
 
                 def generate_leave_pdf():
                     app = {
@@ -8878,9 +8882,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     pdf_bytes = HTML(string=html_out).write_pdf()
                     return pdf_bytes
 
-                
-                global ACCESS_TOKEN
-                global PHONE_NUMBER_ID
 
                 def upload_pdf_to_whatsapp(pdf_bytes):
                     filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
@@ -8943,6 +8944,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
         if user_uuid:
 
+            ACCESS_TOKEN = "EAATESj1oB5YBPIzFCv7ulvosr2S2ZAiWBJrFp7bti6L0ZCWS2AOz5dUABlJ6q16a4hRwEXdq5vZAP5tp4rGXfOQ2sx0hg1EOwMpL002eqUrygbPc3jkY8FPOzR7c6tMvKJxT3XxXP8Qp9U1n30MIMVcNy9JUCZB8UyIwaAZBAjf2U32TVTwSBJlSeHoNYrGH0dwZDZD"
+            PHONE_NUMBER_ID = "756962384159644"
+            VERIFY_TOKEN = "2644686099068373"
+            WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
+
             try:
                 data = request.get_json()
                 app_id = data.get("app_id")
@@ -8989,10 +8995,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
                 cursor.execute(query, (app_id,))
                 connection.commit()
-
-                global ACCESS_TOKEN
-                global PHONE_NUMBER_ID
-
 
                 query = f"SELECT id, firstname, surname, whatsapp, email, address ,role, department,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
                 cursor.execute(query)
