@@ -1169,6 +1169,8 @@ def webhook():
                                                             all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
                                                             all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
 
+                                                            all_approved_declined_cancelled_pending["date_applied"] = pd.to_datetime(all_approved_declined_cancelled_pending["date_applied"], errors='coerce')
+
                                                             all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="date_applied", ascending=False)
 
                                                             print("hist hist hist")
