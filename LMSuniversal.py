@@ -1143,22 +1143,22 @@ def webhook():
                                                             table_name_apps_declined = f"{company_reg}appsdeclined"
                                                             table_name_apps_cancelled = f"{company_reg}appscancelled"
 
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, leavedaysappliedfor, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
                                                             df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid", "id","leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"]) 
 
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, leavedaysappliedfor, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate   FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
                                                             df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])  
                                     
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, leavedaysappliedfor, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
                                                             df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])
 
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, leavedaysappliedfor, approvalstatus FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
                                                             df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus"])
@@ -1175,11 +1175,6 @@ def webhook():
 
                                                             print("hist hist hist")
                                                             all_approved_declined_cancelled_pending.drop('id', axis=1, inplace=True)
-
-                                                            date_columns = ['dateapplied', 'leavestartdate', 'leaveenddate', 'statusdate']
-
-                                                            for col in date_columns:
-                                                                all_approved_declined_cancelled_pending[col] = all_approved_declined_cancelled_pending[col].dt.strftime('%d %B %y')
 
                                                             print(all_approved_declined_cancelled_pending)
                                                         
