@@ -6,7 +6,7 @@
     <style>
         @page {
             size: A4;
-            margin: 20mm;
+            margin: 15mm;
             @top-center {
                 content: element(pageHeader);
             }
@@ -136,7 +136,7 @@
     </div>
 
     <div class="document-container">
-        <h2>{{ app.employee_name }} - Leave Applications History</h2>
+        <h2>Leave Applications History for {{ app.employee_name }} </h2>
 
         <div class="table-container">
             {{ table_hist_html | safe }}
