@@ -1162,7 +1162,9 @@ def webhook():
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
                                                             df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])
-                                    
+                                                            df_employeesappspenpendingcheck["statusdate"] = ""
+
+
                                                             all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                             all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
                                                             all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
