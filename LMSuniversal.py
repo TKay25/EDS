@@ -1158,10 +1158,10 @@ def webhook():
                                                             rows = cursor.fetchall()
                                                             df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])
 
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
-                                                            df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])
+                                                            df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus"])
                                                             df_employeesappspenpendingcheck["statusdate"] = ""
 
 
