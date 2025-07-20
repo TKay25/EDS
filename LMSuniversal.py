@@ -1130,6 +1130,83 @@ def webhook():
                                                                 buttons
                                                             )
 
+                                                    elif "myhist" in button_id:
+
+                                                        try:
+
+                                                            id_user = button_id.split("_")[1]
+                                                            print(id_user)
+                                                            companyxx = company_reg.replace("_"," ").title()
+
+                                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                            table_name_apps_approved = f"{company_reg}appsapproved"
+                                                            table_name_apps_declined = f"{company_reg}appsdeclined"
+                                                            table_name_apps_cancelled = f"{company_reg}appscancelled"
+
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid", "id","leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"]) 
+
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])  
+                                    
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])
+
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate"])
+                                    
+                                                            all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
+                                                            all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
+                                                            all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
+
+                                                            all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="date_applied", ascending=False)
+
+                                                            
+
+                                                            
+                                                        
+
+
+
+
+
+
+
+
+
+
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hello {first_name} {last_name} from {companyxx}!\n\n Done😎.", 
+                                                                buttons
+                                                            )
+
+
+                                                        except Exception as e:
+
+                                                            send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
+                                                    
+
+
+
+
+
+
+
+
+
+
                                                     elif button_id == "Menu":
 
                                                         companyxx = company_reg.replace("_"," ").title()
@@ -1287,8 +1364,8 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
                                                                     send_whatsapp_message(
                                                                         sender_id, 
@@ -1300,8 +1377,8 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
                                                                     send_whatsapp_message(
                                                                         sender_id, 
@@ -1313,7 +1390,8 @@ def webhook():
 
                                                                 buttons = [
                                                                     {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}}
                                                                 ]
                                                                 companyxx = company_reg.replace("_"," ").title()
                                                                 send_whatsapp_message(
