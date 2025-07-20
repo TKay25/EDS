@@ -1821,71 +1821,84 @@ def webhook():
 
                                                 elif "end" in text.lower():
 
-                                                    date_part = text.split("end", 1)[1].strip()
-
-                                                    print(date_part)
-
-                                                    cursor.execute("""
-                                                        UPDATE whatsapptempapplication
-                                                        SET enddate = %s
-                                                        WHERE empidwa = %s
-                                                    """, (date_part, id_user))
-
-                                                    connection.commit()
-
-                                                    print("committed end")
-
                                                     try:
+                                                        # ✅ Match "end 24 january 2025"
+                                                        match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
+                                                        if not match:
+                                                            raise ValueError("Invalid end date format.")
 
+                                                        date_part = match.group(1)
+                                                        parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
+
+                                                        # ✅ Update DB now that it's valid
                                                         cursor.execute("""
-                                                            SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                            UPDATE whatsapptempapplication
+                                                            SET enddate = %s
+                                                            WHERE empidwa = %s
+                                                        """, (date_part, id_user))
+                                                        connection.commit()
+
+                                                        # ✅ Fetch full leave application
+                                                        cursor.execute("""
+                                                            SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
                                                             WHERE empidwa = %s
                                                         """, (id_user,))
-                                                
                                                         result = cursor.fetchone()
 
-                                                        print("fetched")
-
-                                                        print(result)
+                                                        if not result:
+                                                            raise Exception("No leave record found.")
 
                                                         appid = result[0]
                                                         leavetype = result[2]
                                                         startdate = result[3]
                                                         enddate = result[4]
-                                                        print(startdate)
-                                                        print(enddate)
 
-                                                        print("converting")
-
+                                                        # ✅ Ensure both dates are datetime.date objects
                                                         if isinstance(startdate, str):
-                                                            startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
                                                         if isinstance(enddate, str):
-                                                            enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
+                                                        # ✅ Calculate business days
                                                         business_days = 0
                                                         current_date = startdate
-
                                                         while current_date <= enddate:
-                                                            if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                            if current_date.weekday() < 5:  # Weekday: Mon-Fri
                                                                 business_days += 1
-                                                            current_date += timedelta(days=1)  # Use timedelta directly
+                                                            current_date += timedelta(days=1)
 
-                                                        print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
-
-
+                                                        # ✅ Ask user to confirm submission
                                                         buttons = [
                                                             {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
                                                             {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
                                                         ]
                                                         send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
+                                                            sender_id,
+                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
                                                             buttons
                                                         )
 
-                                                    except Exception as e:
-                                                        print("🔴 ERROR before 'still good':", e)
+                                                    except ValueError:
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
+                                                            "`end 24 january 2025`\n\n"
+                                                            "Example: `end 28 march 2024`"
+                                                        )
 
+                                                    except Exception as e:
+                                                        import traceback
+                                                        print("🔴 ERROR during end date processing:", e)
+                                                        traceback.print_exc()
+                                                        try:
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "⚠️ Something went wrong while processing your end date. Please try again or contact support."
+                                                            )
+                                                        except Exception as send_err:
+                                                            print("🔴 Failed to send error message via WhatsApp:", send_err)
+                                                            
                                                 else:
                                                     send_whatsapp_message(
                                                         sender_id, 
@@ -3090,54 +3103,84 @@ def webhook():
 
                                                 elif "end" in text.lower():
 
-                                                    date_part = text.split("end", 1)[1].strip()
+                                                    try:
+                                                        # ✅ Match "end 24 january 2025"
+                                                        match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
+                                                        if not match:
+                                                            raise ValueError("Invalid end date format.")
 
-                                                    cursor.execute("""
-                                                        UPDATE whatsapptempapplication
-                                                        SET enddate = %s
-                                                        WHERE empidwa = %s
-                                                    """, (date_part, id_user))
+                                                        date_part = match.group(1)
+                                                        parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
 
-                                                    connection.commit()
+                                                        # ✅ Update DB now that it's valid
+                                                        cursor.execute("""
+                                                            UPDATE whatsapptempapplication
+                                                            SET enddate = %s
+                                                            WHERE empidwa = %s
+                                                        """, (date_part, id_user))
+                                                        connection.commit()
 
-                                                    cursor.execute("""
-                                                        SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (id_user,))
-                                            
-                                                    result = cursor.fetchone()
+                                                        # ✅ Fetch full leave application
+                                                        cursor.execute("""
+                                                            SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (id_user,))
+                                                        result = cursor.fetchone()
 
-                                                    appid = result[0]
-                                                    leavetype = result[2]
-                                                    startdate = result[3]
-                                                    enddate = result[4]
+                                                        if not result:
+                                                            raise Exception("No leave record found.")
 
-                                                    if isinstance(startdate, str):
-                                                        startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                    if isinstance(enddate, str):
-                                                        enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                        appid = result[0]
+                                                        leavetype = result[2]
+                                                        startdate = result[3]
+                                                        enddate = result[4]
 
-                                                    business_days = 0
-                                                    current_date = startdate
+                                                        # ✅ Ensure both dates are datetime.date objects
+                                                        if isinstance(startdate, str):
+                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                        if isinstance(enddate, str):
+                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
-                                                    while current_date <= enddate:
-                                                        if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                            business_days += 1
-                                                        current_date += timedelta(days=1)  # Use timedelta directly
+                                                        # ✅ Calculate business days
+                                                        business_days = 0
+                                                        current_date = startdate
+                                                        while current_date <= enddate:
+                                                            if current_date.weekday() < 5:  # Weekday: Mon-Fri
+                                                                business_days += 1
+                                                            current_date += timedelta(days=1)
 
-                                                    print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
+                                                        # ✅ Ask user to confirm submission
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                            buttons
+                                                        )
 
+                                                    except ValueError:
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
+                                                            "`end 24 january 2025`\n\n"
+                                                            "Example: `end 28 march 2024`"
+                                                        )
 
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                    ]
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
-                                                        buttons
-                                                    )
-
+                                                    except Exception as e:
+                                                        import traceback
+                                                        print("🔴 ERROR during end date processing:", e)
+                                                        traceback.print_exc()
+                                                        try:
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "⚠️ Something went wrong while processing your end date. Please try again or contact support."
+                                                            )
+                                                        except Exception as send_err:
+                                                            print("🔴 Failed to send error message via WhatsApp:", send_err)
+                                                            
                                                 else:
                                                     send_whatsapp_message(
                                                         sender_id, 
@@ -4255,54 +4298,84 @@ def webhook():
 
                                                 elif "end" in text.lower():
 
-                                                    date_part = text.split("end", 1)[1].strip()
+                                                    try:
+                                                        # ✅ Match "end 24 january 2025"
+                                                        match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
+                                                        if not match:
+                                                            raise ValueError("Invalid end date format.")
 
-                                                    cursor.execute("""
-                                                        UPDATE whatsapptempapplication
-                                                        SET enddate = %s
-                                                        WHERE empidwa = %s
-                                                    """, (date_part, id_user))
+                                                        date_part = match.group(1)
+                                                        parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
 
-                                                    connection.commit()
+                                                        # ✅ Update DB now that it's valid
+                                                        cursor.execute("""
+                                                            UPDATE whatsapptempapplication
+                                                            SET enddate = %s
+                                                            WHERE empidwa = %s
+                                                        """, (date_part, id_user))
+                                                        connection.commit()
 
-                                                    cursor.execute("""
-                                                        SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (id_user,))
-                                            
-                                                    result = cursor.fetchone()
+                                                        # ✅ Fetch full leave application
+                                                        cursor.execute("""
+                                                            SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (id_user,))
+                                                        result = cursor.fetchone()
 
-                                                    appid = result[0]
-                                                    leavetype = result[2]
-                                                    startdate = result[3]
-                                                    enddate = result[4]
+                                                        if not result:
+                                                            raise Exception("No leave record found.")
 
-                                                    if isinstance(startdate, str):
-                                                        startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                    if isinstance(enddate, str):
-                                                        enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                        appid = result[0]
+                                                        leavetype = result[2]
+                                                        startdate = result[3]
+                                                        enddate = result[4]
 
-                                                    business_days = 0
-                                                    current_date = startdate
+                                                        # ✅ Ensure both dates are datetime.date objects
+                                                        if isinstance(startdate, str):
+                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                        if isinstance(enddate, str):
+                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
-                                                    while current_date <= enddate:
-                                                        if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                            business_days += 1
-                                                        current_date += timedelta(days=1)  # Use timedelta directly
+                                                        # ✅ Calculate business days
+                                                        business_days = 0
+                                                        current_date = startdate
+                                                        while current_date <= enddate:
+                                                            if current_date.weekday() < 5:  # Weekday: Mon-Fri
+                                                                business_days += 1
+                                                            current_date += timedelta(days=1)
 
-                                                    print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
+                                                        # ✅ Ask user to confirm submission
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                            buttons
+                                                        )
 
+                                                    except ValueError:
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
+                                                            "`end 24 january 2025`\n\n"
+                                                            "Example: `end 28 march 2024`"
+                                                        )
 
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                    ]
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
-                                                        buttons
-                                                    )
-
+                                                    except Exception as e:
+                                                        import traceback
+                                                        print("🔴 ERROR during end date processing:", e)
+                                                        traceback.print_exc()
+                                                        try:
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "⚠️ Something went wrong while processing your end date. Please try again or contact support."
+                                                            )
+                                                        except Exception as send_err:
+                                                            print("🔴 Failed to send error message via WhatsApp:", send_err)
+                                                            
                                                 else:
                                                     send_whatsapp_message(
                                                         sender_id, 
@@ -5957,63 +6030,92 @@ def webhook():
                                                         except Exception as send_err:
                                                             print("🔴 Failed to send WhatsApp error message:", send_err)
 
-                                                            
+
                                                 elif "end" in text.lower():
+                                                    
+                                                    try:
+                                                        # ✅ Match "end 24 january 2025"
+                                                        match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
+                                                        if not match:
+                                                            raise ValueError("Invalid end date format.")
 
-                                                    date_part = text.split("end", 1)[1].strip()
+                                                        date_part = match.group(1)
+                                                        parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
 
-                                                    cursor.execute("""
-                                                        UPDATE whatsapptempapplication
-                                                        SET enddate = %s
-                                                        WHERE empidwa = %s
-                                                    """, (date_part, id_user))
+                                                        # ✅ Update DB now that it's valid
+                                                        cursor.execute("""
+                                                            UPDATE whatsapptempapplication
+                                                            SET enddate = %s
+                                                            WHERE empidwa = %s
+                                                        """, (date_part, id_user))
+                                                        connection.commit()
 
-                                                    connection.commit()
+                                                        # ✅ Fetch full leave application
+                                                        cursor.execute("""
+                                                            SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (id_user,))
+                                                        result = cursor.fetchone()
 
-                                                    cursor.execute("""
-                                                        SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (id_user,))
-                                            
-                                                    result = cursor.fetchone()
+                                                        if not result:
+                                                            raise Exception("No leave record found.")
 
-                                                    appid = result[0]
-                                                    leavetype = result[2]
-                                                    startdate = result[3]
-                                                    enddate = result[4]
+                                                        appid = result[0]
+                                                        leavetype = result[2]
+                                                        startdate = result[3]
+                                                        enddate = result[4]
 
-                                                    if isinstance(startdate, str):
-                                                        startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                    if isinstance(enddate, str):
-                                                        enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                        # ✅ Ensure both dates are datetime.date objects
+                                                        if isinstance(startdate, str):
+                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                        if isinstance(enddate, str):
+                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
-                                                    business_days = 0
-                                                    current_date = startdate
+                                                        # ✅ Calculate business days
+                                                        business_days = 0
+                                                        current_date = startdate
+                                                        while current_date <= enddate:
+                                                            if current_date.weekday() < 5:  # Weekday: Mon-Fri
+                                                                business_days += 1
+                                                            current_date += timedelta(days=1)
 
-                                                    while current_date <= enddate:
-                                                        if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                            business_days += 1
-                                                        current_date += timedelta(days=1)  # Use timedelta directly
+                                                        # ✅ Ask user to confirm submission
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                            buttons
+                                                        )
 
-                                                    print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
+                                                    except ValueError:
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
+                                                            "`end 24 january 2025`\n\n"
+                                                            "Example: `end 28 march 2024`"
+                                                        )
 
-
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                    ]
-                                                    send_whatsapp_message(
-                                                        sender_id, 
-                                                        f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` {first_name} ?", 
-                                                        buttons
-                                                    )
-
+                                                    except Exception as e:
+                                                        import traceback
+                                                        print("🔴 ERROR during end date processing:", e)
+                                                        traceback.print_exc()
+                                                        try:
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "⚠️ Something went wrong while processing your end date. Please try again or contact support."
+                                                            )
+                                                        except Exception as send_err:
+                                                            print("🔴 Failed to send error message via WhatsApp:", send_err)
+                                                            
                                                 else:
                                                     send_whatsapp_message(
                                                         sender_id, 
                                                         "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
-                
 
 
 
