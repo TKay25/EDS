@@ -1827,13 +1827,6 @@ def webhook():
                                                             "Example: `start 15 march 2025`"
                                                         )
 
-                                                    except Exception as e:
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "⚠️ Something went wrong while processing your date. Please try again or contact support."
-                                                        )
-                                                        print("🔴 Unexpected error during date parsing:", e)
-
                                                 elif "end" in text.lower():
 
                                                     date_part = text.split("end", 1)[1].strip()
@@ -3052,43 +3045,44 @@ def webhook():
 
 
                                                 elif "start" in text.lower():
-
-                                                    date_part = text.split("start", 1)[1].strip()
-
-                                                    cursor.execute("""
-                                                        UPDATE whatsapptempapplication
-                                                        SET startdate = %s
-                                                        WHERE empidwa = %s
-                                                    """, (date_part, id_user))
-
-                                                    connection.commit()
-
-                                                    cursor.execute("""
-                                                        SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (id_user,))
-                                            
-                                                    result = cursor.fetchone()
-
-                                                    if result:
-                                                        leavetypewa = result[1] 
-
-                                                    cursor.execute("SELECT * FROM whatsapptempapplication")
-                                                    columns = [desc[0] for desc in cursor.description]
-                                                    records = cursor.fetchall()
-                                                    
-                                                    df = pd.DataFrame(records, columns=columns)
-                                                    
-                                                    print("\n📊 whatsapptempapplication Table:")
-                                                    print(df)
                                                     
                                                     try:
+
+                                                        date_part = text.split("start", 1)[1].strip()
                                                         parsed_date = datetime.strptime(date_part, "%d %B %Y")
+
+                                                        cursor.execute("""
+                                                            UPDATE whatsapptempapplication
+                                                            SET startdate = %s
+                                                            WHERE empidwa = %s
+                                                        """, (date_part, id_user))
+
+                                                        connection.commit()
+
+                                                        cursor.execute("""
+                                                            SELECT empidwa, leavetypewa FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (id_user,))
+                                                
+                                                        result = cursor.fetchone()
+
+                                                        if result:
+                                                            leavetypewa = result[1] 
+
+                                                        cursor.execute("SELECT * FROM whatsapptempapplication")
+                                                        columns = [desc[0] for desc in cursor.description]
+                                                        records = cursor.fetchall()
+                                                        
+                                                        df = pd.DataFrame(records, columns=columns)
+                                                        
+                                                        print("\n📊 whatsapptempapplication Table:")
+                                                        print(df)
+                                                        
                                                         send_whatsapp_message(sender_id, "✅ Yes! Valid start date format.\n\n"
                                                             f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
                                                             "`end 24 january 2025`"                      
                                                                             )
-                                                        
+                                                    
                                                     except ValueError:
                                                         send_whatsapp_message(
                                                             sender_id,
@@ -3096,6 +3090,13 @@ def webhook():
                                                             "`start 24 january 2025`\n"
                                                             "Example: `start 15 march 2024`"
                                                         )
+
+                                                    except Exception as e:
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "⚠️ Something went wrong while processing your date. Please try again or contact support."
+                                                        )
+                                                        print("🔴 Unexpected error during date parsing:", e)
 
                                                 elif "end" in text.lower():
 
