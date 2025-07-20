@@ -1190,10 +1190,53 @@ def webhook():
                                                                 pdf_bytes = HTML(string=html_out).write_pdf()
                                                                 return pdf_bytes
 
+                                                            def upload_pdf_to_whatsapp(pdf_bytes):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"{first_name}_{last_name}_{compxxy}_leave_applications_history.pdf"
+                                                            
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                                }
+
+                                                                files = {
+                                                                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                    "type": (None, "application/pdf"),
+                                                                    "messaging_product": (None, "whatsapp")
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, files=files)
+                                                                print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                response.raise_for_status()
+                                                                return response.json()["id"]
+
+                                                                                                            
+                                                            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"{first_name}_{last_name}_{compxxy}_leave_applications_history.pdf"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "document",
+                                                                    "document": {
+                                                                        "id": media_id,            # Media ID from upload step
+                                                                        "filename": filename       # Desired file name on recipient's phone
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
 
 
-
-
+                                                            pdf_path = generate_leave_pdf()
+                                                            media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                            send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
                                                             buttons = [
                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
