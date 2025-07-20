@@ -1234,7 +1234,7 @@ def webhook():
                                                                 return response.json()
 
 
-                                                            pdf_path = generate_leave_pdf()
+                                                            pdf_path = generate_leave_hist_pdf()
                                                             media_id = upload_pdf_to_whatsapp(pdf_path)
                                                             send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
