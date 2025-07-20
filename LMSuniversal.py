@@ -1161,7 +1161,7 @@ def webhook():
                                                             query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
-                                                            df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate","approvalstatus"])
+                                                            df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate" ,"approvalstatus"])
                                                             df_employeesappspenpendingcheck["statusdate"] = ""
 
 
@@ -1175,6 +1175,7 @@ def webhook():
 
                                                             print("hist hist hist")
                                                             all_approved_declined_cancelled_pending.drop('id', axis=1, inplace=True)
+                                                            all_approved_declined_cancelled_pending["dateapplied"] = all_approved_declined_cancelled_pending["dateapplied"].dt.strftime("%-d %B %Y")
 
                                                             print(all_approved_declined_cancelled_pending)
                                                         
