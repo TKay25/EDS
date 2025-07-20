@@ -1176,15 +1176,19 @@ def webhook():
                                                             print("hist hist hist")
 
                                                             print(all_approved_declined_cancelled_pending)
-
-                                                            
-
-
                                                         
+                                                            def generate_leave_hist_pdf():
+                                                                app = {
+                                                                    'company_name': company_reg.replace("_", " ").title(),
+                                                                    'employee_name': f"{first_name} {last_name}",
+                                                                    'generated_on': today_date,
+                                                                }
 
+                                                                table_hist_html = all_approved_declined_cancelled_pending.to_html(index=False, classes='data', border=0, justify='center',escape=False)
 
-
-
+                                                                html_out = render_template("leave_applications_history.html", app=app, table_html=table_hist_html)
+                                                                pdf_bytes = HTML(string=html_out).write_pdf()
+                                                                return pdf_bytes
 
 
 
