@@ -1169,9 +1169,13 @@ def webhook():
 
                                                             all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="date_applied", ascending=False)
 
-                                                            
+                                                            print("hist hist hist")
+
+                                                            print(all_approved_declined_cancelled_pending)
 
                                                             
+
+
                                                         
 
 
