@@ -1186,7 +1186,7 @@ def webhook():
 
                                                                 table_hist_html = all_approved_declined_cancelled_pending.to_html(index=False, classes='data', border=0, justify='center',escape=False)
 
-                                                                html_out = render_template("leave_applications_history.html", app=app, table_html=table_hist_html)
+                                                                html_out = render_template("leave_applications_history.html", app=app, table_hist_html=table_hist_html)
                                                                 pdf_bytes = HTML(string=html_out).write_pdf()
                                                                 return pdf_bytes
 
