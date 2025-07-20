@@ -1174,6 +1174,12 @@ def webhook():
                                                             all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="dateapplied", ascending=False)
 
                                                             print("hist hist hist")
+                                                            all_approved_declined_cancelled_pending.drop('id', axis=1, inplace=True)
+
+                                                            date_columns = ['dateapplied', 'leavestartdate', 'leaveenddate', 'statusdate']
+
+                                                            for col in date_columns:
+                                                                all_approved_declined_cancelled_pending[col] = all_approved_declined_cancelled_pending[col].dt.strftime('%d %B %y')
 
                                                             print(all_approved_declined_cancelled_pending)
                                                         
