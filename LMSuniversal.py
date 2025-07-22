@@ -4594,6 +4594,20 @@ def webhook():
                                                             f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
                                                             buttons
                                                         )
+
+                                                    elif selected_option == "Bulkadd":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Uptemp", "title": "Upload Template"}},
+                                                        {"type": "reply", "reply": {"id": "Downtemp", "title": "Download Template"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, select an option below on whether you want to upload an Excel temaplate already filled with employee details or you want to download the template to fill with Employee details.",
+                                                            buttons
+                                                        )
                                                         
                                                     elif selected_option == "Template":
                                                         # Handle Add Employees
@@ -6598,6 +6612,20 @@ def webhook():
                                                         send_whatsapp_message(
                                                             sender_id, 
                                                             f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
+                                                            buttons
+                                                        )
+
+                                                    elif selected_option == "Bulkadd":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Uptemp", "title": "Upload Template"}},
+                                                        {"type": "reply", "reply": {"id": "Downtemp", "title": "Download Template"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, select an option below on whether you want to upload an Excel temaplate already filled with employee details or you want to download the template to fill with Employee details.",
                                                             buttons
                                                         )
                                                                                                                 
