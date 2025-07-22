@@ -2189,8 +2189,6 @@ def webhook():
                                                     button_id = interactive.get("button_reply", {}).get("id")
                                                     print(f"🔘 Button clicked: {button_id}")
 
-            
-
                                                     if button_id == "Track":
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -2507,7 +2505,6 @@ def webhook():
 
                                                             send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
                                                     
-
                                                     elif button_id == "Apply":
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -2557,20 +2554,26 @@ def webhook():
 
                                                     elif button_id == "Menu":
 
-                                                        companyxx = company_reg.replace("_"," ").title()
-                                                        
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
-                                                        ]
-                                                        companyxx = company_reg.replace("_"," ").title()
+                                                        companyxx = company_reg.replace("_", " ").title()
 
-                                                        send_whatsapp_message(
+                                                        sections = [
+                                                            {
+                                                                "title": "Approver Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Track", "title": "Track My Application"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "Pending", "title": "Apps Pending My Approval"}
+                                                                ]
+                                                            }
+                                                        ]
+
+
+                                                        send_whatsapp_list_message(
                                                             sender_id, 
-                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
-                                                            buttons
-                                                        )
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
+                                                        "User Options",
+                                                        sections)
 
                                                     elif button_id == "Submitapp":
                                             
@@ -2915,7 +2918,6 @@ def webhook():
                                                         else:
                                                             print("No record found for the user.")
 
-
                                                     elif button_id == "Cancelapp" :
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -2968,8 +2970,6 @@ def webhook():
                                                         
                                                         else:
                                                             print("No record found for the user.")
-
-
 
                                                     elif "appwa" in button_id.lower():
 
