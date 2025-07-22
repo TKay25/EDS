@@ -3816,23 +3816,29 @@ def webhook():
 
                                                             send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
                                                     
-
-
                                                     elif button_id == "Menu":
 
                                                         companyxx = company_reg.replace("_"," ").title()
                                                         
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                        sections = [
+                                                            {
+                                                                "title": "Administrator Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Track", "title": "Track My Application"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "Addemp", "title": "Add Employees"},
+                                                                    {"id": "Rolechange", "title": "Change Employee's Role"},
+                                                                    {"id": "Book", "title": "Extract Leave Book"}
+                                                                ]
+                                                            }
                                                         ]
-                                                        companyxx = company_reg.replace("_"," ").title()
-
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
-                                                            buttons
+                                                        
+                                                        send_whatsapp_list_message(
+                                                            sender_id,
+                                                            f"Hello {first_name} {last_name}, LMS Administrator from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?",
+                                                            "Administrator Options",
+                                                            sections
                                                         )
 
                                                     elif button_id == "Apply":
@@ -4305,7 +4311,6 @@ def webhook():
                                                         else:
                                                             print("No record found for the user.")
 
-
                                                     elif button_id == "Bulkadd":
 
                                                         buttons = [
@@ -4483,10 +4488,7 @@ def webhook():
                                                     elif selected_option == "Rolechange":
                                                         # Handle Change Employee's Role
                                                         pass
-                                                        
-
-
-                                                
+                                                            
                                                 if interactive.get("type") == "list_reply":
 
                                                     selected_option = interactive.get("list_reply", {}).get("id")
@@ -5440,8 +5442,6 @@ def webhook():
 
                                                             send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
                                                     
-
-
                                                     elif button_id == "Apply":
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -6248,8 +6248,7 @@ def webhook():
                                                         
                                                         else:
                                                             print("No record found for the user.")
-
-                                                        
+                                                   
                                                     elif button_id == "Bulkadd":
 
                                                         buttons = [
@@ -6263,7 +6262,6 @@ def webhook():
                                                             f"Hey {first_name}, select an option below on whether you want to upload an Excel temaplate already filled with employee details or you want to download the template to fill with Employee details.",
                                                             buttons
                                                         )
-
 
                                                     elif button_id == "Uptemp":
 
@@ -6429,10 +6427,7 @@ def webhook():
                                                     elif selected_option == "Rolechange":
                                                         # Handle Change Employee's Role
                                                         pass
-                                                        
-
-
-                                                
+                                                                                                        
                                                 if interactive.get("type") == "list_reply":
                                                     selected_option = interactive.get("list_reply", {}).get("id")
                                                     print(f"📋 User selected: {selected_option}")
