@@ -4305,6 +4305,129 @@ def webhook():
                                                             print("No record found for the user.")
 
 
+                                                    elif button_id == "Bulkadd":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Uptemp", "title": "Upload Template"}},
+                                                        {"type": "reply", "reply": {"id": "Downtemp", "title": "Download Template"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, select an option below on whether you want to upload an Excel temaplate already filled with employee details or you want to download the template to fill with Employee details.",
+                                                            buttons
+                                                        )
+
+                                                    elif button_id == "Downtemp":
+
+                                                        companyxx = company_reg.replace("_", " ").title()
+
+                                                        wb = openpyxl.Workbook()
+                                                        ws = wb.active
+                                                        ws.title = "Employee Details"
+
+                                                        # Add headers
+                                                        headers = [
+                                                            "FirstName", "Surname", "WhatsApp", "Email", 
+                                                            "Role", "Department", 
+                                                            "Current Leave Days Balance", "Monthly Leave Days Accumulation"
+                                                        ]
+                                                        ws.append(headers)
+
+                                                        # Style headers
+                                                        dark_blue = "003366"
+                                                        white = "FFFFFF"
+                                                        for col in range(1, len(headers) + 1):
+                                                            cell = ws.cell(row=1, column=col)
+                                                            cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
+                                                            cell.font = Font(color=white, bold=True)
+
+                                                        # Role dropdown (inline, short list)
+                                                        role_dv = DataValidation(type="list", formula1='"Administrator,Ordinary User"', allow_blank=False)
+                                                        ws.add_data_validation(role_dv)
+                                                        for row in range(2, 500):
+                                                            role_dv.add(ws[f"E{row}"])
+
+                                                        # Department options (long list) - write to column Z
+                                                        departments = [
+                                                            "Human Resources and Administration",
+                                                            "Finance and Accounting",
+                                                            "Sales and Marketing",
+                                                            "Sales and Distribution",
+                                                            "Workshop and Maintenance",
+                                                            "Operations and Production",
+                                                            "Procurement and Purchasing",
+                                                            "Customer Service and Support",
+                                                            "IT and Digital Infrastructure",
+                                                            "Risk Management",
+                                                            "Legal and Compliance",
+                                                            "Health, Safety and Environment",
+                                                            "Research, Analytics and Reporting"
+                                                        ]
+
+                                                        for i, dept in enumerate(departments, start=1):
+                                                            ws[f"Z{i}"] = dept
+
+                                                        # Department dropdown using cell range
+                                                        dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
+                                                        ws.add_data_validation(dept_dv)
+                                                        for row in range(2, 500):
+                                                            dept_dv.add(ws[f"F{row}"])
+
+                                                        # Hide the reference column
+                                                        ws.column_dimensions['Z'].hidden = True
+
+                                                        # Save workbook to memory stream
+                                                        output = io.BytesIO()
+                                                        wb.save(output)
+                                                        output.seek(0)
+
+                                                        try:
+                                                            # Get the Excel bytes
+                                                            excel_bytes = output.getvalue()
+
+                                                            # Upload Excel to WhatsApp and get media ID
+                                                            media_id = upload_excel_to_whatsapp(
+                                                                excel_bytes=excel_bytes,
+                                                                company_reg=table_name,
+                                                                first_name="HR",  # or use session info if available
+                                                                last_name="Manager"
+                                                            )
+
+                                                            # Send Excel to user
+                                                            send_whatsapp_excel_by_media_id(
+                                                                recipient_number=sender_id,
+                                                                media_id=media_id,
+                                                                company_reg=table_name,
+                                                                first_name="HR",
+                                                                last_name="Manager",
+                                                                caption=f"Employee Registration Template - {companyxx}"
+                                                            )
+
+                                                            # Confirmation message with button
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready.",
+                                                                buttons
+                                                            )
+
+                                                        except Exception as e:
+                                                            print("Error sending employee template:", str(e))
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"Sorry, we couldn't send the Employee Template right now.\nError: {e}"
+                                                            )
+                                                        
+                                                    elif selected_option == "Rolechange":
+                                                        # Handle Change Employee's Role
+                                                        pass
+                                                        
+
+
                                                 
                                                 if interactive.get("type") == "list_reply":
 
@@ -4586,7 +4709,7 @@ def webhook():
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
                                                         {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Employee Addition"}},
-                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                         ]
 
                                                         send_whatsapp_message(
@@ -4594,131 +4717,6 @@ def webhook():
                                                             f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
                                                             buttons
                                                         )
-
-                                                    elif selected_option == "Bulkadd":
-
-                                                        buttons = [
-                                                        {"type": "reply", "reply": {"id": "Uptemp", "title": "Upload Template"}},
-                                                        {"type": "reply", "reply": {"id": "Downtemp", "title": "Download Template"}},
-                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
-                                                        ]
-
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, select an option below on whether you want to upload an Excel temaplate already filled with employee details or you want to download the template to fill with Employee details.",
-                                                            buttons
-                                                        )
-                                                        
-                                                    elif selected_option == "Downtemp":
-
-                                                        companyxx = company_reg.replace("_", " ").title()
-
-                                                        wb = openpyxl.Workbook()
-                                                        ws = wb.active
-                                                        ws.title = "Employee Details"
-
-                                                        # Add headers
-                                                        headers = [
-                                                            "FirstName", "Surname", "WhatsApp", "Email", 
-                                                            "Role", "Department", 
-                                                            "Current Leave Days Balance", "Monthly Leave Days Accumulation"
-                                                        ]
-                                                        ws.append(headers)
-
-                                                        # Style headers
-                                                        dark_blue = "003366"
-                                                        white = "FFFFFF"
-                                                        for col in range(1, len(headers) + 1):
-                                                            cell = ws.cell(row=1, column=col)
-                                                            cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
-                                                            cell.font = Font(color=white, bold=True)
-
-                                                        # Role dropdown (inline, short list)
-                                                        role_dv = DataValidation(type="list", formula1='"Administrator,Ordinary User"', allow_blank=False)
-                                                        ws.add_data_validation(role_dv)
-                                                        for row in range(2, 500):
-                                                            role_dv.add(ws[f"E{row}"])
-
-                                                        # Department options (long list) - write to column Z
-                                                        departments = [
-                                                            "Human Resources and Administration",
-                                                            "Finance and Accounting",
-                                                            "Sales and Marketing",
-                                                            "Sales and Distribution",
-                                                            "Workshop and Maintenance",
-                                                            "Operations and Production",
-                                                            "Procurement and Purchasing",
-                                                            "Customer Service and Support",
-                                                            "IT and Digital Infrastructure",
-                                                            "Risk Management",
-                                                            "Legal and Compliance",
-                                                            "Health, Safety and Environment",
-                                                            "Research, Analytics and Reporting"
-                                                        ]
-
-                                                        for i, dept in enumerate(departments, start=1):
-                                                            ws[f"Z{i}"] = dept
-
-                                                        # Department dropdown using cell range
-                                                        dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
-                                                        ws.add_data_validation(dept_dv)
-                                                        for row in range(2, 500):
-                                                            dept_dv.add(ws[f"F{row}"])
-
-                                                        # Hide the reference column
-                                                        ws.column_dimensions['Z'].hidden = True
-
-                                                        # Save workbook to memory stream
-                                                        output = io.BytesIO()
-                                                        wb.save(output)
-                                                        output.seek(0)
-
-                                                        try:
-                                                            # Get the Excel bytes
-                                                            excel_bytes = output.getvalue()
-
-                                                            # Upload Excel to WhatsApp and get media ID
-                                                            media_id = upload_excel_to_whatsapp(
-                                                                excel_bytes=excel_bytes,
-                                                                company_reg=table_name,
-                                                                first_name="HR",  # or use session info if available
-                                                                last_name="Manager"
-                                                            )
-
-                                                            # Send Excel to user
-                                                            send_whatsapp_excel_by_media_id(
-                                                                recipient_number=sender_id,
-                                                                media_id=media_id,
-                                                                company_reg=table_name,
-                                                                first_name="HR",
-                                                                last_name="Manager",
-                                                                caption=f"Employee Registration Template - {companyxx}"
-                                                            )
-
-                                                            # Confirmation message with button
-                                                            buttons = [
-                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                            ]
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready.",
-                                                                buttons
-                                                            )
-
-                                                        except Exception as e:
-                                                            print("Error sending employee template:", str(e))
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"Sorry, we couldn't send the Employee Template right now.\nError: {e}"
-                                                            )
-                                                    
-
-
-
-
-
-
-
                                                         
                                                     elif selected_option == "Rolechange":
                                                         # Handle Change Employee's Role
@@ -6193,6 +6191,129 @@ def webhook():
                                                         else:
                                                             print("No record found for the user.")
 
+                                                        
+                                                    elif button_id == "Bulkadd":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Uptemp", "title": "Upload Template"}},
+                                                        {"type": "reply", "reply": {"id": "Downtemp", "title": "Download Template"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, select an option below on whether you want to upload an Excel temaplate already filled with employee details or you want to download the template to fill with Employee details.",
+                                                            buttons
+                                                        )
+
+                                                    elif button_id == "Downtemp":
+
+                                                        companyxx = company_reg.replace("_", " ").title()
+
+                                                        wb = openpyxl.Workbook()
+                                                        ws = wb.active
+                                                        ws.title = "Employee Details"
+
+                                                        # Add headers
+                                                        headers = [
+                                                            "FirstName", "Surname", "WhatsApp", "Email", 
+                                                            "Role", "Department", 
+                                                            "Current Leave Days Balance", "Monthly Leave Days Accumulation"
+                                                        ]
+                                                        ws.append(headers)
+
+                                                        # Style headers
+                                                        dark_blue = "003366"
+                                                        white = "FFFFFF"
+                                                        for col in range(1, len(headers) + 1):
+                                                            cell = ws.cell(row=1, column=col)
+                                                            cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
+                                                            cell.font = Font(color=white, bold=True)
+
+                                                        # Role dropdown (inline, short list)
+                                                        role_dv = DataValidation(type="list", formula1='"Administrator,Ordinary User"', allow_blank=False)
+                                                        ws.add_data_validation(role_dv)
+                                                        for row in range(2, 500):
+                                                            role_dv.add(ws[f"E{row}"])
+
+                                                        # Department options (long list) - write to column Z
+                                                        departments = [
+                                                            "Human Resources and Administration",
+                                                            "Finance and Accounting",
+                                                            "Sales and Marketing",
+                                                            "Sales and Distribution",
+                                                            "Workshop and Maintenance",
+                                                            "Operations and Production",
+                                                            "Procurement and Purchasing",
+                                                            "Customer Service and Support",
+                                                            "IT and Digital Infrastructure",
+                                                            "Risk Management",
+                                                            "Legal and Compliance",
+                                                            "Health, Safety and Environment",
+                                                            "Research, Analytics and Reporting"
+                                                        ]
+
+                                                        for i, dept in enumerate(departments, start=1):
+                                                            ws[f"Z{i}"] = dept
+
+                                                        # Department dropdown using cell range
+                                                        dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
+                                                        ws.add_data_validation(dept_dv)
+                                                        for row in range(2, 500):
+                                                            dept_dv.add(ws[f"F{row}"])
+
+                                                        # Hide the reference column
+                                                        ws.column_dimensions['Z'].hidden = True
+
+                                                        # Save workbook to memory stream
+                                                        output = io.BytesIO()
+                                                        wb.save(output)
+                                                        output.seek(0)
+
+                                                        try:
+                                                            # Get the Excel bytes
+                                                            excel_bytes = output.getvalue()
+
+                                                            # Upload Excel to WhatsApp and get media ID
+                                                            media_id = upload_excel_to_whatsapp(
+                                                                excel_bytes=excel_bytes,
+                                                                company_reg=table_name,
+                                                                first_name="HR",  # or use session info if available
+                                                                last_name="Manager"
+                                                            )
+
+                                                            # Send Excel to user
+                                                            send_whatsapp_excel_by_media_id(
+                                                                recipient_number=sender_id,
+                                                                media_id=media_id,
+                                                                company_reg=table_name,
+                                                                first_name="HR",
+                                                                last_name="Manager",
+                                                                caption=f"Employee Registration Template - {companyxx}"
+                                                            )
+
+                                                            # Confirmation message with button
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready.",
+                                                                buttons
+                                                            )
+
+                                                        except Exception as e:
+                                                            print("Error sending employee template:", str(e))
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"Sorry, we couldn't send the Employee Template right now.\nError: {e}"
+                                                            )
+                                                        
+                                                    elif selected_option == "Rolechange":
+                                                        # Handle Change Employee's Role
+                                                        pass
+                                                        
+
 
                                                 
                                                 if interactive.get("type") == "list_reply":
@@ -6713,7 +6834,7 @@ def webhook():
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
                                                         {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Employee Addition"}},
-                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                         ]
 
                                                         send_whatsapp_message(
@@ -6721,132 +6842,6 @@ def webhook():
                                                             f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
                                                             buttons
                                                         )
-
-                                                    elif selected_option == "Bulkadd":
-
-                                                        buttons = [
-                                                        {"type": "reply", "reply": {"id": "Uptemp", "title": "Upload Template"}},
-                                                        {"type": "reply", "reply": {"id": "Downtemp", "title": "Download Template"}},
-                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
-                                                        ]
-
-                                                        send_whatsapp_message(
-                                                            sender_id, 
-                                                            f"Hey {first_name}, select an option below on whether you want to upload an Excel temaplate already filled with employee details or you want to download the template to fill with Employee details.",
-                                                            buttons
-                                                        )
-                                                        
-                                                    elif selected_option == "Downtemp":
-
-                                                        companyxx = company_reg.replace("_", " ").title()
-
-                                                        wb = openpyxl.Workbook()
-                                                        ws = wb.active
-                                                        ws.title = "Employee Details"
-
-                                                        # Add headers
-                                                        headers = [
-                                                            "FirstName", "Surname", "WhatsApp", "Email", 
-                                                            "Role", "Department", 
-                                                            "Current Leave Days Balance", "Monthly Leave Days Accumulation"
-                                                        ]
-                                                        ws.append(headers)
-
-                                                        # Style headers
-                                                        dark_blue = "003366"
-                                                        white = "FFFFFF"
-                                                        for col in range(1, len(headers) + 1):
-                                                            cell = ws.cell(row=1, column=col)
-                                                            cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
-                                                            cell.font = Font(color=white, bold=True)
-
-                                                        # Role dropdown (inline, short list)
-                                                        role_dv = DataValidation(type="list", formula1='"Administrator,Ordinary User"', allow_blank=False)
-                                                        ws.add_data_validation(role_dv)
-                                                        for row in range(2, 500):
-                                                            role_dv.add(ws[f"E{row}"])
-
-                                                        # Department options (long list) - write to column Z
-                                                        departments = [
-                                                            "Human Resources and Administration",
-                                                            "Finance and Accounting",
-                                                            "Sales and Marketing",
-                                                            "Sales and Distribution",
-                                                            "Workshop and Maintenance",
-                                                            "Operations and Production",
-                                                            "Procurement and Purchasing",
-                                                            "Customer Service and Support",
-                                                            "IT and Digital Infrastructure",
-                                                            "Risk Management",
-                                                            "Legal and Compliance",
-                                                            "Health, Safety and Environment",
-                                                            "Research, Analytics and Reporting"
-                                                        ]
-
-                                                        for i, dept in enumerate(departments, start=1):
-                                                            ws[f"Z{i}"] = dept
-
-                                                        # Department dropdown using cell range
-                                                        dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
-                                                        ws.add_data_validation(dept_dv)
-                                                        for row in range(2, 500):
-                                                            dept_dv.add(ws[f"F{row}"])
-
-                                                        # Hide the reference column
-                                                        ws.column_dimensions['Z'].hidden = True
-
-                                                        # Save workbook to memory stream
-                                                        output = io.BytesIO()
-                                                        wb.save(output)
-                                                        output.seek(0)
-
-                                                        try:
-                                                            # Get the Excel bytes
-                                                            excel_bytes = output.getvalue()
-
-                                                            # Upload Excel to WhatsApp and get media ID
-                                                            media_id = upload_excel_to_whatsapp(
-                                                                excel_bytes=excel_bytes,
-                                                                company_reg=table_name,
-                                                                first_name="HR",  # or use session info if available
-                                                                last_name="Manager"
-                                                            )
-
-                                                            # Send Excel to user
-                                                            send_whatsapp_excel_by_media_id(
-                                                                recipient_number=sender_id,
-                                                                media_id=media_id,
-                                                                company_reg=table_name,
-                                                                first_name="HR",
-                                                                last_name="Manager",
-                                                                caption=f"Employee Registration Template - {companyxx}"
-                                                            )
-
-                                                            # Confirmation message with button
-                                                            buttons = [
-                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                            ]
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready.",
-                                                                buttons
-                                                            )
-
-                                                        except Exception as e:
-                                                            print("Error sending employee template:", str(e))
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"Sorry, we couldn't send the Employee Template right now.\nError: {e}"
-                                                            )
-                                                        
-                                                    elif selected_option == "Rolechange":
-                                                        # Handle Change Employee's Role
-                                                        pass
-                                                        
-
-
-
-
 
                                             elif message.get("type") == "text":
 
