@@ -4320,6 +4320,19 @@ def webhook():
                                                             buttons
                                                         )
 
+                                                    elif button_id == "Uptemp":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Downtemp", "title": "Download Template"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "📁 Please attach 📎 the filled Excel template file now by sending it directly here.",
+                                                            buttons
+                                                        )
+
                                                     elif button_id == "Downtemp":
 
                                                         companyxx = company_reg.replace("_", " ").title()
@@ -6248,6 +6261,20 @@ def webhook():
                                                         send_whatsapp_message(
                                                             sender_id, 
                                                             f"Hey {first_name}, select an option below on whether you want to upload an Excel temaplate already filled with employee details or you want to download the template to fill with Employee details.",
+                                                            buttons
+                                                        )
+
+
+                                                    elif button_id == "Uptemp":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Downtemp", "title": "Download Template"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "📁 Please attach 📎 the filled Excel template file now by sending it directly here.",
                                                             buttons
                                                         )
 
