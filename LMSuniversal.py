@@ -4738,7 +4738,7 @@ def webhook():
                                                                 company_reg=company_reg,
                                                                 first_name=first_name,
                                                                 last_name=last_name,
-                                                                caption=f"Employee Leave Records as of {today_date}"
+                                                                caption=f"{companyxx} Employee Leave Records as of {today_date}"
                                                             )
                                                             
                                                             buttons = [
@@ -6282,7 +6282,7 @@ def webhook():
                                                                 company_reg=company_reg,
                                                                 first_name=first_name,
                                                                 last_name=last_name,
-                                                                caption=f"Employee Leave Records as of {today_date}"
+                                                                caption=f"{companyxx} Employee Leave Records as of {today_date}"
                                                             )
                                                             
                                                             buttons = [
