@@ -4557,7 +4557,6 @@ def webhook():
                                                                 , 
                                                                 buttons
                                                             )
-
                                                         
                                                     elif selected_option == "Checkbal":
 
@@ -4582,15 +4581,6 @@ def webhook():
                                                             sections
                                                         )
                                                         
-                                                    elif selected_option == "Pending":
-
-
-
-
-                                                        
-                                                        # Handle Apps Apps Pending My Approval
-                                                        pass
-                                                        
                                                     elif selected_option == "Template":
                                                         # Handle Add Employees
                                                         pass
@@ -4600,8 +4590,157 @@ def webhook():
                                                         pass
                                                         
                                                     elif selected_option == "Book":
-                                                        # Handle Extract Leave Book
-                                                        pass
+
+                                                        table_name = f"{company_reg}main"
+                                                        appsapproved = f"{company_reg}appsapproved"
+
+                                                        query = f"SELECT id, firstname, surname, whatsapp, email, address ,role,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
+                                                        cursor.execute(query)
+                                                        rows = cursor.fetchall()
+
+                                                        df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
+                                                        df_employees = df_employees.sort_values(by="ID", ascending=True)
+
+                                                        query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, leavedaysappliedfor,   TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, leavedaysbalancebf  FROM {appsapproved};"
+                                                        cursor.execute(query)
+                                                        rows2 = cursor.fetchall()
+
+                                                        df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved","Leave Days Balance"])
+                                                        df_apps = df_apps.sort_values(by="AppID", ascending=False)
+
+
+
+
+                                                        print(df_employees)
+
+
+                                                        df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
+                                                        df_apps['Leave End Date'] = pd.to_datetime(df_apps['Leave End Date'])
+
+                                                        # Function to expand dates and exclude Sundays
+                                                        def expand_leave_days(row):
+                                                            dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
+                                                            # Exclude Sundays (weekday=6)
+                                                            dates = [d for d in dates if d.weekday() != 6]
+                                                            return dates
+
+                                                        # Apply the function and explode the DataFrame
+                                                        df_apps['Leave Dates'] = df_apps.apply(expand_leave_days, axis=1)
+                                                        df_exploded = df_apps.explode('Leave Dates')
+
+                                                        # Extract month and year for grouping
+                                                        df_exploded['Month'] = df_exploded['Leave Dates'].dt.to_period('M')
+
+                                                        # Group by Employee and Month
+                                                        result = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month']).size().reset_index(name='Leave Days Taken')
+
+                                                        # Pivot to MoM format (months as columns)
+                                                        mom_leave = result.pivot_table(
+                                                            index=['Emp ID', 'First Name', 'Surname'],
+                                                            columns='Month',
+                                                            values='Leave Days Taken',
+                                                            fill_value=0
+                                                        ).reset_index()
+
+                                                        # Rename columns for clarity
+                                                        mom_leave.columns.name = None
+                                                        mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"{col.strftime('%b-%Y')}" for col in mom_leave.columns[3:]]
+
+                                                        print(mom_leave)
+
+                                                        def upload_excel_to_whatsapp(excel_bytes, company_reg, first_name, last_name, reference_number=None):
+                                                            """Uploads an Excel file to WhatsApp servers and returns the media ID"""
+                                                            compxxy = company_reg.replace("_"," ").title()
+                                                            
+                                                            filename = f"leave_records_{compxxy}.xlsx"
+                                                            
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                            }
+
+                                                            files = {
+                                                                "file": (filename, io.BytesIO(excel_bytes), 
+                                                                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+                                                                "type": (None, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+                                                                "messaging_product": (None, "whatsapp")
+                                                            }
+
+                                                            response = requests.post(url, headers=headers, files=files)
+                                                            print("📊 Excel upload response:", response.text)  # Debugging
+                                                            response.raise_for_status()
+                                                            return response.json()["id"]
+
+                                                        def send_whatsapp_excel_by_media_id(recipient_number, media_id, company_reg, first_name, last_name, reference_number=None, caption=None):
+                                                            """Sends an Excel file via WhatsApp using the uploaded media ID"""
+                                                            compxxy = company_reg.replace("_"," ").title()
+                                                            
+                                                            filename = f"leave_records_{compxxy}.xlsx"
+                                                            
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            }
+                                                            
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": recipient_number,
+                                                                "type": "document",
+                                                                "document": {
+                                                                    "id": media_id,
+                                                                    "filename": filename
+                                                                }
+                                                            }
+                                                            
+                                                            if caption:
+                                                                payload["document"]["caption"] = caption
+
+                                                            response = requests.post(url, headers=headers, json=payload)
+                                                            response.raise_for_status()
+                                                            return response.json()
+
+                                                        output = BytesIO()
+                                                        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                                                            df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
+                                                            df_apps.to_excel(writer, index=False, sheet_name=f'All Approved')
+                                                            mom_leave.to_excel(writer, index=False, sheet_name=f'Month on Month')
+
+                                                        output.seek(0)
+                                                        excel_bytes = output.getvalue()
+                                                        
+                                                        try:
+                                                            media_id = upload_excel_to_whatsapp(
+                                                                excel_bytes=excel_bytes,
+                                                                company_reg=company_reg,
+                                                                first_name=first_name,
+                                                                last_name=last_name
+                                                            )
+                                                            
+                                                            send_whatsapp_excel_by_media_id(
+                                                                recipient_number=sender_id,
+                                                                media_id=media_id,
+                                                                company_reg=company_reg,
+                                                                first_name=first_name,
+                                                                last_name=last_name,
+                                                                caption=f"Employee Leave Records as of {today_date}"
+                                                            )
+                                                            
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey there {first_name} {last_name}! You may go ahead and download Leave Book for {companyxx} attached here 😎.", 
+                                                                buttons
+                                                            )
+
+                                                        except Exception as e:
+                                                            print(f"Error sending Excel file: {str(e)}")
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"Sorry {first_name}, we encountered an error preparing your document. Please try again later."
+                                                            )
                                                         
 
                                             elif message.get("type") == "text":
@@ -4769,9 +4908,6 @@ def webhook():
                                                         sender_id, 
                                                         "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
-
-
-
 
                                         elif len(df_employeesempapp) > 0:
 
@@ -6019,11 +6155,7 @@ def webhook():
                                                         df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved","Leave Days Balance"])
                                                         df_apps = df_apps.sort_values(by="AppID", ascending=False)
 
-
-
-
                                                         print(df_employees)
-
 
                                                         df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
                                                         df_apps['Leave End Date'] = pd.to_datetime(df_apps['Leave End Date'])
@@ -6137,10 +6269,13 @@ def webhook():
                                                                 caption=f"Employee Leave Records as of {today_date}"
                                                             )
                                                             
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                            ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
-                                                                f"Excel file with leave records has been sent, {first_name}.\n\n"
-                                                                "Send `hello` to see your LMS Options."
+                                                                f"Hey there {first_name} {last_name}! You may go ahead and download Leave Book for {companyxx} attached here 😎.", 
+                                                                buttons
                                                             )
 
                                                         except Exception as e:
@@ -6451,10 +6586,6 @@ def webhook():
                                                         
                                                     elif selected_option == "Rolechange":
                                                         # Handle Change Employee's Role
-                                                        pass
-                                                        
-                                                    elif selected_option == "Book":
-                                                        # Handle Extract Leave Book
                                                         pass
                                                         
 
