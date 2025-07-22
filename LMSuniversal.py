@@ -1245,7 +1245,7 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
-                                                                f"Hello {first_name} {last_name} from {companyxx}!\n\n Done😎.", 
+                                                                f"Hey {first_name} {last_name} from {companyxx}! You may go ahead and download your leave applications history file attached here 😎.", 
                                                                 buttons
                                                             )
 
@@ -2497,7 +2497,7 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
-                                                                f"Hello {first_name} {last_name} from {companyxx}!\n\n Done😎.", 
+                                                                f"Hey {first_name} {last_name} from {companyxx}! You may go ahead and download your leave applications history file attached here 😎.", 
                                                                 buttons
                                                             )
 
@@ -3806,7 +3806,7 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
-                                                                f"Hello {first_name} {last_name} from {companyxx}!\n\n Done😎.", 
+                                                                f"Hey {first_name} {last_name} from {companyxx}! You may go ahead and download your leave applications history file attached here 😎.", 
                                                                 buttons
                                                             )
 
@@ -5103,7 +5103,7 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
-                                                                f"Hello {first_name} {last_name} from {companyxx}!\n\n Done😎.", 
+                                                                f"Hey {first_name} {last_name} from {companyxx}! You may go ahead and download your leave applications history file attached here 😎.", 
                                                                 buttons
                                                             )
 
