@@ -4385,10 +4385,8 @@ def webhook():
                                                         output.seek(0)
 
                                                         def send_whatsapp_excel_by_media_id(recipient_number, media_id, company_reg, reference_number=None, caption=None):
-                                                            """Sends an Excel file via WhatsApp using the uploaded media ID"""
-                                                            compxxy = company_reg.replace("_"," ").title()
-                                                            
-                                                            filename = f"leave_records_{compxxy}.xlsx"
+                                                            """Sends an Excel file via WhatsApp using the uploaded media ID"""                                                            
+                                                            filename = f"LMS Employee Addition Template {companyxx}.xlsx"
                                                             
                                                             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                             headers = {
@@ -4415,7 +4413,7 @@ def webhook():
 
                                                         def upload_excel_to_whatsapp(excel_bytes, company_reg, reference_number=None):
                                                             compxxy = company_reg.replace("_"," ").title()
-                                                            filename = f"leave_records_{compxxy}.xlsx"
+                                                            filename = f"LMS Employee Addition Template {companyxx}.xlsx"
 
                                                             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                             headers = {
@@ -4458,7 +4456,7 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id,
-                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready. *Kindly use Microsoft Excel, NOT Google Sheets*.",
+                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in (*Kindly use Microsoft Excel, NOT Google Sheets*) and upload it when ready.",
                                                                 buttons
                                                             )
 
@@ -6319,9 +6317,8 @@ def webhook():
 
                                                         def send_whatsapp_excel_by_media_id(recipient_number, media_id, company_reg, reference_number=None, caption=None):
                                                             """Sends an Excel file via WhatsApp using the uploaded media ID"""
-                                                            compxxy = company_reg.replace("_"," ").title()
                                                             
-                                                            filename = f"leave_records_{compxxy}.xlsx"
+                                                            filename = f"LMS Employee Addition Template {companyxx}.xlsx"
                                                             
                                                             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                             headers = {
@@ -6348,7 +6345,7 @@ def webhook():
 
                                                         def upload_excel_to_whatsapp(excel_bytes, company_reg, reference_number=None):
                                                             compxxy = company_reg.replace("_"," ").title()
-                                                            filename = f"leave_records_{compxxy}.xlsx"
+                                                            filename = f"LMS Employee Addition Template {companyxx}.xlsx"
 
                                                             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                             headers = {
@@ -6391,7 +6388,7 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id,
-                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready. *Kindly use Microsoft Excel, NOT Google Sheets*.",
+                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in (*Kindly use Microsoft Excel, NOT Google Sheets*) and upload it when ready.",
                                                                 buttons
                                                             )
 
