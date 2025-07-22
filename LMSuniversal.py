@@ -7420,6 +7420,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 "Human Resources and Administration",
                 "Finance and Accounting",
                 "Sales and Marketing",
+                "Sales and Distribution",
+                "Workshop and Maintenance",
                 "Operations and Production",
                 "Procurement and Purchasing",
                 "Customer Service and Support",
