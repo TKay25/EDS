@@ -4580,6 +4580,20 @@ def webhook():
                                                             "Administrator Options",
                                                             sections
                                                         )
+
+                                                    elif selected_option == "Addemp":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
+                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Employee Addition"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
+                                                            buttons
+                                                        )
                                                         
                                                     elif selected_option == "Template":
                                                         # Handle Add Employees
@@ -6570,16 +6584,21 @@ def webhook():
                                                             "Administrator Options",
                                                             sections
                                                         )
-                                                        
-                                                    elif selected_option == "Pending":
 
+                                                    elif selected_option == "Addemp":
 
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
+                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Employee Addition"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
 
-
-                                                        
-                                                        # Handle Apps Apps Pending My Approval
-                                                        pass
-                                                        
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
+                                                            buttons
+                                                        )
+                                                                                                                
                                                     elif selected_option == "Template":
                                                         # Handle Add Employees
                                                         pass
