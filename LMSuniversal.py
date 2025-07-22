@@ -4368,16 +4368,16 @@ def webhook():
                                                         ]
 
                                                         for i, dept in enumerate(departments, start=1):
-                                                            ws[f"Z{i}"] = dept
+                                                            ws[f"R{i}"] = dept
 
                                                         # Department dropdown using cell range
-                                                        dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
+                                                        dept_dv = DataValidation(type="list", formula1="=$R$1:$R$13", allow_blank=False)
                                                         ws.add_data_validation(dept_dv)
                                                         for row in range(2, 500):
                                                             dept_dv.add(ws[f"F{row}"])
 
                                                         # Hide the reference column
-                                                        ws.column_dimensions['Z'].hidden = True
+                                                        ws.column_dimensions['R'].hidden = True
 
                                                         # Save workbook to memory stream
                                                         output = io.BytesIO()
@@ -6301,21 +6301,71 @@ def webhook():
                                                         ]
 
                                                         for i, dept in enumerate(departments, start=1):
-                                                            ws[f"Z{i}"] = dept
+                                                            ws[f"R{i}"] = dept
 
                                                         # Department dropdown using cell range
-                                                        dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
+                                                        dept_dv = DataValidation(type="list", formula1="=$R$1:$R$13", allow_blank=False)
                                                         ws.add_data_validation(dept_dv)
                                                         for row in range(2, 500):
                                                             dept_dv.add(ws[f"F{row}"])
 
                                                         # Hide the reference column
-                                                        ws.column_dimensions['Z'].hidden = True
+                                                        ws.column_dimensions['R'].hidden = True
 
                                                         # Save workbook to memory stream
                                                         output = io.BytesIO()
                                                         wb.save(output)
                                                         output.seek(0)
+
+                                                        def send_whatsapp_excel_by_media_id(recipient_number, media_id, company_reg, reference_number=None, caption=None):
+                                                            """Sends an Excel file via WhatsApp using the uploaded media ID"""
+                                                            compxxy = company_reg.replace("_"," ").title()
+                                                            
+                                                            filename = f"leave_records_{compxxy}.xlsx"
+                                                            
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            }
+                                                            
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": recipient_number,
+                                                                "type": "document",
+                                                                "document": {
+                                                                    "id": media_id,
+                                                                    "filename": filename
+                                                                }
+                                                            }
+                                                            
+                                                            if caption:
+                                                                payload["document"]["caption"] = caption
+
+                                                            response = requests.post(url, headers=headers, json=payload)
+                                                            response.raise_for_status()
+                                                            return response.json()
+
+                                                        def upload_excel_to_whatsapp(excel_bytes, company_reg, reference_number=None):
+                                                            compxxy = company_reg.replace("_"," ").title()
+                                                            filename = f"leave_records_{compxxy}.xlsx"
+
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                            }
+
+                                                            files = {
+                                                                "file": (filename, io.BytesIO(excel_bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+                                                                "type": (None, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+                                                                "messaging_product": (None, "whatsapp")
+                                                            }
+
+                                                            response = requests.post(url, headers=headers, files=files)
+                                                            print("📊 Excel upload response:", response.text)
+                                                            response.raise_for_status()
+
+                                                            return response.json()["id"]
 
                                                         try:
                                                             # Get the Excel bytes
@@ -6324,9 +6374,7 @@ def webhook():
                                                             # Upload Excel to WhatsApp and get media ID
                                                             media_id = upload_excel_to_whatsapp(
                                                                 excel_bytes=excel_bytes,
-                                                                company_reg=table_name,
-                                                                first_name="HR",  # or use session info if available
-                                                                last_name="Manager"
+                                                                company_reg=table_name
                                                             )
 
                                                             # Send Excel to user
@@ -6334,8 +6382,6 @@ def webhook():
                                                                 recipient_number=sender_id,
                                                                 media_id=media_id,
                                                                 company_reg=table_name,
-                                                                first_name="HR",
-                                                                last_name="Manager",
                                                                 caption=f"Employee Registration Template - {companyxx}"
                                                             )
 
@@ -7712,7 +7758,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 ws[f"Z{i}"] = dept
 
             # Department dropdown using cell range
-            dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$12", allow_blank=False)
+            dept_dv = DataValidation(type="list", formula1="=$Z$1:$Z$13", allow_blank=False)
             ws.add_data_validation(dept_dv)
             for row in range(2, 500):
                 dept_dv.add(ws[f"F{row}"])
