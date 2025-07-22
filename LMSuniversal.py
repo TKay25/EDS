@@ -4607,6 +4607,7 @@ def webhook():
 
                                                         table_name = f"{company_reg}main"
                                                         appsapproved = f"{company_reg}appsapproved"
+                                                        companyxx = company_reg.replace("_", " ").title()
 
                                                         query = f"SELECT id, firstname, surname, whatsapp, email, address ,role,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
                                                         cursor.execute(query)
@@ -4753,7 +4754,7 @@ def webhook():
                                                             print(f"Error sending Excel file: {str(e)}")
                                                             send_whatsapp_message(
                                                                 sender_id,
-                                                                f"Sorry {first_name}, we encountered an error preparing your document. Please try again later."
+                                                                f"Sorry {first_name}, we encountered an error preparing your document -- {e}. Please try again later."
                                                             )
                                                         
 
@@ -6154,6 +6155,7 @@ def webhook():
                                                         
                                                         table_name = f"{company_reg}main"
                                                         appsapproved = f"{company_reg}appsapproved"
+                                                        companyxx = company_reg.replace("_", " ").title()
 
                                                         query = f"SELECT id, firstname, surname, whatsapp, email, address ,role,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
                                                         cursor.execute(query)
@@ -6296,7 +6298,7 @@ def webhook():
                                                             print(f"Error sending Excel file: {str(e)}")
                                                             send_whatsapp_message(
                                                                 sender_id,
-                                                                f"Sorry {first_name}, we encountered an error preparing your document. Please try again later."
+                                                                f"Sorry {first_name}, we encountered an error preparing your document -- {e}. Please try again later."
                                                             )
 
                                                     elif selected_option == "Pending":
