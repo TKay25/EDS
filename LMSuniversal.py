@@ -4458,7 +4458,7 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id,
-                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready.",
+                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready. *Kindly use Microsoft Excel, NOT Google Sheets*.",
                                                                 buttons
                                                             )
 
@@ -6391,7 +6391,7 @@ def webhook():
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id,
-                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready.",
+                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in and upload it when ready. *Kindly use Microsoft Excel, NOT Google Sheets*.",
                                                                 buttons
                                                             )
 
