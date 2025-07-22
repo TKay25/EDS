@@ -890,6 +890,7 @@ def webhook():
 
                         response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
                         print("📡 WhatsApp API Response Status:", response.status_code)
+                        print("📡 WhatsApp API Response Text:", response.text)
 
                         response.raise_for_status()  # will throw if not 2xx
 
