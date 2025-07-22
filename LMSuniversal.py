@@ -4709,7 +4709,7 @@ def webhook():
 
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
-                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Employee Addition"}},
+                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Addition"}},
                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                         ]
 
@@ -6834,7 +6834,7 @@ def webhook():
 
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
-                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Employee Addition"}},
+                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Addition"}},
                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                         ]
 
