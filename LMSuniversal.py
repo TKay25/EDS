@@ -1185,6 +1185,7 @@ def webhook():
                                                                     'company_name': company_reg.replace("_", " ").title(),
                                                                     'employee_name': f"{first_name} {last_name}",
                                                                     'generated_on': today_date,
+                                                                    'power': 'Alluire Marketing Agency'
                                                                 }
 
                                                                 table_hist_html = all_approved_declined_cancelled_pending.to_html(index=False, classes='data', border=0, justify='center',escape=False)
@@ -1352,7 +1353,8 @@ def webhook():
                                                                             'address': address_foc_8, 
                                                                             'whatsapp': whatsapp_foc_8, 
                                                                             'email': email_foc_8, 
-                                                                            'status': 'Approved'
+                                                                            'status': 'Approved',
+                                                                            'power': 'Alluire Marketing Agency',
                                                                         }
 
                                                                         html_out = render_template("leave_pdf_template.html", app=app)
@@ -2260,7 +2262,8 @@ def webhook():
                                                                             'address': address_foc_8, 
                                                                             'whatsapp': whatsapp_foc_8, 
                                                                             'email': email_foc_8, 
-                                                                            'status': 'Approved'
+                                                                            'status': 'Approved',
+                                                                            'power': 'Alluire Marketing Agency',
                                                                         }
 
                                                                         html_out = render_template("leave_pdf_template.html", app=app)
@@ -2435,6 +2438,7 @@ def webhook():
                                                                     'company_name': company_reg.replace("_", " ").title(),
                                                                     'employee_name': f"{first_name} {last_name}",
                                                                     'generated_on': today_date,
+                                                                    'power': 'Alluire Marketing Agency',
                                                                 }
 
                                                                 table_hist_html = all_approved_declined_cancelled_pending.to_html(index=False, classes='data', border=0, justify='center',escape=False)
@@ -3075,7 +3079,8 @@ def webhook():
                                                                         'address': address, 
                                                                         'whatsapp': f"+263{whatsappemp}", 
                                                                         'email': email, 
-                                                                        'status': 'Approved'
+                                                                        'status': 'Approved',
+                                                                        'power': 'Alluire Marketing Agency',
                                                                     }
 
                                                                     html_out = render_template("leave_pdf_template.html", app=app)
@@ -3540,7 +3545,8 @@ def webhook():
                                                                             'address': address_foc_8, 
                                                                             'whatsapp': whatsapp_foc_8, 
                                                                             'email': email_foc_8, 
-                                                                            'status': 'Approved'
+                                                                            'status': 'Approved',
+                                                                            'power': 'Alluire Marketing Agency',
                                                                         }
 
                                                                         html_out = render_template("leave_pdf_template.html", app=app)
@@ -3746,6 +3752,7 @@ def webhook():
                                                                     'company_name': company_reg.replace("_", " ").title(),
                                                                     'employee_name': f"{first_name} {last_name}",
                                                                     'generated_on': today_date,
+                                                                    'power': 'Alluire Marketing Agency',
                                                                 }
 
                                                                 table_hist_html = all_approved_declined_cancelled_pending.to_html(index=False, classes='data', border=0, justify='center',escape=False)
@@ -4635,7 +4642,8 @@ def webhook():
                                                                         'address': address_foc_8, 
                                                                         'whatsapp': whatsapp_foc_8, 
                                                                         'email': email_foc_8, 
-                                                                        'status': 'Approved'
+                                                                        'status': 'Approved',
+                                                                        'power': 'Alluire Marketing Agency',
                                                                     }
 
                                                                     html_out = render_template("leave_pdf_template.html", app=app)
@@ -5186,7 +5194,8 @@ def webhook():
                                                                             'address': address_foc_8, 
                                                                             'whatsapp': whatsapp_foc_8, 
                                                                             'email': email_foc_8, 
-                                                                            'status': 'Approved'
+                                                                            'status': 'Approved',
+                                                                            'power': 'Alluire Marketing Agency',
                                                                         }
 
                                                                         html_out = render_template("leave_pdf_template.html", app=app)
@@ -5372,6 +5381,7 @@ def webhook():
                                                                     'company_name': company_reg.replace("_", " ").title(),
                                                                     'employee_name': f"{first_name} {last_name}",
                                                                     'generated_on': today_date,
+                                                                    'power': 'Alluire Marketing Agency',
                                                                 }
 
                                                                 table_hist_html = all_approved_declined_cancelled_pending.to_html(index=False, classes='data', border=0, justify='center',escape=False)
@@ -5964,7 +5974,8 @@ def webhook():
                                                                         'address': address, 
                                                                         'whatsapp': f"+263{whatsappemp}", 
                                                                         'email': email, 
-                                                                        'status': 'Approved'
+                                                                        'status': 'Approved',
+                                                                        'power': 'Alluire Marketing Agency',
                                                                     }
 
                                                                     html_out = render_template("leave_pdf_template.html", app=app)
@@ -6784,7 +6795,8 @@ def webhook():
                                                                             'address': address_foc_8, 
                                                                             'whatsapp': whatsapp_foc_8, 
                                                                             'email': email_foc_8, 
-                                                                            'status': 'Approved'
+                                                                            'status': 'Approved',
+                                                                            'power': 'Alluire Marketing Agency',
                                                                         }
 
                                                                         html_out = render_template("leave_pdf_template.html", app=app)
