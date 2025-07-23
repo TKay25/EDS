@@ -3153,8 +3153,8 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
 
                                                                     send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been Approved ✅ by `{app_namexx}`!")
@@ -3268,8 +3268,8 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Reapply", "title": "Resubmit Application"}},
-                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
 
                                                                     send_whatsapp_message(f"263{whatsappemp}", f"✅ Oops, {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been disapproved ❌ by `{app_namexx}`!")
@@ -6048,8 +6048,8 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
 
                                                                     send_whatsapp_message(f"263{whatsappemp}", f"✅ Great News {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been Approved ✅ by `{app_namexx}`!")
@@ -6161,8 +6161,8 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Reapply", "title": "Resubmit Application"}},
-                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
 
                                                                     send_whatsapp_message(f"263{whatsappemp}", f"✅ Oops, {first_name} {surname} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`, has been disapproved ❌ by `{app_namexx}`!")
