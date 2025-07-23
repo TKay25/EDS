@@ -5007,7 +5007,6 @@ def webhook():
                                                                 f"Sorry {first_name}, we encountered an error preparing your document -- {e}. Please try again later."
                                                             )
                                                         
-
                                             elif message.get("type") == "text":
                                                 text = message.get("text", {}).get("body", "").lower()
                                                 print(f"📨 Message from {sender_id}: {text}")
@@ -5174,6 +5173,49 @@ def webhook():
                                                         sender_id, 
                                                         "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
+
+                                            elif message.get("type") == "document":
+                                                mime_type = message["document"]["mime_type"]
+                                                filename = message["document"]["filename"]
+                                                file_id = message["document"]["id"]
+
+                                                def download_whatsapp_media(media_id):
+                                                    media_url = f"https://graph.facebook.com/v19.0/{media_id}"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {VERIFY_TOKEN}"
+                                                    }
+
+                                                    # Get the actual download URL
+                                                    res = requests.get(media_url, headers=headers)
+                                                    res.raise_for_status()
+                                                    download_url = res.json()["url"]
+
+                                                    # Download file content
+                                                    file_response = requests.get(download_url, headers=headers)
+                                                    file_response.raise_for_status()
+                                                    return file_response.content
+
+
+                                                if mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" or filename.endswith(".xlsx"):
+                                                    try:
+                                                        file_bytes = download_whatsapp_media(file_id)
+
+                                                        # Use BytesIO to read Excel from memory
+                                                        from io import BytesIO
+                                                        excel_file = BytesIO(file_bytes)
+
+                                                        df = pd.read_excel(excel_file)
+
+                                                        print("yoooooooooooooooooooh upload!!!")
+                                                        print(df)
+
+                                                        send_whatsapp_message(sender_id, f"✅ Excel received. It contains {len(df)} employees to add.")
+
+                                                    except Exception as e:
+                                                        send_whatsapp_message(sender_id, f"❌ Error reading Excel file: {str(e)}")
+                                                else:
+                                                    send_whatsapp_message(sender_id, "⚠️ Unsupported file type. Please upload a valid `.xlsx` file.")
+
 
                                         elif len(df_employeesempapp) > 0:
 
@@ -7269,7 +7311,47 @@ def webhook():
                                                         "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
 
+                                            elif message.get("type") == "document":
+                                                mime_type = message["document"]["mime_type"]
+                                                filename = message["document"]["filename"]
+                                                file_id = message["document"]["id"]
 
+                                                def download_whatsapp_media(media_id):
+                                                    media_url = f"https://graph.facebook.com/v19.0/{media_id}"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {VERIFY_TOKEN}"
+                                                    }
+
+                                                    # Get the actual download URL
+                                                    res = requests.get(media_url, headers=headers)
+                                                    res.raise_for_status()
+                                                    download_url = res.json()["url"]
+
+                                                    # Download file content
+                                                    file_response = requests.get(download_url, headers=headers)
+                                                    file_response.raise_for_status()
+                                                    return file_response.content
+
+
+                                                if mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" or filename.endswith(".xlsx"):
+                                                    try:
+                                                        file_bytes = download_whatsapp_media(file_id)
+
+                                                        # Use BytesIO to read Excel from memory
+                                                        from io import BytesIO
+                                                        excel_file = BytesIO(file_bytes)
+
+                                                        df = pd.read_excel(excel_file)
+
+                                                        print("yoooooooooooooooooooh upload!!!")
+                                                        print(df)
+
+                                                        send_whatsapp_message(sender_id, f"✅ Excel received. It contains {len(df)} employees to add.")
+
+                                                    except Exception as e:
+                                                        send_whatsapp_message(sender_id, f"❌ Error reading Excel file: {str(e)}")
+                                                else:
+                                                    send_whatsapp_message(sender_id, "⚠️ Unsupported file type. Please upload a valid `.xlsx` file.")
 
 
 
