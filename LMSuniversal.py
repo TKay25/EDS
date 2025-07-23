@@ -4766,8 +4766,7 @@ def webhook():
                                                                     buttons
                                                                 )
 
-
-                                                        elif button_id == "Menu":
+                                                        elif selected_option == "Menu":
 
                                                             companyxx = company_reg.replace("_"," ").title()
                                                             
@@ -4793,7 +4792,6 @@ def webhook():
                                                                 "Admin/Approver Options",
                                                                 sections
                                                             )
-
 
                                                         elif selected_option == "RoleApprover":
 
@@ -4853,8 +4851,7 @@ def webhook():
                                                                 f"Hey `{first_name}`, select an option below on how you want to add or remove employees to or from your company's Leave Management System.",
                                                                 buttons
                                                             )
-                                                            
-                                                            
+                                                                                        
                                                         elif selected_option == "Book":
 
                                                             table_name = f"{company_reg}main"
