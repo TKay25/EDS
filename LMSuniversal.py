@@ -4319,6 +4319,20 @@ def webhook():
                                                         else:
                                                             print("No record found for the user.")
 
+                                                    elif button_id == "Addemp":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
+                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Addition"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
+                                                            buttons
+                                                        )
+
                                                     elif button_id == "Bulkadd":
 
                                                         buttons = [
@@ -4777,14 +4791,14 @@ def webhook():
                                                     elif selected_option == "Addrememp":
 
                                                         buttons = [
-                                                        {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
-                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Addition"}},
+                                                        {"type": "reply", "reply": {"id": "Addemp", "title": "Add Employees"}},
+                                                        {"type": "reply", "reply": {"id": "Rememp", "title": "Remove Employees"}},
                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                         ]
 
                                                         send_whatsapp_message(
                                                             sender_id, 
-                                                            f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
+                                                            f"Hey `{first_name}`, select an option below on how you want to add or remove employees to or from your company's Leave Management System.",
                                                             buttons
                                                         )
                                                         
@@ -6265,6 +6279,20 @@ def webhook():
                                                         
                                                         else:
                                                             print("No record found for the user.")
+
+                                                    elif button_id == "Addemp":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
+                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Addition"}},
+                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
+                                                            buttons
+                                                        )
                                                    
                                                     elif button_id == "Bulkadd":
 
@@ -6965,14 +6993,14 @@ def webhook():
                                                     elif selected_option == "Addrememp":
 
                                                         buttons = [
-                                                        {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
-                                                        {"type": "reply", "reply": {"id": "Bulkadd", "title": "Bulk Addition"}},
+                                                        {"type": "reply", "reply": {"id": "Addemp", "title": "Add Employees"}},
+                                                        {"type": "reply", "reply": {"id": "Rememp", "title": "Remove Employees"}},
                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                         ]
 
                                                         send_whatsapp_message(
                                                             sender_id, 
-                                                            f"Hey {first_name}, select an option below on how you want to add employees to your company's Leave Management System.",
+                                                            f"Hey {first_name}, select an option below on how you want to add or remove employees to or from your company's Leave Management System.",
                                                             buttons
                                                         )
 
