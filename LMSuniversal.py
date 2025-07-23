@@ -4763,6 +4763,56 @@ def webhook():
                                                                 , 
                                                                 buttons
                                                             )
+
+
+                                                    elif button_id == "Menu":
+
+                                                        companyxx = company_reg.replace("_"," ").title()
+                                                        
+                                                        sections = [
+                                                            {
+                                                                "title": "Administrator Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Track", "title": "Track My Application"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                    {"id": "Addrememp", "title": "Add or Remove Employees"},
+                                                                    {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                    {"id": "DepBalAcc", "title": "Edit Department or Days"},
+                                                                    {"id": "Book", "title": "Extract Leave Book"}
+                                                                ]
+                                                            }
+                                                        ]
+                                                        
+                                                        send_whatsapp_list_message(
+                                                            sender_id,
+                                                            f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?",
+                                                            "Admin/Approver Options",
+                                                            sections
+                                                        )
+
+
+                                                    elif selected_option == "RoleApprover":
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Role & Approver Options",
+                                                                "rows": [
+                                                                    {"id": "Changerole", "title": "Edit Employee Role"},
+                                                                    {"id": "Changeappr", "title": "Edit Employee Approver"},
+                                                                    {"id": "RoleApprover", "title": "Role & Approver Schedule"},
+                                                                    {"id": "Menu", "title": "Menu"}
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, kindly select an option below.",
+                                                            "Role & Approver Options",
+                                                            sections
+                                                        )
                                                         
                                                     elif selected_option == "Checkbal":
 
@@ -4802,9 +4852,6 @@ def webhook():
                                                             buttons
                                                         )
                                                         
-                                                    elif selected_option == "Rolechange":
-                                                        # Handle Change Employee's Role
-                                                        pass
                                                         
                                                     elif selected_option == "Book":
 
@@ -6964,6 +7011,54 @@ def webhook():
                                                                 buttons
                                                             )
 
+                                                    elif selected_option == "RoleApprover":
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Role & Approver Options",
+                                                                "rows": [
+                                                                    {"id": "Changerole", "title": "Edit Employee Role"},
+                                                                    {"id": "Changeappr", "title": "Edit Employee Approver"},
+                                                                    {"id": "RoleApprover", "title": "Role & Approver Schedule"},
+                                                                    {"id": "Menu", "title": "Menu"}
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, kindly select an option below.",
+                                                            "Role & Approver Options",
+                                                            sections
+                                                        )
+
+                                                    elif selected_option == "Menu":
+
+                                                        companyxx = company_reg.replace("_"," ").title()
+                                                        
+                                                        sections = [
+                                                            {
+                                                                "title": "Administrator Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Track", "title": "Track My Application"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                    {"id": "Addrememp", "title": "Add or Remove Employees"},
+                                                                    {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                    {"id": "DepBalAcc", "title": "Edit Department or Days"},
+                                                                    {"id": "Book", "title": "Extract Leave Book"}
+                                                                ]
+                                                            }
+                                                        ]
+                                                        
+                                                        send_whatsapp_list_message(
+                                                            sender_id,
+                                                            f"Hello {first_name} {last_name}, LMS Administrator & Leave Applications Approver from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?",
+                                                            "Admin/Approver Options",
+                                                            sections
+                                                        )
+                                                        
                                                         
                                                     elif selected_option == "Checkbal":
 
