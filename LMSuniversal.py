@@ -3647,10 +3647,8 @@ def webhook():
                                                                             {"id": "Apply", "title": "Apply for Leave"},
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
                                                                             {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                            {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                            {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                            {"id": "RoleApprover", "title": "Role & Approver Schedule"},
-                                                                            {"id": "Departchange", "title": "Edit Employee Department"},
+                                                                            {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                            {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                             {"id": "Book", "title": "Extract Leave Book"}
                                                                         ]
                                                                     }
@@ -3836,9 +3834,8 @@ def webhook():
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                    {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                    {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                    {"id": "RoleApprover", "title": "Role & Approver Schedule"},
+                                                                    {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                    {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                     {"id": "Book", "title": "Extract Leave Book"}
                                                                 ]
                                                             }
@@ -4255,9 +4252,8 @@ def webhook():
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                        {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                        {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                        {"id": "RoleApprover", "title": "Role & Approver Schedule"},
+                                                                        {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                        {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                         {"id": "Book", "title": "Extract Leave Book"}
                                                                     ]
                                                                 }
@@ -4764,9 +4760,8 @@ def webhook():
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                    {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                    {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                    {"id": "RoleApprover", "title": "Role & Approver Schedule"},
+                                                                    {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                    {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                     {"id": "Book", "title": "Extract Leave Book"}
                                                                 ]
                                                             }
@@ -4967,9 +4962,8 @@ def webhook():
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
                                                                 {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                {"id": "RoleApprover", "title": "Role & Approver Schedule"},
+                                                                {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                 {"id": "Book", "title": "Extract Leave Book"}
                                                             ]
                                                         }
@@ -5305,9 +5299,8 @@ def webhook():
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
                                                                             {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                             {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                            {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                            {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                            {"id": "RoleApprover", "title": "Role & Approver Schedule"},
+                                                                            {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                            {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                             {"id": "Book", "title": "Extract Leave Book"}
                                                                         ]
                                                                     }
@@ -5868,10 +5861,8 @@ def webhook():
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                         {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                        {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                        {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                        {"id": "RoleApprover", "title": "Role & Approver Schedule"},
-                                                                        {"id": "Departchange", "title": "Edit Employee Department"},
+                                                                        {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                        {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                         {"id": "Book", "title": "Extract Leave Book"}
                                                                     ]
                                                                 }
@@ -6208,10 +6199,8 @@ def webhook():
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                    {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                    {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                    {"id": "RoleApprover", "title": "Role & Approver Schedule"},
-                                                                    {"id": "Departchange", "title": "Edit Employee Department"},
+                                                                    {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                    {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                     {"id": "Book", "title": "Extract Leave Book"}
                                                                 ]
                                                             }
@@ -6706,10 +6695,8 @@ def webhook():
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                         {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                        {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                        {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                        {"id": "RoleApprover", "title": "Role & Approver Schedule"},
-                                                                        {"id": "Departchange", "title": "Edit Employee Department"},
+                                                                        {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                        {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                         {"id": "Book", "title": "Extract Leave Book"}
                                                                     ]
                                                                 }
@@ -6918,10 +6905,8 @@ def webhook():
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
                                                                             {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                             {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                            {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                            {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                            {"id": "RoleApprover", "title": "Role & Approver Schedule"},
-                                                                            {"id": "Departchange", "title": "Edit Employee Department"},
+                                                                            {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                            {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                             {"id": "Book", "title": "Extract Leave Book"}
                                                                         ]
                                                                     }
@@ -6963,10 +6948,8 @@ def webhook():
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                    {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                    {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                    {"id": "RoleApprover", "title": "Role & Approver Schedule"},
-                                                                    {"id": "Departchange", "title": "Edit Employee Department"},
+                                                                    {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                    {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                     {"id": "Book", "title": "Extract Leave Book"}
                                                                 ]
                                                             }
@@ -7010,10 +6993,8 @@ def webhook():
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
                                                                 {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                 {"id": "Addrememp", "title": "Add or Remove Employees"},
-                                                                {"id": "Rolechange", "title": "Change Employee Role"},
-                                                                {"id": "Apprchange", "title": "Edit Employee Approver"},
-                                                                {"id": "RoleApprover", "title": "Role & Approver Schedule"},
-                                                                {"id": "Departchange", "title": "Edit Employee Department"},
+                                                                {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                {"id": "DepBalAcc", "title": "Edit Department or Days"},
                                                                 {"id": "Book", "title": "Extract Leave Book"}
                                                             ]
                                                         }
