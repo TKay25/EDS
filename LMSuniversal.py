@@ -3646,8 +3646,7 @@ def webhook():
                                                                         "rows": [
                                                                             {"id": "Apply", "title": "Apply for Leave"},
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                            {"id": "Addemp", "title": "Add Employees"},
-                                                                            {"id": "Rememp", "title": "Remove Employees"},
+                                                                            {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                             {"id": "Rolechange", "title": "Change Employee Role"},
                                                                             {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                             {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -3836,8 +3835,7 @@ def webhook():
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                    {"id": "Addemp", "title": "Add Employees"},
-                                                                    {"id": "Rememp", "title": "Remove Employees"},
+                                                                    {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                     {"id": "Rolechange", "title": "Change Employee Role"},
                                                                     {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                     {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -4256,8 +4254,7 @@ def webhook():
                                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": "Addemp", "title": "Add Employees"},
-                                                                        {"id": "Rememp", "title": "Remove Employees"},
+                                                                        {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                         {"id": "Rolechange", "title": "Change Employee Role"},
                                                                         {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                         {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -4766,8 +4763,7 @@ def webhook():
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                    {"id": "Addemp", "title": "Add Employees"},
-                                                                    {"id": "Rememp", "title": "Remove Employees"},
+                                                                    {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                     {"id": "Rolechange", "title": "Change Employee Role"},
                                                                     {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                     {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -4783,7 +4779,7 @@ def webhook():
                                                             sections
                                                         )
 
-                                                    elif selected_option == "Addemp":
+                                                    elif selected_option == "Addrememp":
 
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
@@ -4970,8 +4966,7 @@ def webhook():
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Addemp", "title": "Add Employees"},
-                                                                {"id": "Rememp", "title": "Remove Employees"},
+                                                                {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                 {"id": "Rolechange", "title": "Change Employee Role"},
                                                                 {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                 {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -5309,8 +5304,7 @@ def webhook():
                                                                             {"id": "Apply", "title": "Apply for Leave"},
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
                                                                             {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                            {"id": "Addemp", "title": "Add Employees"},
-                                                                            {"id": "Rememp", "title": "Remove Employees"},
+                                                                            {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                             {"id": "Rolechange", "title": "Change Employee Role"},
                                                                             {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                             {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -5873,8 +5867,7 @@ def webhook():
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                        {"id": "Addemp", "title": "Add Employees"},
-                                                                        {"id": "Rememp", "title": "Remove Employees"},
+                                                                        {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                         {"id": "Rolechange", "title": "Change Employee Role"},
                                                                         {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                         {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -6214,8 +6207,7 @@ def webhook():
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                    {"id": "Addemp", "title": "Add Employees"},
-                                                                    {"id": "Rememp", "title": "Remove Employees"},
+                                                                    {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                     {"id": "Rolechange", "title": "Change Employee Role"},
                                                                     {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                     {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -6713,8 +6705,7 @@ def webhook():
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                        {"id": "Addemp", "title": "Add Employees"},
-                                                                        {"id": "Rememp", "title": "Remove Employees"},
+                                                                        {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                         {"id": "Rolechange", "title": "Change Employee Role"},
                                                                         {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                         {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -6926,8 +6917,7 @@ def webhook():
                                                                             {"id": "Apply", "title": "Apply for Leave"},
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
                                                                             {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                            {"id": "Addemp", "title": "Add Employees"},
-                                                                            {"id": "Rememp", "title": "Remove Employees"},
+                                                                            {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                             {"id": "Rolechange", "title": "Change Employee Role"},
                                                                             {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                             {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -6972,8 +6962,7 @@ def webhook():
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                    {"id": "Addemp", "title": "Add Employees"},
-                                                                    {"id": "Rememp", "title": "Remove Employees"},
+                                                                    {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                     {"id": "Rolechange", "title": "Change Employee Role"},
                                                                     {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                     {"id": "RoleApprover", "title": "Role & Approver Schedule"},
@@ -6990,7 +6979,7 @@ def webhook():
                                                             sections
                                                         )
 
-                                                    elif selected_option == "Addemp":
+                                                    elif selected_option == "Addrememp":
 
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Addone", "title": "Manual Addition"}},
@@ -7020,8 +7009,7 @@ def webhook():
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
                                                                 {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                {"id": "Addemp", "title": "Add Employees"},
-                                                                {"id": "Rememp", "title": "Remove Employees"},
+                                                                {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                 {"id": "Rolechange", "title": "Change Employee Role"},
                                                                 {"id": "Apprchange", "title": "Edit Employee Approver"},
                                                                 {"id": "RoleApprover", "title": "Role & Approver Schedule"},
