@@ -5182,7 +5182,7 @@ def webhook():
                                                 def download_whatsapp_media(media_id):
                                                     media_url = f"https://graph.facebook.com/v19.0/{media_id}"
                                                     headers = {
-                                                        "Authorization": f"Bearer {VERIFY_TOKEN}"
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}"
                                                     }
 
                                                     # Get the actual download URL
