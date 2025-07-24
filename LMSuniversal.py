@@ -1082,12 +1082,12 @@ def webhook():
 
                                                         elif selected_option == "Myinfo":
 
+                                                            companyxx = company_reg.replace("_"," ").title()
 
                                                             try:
 
                                                                 id_user = button_id.split("_")[1]
                                                                 print(id_user)
-                                                                companyxx = company_reg.replace("_"," ").title()
 
                                                                 table_name = f"{company_reg}main"
 
@@ -1134,37 +1134,6 @@ def webhook():
                                                             except Exception as e:
 
                                                                 send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
                                                     elif interactive.get("type") == "button_reply":
