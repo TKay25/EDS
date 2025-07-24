@@ -1114,7 +1114,6 @@ def webhook():
                                                                         }
                                                                     ]
 
-
                                                                     send_whatsapp_list_message(
                                                                         sender_id, 
                                                                         f"Hey there {first_name}!\n Your information in {companyxx}'s Leave Management System is as follows;\n\n {message_text}", 
@@ -1140,7 +1139,7 @@ def webhook():
                                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": f"myhist_{id_user}", "title": "My Applications History"},
+                                                                        {"id": "myhist", "title": "My Applications History"},
                                                                         {"id": "Myinfo", "title": "My Info"}
                                                                     ]
                                                                 }
@@ -1196,7 +1195,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -1294,7 +1293,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -1307,7 +1306,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -1362,11 +1361,10 @@ def webhook():
                                                             )
 
 
-                                                        elif "myhist" in selected_option:
+                                                        elif selected_option == "myhist":
 
                                                             try:
 
-                                                                id_user = selected_option.split("_")[1]
                                                                 print(id_user)
                                                                 companyxx = company_reg.replace("_"," ").title()
 
@@ -1559,7 +1557,7 @@ def webhook():
                                                                     buttons
                                                                 )
 
-                                                        elif "myhist" in button_id:
+                                                        elif button_id == "myhist" :
 
                                                             try:
 
@@ -1695,7 +1693,7 @@ def webhook():
                                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": f"myhist_{id_user}", "title": "My Applications History"},
+                                                                        {"id": "myhist", "title": "My Applications History"},
                                                                         {"id": "Myinfo", "title": "My Info"}
                                                                     ]
                                                                 }
@@ -1751,7 +1749,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -1849,7 +1847,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -1862,7 +1860,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -2327,7 +2325,7 @@ def webhook():
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                    {"id": f"myhist_{id_user}", "title": "My Applications History"},
+                                                                    {"id": "myhist", "title": "My Applications History"},
                                                                     {"id": "Myinfo", "title": "My Info"}
                                                                 ]
                                                             }
@@ -2608,7 +2606,9 @@ def webhook():
                                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": "Pending", "title": "Apps Pending My Approval"}
+                                                                        {"id": "Pending", "title": "Apps Pending My Approval"},
+
+                                                                        
                                                                     ]
                                                                 }
                                                             ]
@@ -2691,7 +2691,7 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
                                                                     send_whatsapp_message(
@@ -2787,7 +2787,7 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
                                                                     send_whatsapp_message(
@@ -2800,7 +2800,7 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
                                                                     send_whatsapp_message(
@@ -2840,7 +2840,7 @@ def webhook():
                                                                 buttons
                                                             )
 
-                                                    elif "myhist" in button_id:
+                                                    elif button_id == "myhist":
 
                                                         try:
 
@@ -3609,7 +3609,7 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
 
@@ -3724,7 +3724,7 @@ def webhook():
 
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Reapply", "title": "Resubmit Application"}},
-                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
 
@@ -3978,7 +3978,7 @@ def webhook():
 
                                                                             buttons = [
                                                                                 {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                                {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                                {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                             ]
                                                                             send_whatsapp_message(
@@ -4075,7 +4075,7 @@ def webhook():
 
                                                                             buttons = [
                                                                                 {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                                {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                                {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                             ]
                                                                             send_whatsapp_message(
@@ -4088,7 +4088,7 @@ def webhook():
 
                                                                             buttons = [
                                                                                 {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                                {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                                {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                             ]
                                                                             send_whatsapp_message(
@@ -4157,7 +4157,7 @@ def webhook():
                                                                     "Administrator Options",
                                                                     sections)
 
-                                                            elif "myhist" in button_id:
+                                                            elif button_id == "myhist":
 
                                                                 try:
 
@@ -5086,7 +5086,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -5184,7 +5184,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -5197,7 +5197,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -5738,7 +5738,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -5836,7 +5836,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -5849,7 +5849,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -5900,11 +5900,10 @@ def webhook():
                                                                     buttons
                                                                 )
 
-                                                        elif "myhist" in button_id:
+                                                        elif button_id == "myhist":
 
                                                             try:
 
-                                                                id_user = button_id.split("_")[1]
                                                                 print(id_user)
                                                                 companyxx = company_reg.replace("_"," ").title()
 
@@ -6622,7 +6621,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
 
@@ -6735,7 +6734,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Reapply", "title": "Resubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
 
@@ -7354,7 +7353,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -7452,7 +7451,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
@@ -7465,7 +7464,7 @@ def webhook():
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                            {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                         ]
                                                                         send_whatsapp_message(
