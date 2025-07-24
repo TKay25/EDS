@@ -1053,10 +1053,12 @@ def webhook():
                                                     if interactive.get("type") == "list_reply":
                                                         selected_option = interactive.get("list_reply", {}).get("id")
                                                         print(f"📋 User selected: {selected_option}")
+                                                        button_id = ""
 
                                                     elif interactive.get("type") == "button_reply":
                                                         button_id = interactive.get("button_reply", {}).get("id")
                                                         print(f"🔘 Button clicked: {button_id}")
+                                                        selected_option = ""
 
                                                     if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
                                                         button_id_leave_type = str(selected_option)
@@ -1354,7 +1356,7 @@ def webhook():
                                                         buttons = [
                                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                         {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                         ]
 
                                                         send_whatsapp_message(
