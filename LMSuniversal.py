@@ -4501,10 +4501,7 @@ def webhook():
                                                                         sender_id,
                                                                         f"Sorry, we couldn't send the Employee Template right now.\nError: {e}"
                                                                     )
-                                                                
-                                                            elif selected_option == "Rolechange":
-                                                                # Handle Change Employee's Role
-                                                                pass
+    
                                                                     
                                                         if interactive.get("type") == "list_reply":
 
@@ -6561,10 +6558,7 @@ def webhook():
                                                                     sender_id,
                                                                     f"Sorry, we couldn't send the Employee Template right now.\nError: {e}"
                                                                 )
-                                                            
-                                                        elif selected_option == "Rolechange":
-                                                            # Handle Change Employee's Role
-                                                            pass
+            
                                                                                                             
                                                     if interactive.get("type") == "list_reply":
                                                         selected_option = interactive.get("list_reply", {}).get("id")
@@ -7104,8 +7098,7 @@ def webhook():
                                                                 "Admin/Approver Options",
                                                                 sections
                                                             )
-                                                            
-                                                            
+                                                                    
                                                         elif selected_option == "Checkbal":
 
                                                             sections = [
