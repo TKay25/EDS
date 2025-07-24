@@ -1109,7 +1109,7 @@ def webhook():
                                                                                 {"id": "Editname", "title": "Edit My Name"},
                                                                                 {"id": "Editwhatsapp", "title": "Edit My WhatsApp"},
                                                                                 {"id": "Editaddress", "title": "Edit My Address"},
-                                                                                {"id": "Editaddress", "title": "Edit My Address"},
+                                                                                {"id": f"myhist_{id_user}", "title": "My Applications History"},
                                                                                 {"id": "Menu", "title": "Main Menu"}
                                                                             ]
                                                                         }
@@ -1141,7 +1141,6 @@ def webhook():
                                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": f"myhist_{id_user}", "title": "My Applications History"},
                                                                         {"id": "Myinfo", "title": "My Info"}
                                                                     ]
                                                                 }
@@ -1468,7 +1467,6 @@ def webhook():
                                                                         {"id": "Apply", "title": "Apply for Leave"},
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": f"myhist_{id_user}", "title": "My Applications History"},
                                                                         {"id": "Myinfo", "title": "My Info"}
                                                                     ]
                                                                 }
