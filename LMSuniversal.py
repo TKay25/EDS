@@ -1079,7 +1079,6 @@ def webhook():
                                                         continue
 
 
-
                                                 elif interactive.get("type") == "button_reply":
                                                     button_id = interactive.get("button_reply", {}).get("id")
                                                     print(f"🔘 Button clicked: {button_id}")
@@ -1256,15 +1255,6 @@ def webhook():
 
                                                             send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
                                                     
-
-
-
-
-
-
-
-
-
 
                                                     elif button_id == "Menu":
 
@@ -1690,6 +1680,8 @@ def webhook():
 
                                                                             if leavedaysbalancebf >= 0:
 
+
+
                                                                                 status = "Pending"
 
                                                                                 insert_query = f"""
@@ -1827,7 +1819,6 @@ def webhook():
                                                         else:
                                                             print("No record found for the user.")
 
-
                                                     elif button_id == "Cancelapp" :
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -1891,18 +1882,24 @@ def webhook():
                                                 print(role_foc_8)
 
                                                 if "hello" in text.lower():
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                        {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
-                                                    ]
-                                                    companyxx = company_reg.replace("_"," ").title()
 
-                                                    send_whatsapp_message(
+                                                    sections = [
+                                                        {
+                                                            "title": "User Options",
+                                                            "rows": [
+                                                                {"id": "Apply", "title": "Apply for Leave"},
+                                                                {"id": "Track", "title": "Track My Application"},
+                                                                {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                {"id": "MyInfo", "title": "My Info"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_message(
                                                         sender_id, 
                                                         f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
-                                                        buttons
-                                                    )
+                                                    "User Options",
+                                                    sections)
                                                     
 
                                                 elif "start" in text.lower():
@@ -3304,7 +3301,8 @@ def webhook():
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "Apps Pending My Approval"}
+                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                {"id": "MyInfo", "title": "My Info"},
                                                             ]
                                                         }
                                                     ]
