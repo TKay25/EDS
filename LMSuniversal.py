@@ -1118,7 +1118,7 @@ def webhook():
 
                                                                     send_whatsapp_list_message(
                                                                         sender_id, 
-                                                                        f"Hey there {first_name}from !\n Your Information in {companyxx}'s Leave Management System is as follows;\n\n {message_text}", 
+                                                                        f"Hey there {first_name}!\n Your information in {companyxx}'s Leave Management System is as follows;\n\n {message_text}", 
                                                                     "User Options",
                                                                     sections)
 
