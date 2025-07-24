@@ -1100,7 +1100,7 @@ def webhook():
 
                                                                     message_text = "*📄 Employee Details:*\n\n"
                                                                     for col, val in zip(columns, row):
-                                                                        message_text += f"*{col}:* {val}\n"
+                                                                        message_text += f"*{col}:* `{val}`\n"
 
                                                                     sections = [
                                                                         {
