@@ -1476,8 +1476,8 @@ def webhook():
                                                                 send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
                                                                 buttons = [
+                                                                    {"type": "reply", "reply": {"id": "Analytics", "title": "Analytics & Insights"}},
                                                                     {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                                     {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                                 ]
                                                                 send_whatsapp_message(
@@ -2387,8 +2387,8 @@ def webhook():
                                                             send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
                                                             buttons = [
+                                                                {"type": "reply", "reply": {"id": "Analytics", "title": "Analytics & Insights"}},
                                                                 {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                             ]
                                                             send_whatsapp_message(
@@ -3768,7 +3768,9 @@ def webhook():
                                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
                                                                                 {"id": "myhist", "title": "My Applications History"},
                                                                                 {"id": "Myinfo", "title": "My Info"},
-                                                                                {"id": "Empmgt", "title": "Employee Management"}
+                                                                                {"id": "Empmgt", "title": "Employee Management"},
+                                                                                {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                                {"id": "Company", "title": "Company Profile"}
                                                                             ]
                                                                         }
                                                                     ]
@@ -3809,7 +3811,9 @@ def webhook():
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
                                                                             {"id": "myhist", "title": "My Applications History"},
                                                                             {"id": "Myinfo", "title": "My Info"},
-                                                                            {"id": "Empmgt", "title": "Employee Management"}
+                                                                            {"id": "Empmgt", "title": "Employee Management"},
+                                                                            {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                            {"id": "Company", "title": "Company Profile"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -3984,8 +3988,8 @@ def webhook():
                                                                     send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
                                                                     buttons = [
+                                                                        {"type": "reply", "reply": {"id": "Analytics", "title": "Analytics & Insights"}},
                                                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                                     ]
                                                                     send_whatsapp_message(
@@ -4013,6 +4017,19 @@ def webhook():
 
                                                                 send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
                                                         
+                                                        elif selected_option == "Analyticscomp":
+
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
+                                                                {"type": "reply", "reply": {"id": "Summarycomp", "title": "Get Essential Summary"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in (*Kindly use Microsoft Excel, NOT Google Sheets*) and upload it when ready.",
+                                                                buttons
+                                                            )
+
                                                         elif button_id == "Menu" or selected_option == "Menu":
 
                                                             companyxx = company_reg.replace("_"," ").title()
@@ -4026,7 +4043,9 @@ def webhook():
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "myhist", "title": "My Applications History"},
                                                                         {"id": "Myinfo", "title": "My Info"},
-                                                                        {"id": "Empmgt", "title": "Employee Management"}
+                                                                        {"id": "Empmgt", "title": "Employee Management"},
+                                                                        {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                        {"id": "Company", "title": "Company Profile"}
                                                                     ]
                                                                 }
                                                             ]
@@ -4428,7 +4447,9 @@ def webhook():
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
                                                                             {"id": "myhist", "title": "My Applications History"},
                                                                             {"id": "Myinfo", "title": "My Info"},
-                                                                            {"id": "Empmgt", "title": "Employee Management"}
+                                                                            {"id": "Empmgt", "title": "Employee Management"},
+                                                                            {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                            {"id": "Company", "title": "Company Profile"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -4690,7 +4711,7 @@ def webhook():
                                                                         {"id": "Addrememp", "title": "Add or Remove Employees"},
                                                                         {"id": "RoleApprover", "title": "Change Role or Approver"},
                                                                         {"id": "DepBalAcc", "title": "Edit Department or Days"},
-                                                                        {"id": "Book", "title": "Extract Leave Book"}
+                                                                        {"id": "Menu", "title": "Main Menu"}
                                                                     ]
                                                                 }
                                                             ]
@@ -4763,7 +4784,9 @@ def webhook():
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "myhist", "title": "My Applications History"},
                                                                         {"id": "Myinfo", "title": "My Info"},
-                                                                        {"id": "Empmgt", "title": "Employee Management"}
+                                                                        {"id": "Empmgt", "title": "Employee Management"},
+                                                                        {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                        {"id": "Company", "title": "Company Profile"}
                                                                     ]
                                                                 }
                                                             ]
@@ -4789,7 +4812,7 @@ def webhook():
                                                                 buttons
                                                             )
                                                                                         
-                                                        elif selected_option == "Book":
+                                                        elif selected_option == "Book" or button_id == "Book":
 
                                                             table_name = f"{company_reg}main"
                                                             appsapproved = f"{company_reg}appsapproved"
@@ -4959,7 +4982,9 @@ def webhook():
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "myhist", "title": "My Applications History"},
                                                                         {"id": "Myinfo", "title": "My Info"},
-                                                                        {"id": "Empmgt", "title": "Employee Management"}
+                                                                        {"id": "Empmgt", "title": "Employee Management"},
+                                                                        {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                        {"id": "Company", "title": "Company Profile"}
                                                                     ]
                                                                 }
                                                             ]
@@ -5172,8 +5197,30 @@ def webhook():
                                                         print(f"📋 User selected: {selected_option}")
                                                         button_id = ""
 
+                                                    if selected_option == "Empmgt":
+
+                                                        sections = [
+                                                            {
+                                                            "title": "Administrator Options",
+                                                            "rows": [
+                                                                    {"id": "Addrememp", "title": "Add or Remove Employees"},
+                                                                    {"id": "RoleApprover", "title": "Change Role or Approver"},
+                                                                    {"id": "DepBalAcc", "title": "Edit Department or Days"},
+                                                                    {"id": "Menu", "title": "Main Menu"}
+                                                                ]
+                                                            }
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave days yet.", 
+                                                            "Administrator Options",
+                                                            sections
+                                                        )
                                                         
-                                                    if button_id == "Track" or selected_option == "Track":
+                                                    elif button_id == "Track" or selected_option == "Track":
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                         table_name_apps_approved = f"{company_reg}appsapproved"
@@ -5349,7 +5396,9 @@ def webhook():
                                                                             {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                             {"id": "myhist", "title": "My Applications History"},
                                                                             {"id": "Myinfo", "title": "My Info"},
-                                                                            {"id": "Empmgt", "title": "Employee Management"}
+                                                                            {"id": "Empmgt", "title": "Employee Management"},
+                                                                            {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                            {"id": "Company", "title": "Company Profile"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -5495,8 +5544,8 @@ def webhook():
                                                                 send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
                                                                 buttons = [
+                                                                    {"type": "reply", "reply": {"id": "Analytics", "title": "Analytics & Insights"}},
                                                                     {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                                     {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                                 ]
                                                                 send_whatsapp_message(
@@ -5524,7 +5573,20 @@ def webhook():
                                                         except Exception as e:
 
                                                             send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
-                                                    
+                                                     
+                                                    elif selected_option == "Analyticscomp":
+
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
+                                                            {"type": "reply", "reply": {"id": "Summarycomp", "title": "Get Essential Summary"}},
+                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in (*Kindly use Microsoft Excel, NOT Google Sheets*) and upload it when ready.",
+                                                            buttons
+                                                        )
+
                                                     elif selected_option == "Myinfo":
 
                                                         companyxx = company_reg.replace("_"," ").title()
@@ -5979,7 +6041,9 @@ def webhook():
                                                                             {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                             {"id": "myhist", "title": "My Applications History"},
                                                                             {"id": "Myinfo", "title": "My Info"},
-                                                                            {"id": "Empmgt", "title": "Employee Management"}
+                                                                            {"id": "Empmgt", "title": "Employee Management"},
+                                                                            {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                            {"id": "Company", "title": "Company Profile"}
                                                                     ]
                                                                 }
                                                             ]
@@ -6318,7 +6382,9 @@ def webhook():
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "myhist", "title": "My Applications History"},
                                                                     {"id": "Myinfo", "title": "My Info"},
-                                                                    {"id": "Empmgt", "title": "Employee Management"}
+                                                                    {"id": "Empmgt", "title": "Employee Management"},
+                                                                    {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                    {"id": "Company", "title": "Company Profile"}
                                                                 ]
                                                             }
                                                         ]
@@ -6859,7 +6925,9 @@ def webhook():
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "myhist", "title": "My Applications History"},
                                                                     {"id": "Myinfo", "title": "My Info"},
-                                                                    {"id": "Empmgt", "title": "Employee Management"}
+                                                                    {"id": "Empmgt", "title": "Employee Management"},
+                                                                    {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                    {"id": "Company", "title": "Company Profile"}
                                                                 ]
                                                             }
                                                         ]
