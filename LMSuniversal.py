@@ -1086,9 +1086,6 @@ def webhook():
 
                                                             try:
 
-                                                                id_user = button_id.split("_")[1]
-                                                                print(id_user)
-
                                                                 table_name = f"{company_reg}main"
 
                                                                 query = f"SELECT id, firstname, surname, whatsapp, address, email, role, department, currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverwhatsapp, leaveapproveremail FROM {table_name} WHERE id = {str(id_user)};"
