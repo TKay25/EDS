@@ -1078,6 +1078,92 @@ def webhook():
 
                                                         continue
 
+                                                    elif selected_option == "Myinfo":
+
+
+                                                        try:
+
+                                                            id_user = button_id.split("_")[1]
+                                                            print(id_user)
+                                                            companyxx = company_reg.replace("_"," ").title()
+
+                                                            table_name = f"{company_reg}main"
+
+                                                            query = f"SELECT id, firstname, surname, whatsapp, address, email, role, department, currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverwhatsapp, leaveapproveremail FROM {table_name} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            row = cursor.fetchone()
+
+                                                            if row:
+
+                                                                columns = ["ID", "First Name", "Surname", "WhatsApp", "Address", "Email", 
+                                                                        "Role", "Department", "Leave Days", "Monthly Accrual", 
+                                                                        "Approver", "Approver WhatsApp", "Approver Email"]
+
+                                                                message_text = "*📄 Employee Details:*\n\n"
+                                                                for col, val in zip(columns, row):
+                                                                    message_text += f"*{col}:* {val}\n"
+
+                                                                sections = [
+                                                                    {
+                                                                        "title": "User Options",
+                                                                        "rows": [
+                                                                            {"id": "Editname", "title": "Edit My Name"},
+                                                                            {"id": "Editwhatsapp", "title": "Edit My WhatsApp"},
+                                                                            {"id": "Editaddress", "title": "Edit My Address"},
+                                                                            {"id": "Menu", "title": "Main Menu"}
+                                                                        ]
+                                                                    }
+                                                                ]
+
+
+                                                                send_whatsapp_list_message(
+                                                                    sender_id, 
+                                                                    f"Hey there {first_name}from !\n Your Information in {companyxx}'s Leave Management System is as follows;\n\n {message_text}", 
+                                                                "User Options",
+                                                                sections)
+
+
+
+
+
+
+
+
+                                                        except Exception as e:
+
+                                                            send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                                                 elif interactive.get("type") == "button_reply":
                                                     button_id = interactive.get("button_reply", {}).get("id")
@@ -1255,23 +1341,28 @@ def webhook():
 
                                                             send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
                                                     
-
                                                     elif button_id == "Menu":
 
                                                         companyxx = company_reg.replace("_"," ").title()
                                                         
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                        sections = [
+                                                            {
+                                                                "title": "User Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Track", "title": "Track My Application"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "Myinfo", "title": "My Info"}
+                                                                ]
+                                                            }
                                                         ]
-                                                        companyxx = company_reg.replace("_"," ").title()
 
-                                                        send_whatsapp_message(
+
+                                                        send_whatsapp_list_message(
                                                             sender_id, 
                                                             f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
-                                                            buttons
-                                                        )
+                                                        "User Options",
+                                                        sections)
 
                                                     elif button_id == "Track":
 
@@ -1880,21 +1971,31 @@ def webhook():
                                                 print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
 
                                                 print(role_foc_8)
+                                                    
+                                                companyxx = company_reg.replace("_", " ").title()
 
                                                 if "hello" in text.lower():
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                        {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
-                                                    ]
-                                                    companyxx = company_reg.replace("_"," ").title()
 
-                                                    send_whatsapp_message(
+                                                    sections = [
+                                                        {
+                                                            "title": "User Options",
+                                                            "rows": [
+                                                                {"id": "Apply", "title": "Apply for Leave"},
+                                                                {"id": "Track", "title": "Track My Application"},
+                                                                {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                {"id": "Myinfo", "title": "My Info"}
+                                                            ]
+                                                        }
+                                                    ]
+
+
+                                                    send_whatsapp_list_message(
                                                         sender_id, 
                                                         f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
-                                                        buttons
-                                                    )
-                                                    
+                                                    "User Options",
+                                                    sections)
+
+
 
                                                 elif "start" in text.lower():
                                                     try:
@@ -2033,6 +2134,24 @@ def webhook():
                                                         sender_id, 
                                                         "Alluire LMS Bot Here 😎. Say 'hello' to start!"
                                                     )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+################## ORDINARY USER APPROVER
+
 
 
                                         elif len(df_employeesempapp) > 0:
