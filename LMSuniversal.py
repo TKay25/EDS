@@ -1410,6 +1410,8 @@ def webhook():
                                                                 all_approved_declined_cancelled_pending["dateapplied"] = all_approved_declined_cancelled_pending["dateapplied"].dt.strftime("%-d %B %Y")
 
                                                                 print(all_approved_declined_cancelled_pending)
+
+                                                                appscountnum = len(all_approved_declined_cancelled_pending)
                                                             
                                                                 def generate_leave_hist_pdf():
                                                                     app = {
@@ -1471,17 +1473,35 @@ def webhook():
 
                                                                 pdf_path = generate_leave_hist_pdf()
                                                                 media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                                send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-                                                                buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                ]
-                                                                send_whatsapp_message(
-                                                                    sender_id, 
-                                                                    f"Hey {first_name} {last_name} from {companyxx}! You may go ahead and download your leave applications history file attached here 😎.", 
-                                                                    buttons
-                                                                )
+                                                                if appscountnum > 0:
 
+                                                                    send_whatsapp_pdf_by_media_id(sender_id, media_id)
+
+                                                                    buttons = [
+                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
+                                                                    ]
+                                                                    send_whatsapp_message(
+                                                                        sender_id, 
+                                                                        f"Hey {first_name} {last_name} from {companyxx}! You may go ahead and download your leave applications history file attached here 😎.", 
+                                                                        buttons
+                                                                    )
+
+                                                                else:
+
+                                                                    buttons = [
+                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
+                                                                    ]
+
+                                                                    send_whatsapp_message(
+                                                                        sender_id, 
+                                                                        f"Hello {first_name} {last_name} from {companyxx}!\n\n You have not applied for any leave days yet.", 
+                                                                        buttons
+                                                                    )
 
                                                             except Exception as e:
 
@@ -1855,7 +1875,7 @@ def webhook():
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                                         {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}}
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                                     ]
                                                                     companyxx = company_reg.replace("_"," ").title()
                                                                     send_whatsapp_message(
