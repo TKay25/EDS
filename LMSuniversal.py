@@ -1133,6 +1133,8 @@ def webhook():
 
                                                             except Exception as e:
 
+                                                                print(e)
+
                                                                 send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
 
 
