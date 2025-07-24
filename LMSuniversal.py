@@ -7363,10 +7363,13 @@ def webhook():
 
                                             send_whatsapp_message(
                                                 sender_id,
-                                                f"{e}",
-                                                buttons
+                                                f"{e}"
                                             )
 
+                                            send_whatsapp_message(
+                                                "+263774822568",
+                                                f"{e}"
+                                            )
 
 
 
