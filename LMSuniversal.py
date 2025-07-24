@@ -2327,6 +2327,7 @@ def webhook():
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": f"myhist_{id_user}", "title": "My Applications History"},
                                                                     {"id": "Myinfo", "title": "My Info"}
                                                                 ]
                                                             }
