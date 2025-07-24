@@ -1042,1259 +1042,997 @@ def webhook():
 
 
                                         if len(df_employeesempapp) == 0:
-
-                                            try:
                                         
 
-                                                if message.get("type") == "interactive":
-                                                    interactive = message.get("interactive", {})
+                                            if message.get("type") == "interactive":
+                                                interactive = message.get("interactive", {})
 
 
-                                                    if interactive.get("type") == "list_reply":
-                                                        selected_option = interactive.get("list_reply", {}).get("id")
-                                                        print(f"📋 User selected: {selected_option}")
+                                                if interactive.get("type") == "list_reply":
+                                                    selected_option = interactive.get("list_reply", {}).get("id")
+                                                    print(f"📋 User selected: {selected_option}")
 
-                                                        if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
-                                                            button_id_leave_type = str(selected_option)
+                                                    if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
+                                                        button_id_leave_type = str(selected_option)
 
-                                                            cursor.execute("""
-                                                                DELETE FROM whatsapptempapplication
-                                                                WHERE empidwa = %s
-                                                            """, (str(id_user),))  
-                                                            
-                                                            connection.commit()
-
-                                                            cursor.execute(f"""
-                                                                INSERT INTO whatsapptempapplication (empidwa, leavetypewa, companynamewa)
-                                                                VALUES (%s, %s, %s)
-                                                            """, (id_user, button_id_leave_type, company_reg))
-
-                                                            connection.commit()
-
-                                                            send_whatsapp_message(
-                                                                sender_id, 
-                                                                f"Ok. When would you like your {selected_option} Leave to start {first_name}?\n\n"
-                                                                "Please enter your response using the format: 👇🏻\n"
-                                                                "`start 24 january 2025`"
-                                                            )
-
-                                                        elif selected_option == "Apply":
-
-                                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-
-                                                            query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
-                                                            cursor.execute(query)
-                                                            rows = cursor.fetchall()
-
-                                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
-
-                                                            if len(df_employeesappspendingcheck) == 0:
-
-                                                                sections = [
-                                                                    {
-                                                                        "title": "Leave Type Options",
-                                                                        "rows": [
-                                                                            {"id": "Annual", "title": "Annual Leave"},
-                                                                            {"id": "Sick", "title": "Sick Leave"},
-                                                                            {"id": "Study", "title": "Study Leave"},
-                                                                            {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                            {"id": "Parental", "title": "Parental Leave"},
-                                                                            {"id": "Other", "title": "Other"},
-                                                                        ]
-                                                                    }
-                                                                ]
-
-                                                                send_whatsapp_list_message(
-                                                                    sender_id, 
-                                                                    f"{first_name}, kindly select the type of Leave that you are applying for.", 
-                                                                    "Leave Type Options",
-                                                                    sections) 
-
-                                                            elif len(df_employeesappspendingcheck) > 0:
-                                                                buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
-                                                                    {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
-                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                ]
-                                                                send_whatsapp_message(
-                                                                    sender_id, 
-                                                                    f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
-                                                                    f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
-                                                                    f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
-                                                                    , 
-                                                                    buttons
-                                                                )                                                        
-
-
-                                                        elif selected_option == "Track":
-
-
-                                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-                                                            table_name_apps_approved = f"{company_reg}appsapproved"
-                                                            table_name_apps_declined = f"{company_reg}appsdeclined"
-                                                            table_name_apps_cancelled = f"{company_reg}appscancelled"
-
-
-                                                            query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
-                                                            cursor.execute(query)
-                                                            rows = cursor.fetchall()
-
-                                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
-
-                                                            if len(df_employeesappspendingcheck) == 0:
-
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
-
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])  
-                                        
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])
-                                        
-                                                                all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
-
-                                                                if len(all_approved_declined_cancelled) > 0:
-
-                                                                    print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
-
-                                                                    if all_approved_declined_cancelled.iat[0,8] == "Approved":
-
-                                                                        buttons = [
-                                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
-                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                        ]
-                                                                        send_whatsapp_message(
-                                                                            sender_id, 
-                                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
-                                                                        )
-
-
-                                                                        def generate_leave_pdf():
-                                                                            app = {
-                                                                                'company_logo': 44,
-                                                                                'company_name': company_reg.replace("_"," ").title(),
-                                                                                'employee_name': f"{first_name} {last_name}",
-                                                                                'leave_type': all_approved_declined_cancelled.iat[0,2],
-                                                                                'generated_on': today_date,
-                                                                                'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
-                                                                                'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
-                                                                                'reference_number': all_approved_declined_cancelled.iat[0,0],
-                                                                                'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
-                                                                                'new_balance': all_approved_declined_cancelled.iat[0,10],
-                                                                                'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
-                                                                                'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
-                                                                                'days_requested':  all_approved_declined_cancelled.iat[0,7], 
-                                                                                'address': address_foc_8, 
-                                                                                'whatsapp': whatsapp_foc_8, 
-                                                                                'email': email_foc_8, 
-                                                                                'status': 'Approved',
-                                                                                'power': 'Alluire Marketing Agency',
-                                                                            }
-
-                                                                            html_out = render_template("leave_pdf_template.html", app=app)
-                                                                            
-                                                                            # ✅ Return as bytes instead of saving to file
-                                                                            pdf_bytes = HTML(string=html_out).write_pdf()
-                                                                            return pdf_bytes
-
-                                                                        
-
-
-                                                                        def upload_pdf_to_whatsapp(pdf_bytes):
-                                                                            compxxy = company_reg.replace("_"," ").title()
-                                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                                        
-                                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
-                                                                            headers = {
-                                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
-                                                                            }
-
-                                                                            files = {
-                                                                                "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                                                                                "type": (None, "application/pdf"),
-                                                                                "messaging_product": (None, "whatsapp")
-                                                                            }
-
-                                                                            response = requests.post(url, headers=headers, files=files)
-                                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
-                                                                            response.raise_for_status()
-                                                                            return response.json()["id"]
-
-                                                                                                                        
-                                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                                            compxxy = company_reg.replace("_"," ").title()
-                                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-                                                                            headers = {
-                                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                                "Content-Type": "application/json"
-                                                                            }
-                                                                            payload = {
-                                                                                "messaging_product": "whatsapp",
-                                                                                "to": recipient_number,
-                                                                                "type": "document",
-                                                                                "document": {
-                                                                                    "id": media_id,            # Media ID from upload step
-                                                                                    "filename": filename       # Desired file name on recipient's phone
-                                                                                }
-                                                                            }
-
-                                                                            response = requests.post(url, headers=headers, json=payload)
-                                                                            response.raise_for_status()
-                                                                            return response.json()
-
-
-                                                                        pdf_path = generate_leave_pdf()
-                                                                        media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
-
-                                                                        send_whatsapp_message(
-                                                                            sender_id,
-                                                                            "Select an option below to continue 👇",
-                                                                            buttons
-                                                                        )
-
-                                                                    elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
-
-                                                                        buttons = [
-                                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
-                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                        ]
-                                                                        send_whatsapp_message(
-                                                                            sender_id, 
-                                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
-                                                                            buttons 
-                                                                        )
-
-                                                                    elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
-
-                                                                        buttons = [
-                                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
-                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                        ]
-                                                                        send_whatsapp_message(
-                                                                            sender_id, 
-                                                                            f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
-                                                                            buttons 
-                                                                        )
-
-                                                                else:
-
-                                                                    buttons = [
-                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}}
-                                                                    ]
-                                                                    companyxx = company_reg.replace("_"," ").title()
-                                                                    send_whatsapp_message(
-                                                                        sender_id, 
-                                                                        f"Hello {first_name} {last_name} from {companyxx}!\n\n You have not applied for any leave days yet.", 
-                                                                        buttons
-                                                                    )
-
-
-                                                            elif len(df_employeesappspendingcheck) > 0:
-                                                                buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
-                                                                    {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
-                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                ]
-                                                                approoooover = df_employeesappspendingcheck.iat[0,2].title()
-                                                                send_whatsapp_message(
-                                                                    sender_id, 
-                                                                    f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
-                                                                    f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
-                                                                    , 
-                                                                    buttons
-                                                                )
-
-
-
-
-
-
-
-                                                    elif interactive.get("type") == "button_reply":
-                                                        button_id = interactive.get("button_reply", {}).get("id")
-                                                        print(f"🔘 Button clicked: {button_id}")
+                                                        cursor.execute("""
+                                                            DELETE FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (str(id_user),))  
                                                         
-                                                        if button_id == "Apply":
+                                                        connection.commit()
 
-                                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                        cursor.execute(f"""
+                                                            INSERT INTO whatsapptempapplication (empidwa, leavetypewa, companynamewa)
+                                                            VALUES (%s, %s, %s)
+                                                        """, (id_user, button_id_leave_type, company_reg))
 
-                                                            query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
-                                                            cursor.execute(query)
-                                                            rows = cursor.fetchall()
+                                                        connection.commit()
 
-                                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Ok. When would you like your {selected_option} Leave to start {first_name}?\n\n"
+                                                            "Please enter your response using the format: 👇🏻\n"
+                                                            "`start 24 january 2025`"
+                                                        )
 
-                                                            if len(df_employeesappspendingcheck) == 0:
-
-                                                                sections = [
-                                                                    {
-                                                                        "title": "Leave Type Options",
-                                                                        "rows": [
-                                                                            {"id": "Annual", "title": "Annual Leave"},
-                                                                            {"id": "Sick", "title": "Sick Leave"},
-                                                                            {"id": "Study", "title": "Study Leave"},
-                                                                            {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                            {"id": "Parental", "title": "Parental Leave"},
-                                                                            {"id": "Other", "title": "Other"},
-                                                                        ]
-                                                                    }
-                                                                ]
-
-                                                                send_whatsapp_list_message(
-                                                                    sender_id, 
-                                                                    f"{first_name}, kindly select the type of Leave that you are applying for.", 
-                                                                    "Leave Type Options",
-                                                                    sections) 
-
-                                                            elif len(df_employeesappspendingcheck) > 0:
-                                                                buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
-                                                                    {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
-                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                ]
-                                                                send_whatsapp_message(
-                                                                    sender_id, 
-                                                                    f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
-                                                                    f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
-                                                                    f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
-                                                                    , 
-                                                                    buttons
-                                                                )
-
-                                                        elif "myhist" in button_id:
-
-                                                            try:
-
-                                                                id_user = button_id.split("_")[1]
-                                                                print(id_user)
-                                                                companyxx = company_reg.replace("_"," ").title()
-
-                                                                table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-                                                                table_name_apps_approved = f"{company_reg}appsapproved"
-                                                                table_name_apps_declined = f"{company_reg}appsdeclined"
-                                                                table_name_apps_cancelled = f"{company_reg}appscancelled"
-
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid", "id","leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate","approvalstatus","statusdate"]) 
-
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate   FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate","approvalstatus","statusdate"])  
-                                        
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate","approvalstatus","statusdate"])
-
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate" ,"approvalstatus"])
-                                                                df_employeesappspenpendingcheck["statusdate"] = ""
+                                                        continue
 
 
-                                                                all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                                all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
+                                                elif interactive.get("type") == "button_reply":
+                                                    button_id = interactive.get("button_reply", {}).get("id")
+                                                    print(f"🔘 Button clicked: {button_id}")
+                                                    
+                                                    if button_id == "Apply":
 
-                                                                all_approved_declined_cancelled_pending["dateapplied"] = pd.to_datetime(all_approved_declined_cancelled_pending["dateapplied"], errors='coerce')
+                                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                                                all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="dateapplied", ascending=False)
+                                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                        cursor.execute(query)
+                                                        rows = cursor.fetchall()
 
-                                                                print("hist hist hist")
-                                                                all_approved_declined_cancelled_pending.drop('id', axis=1, inplace=True)
-                                                                all_approved_declined_cancelled_pending["dateapplied"] = all_approved_declined_cancelled_pending["dateapplied"].dt.strftime("%-d %B %Y")
+                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
 
-                                                                print(all_approved_declined_cancelled_pending)
-                                                            
-                                                                def generate_leave_hist_pdf():
-                                                                    app = {
-                                                                        'company_name': company_reg.replace("_", " ").title(),
-                                                                        'employee_name': f"{first_name} {last_name}",
-                                                                        'generated_on': today_date,
-                                                                        'power': 'Alluire Marketing Agency'
-                                                                    }
+                                                        if len(df_employeesappspendingcheck) == 0:
 
-                                                                    table_hist_html = all_approved_declined_cancelled_pending.to_html(index=False, classes='data', border=0, justify='center',escape=False)
-
-                                                                    html_out = render_template("leave_applications_history.html", app=app, table_hist_html=table_hist_html)
-                                                                    pdf_bytes = HTML(string=html_out).write_pdf()
-                                                                    return pdf_bytes
-
-                                                                def upload_pdf_to_whatsapp(pdf_bytes):
-                                                                    compxxy = company_reg.replace("_"," ").title()
-                                                                    filename=f"{first_name}_{last_name}_{compxxy}_leave_applications_history.pdf"
-                                                                
-                                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
-                                                                    headers = {
-                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}"
-                                                                    }
-
-                                                                    files = {
-                                                                        "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                                                                        "type": (None, "application/pdf"),
-                                                                        "messaging_product": (None, "whatsapp")
-                                                                    }
-
-                                                                    response = requests.post(url, headers=headers, files=files)
-                                                                    print("📥 Full incoming data:", response.text)  # Good for debugging
-                                                                    response.raise_for_status()
-                                                                    return response.json()["id"]
-
-                                                                                                                
-                                                                def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                                    compxxy = company_reg.replace("_"," ").title()
-                                                                    filename=f"{first_name}_{last_name}_{compxxy}_leave_applications_history.pdf"
-                                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-                                                                    headers = {
-                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                        "Content-Type": "application/json"
-                                                                    }
-                                                                    payload = {
-                                                                        "messaging_product": "whatsapp",
-                                                                        "to": recipient_number,
-                                                                        "type": "document",
-                                                                        "document": {
-                                                                            "id": media_id,            # Media ID from upload step
-                                                                            "filename": filename       # Desired file name on recipient's phone
-                                                                        }
-                                                                    }
-
-                                                                    response = requests.post(url, headers=headers, json=payload)
-                                                                    response.raise_for_status()
-                                                                    return response.json()
-
-
-                                                                pdf_path = generate_leave_hist_pdf()
-                                                                media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                                send_whatsapp_pdf_by_media_id(sender_id, media_id)
-
-                                                                buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                ]
-                                                                send_whatsapp_message(
-                                                                    sender_id, 
-                                                                    f"Hey {first_name} {last_name} from {companyxx}! You may go ahead and download your leave applications history file attached here 😎.", 
-                                                                    buttons
-                                                                )
-
-
-                                                            except Exception as e:
-
-                                                                send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
-                                                        
-
-                                                        elif button_id == "Menu":
-
-                                                            companyxx = company_reg.replace("_"," ").title()
-                                                            
                                                             sections = [
                                                                 {
-                                                                    "title": "User Options",
+                                                                    "title": "Leave Type Options",
                                                                     "rows": [
-                                                                        {"id": "Apply", "title": "Apply for Leave"},
-                                                                        {"id": "Track", "title": "Track My Application"},
-                                                                        {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": "MyInfo", "title": "My Info"},
+                                                                        {"id": "Annual", "title": "Annual Leave"},
+                                                                        {"id": "Sick", "title": "Sick Leave"},
+                                                                        {"id": "Study", "title": "Study Leave"},
+                                                                        {"id": "Bereavement", "title": "Bereavement Leave"},
+                                                                        {"id": "Parental", "title": "Parental Leave"},
+                                                                        {"id": "Other", "title": "Other"},
                                                                     ]
                                                                 }
                                                             ]
 
                                                             send_whatsapp_list_message(
                                                                 sender_id, 
-                                                                f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
-                                                            "User Options",
-                                                            sections)
+                                                                f"{first_name}, kindly select the type of Leave that you are applying for.", 
+                                                                "Leave Type Options",
+                                                                sections) 
 
+                                                        elif len(df_employeesappspendingcheck) > 0:
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                                {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
+                                                                f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                                f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
+                                                                , 
+                                                                buttons
+                                                            )
 
-                                                        elif button_id == "Track":
+                                                    elif "myhist" in button_id:
+
+                                                        try:
+
+                                                            id_user = button_id.split("_")[1]
+                                                            print(id_user)
+                                                            companyxx = company_reg.replace("_"," ").title()
 
                                                             table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                             table_name_apps_approved = f"{company_reg}appsapproved"
                                                             table_name_apps_declined = f"{company_reg}appsdeclined"
                                                             table_name_apps_cancelled = f"{company_reg}appscancelled"
 
-
-                                                            query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
+                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid", "id","leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate","approvalstatus","statusdate"]) 
 
-                                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate   FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate","approvalstatus","statusdate"])  
+                                    
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate","approvalstatus","statusdate"])
 
-                                                            if len(df_employeesappspendingcheck) == 0:
-
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
-
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])  
-                                        
-                                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-                                                                df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])
-                                        
-                                                                all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
-
-                                                                if len(all_approved_declined_cancelled) > 0:
-
-                                                                    print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
-
-                                                                    if all_approved_declined_cancelled.iat[0,8] == "Approved":
-
-                                                                        buttons = [
-                                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
-                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                        ]
-                                                                        send_whatsapp_message(
-                                                                            sender_id, 
-                                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
-                                                                        )
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, approvalstatus FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate" ,"approvalstatus"])
+                                                            df_employeesappspenpendingcheck["statusdate"] = ""
 
 
-                                                                        def generate_leave_pdf():
-                                                                            app = {
-                                                                                'company_logo': 44,
-                                                                                'company_name': company_reg.replace("_"," ").title(),
-                                                                                'employee_name': f"{first_name} {last_name}",
-                                                                                'leave_type': all_approved_declined_cancelled.iat[0,2],
-                                                                                'generated_on': today_date,
-                                                                                'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
-                                                                                'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
-                                                                                'reference_number': all_approved_declined_cancelled.iat[0,0],
-                                                                                'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
-                                                                                'new_balance': all_approved_declined_cancelled.iat[0,10],
-                                                                                'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
-                                                                                'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
-                                                                                'days_requested':  all_approved_declined_cancelled.iat[0,7], 
-                                                                                'address': address_foc_8, 
-                                                                                'whatsapp': whatsapp_foc_8, 
-                                                                                'email': email_foc_8, 
-                                                                                'status': 'Approved',
-                                                                                'power': 'Alluire Marketing Agency',
-                                                                            }
+                                                            all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
+                                                            all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
+                                                            all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
 
-                                                                            html_out = render_template("leave_pdf_template.html", app=app)
-                                                                            
-                                                                            # ✅ Return as bytes instead of saving to file
-                                                                            pdf_bytes = HTML(string=html_out).write_pdf()
-                                                                            return pdf_bytes
+                                                            all_approved_declined_cancelled_pending["dateapplied"] = pd.to_datetime(all_approved_declined_cancelled_pending["dateapplied"], errors='coerce')
 
-                                                                        
+                                                            all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="dateapplied", ascending=False)
 
+                                                            print("hist hist hist")
+                                                            all_approved_declined_cancelled_pending.drop('id', axis=1, inplace=True)
+                                                            all_approved_declined_cancelled_pending["dateapplied"] = all_approved_declined_cancelled_pending["dateapplied"].dt.strftime("%-d %B %Y")
 
-                                                                        def upload_pdf_to_whatsapp(pdf_bytes):
-                                                                            compxxy = company_reg.replace("_"," ").title()
-                                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                                        
-                                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
-                                                                            headers = {
-                                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
-                                                                            }
+                                                            print(all_approved_declined_cancelled_pending)
+                                                        
+                                                            def generate_leave_hist_pdf():
+                                                                app = {
+                                                                    'company_name': company_reg.replace("_", " ").title(),
+                                                                    'employee_name': f"{first_name} {last_name}",
+                                                                    'generated_on': today_date,
+                                                                    'power': 'Alluire Marketing Agency'
+                                                                }
 
-                                                                            files = {
-                                                                                "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                                                                                "type": (None, "application/pdf"),
-                                                                                "messaging_product": (None, "whatsapp")
-                                                                            }
+                                                                table_hist_html = all_approved_declined_cancelled_pending.to_html(index=False, classes='data', border=0, justify='center',escape=False)
 
-                                                                            response = requests.post(url, headers=headers, files=files)
-                                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
-                                                                            response.raise_for_status()
-                                                                            return response.json()["id"]
+                                                                html_out = render_template("leave_applications_history.html", app=app, table_hist_html=table_hist_html)
+                                                                pdf_bytes = HTML(string=html_out).write_pdf()
+                                                                return pdf_bytes
 
-                                                                                                                        
-                                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                                            compxxy = company_reg.replace("_"," ").title()
-                                                                            filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
-                                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-                                                                            headers = {
-                                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                                "Content-Type": "application/json"
-                                                                            }
-                                                                            payload = {
-                                                                                "messaging_product": "whatsapp",
-                                                                                "to": recipient_number,
-                                                                                "type": "document",
-                                                                                "document": {
-                                                                                    "id": media_id,            # Media ID from upload step
-                                                                                    "filename": filename       # Desired file name on recipient's phone
-                                                                                }
-                                                                            }
+                                                            def upload_pdf_to_whatsapp(pdf_bytes):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"{first_name}_{last_name}_{compxxy}_leave_applications_history.pdf"
+                                                            
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                                }
 
-                                                                            response = requests.post(url, headers=headers, json=payload)
-                                                                            response.raise_for_status()
-                                                                            return response.json()
+                                                                files = {
+                                                                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                    "type": (None, "application/pdf"),
+                                                                    "messaging_product": (None, "whatsapp")
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, files=files)
+                                                                print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                response.raise_for_status()
+                                                                return response.json()["id"]
+
+                                                                                                            
+                                                            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                                compxxy = company_reg.replace("_"," ").title()
+                                                                filename=f"{first_name}_{last_name}_{compxxy}_leave_applications_history.pdf"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "document",
+                                                                    "document": {
+                                                                        "id": media_id,            # Media ID from upload step
+                                                                        "filename": filename       # Desired file name on recipient's phone
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
 
 
-                                                                        pdf_path = generate_leave_pdf()
-                                                                        media_id = upload_pdf_to_whatsapp(pdf_path)
-                                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                            pdf_path = generate_leave_hist_pdf()
+                                                            media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                            send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-                                                                        send_whatsapp_message(
-                                                                            sender_id,
-                                                                            "Select an option below to continue 👇",
-                                                                            buttons
-                                                                        )
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name} {last_name} from {companyxx}! You may go ahead and download your leave applications history file attached here 😎.", 
+                                                                buttons
+                                                            )
 
-                                                                    elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
-                                                                        buttons = [
-                                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
-                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                        ]
-                                                                        send_whatsapp_message(
-                                                                            sender_id, 
-                                                                            f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
-                                                                            buttons 
-                                                                        )
+                                                        except Exception as e:
 
-                                                                    elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
+                                                            send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
+                                                    
 
-                                                                        buttons = [
-                                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                            {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
-                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                        ]
-                                                                        send_whatsapp_message(
-                                                                            sender_id, 
-                                                                            f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
-                                                                            buttons 
-                                                                        )
+                                                    elif button_id == "Menu":
 
-                                                                else:
+                                                        companyxx = company_reg.replace("_"," ").title()
+                                                        
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                            {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                        ]
+                                                        companyxx = company_reg.replace("_"," ").title()
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
+                                                            buttons
+                                                        )
+
+                                                    elif button_id == "Track":
+
+                                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                        table_name_apps_approved = f"{company_reg}appsapproved"
+                                                        table_name_apps_declined = f"{company_reg}appsdeclined"
+                                                        table_name_apps_cancelled = f"{company_reg}appscancelled"
+
+
+                                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                        cursor.execute(query)
+                                                        rows = cursor.fetchall()
+
+                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
+
+                                                        if len(df_employeesappspendingcheck) == 0:
+
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
+
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])  
+                                    
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+                                                            df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])
+                                    
+                                                            all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
+                                                            all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
+                                                            all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
+
+                                                            if len(all_approved_declined_cancelled) > 0:
+
+                                                                print(f" hhhhhhhhhhhhhhhhhhhh  {all_approved_declined_cancelled.iat[0,8] }")
+
+                                                                if all_approved_declined_cancelled.iat[0,8] == "Approved":
 
                                                                     buttons = [
-                                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}}
+                                                                        {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Application"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                                     ]
-                                                                    companyxx = company_reg.replace("_"," ").title()
                                                                     send_whatsapp_message(
                                                                         sender_id, 
-                                                                        f"Hello {first_name} {last_name} from {companyxx}!\n\n You have not applied for any leave days yet.", 
-                                                                        buttons
+                                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}✅ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`." 
                                                                     )
 
 
-                                                            elif len(df_employeesappspendingcheck) > 0:
+                                                                    def generate_leave_pdf():
+                                                                        app = {
+                                                                            'company_logo': 44,
+                                                                            'company_name': company_reg.replace("_"," ").title(),
+                                                                            'employee_name': f"{first_name} {last_name}",
+                                                                            'leave_type': all_approved_declined_cancelled.iat[0,2],
+                                                                            'generated_on': today_date,
+                                                                            'date_applied': all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y'),
+                                                                            'approver_name': all_approved_declined_cancelled.iat[0,3].title(),
+                                                                            'reference_number': all_approved_declined_cancelled.iat[0,0],
+                                                                            'approved_date': all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y'),
+                                                                            'new_balance': all_approved_declined_cancelled.iat[0,10],
+                                                                            'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
+                                                                            'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
+                                                                            'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                            'address': address_foc_8, 
+                                                                            'whatsapp': whatsapp_foc_8, 
+                                                                            'email': email_foc_8, 
+                                                                            'status': 'Approved',
+                                                                            'power': 'Alluire Marketing Agency',
+                                                                        }
+
+                                                                        html_out = render_template("leave_pdf_template.html", app=app)
+                                                                        
+                                                                        # ✅ Return as bytes instead of saving to file
+                                                                        pdf_bytes = HTML(string=html_out).write_pdf()
+                                                                        return pdf_bytes
+
+                                                                    
+
+
+                                                                    def upload_pdf_to_whatsapp(pdf_bytes):
+                                                                        compxxy = company_reg.replace("_"," ").title()
+                                                                        filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                                    
+                                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                        headers = {
+                                                                            "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                                        }
+
+                                                                        files = {
+                                                                            "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                            "type": (None, "application/pdf"),
+                                                                            "messaging_product": (None, "whatsapp")
+                                                                        }
+
+                                                                        response = requests.post(url, headers=headers, files=files)
+                                                                        print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                        response.raise_for_status()
+                                                                        return response.json()["id"]
+
+                                                                                                                    
+                                                                    def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                                        compxxy = company_reg.replace("_"," ").title()
+                                                                        filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
+                                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                        headers = {
+                                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                            "Content-Type": "application/json"
+                                                                        }
+                                                                        payload = {
+                                                                            "messaging_product": "whatsapp",
+                                                                            "to": recipient_number,
+                                                                            "type": "document",
+                                                                            "document": {
+                                                                                "id": media_id,            # Media ID from upload step
+                                                                                "filename": filename       # Desired file name on recipient's phone
+                                                                            }
+                                                                        }
+
+                                                                        response = requests.post(url, headers=headers, json=payload)
+                                                                        response.raise_for_status()
+                                                                        return response.json()
+
+
+                                                                    pdf_path = generate_leave_pdf()
+                                                                    media_id = upload_pdf_to_whatsapp(pdf_path)
+                                                                    send_whatsapp_pdf_by_media_id(sender_id, media_id)
+
+                                                                    send_whatsapp_message(
+                                                                        sender_id,
+                                                                        "Select an option below to continue 👇",
+                                                                        buttons
+                                                                    )
+
+                                                                elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
+
+                                                                    buttons = [
+                                                                        {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                    ]
+                                                                    send_whatsapp_message(
+                                                                        sender_id, 
+                                                                        f"Hey {first_name}, your recent `{all_approved_declined_cancelled.iat[0,2]}` Leave Application `[ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}` was {all_approved_declined_cancelled.iat[0,8]}❌ by `{all_approved_declined_cancelled.iat[0,3].title()}` on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}`.",
+                                                                        buttons 
+                                                                    )
+
+                                                                elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
+
+                                                                    buttons = [
+                                                                        {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                        {"type": "reply", "reply": {"id": f"myhist_{id_user}", "title": "Download My History"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                    ]
+                                                                    send_whatsapp_message(
+                                                                        sender_id, 
+                                                                        f"Hey {first_name}, on `{all_approved_declined_cancelled.iat[0,9].strftime('%d %B %Y')}` you Cancelled ⛔ your recent `{all_approved_declined_cancelled.iat[0,2]} Leave Application [ID - {all_approved_declined_cancelled.iat[0,0]}]` that you applied for on `{all_approved_declined_cancelled.iat[0,4].strftime('%d %B %Y')}` for `{all_approved_declined_cancelled.iat[0,7]} days` from `{all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y')}` to `{all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y')}`.",
+                                                                        buttons 
+                                                                    )
+
+                                                            else:
+
                                                                 buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
-                                                                    {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
-                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                    {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}}
                                                                 ]
-                                                                approoooover = df_employeesappspendingcheck.iat[0,2].title()
+                                                                companyxx = company_reg.replace("_"," ").title()
                                                                 send_whatsapp_message(
                                                                     sender_id, 
-                                                                    f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
-                                                                    f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
-                                                                    , 
+                                                                    f"Hello {first_name} {last_name} from {companyxx}!\n\n You have not applied for any leave days yet.", 
                                                                     buttons
                                                                 )
 
-                                                        elif button_id == "Submitapp":
-                                                
-                                                            try:
 
-                                                                table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-                                                                table_name_apps_approved = f"{company_reg}appsapproved"
-                                                                companyxx = company_reg.replace("_", " ").title()
-
-                                                                cursor.execute("""
-                                                                    SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                    WHERE empidwa = %s
-                                                                """, (id_user,))
-                                                        
-                                                                result = cursor.fetchone()
-
-                                                                appid = result[0]
-                                                                id_user = result[1]
-                                                                leavetype = result[2]
-                                                                startdate = result[3]
-                                                                enddate = result[4]
-                                                                table_name = f"{company_reg}main"
-                                                                
-                                                                query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
-                                                                cursor.execute(query)
-                                                                rows = cursor.fetchall()
-
-                                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])    
-
-                                                                if len(df_employeesappspendingcheck) == 0:
-
-                                                                    query = f"""SELECT appid, id, leavestartdate, leaveenddate FROM {table_name_apps_approved} WHERE id = %s AND leavestartdate <= %s AND leaveenddate >= %s"""
-
-                                                                    cursor.execute(query, (id_user, enddate, startdate))
-                                                                    results = cursor.fetchall()
-
-                                                                    # Process results
-                                                                    if results:
-                                                                        print("Overlapping records found:")
-
-                                                                        try:
-
-                                                                            overlap_messages = []
-
-                                                                            for row in results:
-
-                                                                                formatted_date_start = row[2].strftime("%d %B %Y")
-                                                                                formatted_date_end = row[3].strftime("%d %B %Y")
-
-                                                                                overlap_messages.append(f"appID: {row[0]}, Starting Date: {formatted_date_start}, Ending Date: {formatted_date_end}")
-
-                                                                            # Combine into one single string (newline-separated)
-                                                                            overlap_info = "\n".join(overlap_messages)
-
-                                                                            buttons = [
-                                                                                {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
-                                                                                {"type": "reply", "reply": {"id": f"ApplyRevoke", "title": "Revoke Conflictn App"}},
-                                                                                {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
-                                                                            ]
-
-                                                                            send_whatsapp_message(sender_id, f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully!\n\n"
-                                                                                f"One of your previously approved leave applications include days within the period that you are currently applying for.\n\n Leave App; {overlap_info}.\n\n Either restart your application with different dates from these, or apply that this conflicting approved Leave application be Revoked.",
-                                                                                buttons
-                                                                                )
-                                                                        
-                                                                        except Exception as e:
-
-                                                                            send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
-                                                                    
-                                                                    else:
-
-                                                                        print("No Overlapping records found:")
-
-                                                                        try:
-
-                                                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-                                                                            table_name_apps_approved = f"{company_reg}appsapproved"
-
-                                                                            query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
-                                                                            cursor.execute(query)
-                                                                            rows = cursor.fetchall()
-
-                                                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])   
-
-                                                                            print("1212") 
-
-                                                                            if len(df_employeesappspendingcheck) == 0:
-
-                                                                                cursor.execute("""
-                                                                                    SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                                    WHERE empidwa = %s
-                                                                                """, (id_user,))
-                                                                        
-                                                                                result = cursor.fetchone()
-
-                                                                                print("select successful")
-
-                                                                                appid = result[0]
-                                                                                leavetype = result[2]
-                                                                                startdate = result[3]
-                                                                                enddate = result[4]
-                                                                                table_name = f"{company_reg}main"
-
-                                                                                if isinstance(startdate, str):
-                                                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                                if isinstance(enddate, str):
-                                                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                                                business_days = 0
-                                                                                current_date = startdate
-
-                                                                                while current_date <= enddate:
-                                                                                    if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                                        business_days += 1
-                                                                                    current_date += timedelta(days=1)  # Use timedelta directly
-
-                                                                                query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
-                                                                                cursor.execute(query)
-                                                                                rows = cursor.fetchall()
-
-                                                                                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month", "Department"])
-                                                                                print(df_employees)
-                                                                                userdf = df_employees[df_employees['id'] == int(np.int64(id_user))].reset_index()
-                                                                                print("yeaarrrrr")
-                                                                                print(userdf)
-                                                                                firstname = userdf.iat[0,2]
-                                                                                surname = userdf.iat[0,3]
-                                                                                whatsapp = userdf.iat[0,4]
-                                                                                address = userdf.iat[0,6]
-                                                                                email = userdf.iat[0,5]
-                                                                                fullnamedisp = firstname + ' ' + surname
-                                                                                leaveapprovername = userdf.iat[0,8]
-                                                                                leaveapproverid = userdf.iat[0,9]
-                                                                                leaveapproveremail = userdf.iat[0, 10]
-                                                                                leaveapproverwhatsapp = userdf.iat[0,11]
-                                                                                role = userdf.iat[0,7]
-                                                                                leavedaysbalance = userdf.iat[0,12]
-                                                                                department = userdf.iat[0,14] 
-                                                                                print('check')
-
-                                                                                departmentdf = df_employees[df_employees['Department'] == department].reset_index()
-                                                                                numberindepartment = len(departmentdf)
-                                                                                
-                                                                                startdatex = pd.Timestamp(startdate)
-                                                                                enddatex = pd.Timestamp(enddate)
-
-                                                                                leave_dates = pd.date_range(startdatex, enddatex)
-
-                                                                                query = f"""
-                                                                                    SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
-                                                                                        leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
-                                                                                        leavedaysbalancebf, department
-                                                                                    FROM {table_name_apps_approved}
-                                                                                    WHERE department = %s;
-                                                                                """
-                                                                                cursor.execute(query, (department,))
-                                                                                rows = cursor.fetchall()
-
-                                                                                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
-                                                                                df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
-                                                                                df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
-                                
-                                                                                df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
-                                                                                # Create daily impact report
-                                                                                impact_report = []
-
-                                                                                for date in leave_dates:
-
-                                                                                    date = pd.Timestamp(date)
-
-                                                                                    print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
-                                                                                    print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
-
-                                                                                    on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
-                                                                                    remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
-                                                                                    impact_report.append({
-                                                                                        "date": date,  # <=== Keep as datetime, don't convert to string
-                                                                                        "on leave": on_leave + 1,
-                                                                                        "employees remaining": remaining
-                                                                                    })
-
-                                                                                # Convert to DataFrame for display
-                                                                                impact_df = pd.DataFrame(impact_report)
-                                                                                print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
-                                                                                print(impact_df)
-                                                                                print(numberindepartment)
-
-                                                                                impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                                                impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
-
-                                                                                change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
-                                                                                change.iloc[0] = True  # ensure the first row starts a group
-                                                                                impact_df["group"] = change.cumsum()
-
-                                                                                statements = []
-                                                                                for _, group_df in impact_df.groupby("group"):
-                                                                                    start = group_df["date"].iloc[0].strftime("%d %B %Y")
-                                                                                    end = group_df["date"].iloc[-1].strftime("%d %B %Y")
-                                                                                    on_leave = group_df["on leave"].iloc[0]
-                                                                                    remaining = group_df["employees remaining"].iloc[0]
-                                                                                    
-                                                                                    if start == end:
-                                                                                        statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
-                                                                                    else:
-                                                                                        statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
-                                                                                        # Combine all statements into a single variable
-                                                                                final_summary = "\n".join(statements)
-                                                                                # Print output
-                                                                                for s in statements:
-                                                                                    print(s)
-
-                                                                                leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
-
-                                                                                if leavedaysbalancebf >= 0:
-
-
-
-                                                                                    status = "Pending"
-
-                                                                                    insert_query = f"""
-                                                                                    INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                                                                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                                    """
-                                                                                    cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), int(np.int64(leavedaysbalance)), today_date, startdate, enddate, int(np.int64(business_days)), int(np.int64(leavedaysbalancebf)), status))
-                                                                                    connection.commit()
-
-                                                                                    query = f"SELECT appid FROM {table_name_apps_pending_approval};"
-                                                                                    cursor.execute(query)
-                                                                                    rows = cursor.fetchall()
-
-                                                                                    df_employees = pd.DataFrame(rows, columns=["id"])
-                                                                                    leaveappid = df_employees.iat[0,0]
-                                                                                    companyxx = company_reg.replace("_"," ").title()
-                                                                                    approovvver = leaveapprovername.title()
-
-                                                                                    buttons = [
-                                                                                    {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
-                                                                                    ]
-
-                                                                                    send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                                                                        f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                                        f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n", 
-                                                                                        buttons)
-                                                                                    
-                                                                                    if leaveapproverwhatsapp:
-                                        
-                                                                                        buttons = [
-                                                                                            {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                                                                            {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
-                                                                                        ]
-                                                                                        send_whatsapp_message(
-                                                                                            f"263{leaveapproverwhatsapp}", 
-                                                                                            f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                                            f"If you approve this leave application, {final_summary}\n\n"  
-                                                                                            f"Select an option below to either approve or disapprove the application."         
-                                                                                            , 
-                                                                                            buttons
-                                                                                        )
-
-                                                                                else:
-
-
-                                                                                    buttons = [
-                                                                                        {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
-                                                                                        {"type": "reply", "reply": {"id": f"Checkbal", "title": "Check Days Balance"}},
-                                                                                        {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
-                                                                                    ]
-
-                                                                                    send_whatsapp_message(sender_id, f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully!\n\n"
-                                                                                        f"You only have *{leavedaysbalance}* days available for leave but you are applying for *{business_days}*.\n\n You can restart your application and apply for leave such that the days between your leave start date and end date do not exceed your available balance of *{leavedaysbalance}* days.",
-                                                                                        buttons
-                                                                                        )
-
-                                                                            else:
-                                                                                print("leave app submission failed")
-                                                                        except Error as e:
-                                                                            print(f"Ooops, submission failed, {e}")
-
-                                                            except ValueError as e:
-                                                                send_whatsapp_message(
-                                                                    sender_id,
-                                                                    f"{e}, ❌ No, incorrect message format. Please use:\n"
-                                                                    "`end 24 january 2025`\n"
-                                                                    "Example: `end 15 march 2024`"
-                                                                )
-
-                                                        elif button_id == "Checkbal":
-
+                                                        elif len(df_employeesappspendingcheck) > 0:
                                                             buttons = [
-                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                                {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
                                                             ]
-
+                                                            approoooover = df_employeesappspendingcheck.iat[0,2].title()
                                                             send_whatsapp_message(
                                                                 sender_id, 
-                                                                f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
-                                                                "Select an option below to continue 👇",
+                                                                f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
+                                                                f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
+                                                                , 
                                                                 buttons
                                                             )
 
-                                                        elif button_id == "Resubmitapp" :
-                                                            table_name_apps_cancelled = f"{company_reg}appscancelled"
-                                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-
-                                                            query = f"SELECT appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf FROM {table_name_apps_pending_approval} WHERE id = %s;"
-                                                            cursor.execute(query, (id_user,))
-                                                            result = cursor.fetchone()
-                                                            if result:
-                                                                (app_id, employee_number, first_name, surname, leave_type,  leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf) = result
-                                                            
-                                                                try:
-                                                                        status = "Cancelled"
-                                                                        statusdate = today_date
-                                                                    
-                                                                        insert_query = f"""
-                                                                        INSERT INTO {table_name_apps_cancelled} 
-                                                                        (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
-                                                                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                        """
-
-                                                                        cursor.execute(insert_query, (
-                                                                            app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
-                                                                            approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
-                                                                            end_date, leave_days, leavedaysbalancebf, status, statusdate
-                                                                        ))
-                                                                        
-                                                                        connection.commit()
-                                                                        print("Insert successful!")
-
-                                                                except Exception as e:
-                                                                    print("Error inserting data:", e)
-
-                                                                # SQL query to delete or mark the leave as canceled
-                                                                query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
-                                                                cursor.execute(query, (app_id,))
-                                                                connection.commit()                                       
-
-                                                                companyxx = company_reg.replace("_", " ").title()
-                                                                buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                    {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                                ]
-
-                                                                send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
-                                                                    "Select an option below to continue 👇",
-                                                                    buttons
-                                                                )                                          
-                                                            
-                                                            else:
-                                                                print("No record found for the user.")
-
-                                                        elif button_id == "Cancelapp" :
+                                                    elif button_id == "Submitapp":
+                                            
+                                                        try:
 
                                                             table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
-                                                            table_name_apps_cancelled = f"{company_reg}appscancelled"
+                                                            table_name_apps_approved = f"{company_reg}appsapproved"
+                                                            companyxx = company_reg.replace("_", " ").title()
 
-                                                            query = f"SELECT appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf FROM {table_name_apps_pending_approval} WHERE id = %s;"
-                                                            cursor.execute(query, (id_user,))
-                                                            result = cursor.fetchone()
-                                                            if result:
-                                                                (app_id, employee_number, first_name, surname, department, leave_type,  leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf) = result
-                                                            
-                                                                try:
-                                                                        status = "Cancelled"
-                                                                        statusdate = today_date
-                                                                    
-                                                                        insert_query = f"""
-                                                                        INSERT INTO {table_name_apps_cancelled} 
-                                                                        (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
-                                                                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                        """
-
-                                                                        cursor.execute(insert_query, (
-                                                                            app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
-                                                                            approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
-                                                                            end_date, leave_days, leavedaysbalancebf, status, statusdate
-                                                                        ))
-                                                                        
-                                                                        connection.commit()
-                                                                        print("Insert successful!")
-
-                                                                except Exception as e:
-                                                                    print("Error inserting data:", e)
-
-                                                                # SQL query to delete or mark the leave as canceled
-                                                                query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
-                                                                cursor.execute(query, (app_id,))
-                                                                connection.commit()                                       
-
-                                                                companyxx = company_reg.replace("_", " ").title()
-                                                                buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
-                                                                    {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
-                                                                    {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
-                                                                ]
-
-                                                                send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
-                                                                    "Select an option below to continue 👇",
-                                                                    buttons
-                                                                )                                          
-                                                            
-                                                            else:
-                                                                print("No record found for the user.")
-
-                                                else:
-
-                                                    text = message.get("text", {}).get("body", "").lower()
-                                                    print(f"📨 Message from {sender_id}: {text}")
+                                                            cursor.execute("""
+                                                                SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                                WHERE empidwa = %s
+                                                            """, (id_user,))
                                                     
-                                                    print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
-
-                                                    print(role_foc_8)
-
-                                                    if "hello" in text.lower():
-
-                                                        sections = [
-                                                            {
-                                                                "title": "User Options",
-                                                                "rows": [
-                                                                    {"id": "Apply", "title": "Apply for Leave"},
-                                                                    {"id": "Track", "title": "Track My Application"},
-                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                    {"id": "MyInfo", "title": "My Info"},
-                                                                ]
-                                                            }
-                                                        ]
-
-                                                        send_whatsapp_list_message(
-                                                            sender_id, 
-                                                            f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
-                                                        "User Options",
-                                                        sections)
-                                                        
-
-                                                    elif "start" in text.lower():
-                                                        try:
-                                                            # Match: "start 20 july 2025"
-                                                            match = re.match(r"start\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                            if not match:
-                                                                raise ValueError("Invalid format")
-
-                                                            date_part = match.group(1)
-                                                            parsed_date = datetime.strptime(date_part, "%d %B %Y")  # Will raise ValueError if invalid
-
-                                                            # ✅ Now it's safe to update the DB
-                                                            cursor.execute("""
-                                                                UPDATE whatsapptempapplication
-                                                                SET startdate = %s
-                                                                WHERE empidwa = %s
-                                                            """, (date_part, id_user))
-                                                            connection.commit()
-
-                                                            cursor.execute("""
-                                                                SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                                WHERE empidwa = %s
-                                                            """, (id_user,))
                                                             result = cursor.fetchone()
-                                                            leavetypewa = result[1] if result else "your"
-
-                                                            send_whatsapp_message(sender_id,
-                                                                f"✅ Got it! Start date saved.\n\nNow enter your last day on {leavetypewa} leave like this:\n"
-                                                                "`end 28 July 2025`"
-                                                            )
-
-                                                        except ValueError:
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"❌ Invalid start date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                                "`start 24 january 2025`\n\n"
-                                                                "Example: `start 15 march 2024`"
-                                                            )
-
-                                                        except Exception as e:
-                                                            import traceback
-                                                            print("🔴 Unexpected error:", e)
-                                                            traceback.print_exc()
-
-                                                            try:
-                                                                send_whatsapp_message(
-                                                                    sender_id,
-                                                                    "⚠️ Something went wrong while processing your start date. Please try again or contact support."
-                                                                )
-                                                            except Exception as send_err:
-                                                                print("🔴 Failed to send WhatsApp error message:", send_err)
-
-
-                                                    elif "end" in text.lower():
-
-                                                        try:
-                                                            # ✅ Match "end 24 january 2025"
-                                                            match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                            if not match:
-                                                                raise ValueError("Invalid end date format.")
-
-                                                            date_part = match.group(1)
-                                                            parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
-
-                                                            # ✅ Update DB now that it's valid
-                                                            cursor.execute("""
-                                                                UPDATE whatsapptempapplication
-                                                                SET enddate = %s
-                                                                WHERE empidwa = %s
-                                                            """, (date_part, id_user))
-                                                            connection.commit()
-
-                                                            # ✅ Fetch full leave application
-                                                            cursor.execute("""
-                                                                SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                WHERE empidwa = %s
-                                                            """, (id_user,))
-                                                            result = cursor.fetchone()
-
-                                                            if not result:
-                                                                raise Exception("No leave record found.")
 
                                                             appid = result[0]
+                                                            id_user = result[1]
                                                             leavetype = result[2]
                                                             startdate = result[3]
                                                             enddate = result[4]
+                                                            table_name = f"{company_reg}main"
+                                                            
+                                                            query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
 
-                                                            # ✅ Ensure both dates are datetime.date objects
-                                                            if isinstance(startdate, str):
-                                                                startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                            if isinstance(enddate, str):
-                                                                enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                            df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])    
 
-                                                            # ✅ Calculate business days
-                                                            business_days = 0
-                                                            current_date = startdate
-                                                            while current_date <= enddate:
-                                                                if current_date.weekday() < 5:  # Weekday: Mon-Fri
-                                                                    business_days += 1
-                                                                current_date += timedelta(days=1)
+                                                            if len(df_employeesappspendingcheck) == 0:
 
-                                                            # ✅ Ask user to confirm submission
-                                                            buttons = [
-                                                                {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                                {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                            ]
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                                f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                                buttons
-                                                            )
+                                                                query = f"""SELECT appid, id, leavestartdate, leaveenddate FROM {table_name_apps_approved} WHERE id = %s AND leavestartdate <= %s AND leaveenddate >= %s"""
 
-                                                        except ValueError:
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                                "`end 24 january 2025`\n\n"
-                                                                "Example: `end 28 march 2024`"
-                                                            )
+                                                                cursor.execute(query, (id_user, enddate, startdate))
+                                                                results = cursor.fetchall()
 
-                                                        except Exception as e:
-                                                            import traceback
-                                                            print("🔴 ERROR during end date processing:", e)
-                                                            traceback.print_exc()
-                                                            try:
-                                                                send_whatsapp_message(
-                                                                    sender_id,
-                                                                    "⚠️ Something went wrong while processing your end date. Please try again or contact support."
-                                                                )
-                                                            except Exception as send_err:
-                                                                print("🔴 Failed to send error message via WhatsApp:", send_err)
+                                                                # Process results
+                                                                if results:
+                                                                    print("Overlapping records found:")
+
+                                                                    try:
+
+                                                                        overlap_messages = []
+
+                                                                        for row in results:
+
+                                                                            formatted_date_start = row[2].strftime("%d %B %Y")
+                                                                            formatted_date_end = row[3].strftime("%d %B %Y")
+
+                                                                            overlap_messages.append(f"appID: {row[0]}, Starting Date: {formatted_date_start}, Ending Date: {formatted_date_end}")
+
+                                                                        # Combine into one single string (newline-separated)
+                                                                        overlap_info = "\n".join(overlap_messages)
+
+                                                                        buttons = [
+                                                                            {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
+                                                                            {"type": "reply", "reply": {"id": f"ApplyRevoke", "title": "Revoke Conflictn App"}},
+                                                                            {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                                        ]
+
+                                                                        send_whatsapp_message(sender_id, f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully!\n\n"
+                                                                            f"One of your previously approved leave applications include days within the period that you are currently applying for.\n\n Leave App; {overlap_info}.\n\n Either restart your application with different dates from these, or apply that this conflicting approved Leave application be Revoked.",
+                                                                            buttons
+                                                                            )
+                                                                    
+                                                                    except Exception as e:
+
+                                                                        send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
                                                                 
-                                                    else:
+                                                                else:
+
+                                                                    print("No Overlapping records found:")
+
+                                                                    try:
+
+                                                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                                        table_name_apps_approved = f"{company_reg}appsapproved"
+
+                                                                        query = f"SELECT id FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                                        cursor.execute(query)
+                                                                        rows = cursor.fetchall()
+
+                                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id"])   
+
+                                                                        print("1212") 
+
+                                                                        if len(df_employeesappspendingcheck) == 0:
+
+                                                                            cursor.execute("""
+                                                                                SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                                                WHERE empidwa = %s
+                                                                            """, (id_user,))
+                                                                    
+                                                                            result = cursor.fetchone()
+
+                                                                            print("select successful")
+
+                                                                            appid = result[0]
+                                                                            leavetype = result[2]
+                                                                            startdate = result[3]
+                                                                            enddate = result[4]
+                                                                            table_name = f"{company_reg}main"
+
+                                                                            if isinstance(startdate, str):
+                                                                                startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                                            if isinstance(enddate, str):
+                                                                                enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                                            business_days = 0
+                                                                            current_date = startdate
+
+                                                                            while current_date <= enddate:
+                                                                                if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                                                    business_days += 1
+                                                                                current_date += timedelta(days=1)  # Use timedelta directly
+
+                                                                            query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
+                                                                            cursor.execute(query)
+                                                                            rows = cursor.fetchall()
+
+                                                                            df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month", "Department"])
+                                                                            print(df_employees)
+                                                                            userdf = df_employees[df_employees['id'] == int(np.int64(id_user))].reset_index()
+                                                                            print("yeaarrrrr")
+                                                                            print(userdf)
+                                                                            firstname = userdf.iat[0,2]
+                                                                            surname = userdf.iat[0,3]
+                                                                            whatsapp = userdf.iat[0,4]
+                                                                            address = userdf.iat[0,6]
+                                                                            email = userdf.iat[0,5]
+                                                                            fullnamedisp = firstname + ' ' + surname
+                                                                            leaveapprovername = userdf.iat[0,8]
+                                                                            leaveapproverid = userdf.iat[0,9]
+                                                                            leaveapproveremail = userdf.iat[0, 10]
+                                                                            leaveapproverwhatsapp = userdf.iat[0,11]
+                                                                            role = userdf.iat[0,7]
+                                                                            leavedaysbalance = userdf.iat[0,12]
+                                                                            department = userdf.iat[0,14] 
+                                                                            print('check')
+
+                                                                            departmentdf = df_employees[df_employees['Department'] == department].reset_index()
+                                                                            numberindepartment = len(departmentdf)
+                                                                            
+                                                                            startdatex = pd.Timestamp(startdate)
+                                                                            enddatex = pd.Timestamp(enddate)
+
+                                                                            leave_dates = pd.date_range(startdatex, enddatex)
+
+                                                                            query = f"""
+                                                                                SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                                                                    leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                                                                    leavedaysbalancebf, department
+                                                                                FROM {table_name_apps_approved}
+                                                                                WHERE department = %s;
+                                                                            """
+                                                                            cursor.execute(query, (department,))
+                                                                            rows = cursor.fetchall()
+
+                                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+                                                                            df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                                                            df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+                            
+                                                                            df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
+                                                                            # Create daily impact report
+                                                                            impact_report = []
+
+                                                                            for date in leave_dates:
+
+                                                                                date = pd.Timestamp(date)
+
+                                                                                print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                                                                print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
+
+                                                                                on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
+                                                                                remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
+                                                                                impact_report.append({
+                                                                                    "date": date,  # <=== Keep as datetime, don't convert to string
+                                                                                    "on leave": on_leave + 1,
+                                                                                    "employees remaining": remaining
+                                                                                })
+
+                                                                            # Convert to DataFrame for display
+                                                                            impact_df = pd.DataFrame(impact_report)
+                                                                            print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
+                                                                            print(impact_df)
+                                                                            print(numberindepartment)
+
+                                                                            impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
+                                                                            impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+
+                                                                            change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
+                                                                            change.iloc[0] = True  # ensure the first row starts a group
+                                                                            impact_df["group"] = change.cumsum()
+
+                                                                            statements = []
+                                                                            for _, group_df in impact_df.groupby("group"):
+                                                                                start = group_df["date"].iloc[0].strftime("%d %B %Y")
+                                                                                end = group_df["date"].iloc[-1].strftime("%d %B %Y")
+                                                                                on_leave = group_df["on leave"].iloc[0]
+                                                                                remaining = group_df["employees remaining"].iloc[0]
+                                                                                
+                                                                                if start == end:
+                                                                                    statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                                else:
+                                                                                    statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                                    # Combine all statements into a single variable
+                                                                            final_summary = "\n".join(statements)
+                                                                            # Print output
+                                                                            for s in statements:
+                                                                                print(s)
+
+                                                                            leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+
+                                                                            if leavedaysbalancebf >= 0:
+
+
+
+                                                                                status = "Pending"
+
+                                                                                insert_query = f"""
+                                                                                INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                                                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                                                """
+                                                                                cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), int(np.int64(leavedaysbalance)), today_date, startdate, enddate, int(np.int64(business_days)), int(np.int64(leavedaysbalancebf)), status))
+                                                                                connection.commit()
+
+                                                                                query = f"SELECT appid FROM {table_name_apps_pending_approval};"
+                                                                                cursor.execute(query)
+                                                                                rows = cursor.fetchall()
+
+                                                                                df_employees = pd.DataFrame(rows, columns=["id"])
+                                                                                leaveappid = df_employees.iat[0,0]
+                                                                                companyxx = company_reg.replace("_"," ").title()
+                                                                                approovvver = leaveapprovername.title()
+
+                                                                                buttons = [
+                                                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                                                ]
+
+                                                                                send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                                                                    f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                                                                    f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n", 
+                                                                                    buttons)
+                                                                                
+                                                                                if leaveapproverwhatsapp:
+                                    
+                                                                                    buttons = [
+                                                                                        {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                                        {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                                    ]
+                                                                                    send_whatsapp_message(
+                                                                                        f"263{leaveapproverwhatsapp}", 
+                                                                                        f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                                        f"If you approve this leave application, {final_summary}\n\n"  
+                                                                                        f"Select an option below to either approve or disapprove the application."         
+                                                                                        , 
+                                                                                        buttons
+                                                                                    )
+
+                                                                            else:
+
+
+                                                                                buttons = [
+                                                                                    {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
+                                                                                    {"type": "reply", "reply": {"id": f"Checkbal", "title": "Check Days Balance"}},
+                                                                                    {"type": "reply", "reply": {"id": f"Menu", "title": "Menu"}},
+                                                                                ]
+
+                                                                                send_whatsapp_message(sender_id, f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully!\n\n"
+                                                                                    f"You only have *{leavedaysbalance}* days available for leave but you are applying for *{business_days}*.\n\n You can restart your application and apply for leave such that the days between your leave start date and end date do not exceed your available balance of *{leavedaysbalance}* days.",
+                                                                                    buttons
+                                                                                    )
+
+                                                                        else:
+                                                                            print("leave app submission failed")
+                                                                    except Error as e:
+                                                                        print(f"Ooops, submission failed, {e}")
+
+                                                        except ValueError as e:
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"{e}, ❌ No, incorrect message format. Please use:\n"
+                                                                "`end 24 january 2025`\n"
+                                                                "Example: `end 15 march 2024`"
+                                                            )
+
+                                                    elif button_id == "Checkbal":
+
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                        {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Menu"}},
+                                                        ]
+
                                                         send_whatsapp_message(
                                                             sender_id, 
-                                                            "Alluire LMS Bot Here 😎. Say 'hello' to start!"
+                                                            f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
+                                                            "Select an option below to continue 👇",
+                                                            buttons
                                                         )
 
-                                            except Exception as e:
-                                                print(e)
+                                                    elif button_id == "Resubmitapp" :
+                                                        table_name_apps_cancelled = f"{company_reg}appscancelled"
+                                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+
+                                                        query = f"SELECT appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                        cursor.execute(query, (id_user,))
+                                                        result = cursor.fetchone()
+                                                        if result:
+                                                            (app_id, employee_number, first_name, surname, leave_type,  leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf) = result
+                                                        
+                                                            try:
+                                                                    status = "Cancelled"
+                                                                    statusdate = today_date
+                                                                
+                                                                    insert_query = f"""
+                                                                    INSERT INTO {table_name_apps_cancelled} 
+                                                                    (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
+                                                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                                    """
+
+                                                                    cursor.execute(insert_query, (
+                                                                        app_id, employee_number, first_name, surname, leave_type, leave_specify, approver_name, 
+                                                                        approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                                                                        end_date, leave_days, leavedaysbalancebf, status, statusdate
+                                                                    ))
+                                                                    
+                                                                    connection.commit()
+                                                                    print("Insert successful!")
+
+                                                            except Exception as e:
+                                                                print("Error inserting data:", e)
+
+                                                            # SQL query to delete or mark the leave as canceled
+                                                            query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
+                                                            cursor.execute(query, (app_id,))
+                                                            connection.commit()                                       
+
+                                                            companyxx = company_reg.replace("_", " ").title()
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+
+                                                            send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )                                          
+                                                        
+                                                        else:
+                                                            print("No record found for the user.")
+
+                                                    elif button_id == "Cancelapp" :
+
+                                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                        table_name_apps_cancelled = f"{company_reg}appscancelled"
+
+                                                        query = f"SELECT appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail , leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                        cursor.execute(query, (id_user,))
+                                                        result = cursor.fetchone()
+                                                        if result:
+                                                            (app_id, employee_number, first_name, surname, department, leave_type,  leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf) = result
+                                                        
+                                                            try:
+                                                                    status = "Cancelled"
+                                                                    statusdate = today_date
+                                                                
+                                                                    insert_query = f"""
+                                                                    INSERT INTO {table_name_apps_cancelled} 
+                                                                    (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
+                                                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                                    """
+
+                                                                    cursor.execute(insert_query, (
+                                                                        app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
+                                                                        approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, 
+                                                                        end_date, leave_days, leavedaysbalancebf, status, statusdate
+                                                                    ))
+                                                                    
+                                                                    connection.commit()
+                                                                    print("Insert successful!")
+
+                                                            except Exception as e:
+                                                                print("Error inserting data:", e)
+
+                                                            # SQL query to delete or mark the leave as canceled
+                                                            query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
+                                                            cursor.execute(query, (app_id,))
+                                                            connection.commit()                                       
+
+                                                            companyxx = company_reg.replace("_", " ").title()
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
+                                                            ]
+
+                                                            send_whatsapp_message(sender_id, f"Hey {first_name} from {companyxx}! \n\n Your `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` has been Cancelled successfully✅!\n\n"
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )                                          
+                                                        
+                                                        else:
+                                                            print("No record found for the user.")
+
+                                            else:
+
+                                                text = message.get("text", {}).get("body", "").lower()
+                                                print(f"📨 Message from {sender_id}: {text}")
+                                                
+                                                print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+
+                                                print(role_foc_8)
+
+                                                if "hello" in text.lower():
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                        {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                        {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}}
+                                                    ]
+                                                    companyxx = company_reg.replace("_"," ").title()
+
+                                                    send_whatsapp_message(
+                                                        sender_id, 
+                                                        f"Hello {first_name} {last_name} from {companyxx}!\n\n Alluire LMS Bot Here 😎. How can I assist you?", 
+                                                        buttons
+                                                    )
+                                                    
+
+                                                elif "start" in text.lower():
+                                                    try:
+                                                        # Match: "start 20 july 2025"
+                                                        match = re.match(r"start\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
+                                                        if not match:
+                                                            raise ValueError("Invalid format")
+
+                                                        date_part = match.group(1)
+                                                        parsed_date = datetime.strptime(date_part, "%d %B %Y")  # Will raise ValueError if invalid
+
+                                                        # ✅ Now it's safe to update the DB
+                                                        cursor.execute("""
+                                                            UPDATE whatsapptempapplication
+                                                            SET startdate = %s
+                                                            WHERE empidwa = %s
+                                                        """, (date_part, id_user))
+                                                        connection.commit()
+
+                                                        cursor.execute("""
+                                                            SELECT empidwa, leavetypewa FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (id_user,))
+                                                        result = cursor.fetchone()
+                                                        leavetypewa = result[1] if result else "your"
+
+                                                        send_whatsapp_message(sender_id,
+                                                            f"✅ Got it! Start date saved.\n\nNow enter your last day on {leavetypewa} leave like this:\n"
+                                                            "`end 28 July 2025`"
+                                                        )
+
+                                                    except ValueError:
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"❌ Invalid start date message format, {first_name}. Please use the date format givem below 👇:\n"
+                                                            "`start 24 january 2025`\n\n"
+                                                            "Example: `start 15 march 2024`"
+                                                        )
+
+                                                    except Exception as e:
+                                                        import traceback
+                                                        print("🔴 Unexpected error:", e)
+                                                        traceback.print_exc()
+
+                                                        try:
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "⚠️ Something went wrong while processing your start date. Please try again or contact support."
+                                                            )
+                                                        except Exception as send_err:
+                                                            print("🔴 Failed to send WhatsApp error message:", send_err)
+
+
+                                                elif "end" in text.lower():
+
+                                                    try:
+                                                        # ✅ Match "end 24 january 2025"
+                                                        match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
+                                                        if not match:
+                                                            raise ValueError("Invalid end date format.")
+
+                                                        date_part = match.group(1)
+                                                        parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
+
+                                                        # ✅ Update DB now that it's valid
+                                                        cursor.execute("""
+                                                            UPDATE whatsapptempapplication
+                                                            SET enddate = %s
+                                                            WHERE empidwa = %s
+                                                        """, (date_part, id_user))
+                                                        connection.commit()
+
+                                                        # ✅ Fetch full leave application
+                                                        cursor.execute("""
+                                                            SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (id_user,))
+                                                        result = cursor.fetchone()
+
+                                                        if not result:
+                                                            raise Exception("No leave record found.")
+
+                                                        appid = result[0]
+                                                        leavetype = result[2]
+                                                        startdate = result[3]
+                                                        enddate = result[4]
+
+                                                        # ✅ Ensure both dates are datetime.date objects
+                                                        if isinstance(startdate, str):
+                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                        if isinstance(enddate, str):
+                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                        # ✅ Calculate business days
+                                                        business_days = 0
+                                                        current_date = startdate
+                                                        while current_date <= enddate:
+                                                            if current_date.weekday() < 5:  # Weekday: Mon-Fri
+                                                                business_days += 1
+                                                            current_date += timedelta(days=1)
+
+                                                        # ✅ Ask user to confirm submission
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                            buttons
+                                                        )
+
+                                                    except ValueError:
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
+                                                            "`end 24 january 2025`\n\n"
+                                                            "Example: `end 28 march 2024`"
+                                                        )
+
+                                                    except Exception as e:
+                                                        import traceback
+                                                        print("🔴 ERROR during end date processing:", e)
+                                                        traceback.print_exc()
+                                                        try:
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "⚠️ Something went wrong while processing your end date. Please try again or contact support."
+                                                            )
+                                                        except Exception as send_err:
+                                                            print("🔴 Failed to send error message via WhatsApp:", send_err)
+                                                            
+                                                else:
+                                                    send_whatsapp_message(
+                                                        sender_id, 
+                                                        "Alluire LMS Bot Here 😎. Say 'hello' to start!"
+                                                    )
 
 
                                         elif len(df_employeesempapp) > 0:
@@ -3557,8 +3295,7 @@ def webhook():
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                {"id": "MyInfo", "title": "My Info"},
+                                                                {"id": "Pending", "title": "Apps Pending My Approval"}
                                                             ]
                                                         }
                                                     ]
