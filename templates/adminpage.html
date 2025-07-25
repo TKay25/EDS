@@ -2356,6 +2356,8 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
         `Editing <strong>${firstname} ${surname}</strong> — ID: <strong>${id}</strong>`
     );
 
+    $('#editinfocompModal').modal('show');
+
 });
 
 
@@ -4207,7 +4209,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     })
 
+    document.getElementById('formaddemployees').addEventListener('click', function() {
+        $('#manualaddemployeeModal').modal('show');
 
+
+    })
 
     
 
