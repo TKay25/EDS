@@ -7124,8 +7124,8 @@ def webhook():
 
             return jsonify({"status": "received"}), 200
             
-        except:
-            print("error")
+        except Exception as e:
+            print(f"error; {e}")
 
 
 def delete_all_tables():
