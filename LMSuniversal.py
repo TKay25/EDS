@@ -6652,7 +6652,7 @@ def webhook():
 
                                                     continue
 
-                                                elif selected_option == "Book":
+                                                elif selected_option == "Book" or button_id == "Book":
                                                     
                                                     table_name = f"{company_reg}main"
                                                     appsapproved = f"{company_reg}appsapproved"
