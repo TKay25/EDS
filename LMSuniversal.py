@@ -4012,7 +4012,7 @@ def webhook():
                                                         ]
                                                         send_whatsapp_message(
                                                             sender_id,
-                                                            f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in (*Kindly use Microsoft Excel, NOT Google Sheets*) and upload it when ready.",
+                                                            f"Hey {first_name}, select an option below to proceed.",
                                                             buttons
                                                         )
 
