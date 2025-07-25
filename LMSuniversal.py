@@ -4705,7 +4705,7 @@ def webhook():
 
                                                         send_whatsapp_list_message(
                                                             sender_id, 
-                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave days yet.", 
+                                                            f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n Select an Employee Management option to continue.", 
                                                             "Administrator Options",
                                                             sections
                                                         )
@@ -5198,7 +5198,7 @@ def webhook():
 
                                                     send_whatsapp_list_message(
                                                         sender_id, 
-                                                        f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n You have not applied for any leave days yet.", 
+                                                        f"Hello {first_name} {last_name}, LMS Leave Applications Approver from {companyxx}!\n\n Select an Employee Management option to continue.", 
                                                         "Administrator Options",
                                                         sections
                                                     )
