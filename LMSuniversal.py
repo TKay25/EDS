@@ -7256,7 +7256,7 @@ def run1(table_name, empid):
     employee_personal_details = df_employees[["id","firstname", "surname", "whatsapp","Email"]]
 
     employee_personal_details['Action'] = employee_personal_details['id'].apply(
-        lambda x: f'''<div style="display: flex; gap: 10px;font-size: 12px;"> <button class="btn btn-primary3 edit-emp-details-btn" data-bs-toggle="modal" data-bs-target="#editinfoModal" data-name="{x}"  data-ID="{x}">Edit Information</button> </div>'''
+        lambda x: f'''<div style="display: flex; gap: 10px;font-size: 12px;"> <button class="btn btn-primary3 edit-emp-details-comp-btn" data-bs-toggle="modal" data-bs-target="#editinfocompModal" data-name="{x}"  data-ID="{x}">Edit Information</button> </div>'''
     )
 
     employee_personal_details.columns = ["ID","FIRST NAME","SURNAME","WHATSAPP","EMAIL","ACTION"]
