@@ -4003,6 +4003,8 @@ def webhook():
                                                     
                                                     elif selected_option == "Analyticscomp":
 
+                                                        companyxx = company_reg.replace("_"," ").title()
+
                                                         buttons = [
                                                             {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
                                                             {"type": "reply", "reply": {"id": "Summarycomp", "title": "Get Essential Summary"}},
@@ -5559,6 +5561,8 @@ def webhook():
                                                         send_whatsapp_message(f"+263710910052", f"Oops, {first_name} from {companyxx}! \n\n Your Leave Application` has NOT been submitted successfully! Error; {e}")                      
                                                     
                                                 elif selected_option == "Analyticscomp":
+                                                
+                                                    companyxx = company_reg.replace("_"," ").title()
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
