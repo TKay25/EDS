@@ -2356,10 +2356,13 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
         `Editing <strong>${firstname} ${surname}</strong> — ID: <strong>${id}</strong>`
     );
 
+    $('#editempdetailsModal').attr('aria-hidden', 'true').attr('inert', '');
+
     $('#editinfocompModal').modal({
-    backdrop: false,
-    focus: true,
-    show: true
+        backdrop: true,
+        keyboard: false,
+        focus: true,
+        show: true
     });
 });
 
