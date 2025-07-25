@@ -39,6 +39,14 @@
             transition: width 0.3s;
         }
 
+        #editinfocompModal {
+            z-index: 1061 !important;
+        }
+
+        .modal-backdrop.show:nth-of-type(2) {
+            z-index: 1060 !important;
+        }
+
         .sidebar:hover {
             width: 270px;
         }
@@ -479,6 +487,11 @@
             margin-right: 15px;
             color: #003366;
         }
+
+        .uppercase-text {
+        text-transform: uppercase;
+        }
+
         .form-select {
             padding: 5px 10px;
             font-size: 0.9rem;
@@ -1166,7 +1179,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h6 class="modal-title" id="editinfocompModalLabel">
-                    <i class="bi bi-file-earmark-medical-fill"></i> EMPLOYEE PERSONAL DETAILS EDITOR — <span id="emp-name-title"></span>
+                    <i class="bi bi-file-earmark-medical-fill"></i> PERSONAL DETAILS EDITOR — <span id="emp-name-title" class="uppercase-text"></span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
