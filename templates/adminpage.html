@@ -1172,6 +1172,7 @@
             </div>
 
             <div class="modal-body">
+                <h5 id="content-edit-emp_details-comp"></h5>
 
                 <form id="employeeDetailsEditFormcomp">
                     <div class="mb-3">
@@ -2338,21 +2339,22 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
     const email = $(this).data('email');
     const address = $(this).data('address');
 
-    // Display the ID somewhere (optional)
+    // Show ID if needed
     $('#emp-id').text('ID: ' + id);
 
-    // Populate modal input fields
-    $('#firstname-editinfo-4-comp').val(firstname);
-    $('#surname-editinfo-4-comp').val(surname);
-    $('#whatsapp-editinfo-4-comp').val(whatsapp);
-    $('#email-editinfo-4-comp').val(email);
-    $('#address-editinfo-4-comp').val(address);
+    // Use placeholder instead of value
+    $('#firstname-editinfo-4-comp').val('').attr('placeholder', firstname);
+    $('#surname-editinfo-4-comp').val('').attr('placeholder', surname);
+    $('#whatsapp-editinfo-4-comp').val('').attr('placeholder', whatsapp);
+    $('#email-editinfo-4-comp').val('').attr('placeholder', email);
+    $('#address-editinfo-4-comp').val('').attr('placeholder', address);
 
-    // Optional: dynamically update the modal header/subtitle
-    $('#content-edit-priv').html(
+    // Optional header or subtitle
+    $('#content-edit-emp_details-comp').html(
         `Editing <strong>${firstname} ${surname}</strong> — ID: <strong>${id}</strong>`
     );
 });
+
 
 
 $(document).on('click', '.edit-priv-btn', function() {
