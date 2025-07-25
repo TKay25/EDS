@@ -1158,54 +1158,57 @@
     </div>
 </div>
 
+
+
+
 <div class="modal fade" id="editinfocompModal" tabindex="-1" role="dialog" aria-labelledby="editinfocompModalLabel">
-    <div class="modal-dialog" role="document"  style="max-width: 35%;">
+    <div class="modal-dialog" role="document" style="max-width: 35%;">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editinfocompModalLabel"><i class="bi bi-file-earmark-medical-fill"></i>    EMPLOYEE PERSONAL DETAILS EDITOR</h5>
+                <h5 class="modal-title" id="editinfocompModalLabel">
+                    <i class="bi bi-file-earmark-medical-fill"></i> EMPLOYEE PERSONAL DETAILS EDITOR
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <div class="modal-body">
+
                 <form id="employeeDetailsEditFormcomp">
-
                     <div class="mb-3">
-                        <label for="firstnamecompx" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="firstname-editinfo-4-comp"
-                               placeholder="{{firstname}}">
+                        <label for="firstname-editinfo-4-comp" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="firstname-editinfo-4-comp" placeholder="Enter first name">
                     </div>
 
                     <div class="mb-3">
-                        <label for="Surnamecompx" class="form-label">Surname</label>
-                        <input type="text" class="form-control" id="surname-editinfo-4-comp"
-                               placeholder="{{surname}}">
+                        <label for="surname-editinfo-4-comp" class="form-label">Surname</label>
+                        <input type="text" class="form-control" id="surname-editinfo-4-comp" placeholder="Enter surname">
                     </div>
 
                     <div class="mb-3">
-                        <label for="whatsappNumbercompx" class="form-label">WhatsApp Number</label>
-                        <input type="number" class="form-control" id="whatsapp-editinfo-4-comp"
-                               placeholder="{{whatsapp}}">
+                        <label for="whatsapp-editinfo-4-comp" class="form-label">WhatsApp Number</label>
+                        <input type="text" class="form-control" id="whatsapp-editinfo-4-comp" placeholder="Enter WhatsApp number">
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label for="emailAddresscompx" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email-editinfo-4-comp" 
-                               placeholder="{{email}}">
+                        <label for="email-editinfo-4-comp" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email-editinfo-4-comp" placeholder="Enter email address">
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label for="residentialAddresscompx" class="form-label">Residential Address</label>
-                        <textarea class="form-control" id="address-editinfo-4-comp" 
-                                  rows="3" placeholder="{{address}}"></textarea>
+                        <label for="address-editinfo-4-comp" class="form-label">Residential Address</label>
+                        <textarea class="form-control" id="address-editinfo-4-comp" rows="3" placeholder="Enter address"></textarea>
                     </div>
                 </form>
             </div>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="savenewinfocomp" style="width: max-content;">Save Changes</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="savenewinfocomp">Save Changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
 </div>
+
 
 
 
@@ -2318,11 +2321,39 @@ $(document).ready(function() {
 
 
 let currentIdeditrole = null;
+let currentIdeditdetails = null;
 let currentIdeditdepartment = null;
 let currentIdchangeapprover = null;
 let currentIdeditbalance = null;
 
 let currentFirstName = null; 
+
+
+
+$(document).on('click', '.edit-emp-details-comp-btn', function () {
+    const id = $(this).data('id');
+    const firstname = $(this).data('firstname');
+    const surname = $(this).data('surname');
+    const whatsapp = $(this).data('whatsapp');
+    const email = $(this).data('email');
+    const address = $(this).data('address');
+
+    // Display the ID somewhere (optional)
+    $('#emp-id').text('ID: ' + id);
+
+    // Populate modal input fields
+    $('#firstname-editinfo-4-comp').val(firstname);
+    $('#surname-editinfo-4-comp').val(surname);
+    $('#whatsapp-editinfo-4-comp').val(whatsapp);
+    $('#email-editinfo-4-comp').val(email);
+    $('#address-editinfo-4-comp').val(address);
+
+    // Optional: dynamically update the modal header/subtitle
+    $('#content-edit-priv').html(
+        `Editing <strong>${firstname} ${surname}</strong> — ID: <strong>${id}</strong>`
+    );
+});
+
 
 $(document).on('click', '.edit-priv-btn', function() {
     currentIdeditrole = $(this).data('id'); 

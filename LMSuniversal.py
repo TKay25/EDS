@@ -7253,13 +7253,28 @@ def run1(table_name, empid):
 
     df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month","Department"])
     print(df_employees)
-    employee_personal_details = df_employees[["id","firstname", "surname", "whatsapp","Email"]]
+    employee_personal_details = df_employees[["id","firstname", "surname", "whatsapp","Email","Address"]]
 
-    employee_personal_details['Action'] = employee_personal_details['id'].apply(
-        lambda x: f'''<div style="display: flex; gap: 10px;font-size: 12px;"> <button class="btn btn-primary3 edit-emp-details-comp-btn" data-bs-toggle="modal" data-bs-target="#editinfocompModal" data-name="{x}"  data-ID="{x}">Edit Information</button> </div>'''
+    employee_personal_details['Action'] = employee_personal_details.apply(
+        lambda row: f'''
+            <div style="display: flex; gap: 10px;font-size: 12px;">
+                <button class="btn btn-primary3 edit-emp-details-comp-btn" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#editinfocompModal"
+                        data-id="{row['id']}" 
+                        data-firstname="{row['firstname']}" 
+                        data-surname="{row['surname']}" 
+                        data-whatsapp="{row['whatsapp']}" 
+                        data-email="{row['Email']}" 
+                        data-address="{row['Address']}">
+                    Edit Information
+                </button>
+            </div>
+        ''',
+        axis=1
     )
 
-    employee_personal_details.columns = ["ID","FIRST NAME","SURNAME","WHATSAPP","EMAIL","ACTION"]
+    employee_personal_details.columns = ["ID","FIRST NAME","SURNAME","WHATSAPP","EMAIL","ADDRESS","ACTION"]
     employee_personal_details_html = employee_personal_details.to_html(classes="table table-bordered table-theme", table_id="employeespersonalTable", index=False,  escape=False,)
 
 
