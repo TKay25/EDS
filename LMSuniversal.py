@@ -7256,22 +7256,7 @@ def run1(table_name, empid):
     employee_personal_details = df_employees[["id","firstname", "surname", "whatsapp","Email","Address"]]
 
     employee_personal_details['Action'] = employee_personal_details.apply(
-        lambda row: f'''
-            <div style="display: flex; gap: 10px;font-size: 12px;">
-                <button class="btn btn-primary3 edit-emp-details-comp-btn" 
-                        data-bs-toggle="modal" 
-                        data-bs-target="#editinfocompModal"
-                        data-id="{row['id']}" 
-                        data-firstname="{row['firstname']}" 
-                        data-surname="{row['surname']}" 
-                        data-whatsapp="{row['whatsapp']}" 
-                        data-email="{row['Email']}" 
-                        data-address="{row['Address']}">
-                    Edit Information
-                </button>
-            </div>
-        ''',
-        axis=1
+        lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn" data-bs-toggle="modal" data-bs-target="#editinfocompModal" data-id="{row['id']}" data-firstname="{row['firstname']}" data-surname="{row['surname']}" data-whatsapp="{row['whatsapp']}" data-email="{row['Email']}" data-address="{row['Address']}">Edit Information</button></div>''', axis=1
     )
 
     employee_personal_details.columns = ["ID","FIRST NAME","SURNAME","WHATSAPP","EMAIL","ADDRESS","ACTION"]
