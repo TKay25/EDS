@@ -3226,7 +3226,7 @@ def webhook():
 
                                                         buttonsapproval = [
                                                             {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Approval"}},
-                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Apps Pending My Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                         ]
 
@@ -3250,7 +3250,7 @@ def webhook():
                                                             send_whatsapp_pdf_by_media_id(f"263{whatsappemp}", media_id)
                                                             send_whatsapp_message(
                                                                 f"263{whatsappemp}",
-                                                                "Select an option below to continue 👇, or Type `Hello` to view all Approver Options",
+                                                                "Select an option below to continue 👇, or Type `Hello` to view all your User Options",
                                                                 buttons
                                                             )
 
@@ -6203,7 +6203,7 @@ def webhook():
 
                                                             buttonsapproval = [
                                                                 {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Approval"}},
-                                                                {"type": "reply", "reply": {"id": "Pending", "title": "Apps Pending My Approval"}},
+                                                                {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                             ]
 
