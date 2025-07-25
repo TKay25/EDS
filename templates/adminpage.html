@@ -1172,8 +1172,6 @@
 </div>
 
 
-
-
 <div class="modal fade" id="editinfocompModal" tabindex="-1" role="dialog" aria-labelledby="editinfocompModalLabel">
     <div class="modal-dialog" role="document" style="max-width: 35%;">
         <div class="modal-content">
@@ -1183,15 +1181,7 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div id="custom-overlay" style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 9999;
-            "></div>
+
             <div class="modal-body">
                 <h5 id="content-edit-emp_details-comp"></h5>
 
@@ -1749,7 +1739,7 @@
   </div>
 
 
-  <div class="dropdown-overlay"></div>
+  <div class="dropdown-overlay" id="ovovo"></div>
 
   <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" >
     <div class="modal-dialog" role="document">
@@ -2364,7 +2354,6 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
     $('#emp-id').text('ID: ' + id);
     $('#emp-name-title').text(`${firstname} ${surname}`);
 
-
     // Use placeholder instead of value
     $('#firstname-editinfo-4-comp').val('').attr('placeholder', firstname);
     $('#surname-editinfo-4-comp').val('').attr('placeholder', surname);
@@ -2378,6 +2367,8 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
     );
 
     $('#editinfocompModal').modal('show');
+    $('#ovovo').show();
+
 
 });
 
