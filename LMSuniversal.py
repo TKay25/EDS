@@ -7253,6 +7253,23 @@ def run1(table_name, empid):
 
     df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month","Department"])
     print(df_employees)
+    employee_personal_details = df_employees[["id","firstname", "surname", "whatsapp","Email"]]
+
+    employee_personal_details['Action'] = employee_personal_details['id'].apply(
+        lambda x: f'''<div style="display: flex; gap: 10px;font-size: 12px;"> <button class="btn btn-primary3 edit-name-btn" data-bs-toggle="modal" data-bs-target="#editModalempnamex" data-name="{x}"  data-ID="{x}">Edit Name</button> <button class="btn btn-primary3 edit-whatsapp-btn" data-bs-toggle="modal" data-bs-target="#editModalwhatsapp" data-name="{x}"  data-ID="{x}">Change WhatsApp</button>  <button class="btn btn-primary3 change-emailadd-btn" data-bs-toggle="modal" data-bs-target="#editModalemail" data-name="{x}" data-ID="{x}">Change Email</button> </div>'''
+    )
+
+    employee_personal_details.columns = ["ID","FIRST NAME","SURNAME","WHATSAPP","EMAIL","ACTION"]
+    employee_personal_details_html = employee_personal_details.to_html(classes="table table-bordered table-theme", table_id="employeespersonalTable", index=False,  escape=False,)
+
+
+
+
+
+
+
+
+
     total_days_available = df_employees["Leave Days Balance"].sum()
 
     total_employees = len(df_employees)
@@ -7614,6 +7631,7 @@ def run1(table_name, empid):
         "whatsapp": whatsapp,
         "address": address,
         "table_employees_html": table_employees_html,
+        "employee_personal_details_html": employee_personal_details_html,
         "today_date": today_date,
         "leaveapprovername": leaveapprovername,
         "leaveapproverid": leaveapproverid,
