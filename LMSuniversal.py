@@ -4007,7 +4007,7 @@ def webhook():
 
                                                         buttons = [
                                                             {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
-                                                            {"type": "reply", "reply": {"id": "Summarycomp", "title": "Get Essential Summary"}},
+                                                            {"type": "reply", "reply": {"id": "Summarycomp", "title": "Get Insights"}},
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                         ]
                                                         send_whatsapp_message(
@@ -5566,12 +5566,12 @@ def webhook():
 
                                                     buttons = [
                                                         {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
-                                                        {"type": "reply", "reply": {"id": "Summarycomp", "title": "Get Essential Summary"}},
+                                                        {"type": "reply", "reply": {"id": "Summarycomp", "title": "Get Insights"}},
                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                     ]
                                                     send_whatsapp_message(
                                                         sender_id,
-                                                        f"Your *Employee Registration Template* for *{companyxx}* is attached 📎.\n\nYou may fill it in (*Kindly use Microsoft Excel, NOT Google Sheets*) and upload it when ready.",
+                                                        f"Hey {first_name}, select an option below to proceed.",
                                                         buttons
                                                     )
 
