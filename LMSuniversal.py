@@ -1,4 +1,3 @@
-from io import BytesIO
 import uuid
 import os
 import numpy as np
@@ -4910,7 +4909,7 @@ def webhook():
                                                             response.raise_for_status()
                                                             return response.json()
 
-                                                        output = BytesIO()
+                                                        output = io.BytesIO()
                                                         with pd.ExcelWriter(output, engine='openpyxl') as writer:
                                                             df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
                                                             df_apps.to_excel(writer, index=False, sheet_name=f'All Approved')
@@ -5146,9 +5145,7 @@ def webhook():
                                                         try:
                                                             file_bytes = download_whatsapp_media(file_id)
 
-                                                            # Use BytesIO to read Excel from memory
-                                                            from io import BytesIO
-                                                            excel_file = BytesIO(file_bytes)
+                                                            excel_file = io.BytesIO(file_bytes)
 
                                                             df = pd.read_excel(excel_file)
 
@@ -6760,7 +6757,7 @@ def webhook():
                                                         response.raise_for_status()
                                                         return response.json()
 
-                                                    output = BytesIO()
+                                                    output = io.BytesIO()
                                                     with pd.ExcelWriter(output, engine='openpyxl') as writer:
                                                         df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
                                                         df_apps.to_excel(writer, index=False, sheet_name=f'All Approved')
@@ -7095,8 +7092,7 @@ def webhook():
                                                         file_bytes = download_whatsapp_media(file_id)
 
                                                         # Use BytesIO to read Excel from memory
-                                                        from io import BytesIO
-                                                        excel_file = BytesIO(file_bytes)
+                                                        excel_file = io.BytesIO(file_bytes)
 
                                                         df = pd.read_excel(excel_file)
 
@@ -10163,7 +10159,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             print(df_employees)
 
             # Create an in-memory Excel file
-            output = BytesIO()
+            output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
 
@@ -10246,7 +10242,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             </html>
             """
 
-            output = BytesIO()
+            output = io.BytesIO()
             pisa_status = pisa.CreatePDF(html_content, dest=output)
 
             if pisa_status.err:
