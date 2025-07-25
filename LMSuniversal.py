@@ -6826,7 +6826,9 @@ def webhook():
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "myhist", "title": "My Applications History"},
                                                                     {"id": "Myinfo", "title": "My Info"},
-                                                                    {"id": "Empmgt", "title": "Employee Management"}
+                                                                    {"id": "Empmgt", "title": "Employee Management"},
+                                                                    {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                    {"id": "Company", "title": "Company Profile"}
                                                                 ]
                                                             }
                                                         ]
