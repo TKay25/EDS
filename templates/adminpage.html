@@ -1195,9 +1195,11 @@
             </div>
 
             <div class="modal-body">
-                <h5 id="content-edit-emp_details-comp"></h5>
 
                 <form id="employeeDetailsEditFormcomp">
+
+                    <input type="hidden" id="emp-id-hidden-comp" name="employee_number_admin_edit">
+
                     <div class="mb-3">
                         <label for="firstname-editinfo-4-comp" class="form-label">First Name</label>
                         <input type="text" class="form-control" id="firstname-editinfo-4-comp" placeholder="Enter first name">
@@ -2371,6 +2373,8 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
     $('#email-editinfo-4-comp').val('').attr('placeholder', email);
     $('#address-editinfo-4-comp').val('').attr('placeholder', address);
 
+    $('#emp-id-hidden-comp').val(id);
+
     $('#editinfocompModal').modal('show');
 
 
@@ -2805,6 +2809,70 @@ $('#saveaddemployee').on('click', function(e) {
         }
     });
 });
+
+
+
+
+
+
+
+
+document.getElementById('savenewinfocomp').addEventListener('click', function() {
+    const firstnameInput = document.getElementById('firstname-editinfo-4-comp');
+    const surnameInput = document.getElementById('surname-editinfo-4-comp');
+    const whatsappInput = document.getElementById('whatsapp-editinfo-4-comp');
+    const emailInput = document.getElementById('email-editinfo-4-comp');
+    const addressInput = document.getElementById('address-editinfo-4-comp');
+    const idInput = document.getElementById('emp-id-hidden-comp'); // 👈
+
+    // If field is empty, use placeholder value
+    const formData = {
+        id: idInput.value, 
+        firtsname: firstnameInput.value.trim() || firstnameInput.placeholder,        
+        surname: surnameInput.value.trim() || surnameInput.placeholder,
+        whatsapp: whatsappInput.value.trim() || whatsappInput.placeholder,
+        email: emailInput.value.trim() || emailInput.placeholder,
+        address: addressInput.value.trim() || addressInput.placeholder
+    };
+
+    // Show loading overlay
+    $('#edsLoader').show();
+
+    // Send data using jQuery AJAX
+    $.ajax({
+        url: '/update_employee_details_admin_comp',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            // Hide modals and loading overlay
+            $('#editinfocompModal').modal('hide');
+            $('#edsLoader').hide();
+            
+            // Show success message with slight delay
+            setTimeout(function() {
+                alert('Employee details updated successfully');
+                location.reload();
+            }, 100);
+        },
+        error: function(xhr, status, error) {
+            // Hide loading overlay
+            $('#edsLoader').hide();
+
+            // Handle different error cases
+            if (xhr.status === 400) {
+                alert('Bad Request: Please check your input data.');
+            } else if (xhr.status === 500) {
+                alert('Server Error: Something went wrong on the server side.');
+            } else {
+                alert('Error: ' + error);
+            }
+        }
+    });
+});
+
+
+
 
 
 
