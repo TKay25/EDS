@@ -2854,7 +2854,7 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
             console.log('Updated firstname:', response.data.firstname);
 
             const updated = response.data;
-            alert(`Employee updated:\nName: ${updated.firstname} ${updated.surname}\nWhatsApp: ${updated.whatsapp}`);
+            alert(`Employee updated:\nName: ${updated.firstname} ${updated.surname}\nWhatsApp: ${updated.whatsapp}\nEmail: ${updated.email}\nAddress: ${updated.address}`);
 
             setTimeout(function() {
                 location.reload();
