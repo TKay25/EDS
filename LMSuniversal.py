@@ -8669,10 +8669,19 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 email = data.get('email')
                 address = data.get('address')
 
+                details_table = company_name + 'main'
+
+
+                check_query = f"SELECT COUNT(*) FROM {details_table} WHERE email = %s OR whatsapp = %s;"
+                cursor.execute(check_query, (email, whatsapp))
+                record_exists = cursor.fetchone()[0]
+
                 if email and '@' not in email:
                     return jsonify({'error': 'Invalid email format'}), 400
-            
-                details_table = company_name + 'main'
+
+                elif record_exists > 0 :
+                    return jsonify({'error': 'Someone esle has a similar WhatsApp Number and(or) Email. Kindly provide unique inputs on these fields'}), 400    
+
                 update_query = f"""UPDATE {details_table} SET firstname = %s, surname = %s, whatsapp = %s, email = %s, address = %s WHERE id = %s; """
                 cursor.execute(update_query, (firstname, surname, whatsapp, email, address, empidcomp))
                 connection.commit()
