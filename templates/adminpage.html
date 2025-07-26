@@ -2350,24 +2350,20 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
     const email = $(this).data('email');
     const address = $(this).data('address');
 
-    // Show ID if needed
     $('#emp-id').text('ID: ' + id);
     $('#emp-name-title').text(`${firstname} ${surname}`);
 
-    // Use placeholder instead of value
     $('#firstname-editinfo-4-comp').val('').attr('placeholder', firstname);
     $('#surname-editinfo-4-comp').val('').attr('placeholder', surname);
     $('#whatsapp-editinfo-4-comp').val('').attr('placeholder', whatsapp);
     $('#email-editinfo-4-comp').val('').attr('placeholder', email);
     $('#address-editinfo-4-comp').val('').attr('placeholder', address);
 
-    // Optional header or subtitle
     $('#content-edit-emp_details-comp').html(
         `Editing <strong>${firstname} ${surname}</strong> — ID: <strong>${id}</strong>`
     );
 
     $('#editinfocompModal').modal('show');
-    $('#ovovo').show();
 
 
 });
