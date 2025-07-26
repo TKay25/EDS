@@ -2845,13 +2845,17 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function(response) {
-            // Hide modals and loading overlay
             $('#editinfocompModal').modal('hide');
             $('#edsLoader').hide();
-            
-            // Show success message with slight delay
+
+            console.log('Returned data:', response.data);  // ✅ log it
+            console.log('Full response:', response);
+
+            // Optional: use it in UI
+            const updated = response.data;
+            alert(`Employee updated:\nName: ${updated.firstname} ${updated.surname}\nWhatsApp: ${updated.whatsapp}`);
+
             setTimeout(function() {
-                alert('Employee details updated successfully');
                 location.reload();
             }, 100);
         },
