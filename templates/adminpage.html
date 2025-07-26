@@ -2859,13 +2859,21 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
             // Hide loading overlay
             $('#edsLoader').hide();
 
-            // Handle different error cases
+            let serverErrorMsg = 'An unknown error occurred.';
+
+            try {
+                const response = JSON.parse(xhr.responseText);
+                serverErrorMsg = response.error || serverErrorMsg;
+            } catch (e) {
+                serverErrorMsg = 'Could not parse error message.';
+            }
+
             if (xhr.status === 400) {
-                alert('Bad Request: Please check your input data.');
+                alert('Bad Request: ' + serverErrorMsg);
             } else if (xhr.status === 500) {
-                alert('Server Error: Something went wrong on the server side.');
+                alert('Server Error: ' + serverErrorMsg);
             } else {
-                alert('Error: ' + error);
+                alert('Error: ' + serverErrorMsg);
             }
         }
     });
