@@ -2828,7 +2828,7 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
     // If field is empty, use placeholder value
     const formData = {
         id: idInput.value, 
-        firtsname: firstnameInput.value.trim() || firstnameInput.placeholder,        
+        firstname: firstnameInput.value.trim() || firstnameInput.placeholder,        
         surname: surnameInput.value.trim() || surnameInput.placeholder,
         whatsapp: whatsappInput.value.trim() || whatsappInput.placeholder,
         email: emailInput.value.trim() || emailInput.placeholder,
@@ -2851,7 +2851,8 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
             console.log('Returned data:', response.data);  // ✅ log it
             console.log('Full response:', response);
 
-            // Optional: use it in UI
+            console.log('Updated firstname:', response.data.firstname);
+
             const updated = response.data;
             alert(`Employee updated:\nName: ${updated.firstname} ${updated.surname}\nWhatsApp: ${updated.whatsapp}`);
 
