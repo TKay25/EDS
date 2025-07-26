@@ -2823,18 +2823,26 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
     const whatsappInput = document.getElementById('whatsapp-editinfo-4-comp');
     const emailInput = document.getElementById('email-editinfo-4-comp');
     const addressInput = document.getElementById('address-editinfo-4-comp');
-    const idInput = document.getElementById('emp-id-hidden-comp'); // 👈
+    const idInput = document.getElementById('emp-id-hidden-comp');
 
-    // If field is empty, use placeholder value
+    // Sanitize WhatsApp input: remove spaces and take last 9 digits
+    let rawWhatsapp = whatsappInput.value.trim().replace(/\s+/g, '');
+    let whatsappSanitized = rawWhatsapp.slice(-9);  // last 9 characters
+
+    // Fallback to placeholder if value is empty
+    if (!whatsappSanitized) {
+        let placeholderClean = whatsappInput.placeholder.replace(/\s+/g, '');
+        whatsappSanitized = placeholderClean.slice(-9);
+    }
+
     const formData = {
-        id: idInput.value, 
-        firstname: firstnameInput.value.trim() || firstnameInput.placeholder,        
+        id: idInput.value,
+        firstname: firstnameInput.value.trim() || firstnameInput.placeholder,
         surname: surnameInput.value.trim() || surnameInput.placeholder,
-        whatsapp: whatsappInput.value.trim() || whatsappInput.placeholder,
+        whatsapp: whatsappSanitized,
         email: emailInput.value.trim() || emailInput.placeholder,
         address: addressInput.value.trim() || addressInput.placeholder
     };
-
     // Show loading overlay
     $('#edsLoader').show();
 
