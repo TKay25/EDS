@@ -8660,6 +8660,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 data = request.get_json()
 
+                print(data)
+
                 empidcomp = data.get('id')
                 firstname = data.get('firstname')
                 surname = data.get('surname')
@@ -8681,7 +8683,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 connection.commit()
 
 ##########################
-
 
                 table_name_apps_pending_approval = company_name + 'appspendingapproval'
                 update_query = f"""UPDATE {table_name_apps_pending_approval} SET firstname = %s, surname = %s WHERE id = %s; """
