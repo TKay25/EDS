@@ -1212,7 +1212,7 @@
 
                     <div class="mb-3">
                         <label for="whatsapp-editinfo-4-comp" class="form-label">WhatsApp Number</label>
-                        <input type="text" class="form-control" id="whatsapp-editinfo-4-comp" placeholder="Enter WhatsApp number">
+                        <input type="text" class="form-control" id="whatsapp-editinfo-4-comp" placeholder="Enter WhatsApp number" maxlength="10" oninput="this.value = this.value.replace(/\D/g, '')">
                     </div>
 
                     <div class="mb-3">
