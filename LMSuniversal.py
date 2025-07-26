@@ -8677,7 +8677,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 cursor.execute(update_query, (firstname, surname, whatsapp, email, address, empidcomp))
                 connection.commit()
 
-                fullnamexx = firstname + " " + surname
+                fullnamexx = f"{firstname} {surname}"
                 update_query = f"""UPDATE {details_table} SET leaveapprovername = %s, leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
                 cursor.execute(update_query, (fullnamexx, whatsapp, email, empidcomp))
                 connection.commit()
