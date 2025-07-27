@@ -5937,8 +5937,8 @@ def webhook():
                                                             try:
 
                                                                 buttons = [
-                                                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{app_id}", "title": "Approve"}},
+                                                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{app_id}", "title": "Disapprove"}},
                                                                 ]
                                                                 send_whatsapp_message(
                                                                     f"263{approver_whatsapp}", 
