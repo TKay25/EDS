@@ -5792,6 +5792,8 @@ def webhook():
                                                         table_name = company_reg + 'main'
                                                         company_name = company_reg.replace("_", " ").title()
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                        table_name_apps_approved = f"{company_reg}appsapproved"
+
 
                                                         if not app_id:
                                                             print("none on appid")
