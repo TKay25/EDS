@@ -1093,7 +1093,10 @@ def webhook():
                                                                     "rows": [
                                                                         {"id": "Editname", "title": "Edit My Name"},
                                                                         {"id": "Editwhatsapp", "title": "Change My WhatsApp #"},
+                                                                        {"id": "Editemail", "title": "Change My Email"},
+                                                                        {"id": "Editwebpass", "title": "Change Web Password"},
                                                                         {"id": "Editaddress", "title": "Edit My Address"},
+                                                                        {"id": "MyInfo", "title": "My Info"},
                                                                         {"id": "Menu", "title": "Main Menu"}
                                                                     ]
                                                                 }
@@ -2428,7 +2431,10 @@ def webhook():
                                                                 "rows": [
                                                                     {"id": "Editname", "title": "Edit My Name"},
                                                                     {"id": "Editwhatsapp", "title": "Change My WhatsApp #"},
+                                                                    {"id": "Editemail", "title": "Change My Email"},
+                                                                    {"id": "Editwebpass", "title": "Change Web Password"},
                                                                     {"id": "Editaddress", "title": "Edit My Address"},
+                                                                    {"id": "MyInfo", "title": "My Info"},
                                                                     {"id": "Menu", "title": "Main Menu"}
                                                                 ]
                                                             }
@@ -3835,7 +3841,10 @@ def webhook():
                                                                         "rows": [
                                                                             {"id": "Editname", "title": "Edit My Name"},
                                                                             {"id": "Editwhatsapp", "title": "Change My WhatsApp #"},
+                                                                            {"id": "Editemail", "title": "Change My Email"},
+                                                                            {"id": "Editwebpass", "title": "Change Web Password"},
                                                                             {"id": "Editaddress", "title": "Edit My Address"},
+                                                                            {"id": "MyInfo", "title": "My Info"},
                                                                             {"id": "Menu", "title": "Main Menu"}
                                                                         ]
                                                                     }
@@ -5572,6 +5581,34 @@ def webhook():
                                                         buttons
                                                     )
 
+                                                elif selected_option == "Editemail":
+                                                
+                                                    companyxx = company_reg.replace("_"," ").title()
+
+
+
+                                                    sections = [
+                                                        {
+                                                            "title": "User Options",
+                                                            "rows": [
+                                                                {"id": "Editname", "title": "Edit My Name"},
+                                                                {"id": "Editwhatsapp", "title": "Change My WhatsApp #"},
+                                                                {"id": "Editemail", "title": "Change My Email"},
+                                                                {"id": "Editwebpass", "title": "Change Web Password"},
+                                                                {"id": "Editaddress", "title": "Edit My Address"},
+                                                                {"id": "MyInfo", "title": "My Info"},
+                                                                {"id": "Menu", "title": "Main Menu"}
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_message(
+                                                        sender_id, 
+                                                        f"Hey {first_name}!\n Enter your new email address starting with the word `email` as shown below 👇. \n\n `email epsilon@gmail.com`", 
+                                                    "User Options",
+                                                    sections)
+                                            
+
                                                 elif selected_option == "Myinfo":
 
                                                     companyxx = company_reg.replace("_"," ").title()
@@ -5600,7 +5637,10 @@ def webhook():
                                                                     "rows": [
                                                                         {"id": "Editname", "title": "Edit My Name"},
                                                                         {"id": "Editwhatsapp", "title": "Change My WhatsApp #"},
+                                                                        {"id": "Editemail", "title": "Change My Email"},
+                                                                        {"id": "Editwebpass", "title": "Change Web Password"},
                                                                         {"id": "Editaddress", "title": "Edit My Address"},
+                                                                        {"id": "MyInfo", "title": "My Info"},
                                                                         {"id": "Menu", "title": "Main Menu"}
                                                                     ]
                                                                 }
@@ -6925,6 +6965,98 @@ def webhook():
                                                         "Admin/Approver Options",
                                                         sections
                                                     )
+
+                                                elif "email" in text.lower():
+
+                                                    table_name = company_reg + "main"
+                                                    table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                    table_name_apps_cancelled = f"{company_reg}appscancelled"
+                                                    table_name_apps_approved = f"{company_reg}appsapproved"
+                                                    table_name_apps_declined = f"{company_reg}appsdeclined"
+                                                    table_name_apps_revoked = f"{company_reg}appsrevoked"
+
+                                                    # Regex to extract email after the word "email"
+                                                    match = re.search(r"email\s+([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", text.strip(), re.IGNORECASE)
+
+                                                    if not match:
+                                                        raise ValueError("Invalid Email format")
+
+                                                        sections = [
+                                                            {
+                                                                "title": "User Options",
+                                                                "rows": [
+                                                                    {"id": "Editname", "title": "Edit My Name"},
+                                                                    {"id": "Editwhatsapp", "title": "Change My WhatsApp #"},
+                                                                    {"id": "Editemail", "title": "Change My Email"},
+                                                                    {"id": "Editwebpass", "title": "Change Web Password"},
+                                                                    {"id": "Editaddress", "title": "Edit My Address"},
+                                                                    {"id": "MyInfo", "title": "My Info"},
+                                                                    {"id": "Menu", "title": "Main Menu"}
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}!\n You have provided an invalid Email Address. Enter your new email address starting with the word `email` as shown below 👇. \n\n `email epsilon@gmail.com`", 
+                                                        "User Options",
+                                                        sections)                
+
+
+                                                    email = match.group(1)
+                                                    print("Extracted email:", email)
+
+                                                    try:
+
+                                                        query = f"UPDATE {table_name} SET email = %s WHERE id = %s;"
+                                                        cursor.execute(query, (email, id_user))
+                                                        connection.commit()
+
+                                                        query = f"UPDATE {table_name_apps_pending_approval} SET leaveapproveremail = %s WHERE leaveapproverid = %s;"
+                                                        cursor.execute(query, (email, id_user))
+                                                        connection.commit()
+                                            
+                                                        query = f"UPDATE {table_name_apps_cancelled} SET leaveapproveremail = %s WHERE leaveapproverid = %s;"
+                                                        cursor.execute(query, (email, id_user))
+                                                        connection.commit()
+
+                                                        query = f"UPDATE {table_name_apps_approved} SET leaveapproveremail = %s WHERE leaveapproverid = %s;"
+                                                        cursor.execute(query, (email, id_user))
+                                                        connection.commit()
+
+                                                        query = f"UPDATE {table_name_apps_declined} SET leaveapproveremail = %s WHERE leaveapproverid = %s;"
+                                                        cursor.execute(query, (email, id_user))
+                                                        connection.commit()
+
+                                                        query = f"UPDATE {table_name_apps_revoked} SET leaveapproveremail = %s WHERE leaveapproverid = %s;"
+                                                        cursor.execute(query, (email, id_user))
+                                                        connection.commit()
+
+                                                        sections = [
+                                                            {
+                                                                "title": "User Options",
+                                                                "rows": [
+                                                                    {"id": "Editname", "title": "Edit My Name"},
+                                                                    {"id": "Editwhatsapp", "title": "Change My WhatsApp #"},
+                                                                    {"id": "Editemail", "title": "Change My Email"},
+                                                                    {"id": "Editwebpass", "title": "Change Web Password"},
+                                                                    {"id": "Editaddress", "title": "Edit My Address"},
+                                                                    {"id": "MyInfo", "title": "My Info"},
+                                                                    {"id": "Menu", "title": "Main Menu"}
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}!\n Email Address Successfully Changed. Select an option below to proceed 👇.", 
+                                                        "User Options",
+                                                        sections)  
+
+                                                    except Exception as e:
+                                                        print(e)
+
+                                                        
 
                                                 elif "start" in text.lower():
 
