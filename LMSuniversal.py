@@ -1276,9 +1276,11 @@ def webhook():
                                                                 )
 
                                                             elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
+ 
+                                                                app_id = all_approved_declined_cancelled.iat[0,0]
 
                                                                 buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                    {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                     {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                     {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                 ]
@@ -1290,8 +1292,10 @@ def webhook():
 
                                                             elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
+                                                                app_id = all_approved_declined_cancelled.iat[0,0]
+
                                                                 buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                    {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                     {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                     {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                 ]
@@ -1829,7 +1833,8 @@ def webhook():
                                                             "Example: `end 15 march 2024`"
                                                         )
 
-                                                elif button_id == "Resubmitapp" :
+                                                elif button_id == "Resubapp" :
+
                                                     table_name_apps_cancelled = f"{company_reg}appscancelled"
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
@@ -1868,7 +1873,7 @@ def webhook():
 
                                                         companyxx = company_reg.replace("_", " ").title()
                                                         buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                            {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                             {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                             {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                         ]
@@ -1921,7 +1926,7 @@ def webhook():
 
                                                         companyxx = company_reg.replace("_", " ").title()
                                                         buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                            {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                             {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                         ]
@@ -2598,8 +2603,10 @@ def webhook():
 
                                                         elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
+                                                            app_id = all_approved_declined_cancelled.iat[0,0] 
+
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                 {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                             ]
@@ -2611,8 +2618,10 @@ def webhook():
 
                                                         elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
+                                                            app_id = all_approved_declined_cancelled.iat[0,0] 
+
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                 {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                             ]
@@ -2975,7 +2984,7 @@ def webhook():
                                                     buttons
                                                 )
 
-                                            elif button_id == "Resubmitapp" :
+                                            elif button_id == "Resubapp" :
 
                                                 table_name_apps_cancelled = f"{company_reg}appscancelled"
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -3068,7 +3077,7 @@ def webhook():
 
                                                     companyxx = company_reg.replace("_", " ").title()
                                                     buttons = [
-                                                        {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                        {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                         {"type": "reply", "reply": {"id": "Checkbal", "title": "Check Days Balance"}},
                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                     ]
@@ -3733,8 +3742,10 @@ def webhook():
 
                                                                 elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
+                                                                    app_id = all_approved_declined_cancelled.iat[0,0]
+
                                                                     buttons = [
-                                                                        {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                        {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                         {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                     ]
@@ -3747,7 +3758,7 @@ def webhook():
                                                                 elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
                                                                     buttons = [
-                                                                        {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                        {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                         {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                     ]
@@ -4392,7 +4403,7 @@ def webhook():
                                                                 "Example: `end 15 march 2024`"
                                                             )
 
-                                                    elif button_id == "Resubmitapp" :
+                                                    elif button_id == "Resubapp" :
 
                                                         table_name_apps_cancelled = f"{company_reg}appscancelled"
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -4514,7 +4525,7 @@ def webhook():
 
                                                             companyxx = company_reg.replace("_", " ").title()
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                 {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                                 {"type": "reply", "reply": {"id": "Main", "title": "Main Menu"}},
                                                             ]
@@ -5488,8 +5499,10 @@ def webhook():
 
                                                             elif all_approved_declined_cancelled.iat[0,8] == "Disapproved":
 
+                                                                app_id = all_approved_declined_cancelled.iat[0,0]
+
                                                                 buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                    {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                     {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                     {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                 ]
@@ -5501,8 +5514,10 @@ def webhook():
 
                                                             elif all_approved_declined_cancelled.iat[0,8] == "Cancelled":
 
+                                                                app_id = all_approved_declined_cancelled.iat[0,0]
+
                                                                 buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                                    {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                                     {"type": "reply", "reply": {"id": "myhist", "title": "Download My History"}},
                                                                     {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                 ]
@@ -6139,7 +6154,7 @@ def webhook():
                                                         buttons
                                                     )
 
-                                                elif button_id == "Resubmitapp" :
+                                                elif button_id == "Resubapp" :
 
                                                     table_name_apps_cancelled = f"{company_reg}appscancelled"
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -6602,7 +6617,7 @@ def webhook():
 
                                                         companyxx = company_reg.replace("_", " ").title()
                                                         buttons = [
-                                                            {"type": "reply", "reply": {"id": "Resubmitapp", "title": "ReSubmit Application"}},
+                                                            {"type": "reply", "reply": {"id": f"Resubapp_{app_id}", "title": "ReSubmit Application"}},
                                                             {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
                                                             {"type": "reply", "reply": {"id": "Main", "title": "Main Menu"}},
                                                         ]
