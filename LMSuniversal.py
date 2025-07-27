@@ -1065,6 +1065,185 @@ def webhook():
 
                                                     continue
 
+                                                elif "reminder" in button_id.lower():
+
+                                                    app_id = button_id.split("_")[1]
+                                                    print(app_id)
+
+                                                    try:
+                                                    
+                                                        print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+
+                                                        table_name = company_reg + 'main'
+                                                        company_name = company_reg.replace("_", " ").title()
+                                                        table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                        table_name_apps_approved = f"{company_reg}appsapproved"
+
+
+                                                        if not app_id:
+                                                            print("none on appid")
+
+                                                            return jsonify({"message": "Application ID is missing."}), 400
+
+                                                        print(table_name_apps_pending_approval)
+
+                                                        query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
+                                                        cursor.execute(query, (app_id,))
+                                                        result = cursor.fetchone()
+                                                        app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
+                                                        print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                                                        print(employee_number)
+                                                        print(approver_name)
+
+                                                        try:
+
+                                                            query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
+                                                            cursor.execute(query)
+                                                            rows = cursor.fetchall()
+
+                                                            df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month", "Department"])
+                                                            print(df_employees)
+                                                            userdf = df_employees[df_employees['id'] == int(np.int64(employee_number))].reset_index()
+                                                            print("yeaarrrrr")
+                                                            print(userdf)
+                                                            firstname = userdf.iat[0,2]
+                                                            surname = userdf.iat[0,3]
+                                                            whatsapp = userdf.iat[0,4]
+                                                            address = userdf.iat[0,6]
+                                                            email = userdf.iat[0,5]
+                                                            fullnamedisp = firstname + ' ' + surname
+                                                            leaveapprovername = userdf.iat[0,8]
+                                                            leaveapproverid = userdf.iat[0,9]
+                                                            leaveapproveremail = userdf.iat[0, 10]
+                                                            leaveapproverwhatsapp = userdf.iat[0,11]
+                                                            role = userdf.iat[0,7]
+                                                            leavedaysbalance = userdf.iat[0,12]
+                                                            department = userdf.iat[0,14] 
+                                                            print('check')
+
+                                                            departmentdf = df_employees[df_employees['Department'] == department].reset_index()
+                                                            numberindepartment = len(departmentdf)
+                                                            
+                                                            startdatex = pd.Timestamp(start_date)
+                                                            enddatex = pd.Timestamp(end_date)
+
+                                                            leave_dates = pd.date_range(startdatex, enddatex)
+
+                                                            query = f"""
+                                                                SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                                                    leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                                                    leavedaysbalancebf, department
+                                                                FROM {table_name_apps_approved}
+                                                                WHERE department = %s;
+                                                            """
+                                                            cursor.execute(query, (department,))
+                                                            rows = cursor.fetchall()
+
+                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+                                                            df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                                            df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+            
+                                                            df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
+                                                            # Create daily impact report
+                                                            impact_report = []
+
+                                                            for date in leave_dates:
+
+                                                                date = pd.Timestamp(date)
+
+                                                                print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                                                print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
+
+                                                                on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
+                                                                remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
+                                                                impact_report.append({
+                                                                    "date": date,  # <=== Keep as datetime, don't convert to string
+                                                                    "on leave": on_leave + 1,
+                                                                    "employees remaining": remaining
+                                                                })
+
+                                                            # Convert to DataFrame for display
+                                                            impact_df = pd.DataFrame(impact_report)
+                                                            print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
+                                                            print(impact_df)
+                                                            print(numberindepartment)
+
+                                                            impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
+                                                            impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+
+                                                            change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
+                                                            change.iloc[0] = True  # ensure the first row starts a group
+                                                            impact_df["group"] = change.cumsum()
+
+                                                            statements = []
+                                                            for _, group_df in impact_df.groupby("group"):
+                                                                start = group_df["date"].iloc[0].strftime("%d %B %Y")
+                                                                end = group_df["date"].iloc[-1].strftime("%d %B %Y")
+                                                                on_leave = group_df["on leave"].iloc[0]
+                                                                remaining = group_df["employees remaining"].iloc[0]
+                                                                
+                                                                if start == end:
+                                                                    statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                else:
+                                                                    statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                    # Combine all statements into a single variable
+                                                            final_summary = "\n".join(statements)
+                                                            # Print output
+                                                            for s in statements:
+                                                                print(s)
+
+                                                        except Exception as e:
+                                                            print(e)
+
+
+                                                        sections = [
+                                                            {
+                                                                "title": "User Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Track", "title": "Track My Application"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "myhist", "title": "My Applications History"},
+                                                                    {"id": "Myinfo", "title": "My Info"}
+                                                                ]
+                                                            }
+                                                        ]
+
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}. A reminder has been sent to {approver_name} on {approver_whatsapp} to decide on your `{leave_days}-day {leave_type} leave` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` that you applied for on `{date_applied.strftime('%d %B %Y')}`✅! \n Select an option below to continue 👇",
+                                                        "User Options",
+                                                        sections)
+
+                                                        if approver_whatsapp:
+
+                                                            try:
+
+                                                                buttons = [
+                                                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{app_id}", "title": "Approve"}},
+                                                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{app_id}", "title": "Disapprove"}},
+                                                                ]
+                                                                send_whatsapp_message(
+                                                                    f"263{approver_whatsapp}", 
+                                                                    f"Hey {approver_name}! 😊. A gentle reminder, you have a new `{leave_type}` Leave Application from `{first_name} {surname}` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
+                                                                    f"If you approve this leave application, {final_summary}\n\n"  
+                                                                    f"Select an option below to either approve or disapprove the application."         
+                                                                    , 
+                                                                    buttons
+                                                                )
+
+                                                            except Exception as e:
+                                                                print(e)
+
+
+
+                                                    except Exception as e:
+                                                        print(e)
+                                                        return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
+                                                
+
+
                                                 elif selected_option == "Myinfo":
 
                                                     companyxx = company_reg.replace("_"," ").title()
@@ -3115,6 +3294,8 @@ def webhook():
                                                     table_name = company_reg + 'main'
                                                     company_name = company_reg.replace("_", " ").title()
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                    table_name_apps_approved = f"{company_reg}appsapproved"
+
 
                                                     if not app_id:
                                                         print("none on appid")
@@ -3160,8 +3341,8 @@ def webhook():
                                                         departmentdf = df_employees[df_employees['Department'] == department].reset_index()
                                                         numberindepartment = len(departmentdf)
                                                         
-                                                        startdatex = pd.Timestamp(startdate)
-                                                        enddatex = pd.Timestamp(enddate)
+                                                        startdatex = pd.Timestamp(start_date)
+                                                        enddatex = pd.Timestamp(end_date)
 
                                                         leave_dates = pd.date_range(startdatex, enddatex)
 
@@ -3258,8 +3439,8 @@ def webhook():
                                                         try:
 
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                                                {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                {"type": "reply", "reply": {"id": f"Approve5appwa_{app_id}", "title": "Approve"}},
+                                                                {"type": "reply", "reply": {"id": f"Disapproveappwa_{app_id}", "title": "Disapprove"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 f"263{approver_whatsapp}", 
@@ -3274,18 +3455,10 @@ def webhook():
                                                             print(e)
 
 
-
                                                 except Exception as e:
                                                     print(e)
-                                                    return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
+                                                    return jsonify({"message": "Error sending reminder.", "error": str(e)}), 500
                                                 
-
-
-
-
-
-
-
                                             elif "appwa" in button_id.lower():
 
                                                 app_id = button_id.split("_")[1]
@@ -4037,8 +4210,186 @@ def webhook():
                                                             "Administrator Options",
                                                             sections)
 
+                                                    elif "reminder" in button_id.lower():
+
+                                                        app_id = button_id.split("_")[1]
+                                                        print(app_id)
+
+                                                        try:
+                                                        
+                                                            print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+
+                                                            table_name = company_reg + 'main'
+                                                            company_name = company_reg.replace("_", " ").title()
+                                                            table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
+                                                            table_name_apps_approved = f"{company_reg}appsapproved"
 
 
+                                                            if not app_id:
+                                                                print("none on appid")
+
+                                                                return jsonify({"message": "Application ID is missing."}), 400
+
+                                                            print(table_name_apps_pending_approval)
+
+                                                            query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
+                                                            cursor.execute(query, (app_id,))
+                                                            result = cursor.fetchone()
+                                                            app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
+                                                            print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                                                            print(employee_number)
+                                                            print(approver_name)
+
+                                                            try:
+
+                                                                query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
+                                                                cursor.execute(query)
+                                                                rows = cursor.fetchall()
+
+                                                                df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month", "Department"])
+                                                                print(df_employees)
+                                                                userdf = df_employees[df_employees['id'] == int(np.int64(employee_number))].reset_index()
+                                                                print("yeaarrrrr")
+                                                                print(userdf)
+                                                                firstname = userdf.iat[0,2]
+                                                                surname = userdf.iat[0,3]
+                                                                whatsapp = userdf.iat[0,4]
+                                                                address = userdf.iat[0,6]
+                                                                email = userdf.iat[0,5]
+                                                                fullnamedisp = firstname + ' ' + surname
+                                                                leaveapprovername = userdf.iat[0,8]
+                                                                leaveapproverid = userdf.iat[0,9]
+                                                                leaveapproveremail = userdf.iat[0, 10]
+                                                                leaveapproverwhatsapp = userdf.iat[0,11]
+                                                                role = userdf.iat[0,7]
+                                                                leavedaysbalance = userdf.iat[0,12]
+                                                                department = userdf.iat[0,14] 
+                                                                print('check')
+
+                                                                departmentdf = df_employees[df_employees['Department'] == department].reset_index()
+                                                                numberindepartment = len(departmentdf)
+                                                                
+                                                                startdatex = pd.Timestamp(start_date)
+                                                                enddatex = pd.Timestamp(end_date)
+
+                                                                leave_dates = pd.date_range(startdatex, enddatex)
+
+                                                                query = f"""
+                                                                    SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate,
+                                                                        leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,
+                                                                        leavedaysbalancebf, department
+                                                                    FROM {table_name_apps_approved}
+                                                                    WHERE department = %s;
+                                                                """
+                                                                cursor.execute(query, (department,))
+                                                                rows = cursor.fetchall()
+
+                                                                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"]) 
+                                                                df_employeesappsapprovedcheck["leavestartdate"] = pd.to_datetime(df_employeesappsapprovedcheck["leavestartdate"])
+                                                                df_employeesappsapprovedcheck["leaveenddate"] = pd.to_datetime(df_employeesappsapprovedcheck["leaveenddate"])
+                
+                                                                df_employeesappsapprovedcheck.dropna(subset=["leavestartdate", "leaveenddate"], inplace=True)
+                                                                # Create daily impact report
+                                                                impact_report = []
+
+                                                                for date in leave_dates:
+
+                                                                    date = pd.Timestamp(date)
+
+                                                                    print(type(date))  # Should be pandas._libs.tslibs.timestamps.Timestamp or datetime.datetime
+                                                                    print(df_employeesappsapprovedcheck.dtypes)  # Check all datetime columns
+
+                                                                    on_leave = ((df_employeesappsapprovedcheck["leavestartdate"] <= date) & (df_employeesappsapprovedcheck["leaveenddate"] >= date)).sum()
+                                                                    remaining = numberindepartment - on_leave - 1  # subtract 1 for the new leave
+                                                                    impact_report.append({
+                                                                        "date": date,  # <=== Keep as datetime, don't convert to string
+                                                                        "on leave": on_leave + 1,
+                                                                        "employees remaining": remaining
+                                                                    })
+
+                                                                # Convert to DataFrame for display
+                                                                impact_df = pd.DataFrame(impact_report)
+                                                                print("IMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACT")
+                                                                print(impact_df)
+                                                                print(numberindepartment)
+
+                                                                impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
+                                                                impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+
+                                                                change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
+                                                                change.iloc[0] = True  # ensure the first row starts a group
+                                                                impact_df["group"] = change.cumsum()
+
+                                                                statements = []
+                                                                for _, group_df in impact_df.groupby("group"):
+                                                                    start = group_df["date"].iloc[0].strftime("%d %B %Y")
+                                                                    end = group_df["date"].iloc[-1].strftime("%d %B %Y")
+                                                                    on_leave = group_df["on leave"].iloc[0]
+                                                                    remaining = group_df["employees remaining"].iloc[0]
+                                                                    
+                                                                    if start == end:
+                                                                        statements.append(f"On {start}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                    else:
+                                                                        statements.append(f"From {start} to {end}, the {department} department will have {remaining} employee(s) remaining at work and {on_leave} employee(s) on leave.")
+                                                                        # Combine all statements into a single variable
+                                                                final_summary = "\n".join(statements)
+                                                                # Print output
+                                                                for s in statements:
+                                                                    print(s)
+
+                                                            except Exception as e:
+                                                                print(e)
+
+
+                                                            sections = [
+                                                                {
+                                                                    "title": "Administrator Options",
+                                                                    "rows": [
+                                                                        {"id": "Apply", "title": "Apply for Leave"},
+                                                                        {"id": "Track", "title": "Track My Application"},
+                                                                        {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                        {"id": "myhist", "title": "My Applications History"},
+                                                                        {"id": "Myinfo", "title": "My Info"},
+                                                                        {"id": "Empmgt", "title": "Employee Management"},
+                                                                        {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                        {"id": "Company", "title": "Company Profile"}
+                                                                    ]
+                                                                }
+                                                            ]
+                                                            
+                                                            send_whatsapp_list_message(
+                                                                sender_id,
+                                                                f"Hey {first_name}. A reminder has been sent to {approver_name} on {approver_whatsapp} to decide on your `{leave_days}-day {leave_type} leave` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` that you applied for on `{date_applied.strftime('%d %B %Y')}`✅! \n Select an option below to continue 👇",
+                                                                "Administrator Options",
+                                                                sections
+                                                            )
+
+                                                            if approver_whatsapp:
+
+                                                                try:
+
+                                                                    buttons = [
+                                                                        {"type": "reply", "reply": {"id": f"Approve5appwa_{app_id}", "title": "Approve"}},
+                                                                        {"type": "reply", "reply": {"id": f"Disapproveappwa_{app_id}", "title": "Disapprove"}},
+                                                                    ]
+                                                                    send_whatsapp_message(
+                                                                        f"263{approver_whatsapp}", 
+                                                                        f"Hey {approver_name}! 😊. A gentle reminder, you have a new `{leave_type}` Leave Application from `{first_name} {surname}` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`.\n\n" 
+                                                                        f"If you approve this leave application, {final_summary}\n\n"  
+                                                                        f"Select an option below to either approve or disapprove the application."         
+                                                                        , 
+                                                                        buttons
+                                                                    )
+
+                                                                except Exception as e:
+                                                                    print(e)
+
+
+
+                                                        except Exception as e:
+                                                            print(e)
+                                                            return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
+                                                    
                                                     elif selected_option == "Myinfo":
 
                                                         companyxx = company_reg.replace("_"," ").title()
@@ -5913,24 +6264,33 @@ def webhook():
 
                                                         sections = [
                                                             {
-                                                                "title": "Approver Options",
+                                                                "title": "My Profile",
                                                                 "rows": [
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "myhist", "title": "My Applications History"},
-                                                                    {"id": "Myinfo", "title": "My Info"}
+                                                                    {"id": "Myinfo", "title": "My Info"},
+                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                ]
+                                                            },
+                                                            {
+                                                                "title": "Administration",
+                                                                "rows": [
+                                                                    {"id": "Empmgt", "title": "Employee Management"},
+                                                                    {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                    {"id": "Company", "title": "Company Profile"},
                                                                 ]
                                                             }
                                                         ]
-
-
+                                                        
                                                         send_whatsapp_list_message(
-                                                            sender_id, 
+                                                            sender_id,
                                                             f"Hey {first_name}. A reminder has been sent to {approver_name} on {approver_whatsapp} to decide on your `{leave_days}-day {leave_type} leave` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}` that you applied for on `{date_applied.strftime('%d %B %Y')}`✅! \n Select an option below to continue 👇",
-                                                        "User Options",
-                                                        sections)
+                                                            "Admin/Approver Options",
+                                                            sections
+                                                        )
+                                                        
 
                                                         if approver_whatsapp:
 
@@ -5958,9 +6318,6 @@ def webhook():
                                                         print(e)
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
                                                 
-
-
-
                                                 elif button_id == "myhist" or selected_option == "myhist":
 
                                                     try:
@@ -7493,17 +7850,22 @@ def webhook():
                                                     
                                                     sections = [
                                                         {
-                                                            "title": "Administrator Options",
+                                                            "title": "My Profile",
                                                             "rows": [
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                 {"id": "myhist", "title": "My Applications History"},
                                                                 {"id": "Myinfo", "title": "My Info"},
+                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                            ]
+                                                        },
+                                                        {
+                                                            "title": "Administration",
+                                                            "rows": [
                                                                 {"id": "Empmgt", "title": "Employee Management"},
                                                                 {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                {"id": "Company", "title": "Company Profile"}
+                                                                {"id": "Company", "title": "Company Profile"},
                                                             ]
                                                         }
                                                     ]
