@@ -6266,22 +6266,27 @@ def webhook():
 
                                                             sections = [
                                                                 {
-                                                                    "title": "Administrator Options",
+                                                                    "title": "MY PROFILE",
                                                                     "rows": [
                                                                         {"id": "Apply", "title": "Apply for Leave"},
-                                                                        {"id": "Apply", "title": "Track My Applications"},
+                                                                        {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                         {"id": "myhist", "title": "My Applications History"},
                                                                         {"id": "Myinfo", "title": "My Info"},
+                                                                        {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "title": "ADMINISTRATION",
+                                                                    "rows": [
                                                                         {"id": "Empmgt", "title": "Employee Management"},
                                                                         {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                        {"id": "Company", "title": "Company Profile"}
+                                                                        {"id": "Company", "title": "Company Profile"},
                                                                     ]
                                                                 }
                                                             ]
-                                                            companyxx = company_reg.replace("_"," ").title()
 
+                                                            companyxx = company_reg.replace("_"," ").title()
 
                                                             send_whatsapp_list_message(
                                                                 sender_id, 
@@ -7139,19 +7144,25 @@ def webhook():
                                                         connection.commit()                                       
 
                                                         companyxx = company_reg.replace("_", " ").title()
+
                                                         sections = [
                                                             {
-                                                                "title": "Administrator Options",
+                                                                "title": "MY PROFILE",
                                                                 "rows": [
-                                                                        {"id": "Apply", "title": "Apply for Leave"},
-                                                                        {"id": "Apply", "title": "Track My Applications"},
-                                                                        {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                        {"id": "Pending", "title": "Apps Pending My Approval"},
-                                                                        {"id": "myhist", "title": "My Applications History"},
-                                                                        {"id": "Myinfo", "title": "My Info"},
-                                                                        {"id": "Empmgt", "title": "Employee Management"},
-                                                                        {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                        {"id": "Company", "title": "Company Profile"}
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Track", "title": "Track My Application"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "myhist", "title": "My Applications History"},
+                                                                    {"id": "Myinfo", "title": "My Info"},
+                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                ]
+                                                            },
+                                                            {
+                                                                "title": "ADMINISTRATION",
+                                                                "rows": [
+                                                                    {"id": "Empmgt", "title": "Employee Management"},
+                                                                    {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                    {"id": "Company", "title": "Company Profile"},
                                                                 ]
                                                             }
                                                         ]
@@ -7482,17 +7493,22 @@ def webhook():
                                                     
                                                     sections = [
                                                         {
-                                                            "title": "Administrator Options",
+                                                            "title": "MY PROFILE",
                                                             "rows": [
                                                                 {"id": "Apply", "title": "Apply for Leave"},
                                                                 {"id": "Track", "title": "Track My Application"},
                                                                 {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                 {"id": "myhist", "title": "My Applications History"},
                                                                 {"id": "Myinfo", "title": "My Info"},
+                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                            ]
+                                                        },
+                                                        {
+                                                            "title": "ADMINISTRATION",
+                                                            "rows": [
                                                                 {"id": "Empmgt", "title": "Employee Management"},
                                                                 {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                {"id": "Company", "title": "Company Profile"}
+                                                                {"id": "Company", "title": "Company Profile"},
                                                             ]
                                                         }
                                                     ]
@@ -7936,19 +7952,25 @@ def webhook():
                                                     if len(df_employeesappspendingcheck) == 0:
 
                                                         companyxx = company_reg.replace("_", " ").title()
+                                                        
                                                         sections = [
                                                             {
-                                                                "title": "Admin/Approver Options",
+                                                                "title": "MY PROFILE",
                                                                 "rows": [
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Track", "title": "Track My Application"},
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "myhist", "title": "My Applications History"},
                                                                     {"id": "Myinfo", "title": "My Info"},
+                                                                    {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                ]
+                                                            },
+                                                            {
+                                                                "title": "ADMINISTRATION",
+                                                                "rows": [
                                                                     {"id": "Empmgt", "title": "Employee Management"},
                                                                     {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                    {"id": "Company", "title": "Company Profile"}
+                                                                    {"id": "Company", "title": "Company Profile"},
                                                                 ]
                                                             }
                                                         ]
