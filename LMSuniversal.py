@@ -7852,20 +7852,20 @@ def webhook():
                                                         {
                                                             "title": "🙋‍♂️ MY PROFILE",
                                                             "rows": [
-                                                                {"id": "Apply", "title": "📝 APPLY FOR LEAVE"},
-                                                                {"id": "Track", "title": "📍 TRACK MY APPLICATION"},
-                                                                {"id": "Checkbal", "title": "📊 CHECK DAYS BALANCE"},
-                                                                {"id": "myhist", "title": "📜 MY LEAVE HISTORY"},
-                                                                {"id": "Myinfo", "title": "🧾 VIEW MY INFO"},
-                                                                {"id": "Pending", "title": "🕒 PENDING MY APPROVAL"}
+                                                                {"id": "Apply", "title": "📝 Apply for Leave"},
+                                                                {"id": "Track", "title": "📍 Track My Application"},
+                                                                {"id": "Checkbal", "title": "📊 Check Days Balance"},
+                                                                {"id": "myhist", "title": "📜 My Leave History"},
+                                                                {"id": "Myinfo", "title": "🧾 View My Info"},
+                                                                {"id": "Pending", "title": "🕒 Pending My Approval"}
                                                             ]
                                                         },
                                                         {
                                                             "title": "🛠️ ADMINISTRATION TOOLS",
                                                             "rows": [
-                                                                {"id": "Empmgt", "title": "👥 MANAGE EMPLOYEES"},
-                                                                {"id": "Analyticscomp", "title": "📈 ANALYTICS & INSIGHTS"},
-                                                                {"id": "Company", "title": "🏢 COMPANY PROFILE"}
+                                                                {"id": "Empmgt", "title": "👥 Employee Management"},
+                                                                {"id": "Analyticscomp", "title": "📈 Analytics and Insights"},
+                                                                {"id": "Company", "title": "🏢 Company Profile"}
                                                             ]
                                                         }
                                                     ]
