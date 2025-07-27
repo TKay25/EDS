@@ -7850,25 +7850,26 @@ def webhook():
                                                     
                                                     sections = [
                                                         {
-                                                            "title": "My Profile",
+                                                            "title": "🙋‍♂️ MY PROFILE",
                                                             "rows": [
-                                                                {"id": "Apply", "title": "Apply for Leave"},
-                                                                {"id": "Track", "title": "Track My Application"},
-                                                                {"id": "Checkbal", "title": "Check Days Balance"},
-                                                                {"id": "myhist", "title": "My Applications History"},
-                                                                {"id": "Myinfo", "title": "My Info"},
-                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                                {"id": "Apply", "title": "📝 APPLY FOR LEAVE"},
+                                                                {"id": "Track", "title": "📍 TRACK MY APPLICATION"},
+                                                                {"id": "Checkbal", "title": "📊 CHECK DAYS BALANCE"},
+                                                                {"id": "myhist", "title": "📜 MY LEAVE HISTORY"},
+                                                                {"id": "Myinfo", "title": "🧾 VIEW MY INFO"},
+                                                                {"id": "Pending", "title": "🕒 PENDING MY APPROVAL"}
                                                             ]
                                                         },
                                                         {
-                                                            "title": "Administration",
+                                                            "title": "🛠️ ADMINISTRATION TOOLS",
                                                             "rows": [
-                                                                {"id": "Empmgt", "title": "Employee Management"},
-                                                                {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                {"id": "Company", "title": "Company Profile"},
+                                                                {"id": "Empmgt", "title": "👥 MANAGE EMPLOYEES"},
+                                                                {"id": "Analyticscomp", "title": "📈 ANALYTICS & INSIGHTS"},
+                                                                {"id": "Company", "title": "🏢 COMPANY PROFILE"}
                                                             ]
                                                         }
                                                     ]
+
                                                     
                                                     send_whatsapp_list_message(
                                                         sender_id,
