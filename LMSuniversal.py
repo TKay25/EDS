@@ -6439,10 +6439,9 @@ def webhook():
                                                         except Exception as e:
                                                             print(e)
 
-
                                                         sections = [
                                                             {
-                                                                "title": "My Profile",
+                                                                "title": "MY PROFILE",
                                                                 "rows": [
                                                                     {"id": "Apply", "title": "Apply for Leave"},
                                                                     {"id": "Track", "title": "Track My Application"},
@@ -6453,7 +6452,7 @@ def webhook():
                                                                 ]
                                                             },
                                                             {
-                                                                "title": "Administration",
+                                                                "title": "ADMINISTRATION",
                                                                 "rows": [
                                                                     {"id": "Empmgt", "title": "Employee Management"},
                                                                     {"id": "Analyticscomp", "title": "Analytics & Insights"},
@@ -8028,22 +8027,22 @@ def webhook():
                                                     
                                                     sections = [
                                                         {
-                                                            "title": "🙋‍♂️ MY PROFILE",
+                                                            "title": "MY PROFILE",
                                                             "rows": [
-                                                                {"id": "Apply", "title": "📝 Apply for Leave"},
-                                                                {"id": "Track", "title": "📍 Track My Application"},
-                                                                {"id": "Checkbal", "title": "📊 Check Days Balance"},
-                                                                {"id": "myhist", "title": "📜 My Leave History"},
-                                                                {"id": "Myinfo", "title": "🧾 View My Info"},
-                                                                {"id": "Pending", "title": "🕒 Pending My Approval"}
+                                                                {"id": "Apply", "title": "Apply for Leave"},
+                                                                {"id": "Track", "title": "Track My Application"},
+                                                                {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                {"id": "myhist", "title": "My Applications History"},
+                                                                {"id": "Myinfo", "title": "My Info"},
+                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
                                                             ]
                                                         },
                                                         {
-                                                            "title": "🛠️ ADMINISTRATION TOOLS",
+                                                            "title": "ADMINISTRATION",
                                                             "rows": [
-                                                                {"id": "Empmgt", "title": "👥 Employee Management"},
-                                                                {"id": "Analyticscomp", "title": "📈 Analytics and Insights"},
-                                                                {"id": "Company", "title": "🏢 Company Profile"}
+                                                                {"id": "Empmgt", "title": "Employee Management"},
+                                                                {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                {"id": "Company", "title": "Company Profile"},
                                                             ]
                                                         }
                                                     ]
