@@ -1146,11 +1146,11 @@ def webhook():
                                                     table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                                    query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
 
-                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
+                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
 
                                                     if len(df_employeesappspendingcheck) == 0:
 
@@ -1171,6 +1171,7 @@ def webhook():
                                 
                                                         all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                         all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
+
                                                         all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
 
                                                         if len(all_approved_declined_cancelled) > 0:
@@ -1321,15 +1322,18 @@ def webhook():
 
 
                                                     elif len(df_employeesappspendingcheck) > 0:
+
+                                                        app_idx = df_employeesappspendingcheck.iat[0,0]
+
                                                         buttons = [
-                                                            {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                            {"type": "reply", "reply": {"id": f"Reminder_{app_idx}", "title": "Remind Approver"}},
                                                             {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                         ]
-                                                        approoooover = df_employeesappspendingcheck.iat[0,2].title()
+                                                        approoooover = df_employeesappspendingcheck.iat[0,3].title()
                                                         send_whatsapp_message(
                                                             sender_id, 
-                                                            f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
+                                                            f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,2]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,7]} days from {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,6].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
                                                             f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
                                                             , 
                                                             buttons
@@ -1498,11 +1502,11 @@ def webhook():
 
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                                    query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT  appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
 
-                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
 
                                                     if len(df_employeesappspendingcheck) == 0:
 
@@ -1527,15 +1531,18 @@ def webhook():
                                                             sections) 
 
                                                     elif len(df_employeesappspendingcheck) > 0:
+
+                                                        app_idx = df_employeesappspendingcheck.iat[0,0]
+
                                                         buttons = [
-                                                            {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                            {"type": "reply", "reply": {"id": f"Reminder_{app_idx}", "title": "Remind Approver"}},
                                                             {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                         ]
                                                         send_whatsapp_message(
                                                             sender_id, 
                                                             f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
-                                                            f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                            f"Your `{df_employeesappspendingcheck.iat[0,2]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,7]} days from {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,6].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,3]}.\n\n" 
                                                             f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
                                                             , 
                                                             buttons
@@ -2168,11 +2175,11 @@ def webhook():
 
                                                 table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                                query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                 cursor.execute(query)
                                                 rows = cursor.fetchall()
 
-                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
 
                                                 if len(df_employeesappspendingcheck) == 0:
 
@@ -2197,15 +2204,18 @@ def webhook():
                                                             sections) 
 
                                                 elif len(df_employeesappspendingcheck) > 0:
+
+                                                    app_idx = df_employeesappspendingcheck.iat[0,0]
+
                                                     buttons = [
-                                                        {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                        {"type": "reply", "reply": {"id": f"Reminder_{app_idx}", "title": "Remind Approver"}},
                                                         {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                     ]
                                                     send_whatsapp_message(
                                                         sender_id, 
                                                         f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
-                                                        f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                        f"Your `{df_employeesappspendingcheck.iat[0,2]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,7]} days from {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,6].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,3]}.\n\n" 
                                                         f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
                                                         , 
                                                         buttons
@@ -2473,11 +2483,11 @@ def webhook():
                                                 table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                                query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, appid  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, appid  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                 cursor.execute(query)
                                                 rows = cursor.fetchall()
 
-                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp","appid"])    
+                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp","appid"])    
 
                                                 if len(df_employeesappspendingcheck) == 0:
 
@@ -2648,15 +2658,18 @@ def webhook():
                                                         )
 
                                                 elif len(df_employeesappspendingcheck) > 0:
+
+                                                    app_idx = df_employeesappspendingcheck.iat[0,0]
+
                                                     buttons = [
-                                                        {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                        {"type": "reply", "reply": {"id": f"Reminder_{app_idx}", "title": "Remind Approver"}},
                                                         {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                         {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                     ]
-                                                    approoooover = df_employeesappspendingcheck.iat[0,2].title()
+                                                    approoooover = df_employeesappspendingcheck.iat[0,3].title()
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
+                                                        f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,2]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,7]} days from {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,6].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
                                                         f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
                                                         , 
                                                         buttons
@@ -3612,11 +3625,11 @@ def webhook():
                                                         table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
 
-                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
+                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
 
                                                         if len(df_employeesappspendingcheck) == 0:
 
@@ -3798,15 +3811,18 @@ def webhook():
 
 
                                                         elif len(df_employeesappspendingcheck) > 0:
+
+                                                            app_idx = df_employeesappspendingcheck.iat[0,0]
+
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                                {"type": "reply", "reply": {"id": f"Reminder_{app_idx}", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                             ]
-                                                            approoooover = df_employeesappspendingcheck.iat[0,2].title()
+                                                            approoooover = df_employeesappspendingcheck.iat[0,3].title()
                                                             send_whatsapp_message(
                                                                 sender_id, 
-                                                                f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
+                                                                f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,2]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,7]} days from {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,6].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
                                                                 f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
                                                                 , 
                                                                 buttons
@@ -4078,11 +4094,11 @@ def webhook():
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                                        query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
 
-                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
 
                                                         if len(df_employeesappspendingcheck) == 0:
 
@@ -4107,15 +4123,18 @@ def webhook():
                                                                 sections) 
 
                                                         elif len(df_employeesappspendingcheck) > 0:
+
+                                                            app_idx = df_employeesappspendingcheck.iat[0,0]
+
                                                             buttons = [
-                                                                {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                                {"type": "reply", "reply": {"id": f"Reminder_{app_idx}", "title": "Remind Approver"}},
                                                                 {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                                 {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                             ]
                                                             send_whatsapp_message(
                                                                 sender_id, 
                                                                 f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
-                                                                f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                                f"Your `{df_employeesappspendingcheck.iat[0,2]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,7]} days from {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,6].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,3]}.\n\n" 
                                                                 f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
                                                                 , 
                                                                 buttons
@@ -5367,11 +5386,11 @@ def webhook():
                                                     table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                                    query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, appid, department  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, appid, department  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
 
-                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp", "appid", "department"])    
+                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp", "appid", "department"])    
 
                                                     if len(df_employeesappspendingcheck) == 0:
 
@@ -5556,16 +5575,19 @@ def webhook():
                                                             )
 
                                                     elif len(df_employeesappspendingcheck) > 0:
+                                                        
+                                                        app_idx = df_employeesappspendingcheck.iat[0,0]
+
                                                         buttons = [
-                                                            {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                            {"type": "reply", "reply": {"id": f"Reminder_{app_idx}", "title": "Remind Approver"}},
                                                             {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
 
                                                         ]
-                                                        approoooover = df_employeesappspendingcheck.iat[0,2].title()
+                                                        approoooover = df_employeesappspendingcheck.iat[0,3].title()
                                                         send_whatsapp_message(
                                                             sender_id, 
-                                                            f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
+                                                            f"Hey {first_name}, your recent `{df_employeesappspendingcheck.iat[0,2]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,7]} days from {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,6].strftime('%d %B %Y')}` is still pending approval from `{approoooover}`.\n\n" 
                                                             f"Select an option below to either remind `{approoooover}` to approve your pending leave application or you can cancel the pending application to submit a new leave application."         
                                                             , 
                                                             buttons
@@ -5843,15 +5865,18 @@ def webhook():
                                                             sections) 
 
                                                     elif len(df_employeesappspendingcheck) > 0:
+
+                                                        app_idx = df_employeesappspendingcheck.iat[0,0]
+
                                                         buttons = [
-                                                            {"type": "reply", "reply": {"id": "Reminder", "title": "Remind Approver"}},
+                                                            {"type": "reply", "reply": {"id": f"Reminder_{app_idx}", "title": "Remind Approver"}},
                                                             {"type": "reply", "reply": {"id": "Cancelapp", "title": "Cancel Pending App"}},
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                         ]
                                                         send_whatsapp_message(
                                                             sender_id, 
                                                             f"Oops! 🥲. Sorry {first_name}, you cannot apply for leave whilst you have another leave application which is still pending approval.\n\n" 
-                                                            f"Your `{df_employeesappspendingcheck.iat[0,1]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,3].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,6]} days from {df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,2]}.\n\n" 
+                                                            f"Your `{df_employeesappspendingcheck.iat[0,2]}` Leave Application `[ID - {df_employeesappspendingcheck.iat[0,0]}]` applied on `{df_employeesappspendingcheck.iat[0,4].strftime('%d %B %Y')}` for `{df_employeesappspendingcheck.iat[0,7]} days from {df_employeesappspendingcheck.iat[0,5].strftime('%d %B %Y')} to {df_employeesappspendingcheck.iat[0,6].strftime('%d %B %Y')}` is still pending approval from {df_employeesappspendingcheck.iat[0,3]}.\n\n" 
                                                             f"Select an option below to either remind the approver to approved your pending application or you can cancel the pending application to submit a new leave application."         
                                                             , 
                                                             buttons
