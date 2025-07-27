@@ -1747,8 +1747,14 @@ def webhook():
                                                                         for s in statements:
                                                                             print(s)
 
-                                                                        leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+                                                                        if leavetype == "Annual":
 
+                                                                            leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+
+                                                                        else:
+
+                                                                            leavedaysbalancebf = int(leavedaysbalance)
+                                                                            
                                                                         if leavedaysbalancebf >= 0:
 
 
@@ -2876,7 +2882,13 @@ def webhook():
                                                                 for s in statements:
                                                                     print(s)
 
-                                                                leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+                                                                if leavetype == "Annual":
+
+                                                                    leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+
+                                                                else:
+
+                                                                    leavedaysbalancebf = int(leavedaysbalance)
 
                                                                 if leavedaysbalancebf >= 0:
 
@@ -4301,7 +4313,14 @@ def webhook():
                                                                         for s in statements:
                                                                             print(s)
 
-                                                                        leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+                                                                        if leavetype == "Annual":
+
+                                                                            leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+
+                                                                        else:
+
+                                                                            leavedaysbalancebf = int(leavedaysbalance)
+
 
                                                                         if leavedaysbalancebf >= 0:
 
@@ -6027,8 +6046,14 @@ def webhook():
                                                                     for s in statements:
                                                                         print(s)
 
-                                                                    leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+                                                                    if leavetype == "Annual":
 
+                                                                        leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+
+                                                                    else:
+
+                                                                        leavedaysbalancebf = int(leavedaysbalance)
+                                                                
                                                                     if leavedaysbalancebf >= 0:
 
                                                                         status = "Pending"
