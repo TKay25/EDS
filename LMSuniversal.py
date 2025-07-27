@@ -1754,7 +1754,7 @@ def webhook():
                                                                         else:
 
                                                                             leavedaysbalancebf = int(leavedaysbalance)
-                                                                            
+
                                                                         if leavedaysbalancebf >= 0:
 
 
@@ -8727,7 +8727,13 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             print(f"End Date: {end_date}")
             print(f"Department: {department}")
 
-            leavedaysbalancebf = int(float(leave_days_balance)) - int(leave_days)
+            if leave_type == "Annual":
+
+                leavedaysbalancebf = int(float(leave_days_balance)) - int(leave_days)
+
+            else:
+
+                leavedaysbalancebf = int(float(leave_days_balance))
 
             table_name_apps_pending_approval = f"{company_name}appspendingapproval"
             table_name_apps_approved = f"{company_name}appsapproved"
