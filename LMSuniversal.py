@@ -766,7 +766,7 @@ def webhook():
                                                 current_date = startdate
 
                                                 while current_date <= enddate:
-                                                    if current_date.weekday() < 5:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                    if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
                                                         business_days += 1
                                                     current_date += timedelta(days=1)  # Use timedelta directly
 
@@ -2344,7 +2344,7 @@ def webhook():
                                                         business_days = 0
                                                         current_date = startdate
                                                         while current_date <= enddate:
-                                                            if current_date.weekday() < 5:  # Weekday: Mon-Fri
+                                                            if current_date.weekday() != 6:  # Weekday: Mon-Fri
                                                                 business_days += 1
                                                             current_date += timedelta(days=1)
 
@@ -4078,7 +4078,7 @@ def webhook():
                                                     business_days = 0
                                                     current_date = startdate
                                                     while current_date <= enddate:
-                                                        if current_date.weekday() < 5:  # Weekday: Mon-Fri
+                                                        if current_date.weekday() != 6:  # Weekday: Mon-Fri
                                                             business_days += 1
                                                         current_date += timedelta(days=1)
 
@@ -5968,7 +5968,7 @@ def webhook():
                                                             business_days = 0
                                                             current_date = startdate
                                                             while current_date <= enddate:
-                                                                if current_date.weekday() < 5:  # Weekday: Mon-Fri
+                                                                if current_date.weekday() != 6:  # Weekday: Mon-Fri
                                                                     business_days += 1
                                                                 current_date += timedelta(days=1)
 
@@ -8266,7 +8266,7 @@ def webhook():
                                                         business_days = 0
                                                         current_date = startdate
                                                         while current_date <= enddate:
-                                                            if current_date.weekday() < 5:  # Weekday: Mon-Fri
+                                                            if current_date.weekday() != 6:  # Weekday: Mon-Fri
                                                                 business_days += 1
                                                             current_date += timedelta(days=1)
 
