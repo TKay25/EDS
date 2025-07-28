@@ -8505,14 +8505,6 @@ def run1(table_name, empid):
     employee_personal_details.columns = ["ID","FIRST NAME","SURNAME","WHATSAPP","EMAIL","ADDRESS","ACTION"]
     employee_personal_details_html = employee_personal_details.to_html(classes="table table-bordered table-theme", table_id="employeespersonalTable", index=False,  escape=False,)
 
-
-
-
-
-
-
-
-
     total_days_available = df_employees["Leave Days Balance"].sum()
 
     total_employees = len(df_employees)
@@ -9699,11 +9691,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             if leave_type == "Annual":
 
-                leavedaysbalancebf = int(float(leave_days_balance)) - int(leave_days)
+                leavedaysbalancebf = float(leave_days_balance) - float(leave_days)
 
             else:
 
-                leavedaysbalancebf = int(float(leave_days_balance))
+                leavedaysbalancebf = float(leave_days_balance)
 
             table_name_apps_pending_approval = f"{company_name}appspendingapproval"
             table_name_apps_approved = f"{company_name}appsapproved"
