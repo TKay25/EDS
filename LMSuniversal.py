@@ -1939,11 +1939,11 @@ def webhook():
 
                                                                         if leavetype == "Annual":
 
-                                                                            leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+                                                                            leavedaysbalancebf = float(leavedaysbalance) - float(business_days)
 
                                                                         else:
 
-                                                                            leavedaysbalancebf = int(leavedaysbalance)
+                                                                            leavedaysbalancebf = float(leavedaysbalance)
 
                                                                         if leavedaysbalancebf >= 0:
 
@@ -5061,11 +5061,11 @@ def webhook():
 
                                                                         if leavetype == "Annual":
 
-                                                                            leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+                                                                            leavedaysbalancebf = float(leavedaysbalance) - float(business_days)
 
                                                                         else:
 
-                                                                            leavedaysbalancebf = int(leavedaysbalance)
+                                                                            leavedaysbalancebf = float(leavedaysbalance)
 
 
                                                                         if leavedaysbalancebf >= 0:
@@ -6995,11 +6995,11 @@ def webhook():
 
                                                                     if leavetype == "Annual":
 
-                                                                        leavedaysbalancebf = int(leavedaysbalance) - int(business_days)
+                                                                        leavedaysbalancebf = float(leavedaysbalance) - float(business_days)
 
                                                                     else:
 
-                                                                        leavedaysbalancebf = int(leavedaysbalance)
+                                                                        leavedaysbalancebf = float(leavedaysbalance)
                                                                 
                                                                     if leavedaysbalancebf >= 0:
 
