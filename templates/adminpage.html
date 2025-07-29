@@ -962,8 +962,8 @@
                             </div>
 
                             <div class="graph-card">
-                                <h6>Monthly Leave Trend</h6>
-                                <canvas id="monthlyLeaveChart"></canvas>
+                                <h6>Employees at Work</h6>
+                                <canvas id="employeesRemainingChart" width="800" height="400"></canvas>
                             </div>
 
 
@@ -2116,9 +2116,9 @@
   <!-- Bootstrap and jQuery Scripts -->
 
 
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -2130,6 +2130,36 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+<script>
+  // Parse the JSON data passed from Flask
+  const dataFromFlask = JSON.parse('{{ empsremainingbydpt | safe }}');
+
+  // Prepare traces for Plotly
+  const traces = [];
+
+  for (const dept in dataFromFlask) {
+    const dates = dataFromFlask[dept].map(entry => entry.date);
+    const remainingCounts = dataFromFlask[dept].map(entry => entry.employees_remaining);
+
+    traces.push({
+      x: dates,
+      y: remainingCounts,
+      mode: 'lines+markers',
+      name: dept,
+      line: { shape: 'linear' },
+      marker: { size: 6 }
+    });
+  }
+
+  const layout = {
+    title: 'Employees Remaining at Work by Department (Next 30 Days)',
+    xaxis: { title: 'Date', tickangle: -45 },
+    yaxis: { title: 'Employees Remaining', rangemode: 'tozero' },
+    legend: { orientation: 'h', y: -0.2 }
+  };
+
+  Plotly.newPlot('employeesRemainingChart', traces, layout, {responsive: true});
+</script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

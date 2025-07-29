@@ -8431,6 +8431,45 @@ def find_credentials(email, password):
         return None
 
 
+def generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_lineg):
+    df_employees = df_employees_lineg
+    df_leaves = df_apps_approved_lineg
+
+    today = datetime.today().date()
+    next_30_days = today + timedelta(days=30)
+
+    # Total employees per department
+    total_by_dept = df_employees.groupby('department').size().to_dict()
+
+    # Ensure leave dates are datetime.date
+    df_leaves['leavestartdate'] = pd.to_datetime(df_leaves['leavestartdate']).dt.date
+    df_leaves['leaveenddate'] = pd.to_datetime(df_leaves['leaveenddate']).dt.date
+
+    result = {}
+    all_dates = pd.date_range(start=today, end=next_30_days).date
+
+    for dept, total_employees in total_by_dept.items():
+        result[dept] = []
+        df_dept_leaves = df_leaves[df_leaves['department'] == dept]
+
+        for date in all_dates:
+            # Count employees on leave on this date
+            on_leave = df_dept_leaves[
+                (df_dept_leaves['leavestartdate'] <= date) & (df_dept_leaves['leaveenddate'] >= date)
+            ].shape[0]
+
+            remaining = total_employees - on_leave
+
+            result[dept].append({
+                "date": date.strftime("%Y-%m-%d"),
+                "employees_remaining": remaining
+            })
+
+    return result
+
+
+
+
 def generate_leave_by_department_data(df_filtered_for_bar_chart):
     # Ensure 'Date Applied' is a datetime object
     df_filtered_for_bar_chart['Leave Start Date'] = pd.to_datetime(df_filtered_for_bar_chart['Leave Start Date'], format='%d %B %Y', errors='coerce')
@@ -8593,7 +8632,6 @@ def run1(table_name, empid):
     table_name_apps_declined = f"{company_name}appsdeclined"
     table_name_apps_cancelled = f"{company_name}appscancelled"
 
-
     query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_pending_approval};"""
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -8602,7 +8640,6 @@ def run1(table_name, empid):
     df_leave_appsmain_pending_approvalcomb = df_leave_appsmain_pending_approval[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"]]
     open_requests = len(df_leave_appsmain_pending_approval)
     print(df_leave_appsmain_pending_approval)
-
 
     query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, approvalstatus FROM {table_name_apps_approved};"""
     cursor.execute(query)
@@ -8707,9 +8744,6 @@ def run1(table_name, empid):
     rows = cursor.fetchall()
     df_leave_appsmain_approvedxx = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Department", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status"])
     df_leave_appsmain_approvedxx['Approval Status'] = "Approved"
-    
-
-
 
 
 
@@ -8721,12 +8755,6 @@ def run1(table_name, empid):
     df_filtered_for_bar_chart = df_leave_appsmain_analysis[['Department', 'Approval Status', 'Leave Start Date']]
 
     df_filtered_for_bar_chart_type = df_leave_appsmain_analysis[['Leave Type', 'Approval Status', 'Leave Start Date']]
-
-
-
-
-
-
 
 
     df_leave_appsmain1 = df_leave_appsmain_pending_approvalcomb._append(df_leave_appsmain_approvedcomb)
@@ -8836,6 +8864,44 @@ def run1(table_name, empid):
     if not approval_rate:
         approval_rate = ""
 
+
+
+
+
+
+
+
+
+    query = f"""SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,leavedaysbalancebf, departmentFROM {table_name_apps_approved}"""
+    cursor.execute(query)
+    rowsxxyy = cursor.fetchall()
+
+    df_apps_approved_lineg = pd.DataFrame(rowsxxyy, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate","leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"])
+
+    startdate_lineg = datetime.today().date()
+    enddate_lineg = startdate_lineg + timedelta(days=30)
+
+
+    query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
+    cursor.execute(query)
+    rowsxxzz = cursor.fetchall()
+
+    df_employees_lineg = pd.DataFrame(rowsxxzz, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month","Department"])
+   
+    chart_img = generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_lineg)
+
+
+
+
+
+
+
+
+
+
+
+
+
     return {
         "table_my_leave_apps_html": table_my_leave_apps_html,
         "table_leave_apps_approved_by_me_html": table_leave_apps_approved_by_me_html,
@@ -8876,6 +8942,7 @@ def run1(table_name, empid):
         "leave_status_chart": generate_leave_status_chart(),  
         "leave_by_department_data": generate_leave_by_department_data(df_filtered_for_bar_chart),
         "leave_by_type_data": generate_leave_by_type_data(df_filtered_for_bar_chart_type),
+        "empsremainingbydpt": generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_lineg),
     }
 
 
