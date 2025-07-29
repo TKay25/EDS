@@ -2136,7 +2136,7 @@
 
     const remainingDatasets = Object.entries(rawRemainingData).map(([dept, values]) => ({
         label: dept,
-        data: values.map(v => v.remaining),
+        data: values.map(v => Number(v.remaining)),
         fill: false,
         borderColor: getRandomColor(),
         tension: 0.1
