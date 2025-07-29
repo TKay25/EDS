@@ -8872,7 +8872,7 @@ def run1(table_name, empid):
 
 
 
-    query = f"""SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,leavedaysbalancebf, departmentFROM {table_name_apps_approved}"""
+    query = f"""SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,leavedaysbalancebf, department FROM {table_name_apps_approved}"""
     cursor.execute(query)
     rowsxxyy = cursor.fetchall()
 
