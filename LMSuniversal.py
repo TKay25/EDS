@@ -5280,60 +5280,197 @@ def webhook():
                                                             print("CURRENT FIIIIIIIXXX")
                                                             print(result)
 
-                                                            plt.figure(figsize=(12, 6))
+                                                            result2 = {}
 
-                                                            for dept, records in result.items():
-                                                                dates = [r['date'] for r in records]
-                                                                percentages = [r['remaining'] for r in records]
-                                                                plt.plot(dates, percentages, label=dept)
+                                                            for dept, total_employees in total_by_dept.items():
+                                                                result2[dept] = []
+                                                                df_dept_leaves = df_leaves[df_leaves['department'] == dept]
 
-                                                            plt.xticks(rotation=45)
-                                                            plt.ylim(0, 100)
-                                                            plt.title("Department Occupancy (%) Over Next 30 Days")
-                                                            plt.xlabel("Date")
-                                                            plt.ylabel("Occupancy (%)")
-                                                            plt.legend()
-                                                            plt.grid(True)
-                                                            plt.tight_layout()
+                                                                for date in all_dates:
+                                                                    # Count employees on leave on this date
+                                                                    on_leave = df_dept_leaves[
+                                                                        (df_dept_leaves['leavestartdate'] <= date) & (df_dept_leaves['leaveenddate'] >= date)
+                                                                    ].shape[0]
 
-                                                            # Save image
-                                                            output_path = "occupancy_chart.png"
-                                                            plt.savefig(output_path)
-                                                            plt.close()
+                                                                    remaining = total_employees - on_leave
 
-                                                            media_url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/media"
-                                                            access_token = f"{ACCESS_TOKEN}"
-                                                            recipient_whatsapp_id = sender_id
+                                                                    result2[dept].append({
+                                                                        "date": date.strftime("%Y-%m-%d"),
+                                                                        "remaining": remaining
+                                                                    })
+                                                            print("CURRENT FIIIIIIIXXX")
+                                                            print(result2)
+                                                        
 
-                                                            # Step 1: Upload the image to WhatsApp servers
-                                                            files = {'file': open("occupancy_chart.png", 'rb')}
-                                                            media_upload = requests.post(
-                                                                media_url,
-                                                                files=files,
-                                                                data={"messaging_product": "whatsapp"},
-                                                                headers={"Authorization": f"Bearer {access_token}"}
-                                                            )
-                                                            media_id = media_upload.json().get("id")
 
-                                                            # Step 2: Send the image to the user
-                                                            send_url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": recipient_whatsapp_id.replace("whatsapp:", ""),
-                                                                "type": "image",
-                                                                "image": {
-                                                                    "id": media_id,
-                                                                    "caption": "Here is your department occupancy chart over the next 30 days."
+
+
+
+                                                            def generate_graph_image_bytes(result_dict):
+                                                                plt.figure(figsize=(12, 6))
+
+                                                                for dept, values in result_dict.items():
+                                                                    dates = [entry['date'] for entry in values]
+                                                                    percentages = [entry['remaining'] for entry in values]
+                                                                    plt.plot(dates, percentages, label=dept)
+
+                                                                plt.xlabel("Date")
+                                                                plt.ylabel("Remaining % Available Employees")
+                                                                plt.title("Departmental Leave Trend")
+                                                                plt.xticks(rotation=45)
+                                                                plt.legend()
+                                                                plt.tight_layout()
+
+                                                                img_buffer = io.BytesIO()
+                                                                plt.savefig(img_buffer, format='png')
+                                                                img_buffer.seek(0)
+                                                                return img_buffer
+
+                                                            def generate_graph_image_bytes_bar(result_dict):
+                                                                plt.figure(figsize=(12, 6))
+
+                                                                # Extract all unique dates
+                                                                all_dates = sorted({entry['date'] for values in result_dict.values() for entry in values})
+                                                                x = np.arange(len(all_dates))  # the label locations
+
+                                                                total_departments = len(result_dict)
+                                                                width = 0.8 / total_departments  # total width shared among bars
+
+                                                                for i, (dept, values) in enumerate(result_dict.items()):
+                                                                    # Create a dict of date -> percentage for each dept (fill missing dates with 0)
+                                                                    date_to_val = {entry['date']: entry['remaining'] for entry in values}
+                                                                    percentages = [date_to_val.get(date, 0) for date in all_dates]
+                                                                    plt.bar(x + i * width, percentages, width=width, label=dept)
+
+                                                                plt.xlabel("Date")
+                                                                plt.ylabel("Remaining % Available Employees")
+                                                                plt.title("Departmental Leave Trend (Bar Chart)")
+                                                                plt.xticks(x + width * (total_departments - 1) / 2, all_dates, rotation=45)
+                                                                plt.legend()
+                                                                plt.tight_layout()
+
+                                                                img_buffer = io.BytesIO()
+                                                                plt.savefig(img_buffer, format='png')
+                                                                img_buffer.seek(0)
+                                                                return img_buffer
+
+
+                                                            def upload_image_to_whatsapp(img_buffer):
+                                                                filename=f"{companyxx} insights {today_date}.png"
+                                                            
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}"
                                                                 }
-                                                            }
-                                                            headers = {
-                                                                "Authorization": f"Bearer {access_token}",
-                                                                "Content-Type": "application/json"
-                                                            }
-                                                            response = requests.post(send_url, json=payload, headers=headers)
-                                                            print(response.json())
+
+                                                                files = {
+                                                                    "file": (filename, img_buffer.read(), "image/png"),
+                                                                    "type": (None, "image/png"),
+                                                                    "messaging_product": (None, "whatsapp")
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, files=files)
+                                                                print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                                response.raise_for_status()
+                                                                return response.json()["id"]
+
+                                                                                                            
+                                                            def send_whatsapp_image_by_media_id(recipient_number, media_id):
+                                                                filename=f"{companyxx} insights {today_date}.png"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "image",
+                                                                    "image": {
+                                                                        "id": media_id,
+                                                                        "caption": "📊 % Employee Occupancy per Department +30-day"
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
 
 
+                                                            def send_whatsapp_image_by_media_id2(recipient_number, media_id):
+                                                                filename=f"{companyxx} insights {today_date}.png"
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": recipient_number,
+                                                                    "type": "image",
+                                                                    "image": {
+                                                                        "id": media_id,
+                                                                        "caption": "📊 Number of Employees Remaining at work per Department =30-day"
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+                                                                response.raise_for_status()
+                                                                return response.json()
+                                                            
+
+
+
+
+
+
+                                                            img_bytes = generate_graph_image_bytes_bar(result)
+                                                            media_id = upload_image_to_whatsapp(img_bytes)
+                                                            send_whatsapp_image_by_media_id(sender_id, media_id)
+
+                                                            img_bytes2 = generate_graph_image_bytes(result2)
+                                                            media_id2 = upload_image_to_whatsapp(img_bytes2)
+                                                            send_whatsapp_image_by_media_id2(sender_id, media_id2)
+
+                                                            avg_availability = {}
+                                                            for dept, values in result.items():
+                                                                percentages = [entry['remaining'] for entry in values]
+                                                                avg_availability[dept] = sum(percentages) / len(percentages)
+
+                                                            lowest_availability = {}
+                                                            for dept, values in result.items():
+                                                                lowest_entry = min(values, key=lambda x: x['remaining'])
+                                                                lowest_availability[dept] = (lowest_entry['date'], lowest_entry['remaining'])
+
+                                                            total_leave_days = {}
+                                                            for dept, values in result.items():
+                                                                total_leave_days[dept] = sum(100 - entry['remaining'] for entry in values)
+
+
+                                                            msg = "📊 Departmental Leave Insights for Next 30 Days:\n\n"
+
+                                                            msg += "Average Availability:\n"
+                                                            for dept, avg in avg_availability.items():
+                                                                msg += f"- {dept}: {avg:.1f}%\n"
+
+                                                            msg += "\nLowest Availability Dates:\n"
+                                                            for dept, (date, perc) in lowest_availability.items():
+                                                                msg += f"- {dept}: {date} ({perc:.1f}%)\n"
+
+                                                            msg += "\nTotal Planned Leave Days:\n"
+                                                            for dept, days in total_leave_days.items():
+                                                                msg += f"- {dept}: {days:.0f} days\n"
+
+                                                            buttonsapproval = [
+                                                                {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
+                                                            ]
+
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f" {msg} \n\n Select an option below to continue 👇.",
+                                                                buttonsapproval
+                                                            )
 
 
 
