@@ -2142,6 +2142,9 @@
         tension: 0.1
     }));
 
+    console.log("All Dates:", allDates);
+    console.log("Datasets:", remainingDatasets);
+
     const ctx = document.getElementById("employeesRemainingChart").getContext("2d");
 
     new Chart(ctx, {
@@ -2163,7 +2166,7 @@
             },
             scales: {
                 x: { display: true, title: { display: true, text: 'Date' }},
-                y: { display: true, title: { display: true, text: 'Employees Remaining' }, beginAtZero: true }
+                y: { display: true, title: { display: true, text: 'Employees Remaining' } }
             }
         }
     });
