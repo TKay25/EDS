@@ -6285,64 +6285,87 @@ def webhook():
                                                         print("CURRENT FIIIIIIIXXX")
                                                         print(result)
 
-                                                        plt.figure(figsize=(12, 6))
+                                                        def generate_graph_image_bytes(result_dict):
+                                                            plt.figure(figsize=(12, 6))
 
-                                                        for dept, records in result.items():
-                                                            dates = [r['date'] for r in records]
-                                                            percentages = [r['remaining'] for r in records]
-                                                            plt.plot(dates, percentages, label=dept)
+                                                            for dept, values in result_dict.items():
+                                                                dates = [entry['date'] for entry in values]
+                                                                percentages = [entry['remaining'] for entry in values]
+                                                                plt.plot(dates, percentages, label=dept)
 
-                                                        plt.xticks(rotation=45)
-                                                        plt.ylim(0, 100)
-                                                        plt.title("Department Occupancy (%) Over Next 30 Days")
-                                                        plt.xlabel("Date")
-                                                        plt.ylabel("Occupancy (%)")
-                                                        plt.legend()
-                                                        plt.grid(True)
-                                                        plt.tight_layout()
+                                                            plt.xlabel("Date")
+                                                            plt.ylabel("Remaining % Available Employees")
+                                                            plt.title("Departmental Leave Trend")
+                                                            plt.xticks(rotation=45)
+                                                            plt.legend()
+                                                            plt.tight_layout()
 
-                                                        image_buffer = BytesIO()
-                                                        plt.savefig(image_buffer, format='png')
-                                                        image_buffer.seek(0)  # Go to the beginning
+                                                            img_buffer = io.BytesIO()
+                                                            plt.savefig(img_buffer, format='png')
+                                                            img_buffer.seek(0)
+                                                            return img_buffer.getvalue()
 
-                                                        upload_url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/media"
-                                                        access_token = f"{ACCESS_TOKEN}"
-
-                                                        files = {
-                                                            'file': ('occupancy_chart.png', image_buffer, 'image/png')
-                                                        }
-                                                        data = {
-                                                            'messaging_product': 'whatsapp'
-                                                        }
-                                                        headers = {
-                                                            'Authorization': f'Bearer {access_token}'
-                                                        }
-
-                                                        response = requests.post(upload_url, files=files, data=data, headers=headers)
-                                                        print(response.status_code, response.text)
-
-                                                        media_id = response.json()['id']
-                                                        recipient = sender_id
-
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": recipient,
-                                                            "type": "image",
-                                                            "image": {
-                                                                "id": media_id,
-                                                                "caption": "Occupancy chart for next 30 days"
+                                                        def upload_image_to_whatsapp(pdf_bytes):
+                                                            filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
+                                                        
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
                                                             }
-                                                        }
-                                                        headers = {
-                                                            "Authorization": f"Bearer {access_token}",
-                                                            "Content-Type": "application/json"
-                                                        }
-                                                        send_response = requests.post(
-                                                            f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
-                                                            json=payload,
-                                                            headers=headers
+
+                                                            files = {
+                                                                "file": (filename, img_buffer.read(), "image/png"),
+                                                                "type": (None, "image/png"),
+                                                                "messaging_product": (None, "whatsapp")
+                                                            }
+
+                                                            response = requests.post(url, headers=headers, files=files)
+                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                            response.raise_for_status()
+                                                            return response.json()["id"]
+
+                                                                                                        
+                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                            filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            }
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": recipient_number,
+                                                                "type": "image",
+                                                                "image": {
+                                                                    "id": media_id,
+                                                                    "caption": "📊 Departmental Leave Trends with Background Total Employees"
+                                                                }
+                                                            }
+
+                                                            response = requests.post(url, headers=headers, json=payload)
+                                                            response.raise_for_status()
+                                                            return response.json()
+
+
+                                                        img_bytes = generate_graph_image_bytes(result)
+
+                                                        media_id = upload_image_to_whatsapp(img_bytes)
+
+                                                        send_whatsapp_image_by_media_id(sender_id, media_id)
+
+                                                        buttonsapproval = [
+                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
+                                                        ]
+
+                                                        send_whatsapp_message(sender_id, f"✅ Great News {approver_name} from {companyxx}! \n\n You have successfully approved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
+                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            "Select an option below to continue 👇, or Type `Hello` to view all Administrator/Approver Options",
+                                                            buttonsapproval
                                                         )
-                                                        print(send_response.status_code, send_response.text)
 
 
 
