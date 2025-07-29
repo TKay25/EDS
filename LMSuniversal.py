@@ -6422,6 +6422,12 @@ def webhook():
                                                             response = requests.post(url, headers=headers, json=payload)
                                                             response.raise_for_status()
                                                             return response.json()
+                                                        
+
+
+
+
+
 
                                                         img_bytes = generate_graph_image_bytes_bar(result)
                                                         media_id = upload_image_to_whatsapp(img_bytes)
@@ -6431,6 +6437,34 @@ def webhook():
                                                         media_id2 = upload_image_to_whatsapp(img_bytes2)
                                                         send_whatsapp_image_by_media_id2(sender_id, media_id2)
 
+                                                        avg_availability = {}
+                                                        for dept, values in result.items():
+                                                            percentages = [entry['remaining'] for entry in values]
+                                                            avg_availability[dept] = sum(percentages) / len(percentages)
+
+                                                        lowest_availability = {}
+                                                        for dept, values in result.items():
+                                                            lowest_entry = min(values, key=lambda x: x['remaining'])
+                                                            lowest_availability[dept] = (lowest_entry['date'], lowest_entry['remaining'])
+
+                                                        total_leave_days = {}
+                                                        for dept, values in result.items():
+                                                            total_leave_days[dept] = sum(100 - entry['remaining'] for entry in values)
+
+
+                                                        msg = "📊 Departmental Leave Insights for Next 30 Days:\n\n"
+
+                                                        msg += "Average Availability:\n"
+                                                        for dept, avg in avg_availability.items():
+                                                            msg += f"- {dept}: {avg:.1f}%\n"
+
+                                                        msg += "\nLowest Availability Dates:\n"
+                                                        for dept, (date, perc) in lowest_availability.items():
+                                                            msg += f"- {dept}: {date} ({perc:.1f}%)\n"
+
+                                                        msg += "\nTotal Planned Leave Days:\n"
+                                                        for dept, days in total_leave_days.items():
+                                                            msg += f"- {dept}: {days:.0f} days\n"
 
                                                         buttonsapproval = [
                                                             {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
@@ -6439,7 +6473,7 @@ def webhook():
 
                                                         send_whatsapp_message(
                                                             sender_id,
-                                                            "Select an option below to continue 👇, or Type `Hello` to view all Administrator/Approver Options",
+                                                            f" {msg} \n\n Select an option below to continue 👇.",
                                                             buttonsapproval
                                                         )
 
