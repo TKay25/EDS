@@ -8433,45 +8433,38 @@ def find_credentials(email, password):
 
 def generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_lineg):
     df_employees = df_employees_lineg
-    df_approved_apps = df_apps_approved_lineg
+    df_leaves = df_apps_approved_lineg
 
-    df_approved_apps['Leave Start Date'] = pd.to_datetime(df_approved_apps['leavestartdate'], format='%d %B %Y', errors='coerce')
-    df_approved_apps['Leave End Date'] = pd.to_datetime(df_approved_apps['leaveenddate'], format='%d %B %Y', errors='coerce')
+    today = datetime.today().date()
+    next_30_days = today + timedelta(days=30)
 
-    # Set start from today only
-    today = pd.Timestamp.today().normalize()
-    min_start = max(df_approved_apps['Leave Start Date'].min(), today)
-    max_end = df_approved_apps['Leave End Date'].max()
+    # Total employees per department
+    total_by_dept = df_employees.groupby('department').size().to_dict()
 
-    if pd.isnull(min_start) or pd.isnull(max_end) or min_start > max_end:
-        return {}  # no data to plot
+    # Ensure leave dates are datetime.date
+    df_leaves['leavestartdate'] = pd.to_datetime(df_leaves['leavestartdate']).dt.date
+    df_leaves['leaveenddate'] = pd.to_datetime(df_leaves['leaveenddate']).dt.date
 
-    # Generate all relevant dates
-    all_dates = pd.date_range(start=min_start, end=max_end)
-
-    departments = df_employees['department'].unique()
     result = {}
+    all_dates = pd.date_range(start=today, end=next_30_days).date
 
-    for dept in departments:
-        dept_employees = df_employees[df_employees['department'] == dept]
-        dept_result = []
+    for dept, total_employees in total_by_dept.items():
+        result[dept] = []
+        df_dept_leaves = df_leaves[df_leaves['department'] == dept]
 
         for date in all_dates:
-            on_leave = df_approved_apps[
-                (df_approved_apps['Leave Start Date'] <= date) &
-                (df_approved_apps['Leave End Date'] >= date) &
-                (df_approved_apps['department'] == dept)
-            ]['id'].nunique()
+            # Count employees on leave on this date
+            on_leave = df_dept_leaves[
+                (df_dept_leaves['leavestartdate'] <= date) & (df_dept_leaves['leaveenddate'] >= date)
+            ].shape[0]
 
-            remaining = len(dept_employees) - on_leave
-            dept_result.append({
-                'date': date.strftime('%Y-%m-%d'),
-                'remaining': remaining
+            remaining = total_employees - on_leave
+
+            result[dept].append({
+                "date": date.strftime("%Y-%m-%d"),
+                "employees_remaining": remaining
             })
-
-        result[dept] = dept_result
-
-    print("EMPPPPPPP RESULT NEWWWW")
+    print("CURRENT FIIIIIIIXXX")
     print(result)
 
     return result

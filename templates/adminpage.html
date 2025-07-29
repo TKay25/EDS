@@ -963,7 +963,7 @@
 
                             <div class="graph-card">
                                 <h6>Employees at Work</h6>
-                                <canvas id="availabilityChart" width="800" height="400"></canvas>
+                                <canvas id="employeesRemainingChart" width="800" height="400"></canvas>
                             </div>
 
 
@@ -2131,34 +2131,49 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-    const availabilityData = JSON.parse('{{ remaining_employees_data | tojson | safe }}');
-    const labels = availabilityData[Object.keys(availabilityData)[0]].map(entry => entry.date);
+    var empsRemainingData = JSON.parse('{{ empsremainingbydpt | tojson | safe }}');
 
-    const datasets = Object.entries(availabilityData).map(([dept, entries]) => ({
-        label: dept,
-        data: entries.map(entry => entry.remaining),
-        fill: false,
-        borderColor: getRandomColor(),
-        tension: 0.2
-    }));
+    var traces = [];
 
-    new Chart(document.getElementById('availabilityChart'), {
-        type: 'line',
-        data: { labels, datasets },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'top' } },
-            scales: {
-                y: { beginAtZero: true },
-                x: { title: { display: true, text: 'Date' } }
-            }
-        }
-    });
+    for (var dept in empsRemainingData) {
+        var dates = empsRemainingData[dept].map(entry => entry.date);
+        var remainingCounts = empsRemainingData[dept].map(entry => entry.employees_remaining);
 
-    function getRandomColor() {
-        return `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
+        traces.push({
+            x: dates,
+            y: remainingCounts,
+            mode: 'lines+markers',
+            name: dept,
+            line: { shape: 'linear' },
+            marker: { size: 6 }
+        });
     }
+
+    var layout = {
+        title: 'Employees Remaining at Work by Department (Next 30 Days)',
+        xaxis: {
+            title: 'Date',
+            tickangle: -45,
+            tickformat: '%d %b',
+            automargin: true
+        },
+        yaxis: {
+            title: 'Employees Remaining',
+            rangemode: 'tozero'
+        },
+        legend: {
+            orientation: 'h',
+            y: -0.2
+        },
+        margin: {
+            t: 50,
+            b: 100
+        }
+    };
+
+    Plotly.newPlot('employeesRemainingChart', traces, layout, {responsive: true});
 </script>
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
