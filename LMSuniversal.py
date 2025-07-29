@@ -5166,12 +5166,12 @@ def webhook():
                                                                 approver_id =  int(np.int64(df_employees.iat[0,7]))
                                                                 approver_email =  df_employees.iat[0,8]
                                                                 approver_whatsapp =  int(np.int64(df_employees.iat[0,9]))
-                                                                leave_days_balance =  int(np.int64(df_employees.iat[0,10]))
+                                                                leave_days_balance =  float(np.int64(df_employees.iat[0,10]))
                                                                 date_applied = df_employees.iat[0,11]
                                                                 start_date = df_employees.iat[0,12]
                                                                 end_date = df_employees.iat[0,13]
                                                                 leave_days =  int(np.int64(df_employees.iat[0,14]))
-                                                                leavedaysbalancebf =  int(np.int64(df_employees.iat[0,15]))
+                                                                leavedaysbalancebf =  float(np.int64(df_employees.iat[0,15]))
                                                                 department = df_employees.iat[0,16]
                                                                 insert_query = f"""
                                                                 INSERT INTO {table_name_apps_pending_approval} 
@@ -7114,12 +7114,12 @@ def webhook():
                                                             approver_id =  int(np.int64(df_employees.iat[0,7]))
                                                             approver_email =  df_employees.iat[0,8]
                                                             approver_whatsapp =  int(np.int64(df_employees.iat[0,9]))
-                                                            leave_days_balance =  int(np.int64(df_employees.iat[0,10]))
+                                                            leave_days_balance =  float(np.int64(df_employees.iat[0,10]))
                                                             date_applied = df_employees.iat[0,11]
                                                             start_date = df_employees.iat[0,12]
                                                             end_date = df_employees.iat[0,13]
                                                             leave_days =  int(np.int64(df_employees.iat[0,14]))
-                                                            leavedaysbalancebf =  int(np.int64(df_employees.iat[0,15]))
+                                                            leavedaysbalancebf =  float(np.int64(df_employees.iat[0,15]))
                                                             insert_query = f"""
                                                             INSERT INTO {table_name_apps_pending_approval} 
                                                             (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
@@ -9748,7 +9748,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                     """
-                    cursor.execute(insert_query, (employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, int(leavedaysbalancebf), status))
+                    cursor.execute(insert_query, (employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, float(leavedaysbalancebf), status))
                     connection.commit()
 
 
@@ -10113,7 +10113,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                     whatsapp_raw = str(int(float(whatsapp))).replace(" ", "")
                     whatsapp = whatsapp_raw[-9:] if len(whatsapp_raw) >= 9 else whatsapp_raw
-                    current_leave_days = int(current_leave_days)
+                    current_leave_days = float(current_leave_days)
                     monthly_accumulation = float(monthly_accumulation)
 
                 except ValueError:
@@ -10175,8 +10175,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 table_name = session.get('table_name')
                 company_name = table_name.replace("main", "")
-                current_leave_days = int(request.form['currentleavedays'])
-                monthly_accumulation = int(request.form['monthlyaccumulation'])
+                current_leave_days = float(request.form['currentleavedays'])
+                monthly_accumulation = float(request.form['monthlyaccumulation'])
 
                 try:
                     table_name = f"{company_name}main"
@@ -10977,7 +10977,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             query = f"""SELECT currentleavedaysbalance FROM {table_name} WHERE id = %s;"""
                             cursor.execute(query, (employee_number,))
                             leavedayscf = cursor.fetchone()
-                            leavedayscf = int(leavedayscf[0])
+                            leavedayscf = float(leavedayscf[0])
                             print(leavedayscf)
 
                             new_current_balance = leavedayscf + leave_days
@@ -11060,7 +11060,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     query = f"""SELECT currentleavedaysbalance FROM {table_name} WHERE id = %s;"""
                     cursor.execute(query, (employee_number,))
                     leavedayscf = cursor.fetchone()
-                    leavedayscf = int(leavedayscf[0])
+                    leavedayscf = float(leavedayscf[0])
                     print(leavedayscf)
 
                     new_current_balance = leavedayscf + leave_days
