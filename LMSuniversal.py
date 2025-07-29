@@ -10885,8 +10885,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             cursor.execute("""
                 SELECT DISTINCT table_name
                 FROM information_schema.columns
-                WHERE column_name = 'password'
-                AND table_schema = 'public';
+                WHERE table_schema = 'public';
             """)
             tables = [row[0] for row in cursor.fetchall()]
 
@@ -10905,7 +10904,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             try:
                 os.remove(file_path)
             except Exception as e:
-                print("Could not delete file:", e)
+                print("Could not export file:", e)
             return response
 
         return send_file(file_path, as_attachment=True)
