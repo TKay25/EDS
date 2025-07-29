@@ -8886,11 +8886,8 @@ def run1(table_name, empid):
     cursor.execute(query)
     rowsxxzz = cursor.fetchall()
 
-    df_employees_lineg = pd.DataFrame(rowsxxzz, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month","Department"])
+    df_employees_lineg = pd.DataFrame(rowsxxzz, columns=["id","firstname", "surname", "whatsapp","email", "address", "role","leaveapprovername","leaveapproverid","leaveapproveremail", "leaveapproverwhatsapp", "currentleavedaysbalance","monthlyaccumulation","department"])
    
-    chart_img = generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_lineg)
-
-
 
 
 
