@@ -6301,44 +6301,48 @@ def webhook():
                                                         plt.grid(True)
                                                         plt.tight_layout()
 
-                                                        # Save image
-                                                        output_path = "occupancy_chart.png"
-                                                        plt.savefig(output_path)
-                                                        plt.close()
+                                                        image_buffer = BytesIO()
+                                                        plt.savefig(image_buffer, format='png')
+                                                        image_buffer.seek(0)  # Go to the beginning
 
-                                                        media_url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/media"
+                                                        upload_url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/media"
                                                         access_token = f"{ACCESS_TOKEN}"
-                                                        recipient_whatsapp_id = sender_id
 
-                                                        # Step 1: Upload the image to WhatsApp servers
-                                                        files = {'file': open("occupancy_chart.png", 'rb')}
-                                                        media_upload = requests.post(
-                                                            media_url,
-                                                            files=files,
-                                                            data={"messaging_product": "whatsapp"},
-                                                            headers={"Authorization": f"Bearer {access_token}"}
-                                                        )
-                                                        media_id = media_upload.json().get("id")
+                                                        files = {
+                                                            'file': ('occupancy_chart.png', image_buffer, 'image/png')
+                                                        }
+                                                        data = {
+                                                            'messaging_product': 'whatsapp'
+                                                        }
+                                                        headers = {
+                                                            'Authorization': f'Bearer {access_token}'
+                                                        }
 
-                                                        # Step 2: Send the image to the user
-                                                        send_url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
+                                                        response = requests.post(upload_url, files=files, data=data, headers=headers)
+                                                        print(response.status_code, response.text)
+
+                                                        media_id = response.json()['id']
+                                                        recipient = sender_id
+
                                                         payload = {
                                                             "messaging_product": "whatsapp",
-                                                            "to": recipient_whatsapp_id.replace("whatsapp:", ""),
+                                                            "to": recipient,
                                                             "type": "image",
                                                             "image": {
                                                                 "id": media_id,
-                                                                "caption": "Here is your department occupancy chart over the next 30 days."
+                                                                "caption": "Occupancy chart for next 30 days"
                                                             }
                                                         }
                                                         headers = {
                                                             "Authorization": f"Bearer {access_token}",
                                                             "Content-Type": "application/json"
                                                         }
-                                                        response = requests.post(send_url, json=payload, headers=headers)
-                                                        print(response.json())
-
-
+                                                        send_response = requests.post(
+                                                            f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
+                                                            json=payload,
+                                                            headers=headers
+                                                        )
+                                                        print(send_response.status_code, send_response.text)
 
 
 
