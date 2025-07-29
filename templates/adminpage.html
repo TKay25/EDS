@@ -3390,7 +3390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateEndDateMin() {
         const startDateValue = startDateInput.value;
         if (startDateValue) {
-            const minEndDate = addOneDay(startDateValue);
+            const minEndDate = startDateValue;
             endDateInput.setAttribute("min", minEndDate);
             endDateInput.value = ""; // Reset end date to force re-selection
         }
