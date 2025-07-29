@@ -6306,7 +6306,7 @@ def webhook():
                                                             return img_buffer.getvalue()
 
                                                         def upload_image_to_whatsapp(pdf_bytes):
-                                                            filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
+                                                            filename=f"{companyxx} insights {today_date}.png"
                                                         
                                                             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
                                                             headers = {
@@ -6325,8 +6325,8 @@ def webhook():
                                                             return response.json()["id"]
 
                                                                                                         
-                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                                                            filename=f"leave_application_{df_employeesappsapprovedcheck.iat[0,0]}_{first_name}_{surname}_{companyxx}.pdf"
+                                                        def send_whatsapp_image_by_media_id(recipient_number, media_id):
+                                                            filename=f"{companyxx} insights {today_date}.png"
                                                             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                                                             headers = {
                                                                 "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -6359,8 +6359,6 @@ def webhook():
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                         ]
 
-                                                        send_whatsapp_message(sender_id, f"✅ Great News {approver_name} from {companyxx}! \n\n You have successfully approved `{first_name} {surname}`'s  `{leave_days} day` `{leave_type} Leave Application` running from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`✅!")
-                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
                                                         send_whatsapp_message(
                                                             sender_id,
                                                             "Select an option below to continue 👇, or Type `Hello` to view all Administrator/Approver Options",
