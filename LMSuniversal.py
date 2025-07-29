@@ -5410,7 +5410,7 @@ def webhook():
                                                                     "type": "image",
                                                                     "image": {
                                                                         "id": media_id,
-                                                                        "caption": "📊 Number of Employees Remaining at work per Department =30-day"
+                                                                        "caption": "📊 Number of Employees Remaining at work per Department +30-day"
                                                                     }
                                                                 }
 
@@ -6552,7 +6552,7 @@ def webhook():
                                                                 "type": "image",
                                                                 "image": {
                                                                     "id": media_id,
-                                                                    "caption": "📊 Number of Employees Remaining at work per Department =30-day"
+                                                                    "caption": "📊 Number of Employees Remaining at work per Department +30-day"
                                                                 }
                                                             }
 
