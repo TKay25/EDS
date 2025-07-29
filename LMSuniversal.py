@@ -6303,9 +6303,9 @@ def webhook():
                                                             img_buffer = io.BytesIO()
                                                             plt.savefig(img_buffer, format='png')
                                                             img_buffer.seek(0)
-                                                            return img_buffer.getvalue()
+                                                            return img_buffer
 
-                                                        def upload_image_to_whatsapp(pdf_bytes):
+                                                        def upload_image_to_whatsapp(img_buffer):
                                                             filename=f"{companyxx} insights {today_date}.png"
                                                         
                                                             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/media"
@@ -6349,7 +6349,7 @@ def webhook():
 
                                                         img_bytes = generate_graph_image_bytes(result)
 
-                                                        media_id = upload_image_to_whatsapp(img_bytes)
+                                                        media_id = upload_image_to_whatsapp(img_buffer)
 
                                                         send_whatsapp_image_by_media_id(sender_id, media_id)
 
