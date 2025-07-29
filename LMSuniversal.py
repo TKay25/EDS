@@ -6331,6 +6331,35 @@ def webhook():
                                                             img_buffer.seek(0)
                                                             return img_buffer
 
+                                                        def generate_graph_image_bytes_bar(result_dict):
+                                                            plt.figure(figsize=(12, 6))
+
+                                                            # Extract all unique dates
+                                                            all_dates = sorted({entry['date'] for values in result_dict.values() for entry in values})
+                                                            x = np.arange(len(all_dates))  # the label locations
+
+                                                            total_departments = len(result_dict)
+                                                            width = 0.8 / total_departments  # total width shared among bars
+
+                                                            for i, (dept, values) in enumerate(result_dict.items()):
+                                                                # Create a dict of date -> percentage for each dept (fill missing dates with 0)
+                                                                date_to_val = {entry['date']: entry['remaining'] for entry in values}
+                                                                percentages = [date_to_val.get(date, 0) for date in all_dates]
+                                                                plt.bar(x + i * width, percentages, width=width, label=dept)
+
+                                                            plt.xlabel("Date")
+                                                            plt.ylabel("Remaining % Available Employees")
+                                                            plt.title("Departmental Leave Trend (Bar Chart)")
+                                                            plt.xticks(x + width * (total_departments - 1) / 2, all_dates, rotation=45)
+                                                            plt.legend()
+                                                            plt.tight_layout()
+
+                                                            img_buffer = io.BytesIO()
+                                                            plt.savefig(img_buffer, format='png')
+                                                            img_buffer.seek(0)
+                                                            return img_buffer
+
+
                                                         def upload_image_to_whatsapp(img_buffer):
                                                             filename=f"{companyxx} insights {today_date}.png"
                                                         
@@ -6394,7 +6423,7 @@ def webhook():
                                                             response.raise_for_status()
                                                             return response.json()
 
-                                                        img_bytes = generate_graph_image_bytes(result)
+                                                        img_bytes = generate_graph_image_bytes_bar(result)
                                                         media_id = upload_image_to_whatsapp(img_bytes)
                                                         send_whatsapp_image_by_media_id(sender_id, media_id)
 
