@@ -2132,26 +2132,37 @@
 
 <script>
     const rawRemainingData = JSON.parse('{{ empsremainingbydpt | tojson | safe }}');
+
     const allDates = rawRemainingData[Object.keys(rawRemainingData)[0]].map(item => item.date);
 
     const remainingDatasets = Object.entries(rawRemainingData).map(([dept, values]) => ({
-        label: dept,
+        label: dept + ' Remaining',
         data: values.map(v => Number(v.remaining)),
+        type: 'line',
         fill: false,
         borderColor: getRandomColor(),
-        tension: 0.1
+        tension: 0.1,
+        yAxisID: 'y'
     }));
 
-    console.log("All Dates:", allDates);
-    console.log("Datasets:", remainingDatasets);
+    const totalBarDatasets = Object.entries(rawRemainingData).map(([dept, values]) => ({
+        label: dept + ' Total',
+        data: values.map(v => Number(v.total)),
+        type: 'bar',
+        backgroundColor: 'rgba(200,200,200,0.2)',
+        borderColor: 'rgba(160,160,160,0.5)',
+        borderWidth: 1,
+        yAxisID: 'y',
+        barPercentage: 1.0,
+        categoryPercentage: 1.0
+    }));
 
     const ctx = document.getElementById("employeesRemainingChart").getContext("2d");
 
     new Chart(ctx, {
-        type: 'line',
         data: {
             labels: allDates,
-            datasets: remainingDatasets
+            datasets: [...totalBarDatasets, ...remainingDatasets]
         },
         options: {
             responsive: true,
@@ -2167,10 +2178,9 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    suggestedMax: 100, // optional, just for testing
                     title: {
                         display: true,
-                        text: 'Employees Remaining'
+                        text: 'Employees'
                     }
                 },
                 x: {
