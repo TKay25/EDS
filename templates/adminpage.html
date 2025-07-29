@@ -2147,7 +2147,7 @@
 
     const totalBarDatasets = Object.entries(rawRemainingData).map(([dept, values]) => ({
         label: dept + ' Total',
-        data: values.map(v => Number(v.total)),
+        data: values.map(v => Number(v.total_employees)),
         type: 'bar',
         backgroundColor: 'rgba(200,200,200,0.2)',
         borderColor: 'rgba(160,160,160,0.5)',
