@@ -6349,7 +6349,7 @@ def webhook():
 
                                                         img_bytes = generate_graph_image_bytes(result)
 
-                                                        media_id = upload_image_to_whatsapp(img_buffer)
+                                                        media_id = upload_image_to_whatsapp(img_bytes)
 
                                                         send_whatsapp_image_by_media_id(sender_id, media_id)
 
