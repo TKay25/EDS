@@ -3379,9 +3379,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDateInput = document.getElementById("startDate");
     const endDateInput = document.getElementById("endDate");
 
-    // Set minimum date for startDate
-    startDateInput.setAttribute("min", today);
-
     // Function to add one day to startDate
     function addOneDay(dateString) {
         const date = new Date(dateString);
