@@ -1955,7 +1955,7 @@ def webhook():
                                                                             INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
                                                                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                                                                             """
-                                                                            cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.int64(leavedaysbalance)), today_date, startdate, enddate, int(np.int64(business_days)), float(np.int64(leavedaysbalancebf)), status))
+                                                                            cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
                                                                             connection.commit()
 
                                                                             query = f"SELECT appid FROM {table_name_apps_pending_approval};"
@@ -3187,7 +3187,7 @@ def webhook():
                                                                     INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
                                                                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                                                                     """
-                                                                    cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.int64(leavedaysbalance)), today_date, startdate, enddate, int(np.int64(business_days)), float(np.int64(leavedaysbalancebf)), status))
+                                                                    cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
                                                                     connection.commit()
 
                                                                     query = f"SELECT appid FROM {table_name_apps_pending_approval};"
@@ -5076,7 +5076,7 @@ def webhook():
                                                                             INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
                                                                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                                                                             """
-                                                                            cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.int64(leavedaysbalance)), today_date, startdate, enddate, int(np.int64(business_days)), float(np.int64(leavedaysbalancebf)), status))
+                                                                            cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
                                                                             connection.commit()
 
                                                                             query = f"SELECT appid FROM {table_name_apps_pending_approval};"
@@ -5166,12 +5166,12 @@ def webhook():
                                                                 approver_id =  int(np.int64(df_employees.iat[0,7]))
                                                                 approver_email =  df_employees.iat[0,8]
                                                                 approver_whatsapp =  int(np.int64(df_employees.iat[0,9]))
-                                                                leave_days_balance =  float(np.int64(df_employees.iat[0,10]))
+                                                                leave_days_balance =  float(np.float64(df_employees.iat[0,10]))
                                                                 date_applied = df_employees.iat[0,11]
                                                                 start_date = df_employees.iat[0,12]
                                                                 end_date = df_employees.iat[0,13]
-                                                                leave_days =  int(np.int64(df_employees.iat[0,14]))
-                                                                leavedaysbalancebf =  float(np.int64(df_employees.iat[0,15]))
+                                                                leave_days =  float(np.int64(df_employees.iat[0,14]))
+                                                                leavedaysbalancebf =  float(np.float64(df_employees.iat[0,15]))
                                                                 department = df_employees.iat[0,16]
                                                                 insert_query = f"""
                                                                 INSERT INTO {table_name_apps_pending_approval} 
@@ -7009,7 +7009,7 @@ def webhook():
                                                                         INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
                                                                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                                                                         """
-                                                                        cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.int64(leavedaysbalance)), today_date, startdate, enddate, int(np.int64(business_days)), float(np.int64(leavedaysbalancebf)), status))
+                                                                        cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
                                                                         connection.commit()
 
                                                                         query = f"SELECT appid FROM {table_name_apps_pending_approval};"
@@ -7114,12 +7114,12 @@ def webhook():
                                                             approver_id =  int(np.int64(df_employees.iat[0,7]))
                                                             approver_email =  df_employees.iat[0,8]
                                                             approver_whatsapp =  int(np.int64(df_employees.iat[0,9]))
-                                                            leave_days_balance =  float(np.int64(df_employees.iat[0,10]))
+                                                            leave_days_balance =  float(np.float64(df_employees.iat[0,10]))
                                                             date_applied = df_employees.iat[0,11]
                                                             start_date = df_employees.iat[0,12]
                                                             end_date = df_employees.iat[0,13]
-                                                            leave_days =  int(np.int64(df_employees.iat[0,14]))
-                                                            leavedaysbalancebf =  float(np.int64(df_employees.iat[0,15]))
+                                                            leave_days =  float(np.int64(df_employees.iat[0,14]))
+                                                            leavedaysbalancebf =  float(np.float64(df_employees.iat[0,15]))
                                                             insert_query = f"""
                                                             INSERT INTO {table_name_apps_pending_approval} 
                                                             (appid, id, firstname, surname, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
