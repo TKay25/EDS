@@ -2165,8 +2165,20 @@
                 intersect: false
             },
             scales: {
-                x: { display: true, title: { display: true, text: 'Date' }},
-                y: { display: true, title: { display: true, text: 'Employees Remaining' } }
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: 100, // optional, just for testing
+                    title: {
+                        display: true,
+                        text: 'Employees Remaining'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
             }
         }
     });
