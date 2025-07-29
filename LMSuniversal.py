@@ -6285,6 +6285,32 @@ def webhook():
                                                         print("CURRENT FIIIIIIIXXX")
                                                         print(result)
 
+                                                        result2 = {}
+
+                                                        for dept, total_employees in total_by_dept.items():
+                                                            result2[dept] = []
+                                                            df_dept_leaves = df_leaves[df_leaves['department'] == dept]
+
+                                                            for date in all_dates:
+                                                                # Count employees on leave on this date
+                                                                on_leave = df_dept_leaves[
+                                                                    (df_dept_leaves['leavestartdate'] <= date) & (df_dept_leaves['leaveenddate'] >= date)
+                                                                ].shape[0]
+
+                                                                remaining = total_employees - on_leave
+
+                                                                result2[dept].append({
+                                                                    "date": date.strftime("%Y-%m-%d"),
+                                                                    "remaining": remaining
+                                                                })
+                                                        print("CURRENT FIIIIIIIXXX")
+                                                        print(result2)
+                                                    
+
+
+
+
+
                                                         def generate_graph_image_bytes(result_dict):
                                                             plt.figure(figsize=(12, 6))
 
@@ -6338,7 +6364,7 @@ def webhook():
                                                                 "type": "image",
                                                                 "image": {
                                                                     "id": media_id,
-                                                                    "caption": "📊 Departmental Leave Trends with Background Total Employees"
+                                                                    "caption": "📊 % Employee Occupancy per Department +30-day"
                                                                 }
                                                             }
 
@@ -6347,15 +6373,38 @@ def webhook():
                                                             return response.json()
 
 
+                                                        def send_whatsapp_image_by_media_id2(recipient_number, media_id):
+                                                            filename=f"{companyxx} insights {today_date}.png"
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            }
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": recipient_number,
+                                                                "type": "image",
+                                                                "image": {
+                                                                    "id": media_id,
+                                                                    "caption": "📊 Number of Employees Remaining at work per Department =30-day"
+                                                                }
+                                                            }
+
+                                                            response = requests.post(url, headers=headers, json=payload)
+                                                            response.raise_for_status()
+                                                            return response.json()
+
                                                         img_bytes = generate_graph_image_bytes(result)
-
                                                         media_id = upload_image_to_whatsapp(img_bytes)
-
                                                         send_whatsapp_image_by_media_id(sender_id, media_id)
 
+                                                        img_bytes2 = generate_graph_image_bytes(result2)
+                                                        media_id2 = upload_image_to_whatsapp(img_bytes2)
+                                                        send_whatsapp_image_by_media_id2(sender_id, media_id2)
+
+
                                                         buttonsapproval = [
-                                                            {"type": "reply", "reply": {"id": "Revoke", "title": "Revoke Approval"}},
-                                                            {"type": "reply", "reply": {"id": "Pending", "title": "Pending My Approval"}},
+                                                            {"type": "reply", "reply": {"id": "Book", "title": "Extract Leave Book"}},
                                                             {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}}
                                                         ]
 
