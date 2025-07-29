@@ -6224,6 +6224,129 @@ def webhook():
                                                         "Administrator Options",
                                                         sections
                                                     )
+
+
+                                                elif button_id == "Summarycomp":
+
+                                                    try:
+
+                                                        table_name = f"{company_reg}main"
+                                                        table_name_apps_approved = f"{company_reg}appsapproved"
+                                                        companyxx = company_reg.replace("_", " ").title()
+
+                                                        query = f"""SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,leavedaysbalancebf, department FROM {table_name_apps_approved}"""
+                                                        cursor.execute(query)
+                                                        rowsxxyy = cursor.fetchall()
+
+                                                        df_apps_approved_lineg = pd.DataFrame(rowsxxyy, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate","leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf","department"])
+
+                                                        startdate_lineg = datetime.today().date()
+                                                        enddate_lineg = startdate_lineg + timedelta(days=30)
+
+
+                                                        query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
+                                                        cursor.execute(query)
+                                                        rowsxxzz = cursor.fetchall()
+
+                                                        df_employees_lineg = pd.DataFrame(rowsxxzz, columns=["id","firstname", "surname", "whatsapp","email", "address", "role","leaveapprovername","leaveapproverid","leaveapproveremail", "leaveapproverwhatsapp", "currentleavedaysbalance","monthlyaccumulation","department"])
+                                                    
+                                                        df_employees = df_employees_lineg
+                                                        df_leaves = df_apps_approved_lineg
+
+                                                        today = datetime.today().date()
+                                                        next_30_days = today + timedelta(days=30)
+
+                                                        # Total employees per department
+                                                        total_by_dept = df_employees.groupby('department').size().to_dict()
+
+                                                        # Ensure leave dates are datetime.date
+                                                        df_leaves['leavestartdate'] = pd.to_datetime(df_leaves['leavestartdate']).dt.date
+                                                        df_leaves['leaveenddate'] = pd.to_datetime(df_leaves['leaveenddate']).dt.date
+
+                                                        result = {}
+                                                        all_dates = pd.date_range(start=today, end=next_30_days).date
+
+                                                        for dept, total_employees in total_by_dept.items():
+                                                            result[dept] = []
+                                                            df_dept_leaves = df_leaves[df_leaves['department'] == dept]
+
+                                                            for date in all_dates:
+                                                                # Count employees on leave on this date
+                                                                on_leave = df_dept_leaves[
+                                                                    (df_dept_leaves['leavestartdate'] <= date) & (df_dept_leaves['leaveenddate'] >= date)
+                                                                ].shape[0]
+
+                                                                remaining = ((total_employees - on_leave)/total_employees) * 100
+
+                                                                result[dept].append({
+                                                                    "date": date.strftime("%Y-%m-%d"),
+                                                                    "remaining": remaining
+                                                                })
+                                                        print("CURRENT FIIIIIIIXXX")
+                                                        print(result)
+
+                                                        plt.figure(figsize=(12, 6))
+
+                                                        for dept, records in result.items():
+                                                            dates = [r['date'] for r in records]
+                                                            percentages = [r['remaining'] for r in records]
+                                                            plt.plot(dates, percentages, label=dept)
+
+                                                        plt.xticks(rotation=45)
+                                                        plt.ylim(0, 100)
+                                                        plt.title("Department Occupancy (%) Over Next 30 Days")
+                                                        plt.xlabel("Date")
+                                                        plt.ylabel("Occupancy (%)")
+                                                        plt.legend()
+                                                        plt.grid(True)
+                                                        plt.tight_layout()
+
+                                                        # Save image
+                                                        output_path = "occupancy_chart.png"
+                                                        plt.savefig(output_path)
+                                                        plt.close()
+
+                                                        media_url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/media"
+                                                        access_token = f"{ACCESS_TOKEN}"
+                                                        recipient_whatsapp_id = sender_id
+
+                                                        # Step 1: Upload the image to WhatsApp servers
+                                                        files = {'file': open("occupancy_chart.png", 'rb')}
+                                                        media_upload = requests.post(
+                                                            media_url,
+                                                            files=files,
+                                                            data={"messaging_product": "whatsapp"},
+                                                            headers={"Authorization": f"Bearer {access_token}"}
+                                                        )
+                                                        media_id = media_upload.json().get("id")
+
+                                                        # Step 2: Send the image to the user
+                                                        send_url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": recipient_whatsapp_id.replace("whatsapp:", ""),
+                                                            "type": "image",
+                                                            "image": {
+                                                                "id": media_id,
+                                                                "caption": "Here is your department occupancy chart over the next 30 days."
+                                                            }
+                                                        }
+                                                        headers = {
+                                                            "Authorization": f"Bearer {access_token}",
+                                                            "Content-Type": "application/json"
+                                                        }
+                                                        response = requests.post(send_url, json=payload, headers=headers)
+                                                        print(response.json())
+
+
+
+
+
+
+                                                    except Exception as e:
+
+                                                        print(e)
+
                                                     
                                                 elif button_id == "Track" or selected_option == "Track":
 
