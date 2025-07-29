@@ -8462,8 +8462,45 @@ def generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_line
 
             result[dept].append({
                 "date": date.strftime("%Y-%m-%d"),
-                "remaining": remaining,
-                "total_employees": total_employees
+                "remaining": remaining
+            })
+    print("CURRENT FIIIIIIIXXX")
+    print(result)
+
+    return result
+
+def generate_employees_remaining_bar_chart(df_employees_lineg, df_apps_approved_lineg):
+    df_employees = df_employees_lineg
+    df_leaves = df_apps_approved_lineg
+
+    today = datetime.today().date()
+    next_30_days = today + timedelta(days=30)
+
+    # Total employees per department
+    total_by_dept = df_employees.groupby('department').size().to_dict()
+
+    # Ensure leave dates are datetime.date
+    df_leaves['leavestartdate'] = pd.to_datetime(df_leaves['leavestartdate']).dt.date
+    df_leaves['leaveenddate'] = pd.to_datetime(df_leaves['leaveenddate']).dt.date
+
+    result = {}
+    all_dates = pd.date_range(start=today, end=next_30_days).date
+
+    for dept, total_employees in total_by_dept.items():
+        result[dept] = []
+        df_dept_leaves = df_leaves[df_leaves['department'] == dept]
+
+        for date in all_dates:
+            # Count employees on leave on this date
+            on_leave = df_dept_leaves[
+                (df_dept_leaves['leavestartdate'] <= date) & (df_dept_leaves['leaveenddate'] >= date)
+            ].shape[0]
+
+            remaining = ((total_employees - on_leave)/total_employees) * 100
+
+            result[dept].append({
+                "date": date.strftime("%Y-%m-%d"),
+                "remaining": remaining
             })
     print("CURRENT FIIIIIIIXXX")
     print(result)
@@ -8943,6 +8980,7 @@ def run1(table_name, empid):
         "leave_by_department_data": generate_leave_by_department_data(df_filtered_for_bar_chart),
         "leave_by_type_data": generate_leave_by_type_data(df_filtered_for_bar_chart_type),
         "empsremainingbydpt": generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_lineg),
+        "empsremainingbydptbar": generate_employees_remaining_bar_chart(df_employees_lineg, df_apps_approved_lineg),
     }
 
 
