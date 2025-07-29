@@ -2131,47 +2131,47 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-    var empsRemainingData = JSON.parse('{{ empsremainingbydpt | tojson | safe }}');
+    const rawRemainingData = JSON.parse('{{ empsremainingbydpt | tojson | safe }}');
+    const allDates = rawRemainingData[Object.keys(rawRemainingData)[0]].map(item => item.date);
 
-    var traces = [];
+    const remainingDatasets = Object.entries(rawRemainingData).map(([dept, values]) => ({
+        label: dept,
+        data: values.map(v => v.remaining),
+        fill: false,
+        borderColor: getRandomColor(),
+        tension: 0.1
+    }));
 
-    for (var dept in empsRemainingData) {
-        var dates = empsRemainingData[dept].map(entry => entry.date);
-        var remainingCounts = empsRemainingData[dept].map(entry => entry.employees_remaining);
+    const ctx = document.getElementById("employeesRemainingChart").getContext("2d");
 
-        traces.push({
-            x: dates,
-            y: remainingCounts,
-            mode: 'lines+markers',
-            name: dept,
-            line: { shape: 'linear' },
-            marker: { size: 6 }
-        });
-    }
-
-    var layout = {
-        title: 'Employees Remaining at Work by Department (Next 30 Days)',
-        xaxis: {
-            title: 'Date',
-            tickangle: -45,
-            tickformat: '%d %b',
-            automargin: true
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: allDates,
+            datasets: remainingDatasets
         },
-        yaxis: {
-            title: 'Employees Remaining',
-            rangemode: 'tozero'
-        },
-        legend: {
-            orientation: 'h',
-            y: -0.2
-        },
-        margin: {
-            t: 50,
-            b: 100
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
+            scales: {
+                x: { display: true, title: { display: true, text: 'Date' }},
+                y: { display: true, title: { display: true, text: 'Employees Remaining' }, beginAtZero: true }
+            }
         }
-    };
+    });
 
-    Plotly.newPlot('employeesRemainingChart', traces, layout, {responsive: true});
+    function getRandomColor() {
+        const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
 </script>
 
 
