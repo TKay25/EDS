@@ -8464,6 +8464,8 @@ def generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_line
                 "date": date.strftime("%Y-%m-%d"),
                 "employees_remaining": remaining
             })
+    print("CURRENT FIIIIIIIXXX")
+    print(result)
 
     return result
 
