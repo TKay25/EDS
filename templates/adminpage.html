@@ -2194,13 +2194,16 @@
     const rawRemainingData2 = JSON.parse('{{ empsremainingbydptbar | tojson | safe }}');
     const allDates2 = rawRemainingData2[Object.keys(rawRemainingData2)[0]].map(item => item.date);
 
-    const remainingDatasets2 = Object.entries(rawRemainingData2).map(([dept, values]) => ({
-        label: dept,
-        data: values.map(v => Number(v.remaining)),
-        fill: false,
-        borderColor: getRandomColor(),
-        tension: 0.1
-    }));
+    const remainingDatasets2 = Object.entries(rawRemainingData2).map(([dept, values]) => {
+        const color = getRandomColor();
+        return {
+            label: dept,
+            data: values.map(v => Number(v.remaining)),
+            backgroundColor: color,
+            borderColor: color,
+            tension: 0.1
+        };
+    });
 
     console.log("All Dates:", allDates2);
     console.log("Datasets:", remainingDatasets2);
