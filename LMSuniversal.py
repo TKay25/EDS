@@ -639,161 +639,116 @@ def webhook():
                                             
                                             print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
 
-                                            if re.fullmatch(r'\d{1,2}\s+[a-zA-Z]+\s+\d{4}', re.sub(r'\s+', ' ', message.get("text", {}).get("body", "")).strip()):
-                                                try:
-                                                    date_str = re.sub(r'\s+', ' ', message.get("text", {}).get("body", "")).strip().title()
-                                                    parsed_date = datetime.strptime(date_str, "%d %B %Y").date()
-                                                    print("✅ Valid date message:", parsed_date)
 
-                                                    cursor.execute(
-                                                        "UPDATE ticketbookingstemp SET travel_date = %s WHERE user_id = %s",
-                                                        (parsed_date, sender_number)
-                                                    )
-                                                    connection.commit()
-                                                    print(f"✅ travel_date {parsed_date} saved for user_id {sender_number}")
+                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                            headers = {
+                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                "Content-Type": "application/json"
+                                            }
 
-                                                    cursor.execute(
-                                                        "SELECT departure_city, destination_city FROM ticketbookingstemp WHERE user_id = %s",
-                                                        (sender_number,)
-                                                    )
-                                                    result = cursor.fetchone()
-
-                                                    departure_city = result[0]
-                                                    destination_city = result[1]
-
-
-
-
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "7am", "title": "7 a.m"}},
-                                                        {"type": "reply", "reply": {"id": "10am", "title": "10 a.m"}},
-                                                        {"type": "reply", "reply": {"id": "2pm", "title": "2 p.m"}}
-                                                    ]
-                                                    send_whatsapp_messagecc(
-                                                        sender_id, 
-                                                        f"Kindly select your preferred departure time on the bus that will be departing from *{departure_city}* to *{destination_city}* on {date_str}.",
-                                                        buttons
-                                                    )      
-
-                                                except ValueError:
-                                                    print("❌ Looks like a date but couldn't parse")
-
-                                            elif "hello" in text.lower():
-
-                                                sections = [
-                                                    {
-                                                        "title": "Leave Type Options",
-                                                        "rows": [
-                                                            {"id": "Book", "title": "Book A Bus Ticket"},
-                                                            {"id": "View", "title": "View Route & Times"},
-                                                            {"id": "Contact", "title": "Contact Support"},
-                                                            {"id": "FAQs", "title": "FAQs"},
-                                                            {"id": "Download", "title": "Download Brochure"},
+                                            payload = {
+                                                "messaging_product": "whatsapp",
+                                                "to": sender_id,
+                                                "type": "interactive",
+                                                "interactive": {
+                                                    "type": "list",  # or "button"
+                                                    "header": {
+                                                        "type": "text",
+                                                        "text": "🚌 ABC COACHES"
+                                                    },
+                                                    "body": {
+                                                        "text": "Tap to explore our services:"
+                                                    },
+                                                    "action": {
+                                                        "button": "OPEN MENU",
+                                                        "sections": [
+                                                            {
+                                                                "title": "BUS ABC",
+                                                                "rows": [
+                                                                    {
+                                                                        "id": "know_more",
+                                                                        "title": "Know More",
+                                                                        "description": "About the story of Imperial Lane"
+                                                                    },
+                                                                    {
+                                                                        "id": "why_choose",
+                                                                        "title": "Why Choose Imperial Lane",
+                                                                        "description": "Luxury Cross-Border Travel"
+                                                                    },
+                                                                    {
+                                                                        "id": "book_ticket",
+                                                                        "title": "Book Ticket",
+                                                                        "description": "Reserve your seat instantly"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "title": "CUSTOMER SERVICE",
+                                                                "rows": [
+                                                                    {
+                                                                        "id": "faqs",
+                                                                        "title": "FAQs",
+                                                                        "description": "Common questions and answers"
+                                                                    },
+                                                                    {
+                                                                        "id": "policies",
+                                                                        "title": "Our Policies",
+                                                                        "description": "Terms, conditions, and travel rules"
+                                                                    },
+                                                                    {
+                                                                        "id": "get_help",
+                                                                        "title": "Get Help",
+                                                                        "description": "Talk to our support team"
+                                                                    }
+                                                                ]
+                                                            }
                                                         ]
                                                     }
-                                                ]
+                                                }
+                                            }
 
-                                                send_whatsapp_list_messagecc(
-                                                    sender_id, 
-                                                    f"Hello! Welcome to Bus Abc Chatbot😊.\n Kindly select an option for enquiry.", 
-                                                    "Bus Abc Options",
-                                                    sections) 
-                                            
+                                            # Send the request to WhatsApp
+                                            response = requests.post(url, headers=headers, json=payload)
 
-
-                                            elif "start" in text.lower():
-
-                                                date_part = text.split("start", 1)[1].strip()
-
-
-
-                                                #cursor.execute("""
-                                                #    SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                #    WHERE empidwa = %s
-                                                #""", (str(id_user)))
-                                        
-                                                result = cursor.fetchone()
-
-                                                if result:
-                                                    leavetypewa = result[1] 
-
-                                                cursor.execute("SELECT * FROM whatsapptempapplication")
-                                                columns = [desc[0] for desc in cursor.description]
-                                                records = cursor.fetchall()
-                                                
-                                                df = pd.DataFrame(records, columns=columns)
-                                                
-                                                print("\n📊 whatsapptempapplication Table:")
-                                                print(df)
-                                                
-                                                try:
-                                                    parsed_date = datetime.strptime(date_part, "%d %B %Y")
-                                                    send_whatsapp_messagecc(sender_id, "✅ Yes! Valid start date format.\n\n"
-                                                        f"Now Enter the last day that you will be on {leavetypewa} Leave.Use the format: 👇🏻\n"
-                                                        "`end 24 january 2025`"                      
-                                                                        )
-                                                    
-                                                except ValueError:
-                                                    send_whatsapp_messagecc(
-                                                        sender_id,
-                                                        f"❌ No, incorrect message format. Please use:\n"
-                                                        "`start 24 january 2025`\n"
-                                                        "Example: `start 15 march 2024`"
-                                                    )
-
-                                            elif "end" in text.lower():
-
-                                                date_part = text.split("end", 1)[1].strip()
-
-                                                cursor.execute("""
-                                                    SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                    WHERE empidwa = %s
-                                                """, "tt")
-                                        
-                                                result = cursor.fetchone()
-
-                                                appid = result[0]
-                                                leavetype = result[2]
-                                                startdate = result[3]
-                                                enddate = result[4]
-
-                                                if isinstance(startdate, str):
-                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                if isinstance(enddate, str):
-                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                business_days = 0
-                                                current_date = startdate
-
-                                                while current_date <= enddate:
-                                                    if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                        business_days += 1
-                                                    current_date += timedelta(days=1)  # Use timedelta directly
-
-                                                print(f"📅 Business days between {startdate} and {enddate}: {business_days}")
-
-
-                                                buttons = [
-                                                    {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                    {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                ]
-                                                send_whatsapp_messagecc(
-                                                    sender_id, 
-                                                    f"Do you wish to submit your `{business_days} day {leavetype} Leave Application` leave starting from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`?", 
-                                                    buttons
-                                                )
-
-                                            else:
-                                                send_whatsapp_messagecc(
-                                                    sender_id, 
-                                                    "Alluire LMS Bot Here 😎. Say 'hello' to start!"
-                                                )
-
+                                            # Optional: Print result for debugging
+                                            print(response.status_code)
+                                            print(response.text)
 
 
                                     finally:
                                         if connection:
                                             print('DONE')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
