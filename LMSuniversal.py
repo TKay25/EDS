@@ -670,42 +670,42 @@ def webhook():
                                                             "button": "📋 OPEN MENU",
                                                             "sections": [
                                                                 {
-                                                                    "title": "🚌 BUS ROUTES & BOOKINGS",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "know_more",
-                                                                            "title": "ℹ️ Know More",
-                                                                            "description": "Our story, mission & travel experience"
-                                                                        },
-                                                                        {
-                                                                            "id": "why_choose",
-                                                                            "title": "💎 Why Choose Us",
-                                                                            "description": "Luxury, safety & comfort explained"
-                                                                        },
-                                                                        {
-                                                                            "id": "book_ticket",
-                                                                            "title": "🎫 Book a Ticket",
-                                                                            "description": "Reserve your seat instantly"
-                                                                        }
-                                                                    ]
-                                                                },
-                                                                {
                                                                     "title": "📦 SERVICES & EXTRAS",
                                                                     "rows": [
                                                                         {
+                                                                            "id": "book_ticket",
+                                                                            "title": "Book a Ticket",
+                                                                            "description": "Reserve your seat instantly"
+                                                                        },
+                                                                        {
                                                                             "id": "parcel_delivery",
-                                                                            "title": "📦 Parcel Delivery",
+                                                                            "title": "Parcel Delivery",
                                                                             "description": "Send or collect packages"
                                                                         },
                                                                         {
                                                                             "id": "find_stop",
-                                                                            "title": "📍 Find Bus Stop",
+                                                                            "title": "Find Bus Stop",
                                                                             "description": "Locate nearest pick-up point"
                                                                         },
                                                                         {
                                                                             "id": "promotions",
-                                                                            "title": "🎁 Promotions & Offers",
+                                                                            "title": "Promotions & Offers",
                                                                             "description": "Current discounts & deals"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "title": "🚌 ABOUT ABC COACHES",
+                                                                    "rows": [
+                                                                        {
+                                                                            "id": "know_more",
+                                                                            "title": "Know More",
+                                                                            "description": "Our story, mission & travel experience"
+                                                                        },
+                                                                        {
+                                                                            "id": "why_choose",
+                                                                            "title": "Why Choose Us",
+                                                                            "description": "Luxury, safety & comfort explained"
                                                                         }
                                                                     ]
                                                                 },
@@ -719,12 +719,12 @@ def webhook():
                                                                         },
                                                                         {
                                                                             "id": "policies",
-                                                                            "title": "📃 Travel Policies",
+                                                                            "title": "Travel Policies",
                                                                             "description": "Baggage rules, safety, refunds"
                                                                         },
                                                                         {
                                                                             "id": "get_help",
-                                                                            "title": "🆘 Get Help",
+                                                                            "title": "Get Help",
                                                                             "description": "Talk to a support agent now"
                                                                         }
                                                                     ]
