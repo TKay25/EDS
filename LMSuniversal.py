@@ -632,7 +632,7 @@ def webhook():
                                                         buttons
                                                     ) 
 
-                                        else:
+                                        elif message.get("type") == "text":
 
                                             text = message.get("text", {}).get("body", "").lower()
                                             print(f"📨 Message from {sender_id}: {text}")
