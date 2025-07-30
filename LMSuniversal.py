@@ -194,556 +194,562 @@ def webhook():
                     
                     print("List message response:", response.json())
                     return response
+                
 
-                if data and "entry" in data:
-                    for entry in data["entry"]:
-                        for change in entry["changes"]:
-                            if "messages" in change["value"]:
-                                for message in change["value"]["messages"]:
-
-                                    conversation_id = str(uuid.uuid4())
-                                    session['conversation_id'] = conversation_id
-                                
-
-                                    sender_id = message["from"]
-                                    sender_number = sender_id[-9:]
-                                    print(f"📱 Conversation {conversation_id}: Sender's WhatsApp number: {sender_number}")
-                                    session['client'] = str(sender_number)
-
-                                    external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
-
-
-                                    try:
-                                        connection = psycopg2.connect(external_database_url)
-                                        cursor = connection.cursor()   
-
-                                        if message.get("type") == "interactive":
-                                            interactive = message.get("interactive", {})
-
-
-                                            if interactive.get("type") == "list_reply":
-                                                selected_option = interactive.get("list_reply", {}).get("id")
-                                                print(f"📋 User selected: {selected_option}")
-
-                                                if selected_option == "Book":
-
-                                                    try:
-
-                                                        # Create table if it doesn't exist
-                                                        create_table_query = """
-                                                        CREATE TABLE IF NOT EXISTS ticketbookingstemp (
-                                                            id SERIAL PRIMARY KEY,
-                                                            user_id VARCHAR(50),
-                                                            departure_city VARCHAR(100),
-                                                            destination_city VARCHAR(100),
-                                                            travel_date DATE,
-                                                            booking_status VARCHAR(20) DEFAULT 'pending',
-                                                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                                                        );
-                                                        """
-
-                                                        cursor.execute(create_table_query)
-                                                        connection.commit()
-
-                                                        alter_column_query = """
-                                                        ALTER TABLE ticketbookingstemp
-                                                        ADD COLUMN IF NOT EXISTS time_dep_bus VARCHAR(255);
-                                                        """
-
-                                                        cursor.execute(alter_column_query)
-                                                        connection.commit()
-                                                        print("✅ Column 'fff' added to 'ticketbookingstemp' (if not already present).")
-
-                                                    except Exception as e:
-                                                        print("❌ Failed to connect or create table:", e)
-
-
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "City/Town of Departure",
-                                                            "rows": [
-                                                                {"id": "stHarare", "title": "Harare"},
-                                                                {"id": "stBulawayo", "title": "Bulawayo"},
-                                                                {"id": "stVictoriaFalls", "title": "Victoria Falls"},
-                                                                {"id": "stMutare", "title": "Mutare"},
-                                                                {"id": "stKadoma", "title": "Kadoma"},
-                                                                {"id": "stKwekwe", "title": "Kwekwe"},
-                                                                {"id": "stKaroi", "title": "Karoi"},
-                                                                {"id": "stGweru", "title": "Gweru"},
-                                                                {"id": "stGokwe", "title": "Gokwe"},
-                                                                {"id": "stMasvingo", "title": "Masvingo"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
-                                                        "City of Departure",
-                                                        sections) 
-                                                    
-                                                elif selected_option.startswith("st"):
-                                                    city_selected = selected_option[2:]  
-                                                    print(f"🚌 User selected city of departure: {city_selected}")
-
-                                                    cursor.execute("SELECT 1 FROM ticketbookingstemp WHERE user_id = %s", (sender_number,))
-                                                    exists = cursor.fetchone()
-
-                                                    if exists:
-                                                        # Delete the existing row
-                                                        cursor.execute("DELETE FROM ticketbookingstemp WHERE user_id = %s", (sender_number,))
-                                                        print(f"🗑️ Deleted existing row for {sender_number}")
-
-                                                    # Insert new row with departure_city = 'ccc'
-                                                    cursor.execute(
-                                                        "INSERT INTO ticketbookingstemp (user_id, departure_city) VALUES (%s, %s)",
-                                                        (sender_number, city_selected)
-                                                    )
-                                                    connection.commit()
-
-                                                    print(f"✅ Inserted {sender_number} with departure_city = {city_selected}")
-
-                                                    sections = [
-                                                        {
-                                                            "title": "City of Destination",
-                                                            "rows": [
-                                                                {"id": "dtHarare", "title": "Harare"},
-                                                                {"id": "dtChegutu", "title": "Chegutu"},
-                                                                {"id": "dtKadoma", "title": "Kadoma"},
-                                                                {"id": "dtKwekwe", "title": "Kwekwe"},
-                                                                {"id": "dtGweru", "title": "Gweru"},
-                                                                {"id": "dtBulawayo", "title": "Bulawayo"},
-                                                                {"id": "dtChitungwiza", "title": "Mvuma"},
-                                                                {"id": "dtMasvingo", "title": "Masvingo"},
-                                                                {"id": "dtVictoriaFalls", "title": "Victoria Falls"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id,
-                                                        f"You selected *{city_selected}* as your departure city. What is your destination?",
-                                                        "City of Destination",
-                                                        sections)
-                                                    
-                                                elif selected_option.startswith("dt"):
-                                                    city_selected = selected_option[2:]  
-                                                    print(f"🚌 User selected city of destination: {city_selected}")
-
-                                                    cursor.execute(
-                                                        "UPDATE ticketbookingstemp SET destination_city = %s WHERE user_id = %s",
-                                                        (city_selected, sender_number)
-                                                    )
-                                                    connection.commit()
-                                                    print(f"✅ Updated destination_city to '{city_selected}' for user_id {sender_number}")
-
-                                                    cursor.execute(
-                                                        "SELECT departure_city FROM ticketbookingstemp WHERE user_id = %s",
-                                                        (sender_number,)
-                                                    )
-                                                    result = cursor.fetchone()
-
-                                                    departure_city = result[0]
-
-                                                    send_whatsapp_messagecc(
-                                                        sender_id, 
-                                                        f"You selected *{city_selected}* as your destination city. A bus will be departing from *{departure_city}* to *{city_selected}* and costs USD 13.\n\n"
-                                                        "When would you like to travel?\n\n"
-                                                        "Kindly provide the date in the format 👇 \n\n `3 July 2025`"
-                                                    )
-
-
-                                            
-
-                                                elif selected_option == "FAQs":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "FAQs",
-                                                            "rows": [
-                                                                {"id": "Fares", "title": "Fares"},
-                                                                {"id": "BusTypes", "title": "Bus Types"},
-                                                                {"id": "Privatehires", "title": "Do you do private hires?"},
-                                                                {"id": "Sunday", "title": "Do you work on Sundays"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        "Ok. Select a FAQ for more info...", 
-                                                        "Bus Abc FAQs",
-                                                        sections) 
-                                                    
-                                                elif selected_option == "Fares":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    table_message = (
-                                                            
-                                                            "*🚌 Bus Fares*\n\n"
-                                                            "```"
-                                                            "Cities/Towns         | Fare\n"
-                                                            "-------------------- |-----\n"
-                                                            "Harare ↔️ Bulawayo   | $15\n"
-                                                            "Harare ↔️ Kariba     | $14\n"
-                                                            "Harare ↔️ Vic Falls  | $25\n"
-                                                            "Chitungwiza ↔️ Mutare| $10\n"
-                                                            "Harare ↔️ Gokwe      | $15"
-                                                            "```"
-                                                        )
-
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "text",
-                                                        "text": {
-                                                            "body": table_message,
-                                                            "preview_url": False
-                                                        }
-                                                    }
-
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
-                                                    }
-
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-
-                                                    response = requests.post(url, headers=headers, json=payload)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "View Route & Times"},
-                                                                {"id": "Contact", "title": "Contact Support"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Kindly select an option for enquiry.", 
-                                                        "Bus Abc Options",
-                                                        sections) 
-
-
-                                                elif selected_option == "View":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
-                                                    }
-
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "interactive",
-                                                        "interactive": {
-                                                            "type": "list",
-                                                            "header": { "type": "text", "text": "🚌 Bus ABC Schedule" },
-                                                            "body": { "text": "Select a destination to view bus times:" },
-                                                            "action": {
-                                                                "button": "View Routes",
-                                                                "sections": [{
-                                                                    "title": "Available Routes",
-                                                                    "rows": [
-                                                                        { "id": "vbulawayo", "title": "Harare → Bulawayo", "description": "US$15" },
-                                                                        { "id": "vmutare", "title": "Chitungwiza → Mutare", "description": "6:00 AM" },
-                                                                        { "id": "vkariba", "title": "Harare → Kariba", "description": "US$14" },
-                                                                        { "id": "vvictoria", "title": "Harare → Victoria Falls", "description": "US$25" },
-                                                                        { "id": "vgokwe", "title": "Harare → Gokwe", "description": "10 daily buses" },
-                                                                        { "id": "vkaroi", "title": "Harare → Karoi / Magunje", "description": "7 departures" },
-                                                                        { "id": "vhonde", "title": "Harare → Honde Valley", "description": "10 departures" },
-                                                                        { "id": "vchirundu", "title": "Harare → Chirundu", "description": "9:00 AM" },
-                                                                        { "id": "vmukumbura", "title": "Harare → Mukumbura", "description": "9 departures" },
-                                                                        { "id": "vall", "title": "📄 View Full Schedule PDF", "description": "Download file" }
-                                                                    ]
-                                                                }]
-                                                            }
-                                                        }
-                                                    }
-
-                                                    requests.post(url, headers=headers, json=payload)
-                                                                                                        
-
-
-                                                elif selected_option == "Contact":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    send_whatsapp_messagecc(sender_id, "✅ Okay. A Customer Representative has been notified to assit you. They will contact you shortly.")
-
-                                                elif selected_option == "vkariba":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "View Route & Times"},
-                                                                {"id": "Contact", "title": "Contact Support"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                                {"id": "Download", "title": "Download Brochure"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Departures from Mbare Musika Rank. \n\n Departure Times: 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM.\n\n Kindly select an option for enquiry.", 
-                                                        "Bus Abc Options",
-                                                        sections) 
-                                                    
-
-                                                elif selected_option == "vbulawayo":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "View Route & Times"},
-                                                                {"id": "Contact", "title": "Contact Support"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                                {"id": "Download", "title": "Download Brochure"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
-                                                        "Bus Abc Options",
-                                                        sections) 
-
-                                                elif selected_option == "vmutare":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "View Route & Times"},
-                                                                {"id": "Contact", "title": "Contact Support"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                                {"id": "Download", "title": "Download Brochure"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
-                                                        "Bus Abc Options",
-                                                        sections)
-                                                    
-
-
-                                            elif interactive.get("type") == "button_reply":
-                                                button_id = interactive.get("button_reply", {}).get("id")
-                                                print(f"🔘 Button clicked: {button_id}")
-                                                
-                                                if button_id == "changeroute":
-
-                                                    sections = [
-                                                        {
-                                                            "title": "City of Departure",
-                                                            "rows": [
-                                                                {"id": "stHarare", "title": "Harare"},
-                                                                {"id": "stChegutu", "title": "Chegutu"},
-                                                                {"id": "stKadoma", "title": "Kadoma"},
-                                                                {"id": "stKwekwe", "title": "Kwekwe"},
-                                                                {"id": "stGweru", "title": "Gweru"},
-                                                                {"id": "stBulawayo", "title": "Bulawayo"},
-                                                                {"id": "stChitungwiza", "title": "Mvuma"},
-                                                                {"id": "stMasvingo", "title": "Masvingo"},
-                                                                {"id": "stVictoriaFalls", "title": "Victoria Falls"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
-                                                        "City of Departure",
-                                                        sections)     
-
-
-                                                elif button_id == "ticketbook":
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Payment for Ticket",
-                                                            "rows": [
-                                                                {"id": "EcoCash", "title": "EcoCash"},
-                                                                {"id": "OneMoney", "title": "OneMoney"},
-                                                                {"id": "PayNow", "title": "Bank Card"},
-                                                                {"id": "Cash", "title": "Cash"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        "Great! You may proceed to pay for your ticket and reserve a seat. Select a method of Payment below.", 
-                                                        "Payment for Ticket",
-                                                        sections) 
-
-                                                elif button_id in ["7am", "10am", "2pm"]:
-
-                                                    print(f"🕒 User selected time: {button_id}") 
-
-                                                    cursor.execute(
-                                                        "UPDATE ticketbookingstemp SET time_dep_bus = %s WHERE user_id = %s",
-                                                        (button_id, sender_number)
-                                                    )
-                                                    connection.commit()
-
-
-                                                    cursor.execute(
-                                                        "SELECT departure_city, destination_city, travel_date FROM ticketbookingstemp WHERE user_id = %s",
-                                                        (sender_number,)
-                                                    )
-                                                    result = cursor.fetchone()
-
-                                                    departure_city = result[0]
-                                                    destination_city = result[1]
-                                                    travel_date = result[2]
-
-
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
-                                                        {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}},
-                                                    ]
-                                                    send_whatsapp_messagecc(
-                                                        sender_id, 
-                                                        f"Great News! Seats are still available on the bus that will be departing from *{departure_city}* to *{destination_city}* on *{travel_date}* at *{button_id}* and costs USD 13.\n\n"
-                                                        "Proceed to book ticket?",
-                                                        buttons
-                                                    ) 
-
-                                        elif message.get("type") == "text":
-
-                                            text = message.get("text", {}).get("body", "").lower()
-                                            print(f"📨 Message from {sender_id}: {text}")
-                                            
-                                            print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
-
-
-                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                            headers = {
-                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                "Content-Type": "application/json"
-                                            }
-
-                                            payload = {
-                                                "messaging_product": "whatsapp",
-                                                "to": sender_id,
-                                                "type": "interactive",
-                                                "interactive": {
-                                                    "type": "list",
-                                                    "header": {
-                                                        "type": "text",
-                                                        "text": "🚍 ABC COACHES MAIN MENU"
-                                                    },
-                                                    "body": {
-                                                        "text": (
-                                                            "Welcome aboard! 👋\n\n"
-                                                            "Explore our available routes, services, and customer support options.\n"
-                                                            "Tap *OPEN MENU* below to get started. ⬇️"
-                                                        )
-                                                    },
-                                                    "action": {
-                                                        "button": "📋 OPEN MENU",
-                                                        "sections": [
+                try:
+
+                    if data and "entry" in data:
+                        for entry in data["entry"]:
+                            for change in entry["changes"]:
+                                if "messages" in change["value"]:
+                                    for message in change["value"]["messages"]:
+
+                                        conversation_id = str(uuid.uuid4())
+                                        session['conversation_id'] = conversation_id
+                                    
+
+                                        sender_id = message["from"]
+                                        sender_number = sender_id[-9:]
+                                        print(f"📱 Conversation {conversation_id}: Sender's WhatsApp number: {sender_number}")
+                                        session['client'] = str(sender_number)
+
+                                        external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
+
+
+                                        try:
+                                            connection = psycopg2.connect(external_database_url)
+                                            cursor = connection.cursor()   
+
+                                            if message.get("type") == "interactive":
+                                                interactive = message.get("interactive", {})
+
+
+                                                if interactive.get("type") == "list_reply":
+                                                    selected_option = interactive.get("list_reply", {}).get("id")
+                                                    print(f"📋 User selected: {selected_option}")
+
+                                                    if selected_option == "Book":
+
+                                                        try:
+
+                                                            # Create table if it doesn't exist
+                                                            create_table_query = """
+                                                            CREATE TABLE IF NOT EXISTS ticketbookingstemp (
+                                                                id SERIAL PRIMARY KEY,
+                                                                user_id VARCHAR(50),
+                                                                departure_city VARCHAR(100),
+                                                                destination_city VARCHAR(100),
+                                                                travel_date DATE,
+                                                                booking_status VARCHAR(20) DEFAULT 'pending',
+                                                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                                            );
+                                                            """
+
+                                                            cursor.execute(create_table_query)
+                                                            connection.commit()
+
+                                                            alter_column_query = """
+                                                            ALTER TABLE ticketbookingstemp
+                                                            ADD COLUMN IF NOT EXISTS time_dep_bus VARCHAR(255);
+                                                            """
+
+                                                            cursor.execute(alter_column_query)
+                                                            connection.commit()
+                                                            print("✅ Column 'fff' added to 'ticketbookingstemp' (if not already present).")
+
+                                                        except Exception as e:
+                                                            print("❌ Failed to connect or create table:", e)
+
+
+                                                        button_id_leave_type = str(selected_option)
+
+                                                        sections = [
                                                             {
-                                                                "title": "🚌 BUS ROUTES & BOOKINGS",
+                                                                "title": "City/Town of Departure",
                                                                 "rows": [
-                                                                    {
-                                                                        "id": "know_more",
-                                                                        "title": "ℹ️ Know More",
-                                                                        "description": "Our story, mission & travel experience"
-                                                                    },
-                                                                    {
-                                                                        "id": "why_choose",
-                                                                        "title": "💎 Why Choose Us",
-                                                                        "description": "Luxury, safety & comfort explained"
-                                                                    },
-                                                                    {
-                                                                        "id": "book_ticket",
-                                                                        "title": "🎫 Book a Ticket",
-                                                                        "description": "Reserve your seat instantly"
-                                                                    }
-                                                                ]
-                                                            },
-                                                            {
-                                                                "title": "📦 SERVICES & EXTRAS",
-                                                                "rows": [
-                                                                    {
-                                                                        "id": "parcel_delivery",
-                                                                        "title": "📦 Parcel Delivery",
-                                                                        "description": "Send or collect packages"
-                                                                    },
-                                                                    {
-                                                                        "id": "find_stop",
-                                                                        "title": "📍 Find Bus Stop",
-                                                                        "description": "Locate nearest pick-up point"
-                                                                    },
-                                                                    {
-                                                                        "id": "promotions",
-                                                                        "title": "🎁 Promotions & Offers",
-                                                                        "description": "Current discounts & deals"
-                                                                    }
-                                                                ]
-                                                            },
-                                                            {
-                                                                "title": "🛎 CUSTOMER SERVICE",
-                                                                "rows": [
-                                                                    {
-                                                                        "id": "faqs",
-                                                                        "title": "❓ FAQs",
-                                                                        "description": "Get answers to common questions"
-                                                                    },
-                                                                    {
-                                                                        "id": "policies",
-                                                                        "title": "📃 Travel Policies",
-                                                                        "description": "Baggage rules, safety, refunds"
-                                                                    },
-                                                                    {
-                                                                        "id": "get_help",
-                                                                        "title": "🆘 Get Help",
-                                                                        "description": "Talk to a support agent now"
-                                                                    }
+                                                                    {"id": "stHarare", "title": "Harare"},
+                                                                    {"id": "stBulawayo", "title": "Bulawayo"},
+                                                                    {"id": "stVictoriaFalls", "title": "Victoria Falls"},
+                                                                    {"id": "stMutare", "title": "Mutare"},
+                                                                    {"id": "stKadoma", "title": "Kadoma"},
+                                                                    {"id": "stKwekwe", "title": "Kwekwe"},
+                                                                    {"id": "stKaroi", "title": "Karoi"},
+                                                                    {"id": "stGweru", "title": "Gweru"},
+                                                                    {"id": "stGokwe", "title": "Gokwe"},
+                                                                    {"id": "stMasvingo", "title": "Masvingo"},
                                                                 ]
                                                             }
                                                         ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
+                                                            "City of Departure",
+                                                            sections) 
+                                                        
+                                                    elif selected_option.startswith("st"):
+                                                        city_selected = selected_option[2:]  
+                                                        print(f"🚌 User selected city of departure: {city_selected}")
+
+                                                        cursor.execute("SELECT 1 FROM ticketbookingstemp WHERE user_id = %s", (sender_number,))
+                                                        exists = cursor.fetchone()
+
+                                                        if exists:
+                                                            # Delete the existing row
+                                                            cursor.execute("DELETE FROM ticketbookingstemp WHERE user_id = %s", (sender_number,))
+                                                            print(f"🗑️ Deleted existing row for {sender_number}")
+
+                                                        # Insert new row with departure_city = 'ccc'
+                                                        cursor.execute(
+                                                            "INSERT INTO ticketbookingstemp (user_id, departure_city) VALUES (%s, %s)",
+                                                            (sender_number, city_selected)
+                                                        )
+                                                        connection.commit()
+
+                                                        print(f"✅ Inserted {sender_number} with departure_city = {city_selected}")
+
+                                                        sections = [
+                                                            {
+                                                                "title": "City of Destination",
+                                                                "rows": [
+                                                                    {"id": "dtHarare", "title": "Harare"},
+                                                                    {"id": "dtChegutu", "title": "Chegutu"},
+                                                                    {"id": "dtKadoma", "title": "Kadoma"},
+                                                                    {"id": "dtKwekwe", "title": "Kwekwe"},
+                                                                    {"id": "dtGweru", "title": "Gweru"},
+                                                                    {"id": "dtBulawayo", "title": "Bulawayo"},
+                                                                    {"id": "dtChitungwiza", "title": "Mvuma"},
+                                                                    {"id": "dtMasvingo", "title": "Masvingo"},
+                                                                    {"id": "dtVictoriaFalls", "title": "Victoria Falls"},
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id,
+                                                            f"You selected *{city_selected}* as your departure city. What is your destination?",
+                                                            "City of Destination",
+                                                            sections)
+                                                        
+                                                    elif selected_option.startswith("dt"):
+                                                        city_selected = selected_option[2:]  
+                                                        print(f"🚌 User selected city of destination: {city_selected}")
+
+                                                        cursor.execute(
+                                                            "UPDATE ticketbookingstemp SET destination_city = %s WHERE user_id = %s",
+                                                            (city_selected, sender_number)
+                                                        )
+                                                        connection.commit()
+                                                        print(f"✅ Updated destination_city to '{city_selected}' for user_id {sender_number}")
+
+                                                        cursor.execute(
+                                                            "SELECT departure_city FROM ticketbookingstemp WHERE user_id = %s",
+                                                            (sender_number,)
+                                                        )
+                                                        result = cursor.fetchone()
+
+                                                        departure_city = result[0]
+
+                                                        send_whatsapp_messagecc(
+                                                            sender_id, 
+                                                            f"You selected *{city_selected}* as your destination city. A bus will be departing from *{departure_city}* to *{city_selected}* and costs USD 13.\n\n"
+                                                            "When would you like to travel?\n\n"
+                                                            "Kindly provide the date in the format 👇 \n\n `3 July 2025`"
+                                                        )
+
+
+                                                
+
+                                                    elif selected_option == "FAQs":
+                                                        button_id_leave_type = str(selected_option)
+
+                                                        sections = [
+                                                            {
+                                                                "title": "FAQs",
+                                                                "rows": [
+                                                                    {"id": "Fares", "title": "Fares"},
+                                                                    {"id": "BusTypes", "title": "Bus Types"},
+                                                                    {"id": "Privatehires", "title": "Do you do private hires?"},
+                                                                    {"id": "Sunday", "title": "Do you work on Sundays"},
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            "Ok. Select a FAQ for more info...", 
+                                                            "Bus Abc FAQs",
+                                                            sections) 
+                                                        
+                                                    elif selected_option == "Fares":
+                                                        button_id_leave_type = str(selected_option)
+
+                                                        table_message = (
+                                                                
+                                                                "*🚌 Bus Fares*\n\n"
+                                                                "```"
+                                                                "Cities/Towns         | Fare\n"
+                                                                "-------------------- |-----\n"
+                                                                "Harare ↔️ Bulawayo   | $15\n"
+                                                                "Harare ↔️ Kariba     | $14\n"
+                                                                "Harare ↔️ Vic Falls  | $25\n"
+                                                                "Chitungwiza ↔️ Mutare| $10\n"
+                                                                "Harare ↔️ Gokwe      | $15"
+                                                                "```"
+                                                            )
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "text",
+                                                            "text": {
+                                                                "body": table_message,
+                                                                "preview_url": False
+                                                            }
+                                                        }
+
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Leave Type Options",
+                                                                "rows": [
+                                                                    {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                    {"id": "View", "title": "View Route & Times"},
+                                                                    {"id": "Contact", "title": "Contact Support"},
+                                                                    {"id": "FAQs", "title": "FAQs"},
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            f"Kindly select an option for enquiry.", 
+                                                            "Bus Abc Options",
+                                                            sections) 
+
+
+                                                    elif selected_option == "View":
+                                                        button_id_leave_type = str(selected_option)
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": { "type": "text", "text": "🚌 Bus ABC Schedule" },
+                                                                "body": { "text": "Select a destination to view bus times:" },
+                                                                "action": {
+                                                                    "button": "View Routes",
+                                                                    "sections": [{
+                                                                        "title": "Available Routes",
+                                                                        "rows": [
+                                                                            { "id": "vbulawayo", "title": "Harare → Bulawayo", "description": "US$15" },
+                                                                            { "id": "vmutare", "title": "Chitungwiza → Mutare", "description": "6:00 AM" },
+                                                                            { "id": "vkariba", "title": "Harare → Kariba", "description": "US$14" },
+                                                                            { "id": "vvictoria", "title": "Harare → Victoria Falls", "description": "US$25" },
+                                                                            { "id": "vgokwe", "title": "Harare → Gokwe", "description": "10 daily buses" },
+                                                                            { "id": "vkaroi", "title": "Harare → Karoi / Magunje", "description": "7 departures" },
+                                                                            { "id": "vhonde", "title": "Harare → Honde Valley", "description": "10 departures" },
+                                                                            { "id": "vchirundu", "title": "Harare → Chirundu", "description": "9:00 AM" },
+                                                                            { "id": "vmukumbura", "title": "Harare → Mukumbura", "description": "9 departures" },
+                                                                            { "id": "vall", "title": "📄 View Full Schedule PDF", "description": "Download file" }
+                                                                        ]
+                                                                    }]
+                                                                }
+                                                            }
+                                                        }
+
+                                                        requests.post(url, headers=headers, json=payload)
+                                                                                                            
+
+
+                                                    elif selected_option == "Contact":
+                                                        button_id_leave_type = str(selected_option)
+
+                                                        send_whatsapp_messagecc(sender_id, "✅ Okay. A Customer Representative has been notified to assit you. They will contact you shortly.")
+
+                                                    elif selected_option == "vkariba":
+                                                        button_id_leave_type = str(selected_option)
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Leave Type Options",
+                                                                "rows": [
+                                                                    {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                    {"id": "View", "title": "View Route & Times"},
+                                                                    {"id": "Contact", "title": "Contact Support"},
+                                                                    {"id": "FAQs", "title": "FAQs"},
+                                                                    {"id": "Download", "title": "Download Brochure"},
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            f"Departures from Mbare Musika Rank. \n\n Departure Times: 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM.\n\n Kindly select an option for enquiry.", 
+                                                            "Bus Abc Options",
+                                                            sections) 
+                                                        
+
+                                                    elif selected_option == "vbulawayo":
+                                                        button_id_leave_type = str(selected_option)
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Leave Type Options",
+                                                                "rows": [
+                                                                    {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                    {"id": "View", "title": "View Route & Times"},
+                                                                    {"id": "Contact", "title": "Contact Support"},
+                                                                    {"id": "FAQs", "title": "FAQs"},
+                                                                    {"id": "Download", "title": "Download Brochure"},
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
+                                                            "Bus Abc Options",
+                                                            sections) 
+
+                                                    elif selected_option == "vmutare":
+                                                        button_id_leave_type = str(selected_option)
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Leave Type Options",
+                                                                "rows": [
+                                                                    {"id": "Book", "title": "Book A Bus Ticket"},
+                                                                    {"id": "View", "title": "View Route & Times"},
+                                                                    {"id": "Contact", "title": "Contact Support"},
+                                                                    {"id": "FAQs", "title": "FAQs"},
+                                                                    {"id": "Download", "title": "Download Brochure"},
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
+                                                            "Bus Abc Options",
+                                                            sections)
+                                                        
+
+
+                                                elif interactive.get("type") == "button_reply":
+                                                    button_id = interactive.get("button_reply", {}).get("id")
+                                                    print(f"🔘 Button clicked: {button_id}")
+                                                    
+                                                    if button_id == "changeroute":
+
+                                                        sections = [
+                                                            {
+                                                                "title": "City of Departure",
+                                                                "rows": [
+                                                                    {"id": "stHarare", "title": "Harare"},
+                                                                    {"id": "stChegutu", "title": "Chegutu"},
+                                                                    {"id": "stKadoma", "title": "Kadoma"},
+                                                                    {"id": "stKwekwe", "title": "Kwekwe"},
+                                                                    {"id": "stGweru", "title": "Gweru"},
+                                                                    {"id": "stBulawayo", "title": "Bulawayo"},
+                                                                    {"id": "stChitungwiza", "title": "Mvuma"},
+                                                                    {"id": "stMasvingo", "title": "Masvingo"},
+                                                                    {"id": "stVictoriaFalls", "title": "Victoria Falls"},
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
+                                                            "City of Departure",
+                                                            sections)     
+
+
+                                                    elif button_id == "ticketbook":
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Payment for Ticket",
+                                                                "rows": [
+                                                                    {"id": "EcoCash", "title": "EcoCash"},
+                                                                    {"id": "OneMoney", "title": "OneMoney"},
+                                                                    {"id": "PayNow", "title": "Bank Card"},
+                                                                    {"id": "Cash", "title": "Cash"},
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_messagecc(
+                                                            sender_id, 
+                                                            "Great! You may proceed to pay for your ticket and reserve a seat. Select a method of Payment below.", 
+                                                            "Payment for Ticket",
+                                                            sections) 
+
+                                                    elif button_id in ["7am", "10am", "2pm"]:
+
+                                                        print(f"🕒 User selected time: {button_id}") 
+
+                                                        cursor.execute(
+                                                            "UPDATE ticketbookingstemp SET time_dep_bus = %s WHERE user_id = %s",
+                                                            (button_id, sender_number)
+                                                        )
+                                                        connection.commit()
+
+
+                                                        cursor.execute(
+                                                            "SELECT departure_city, destination_city, travel_date FROM ticketbookingstemp WHERE user_id = %s",
+                                                            (sender_number,)
+                                                        )
+                                                        result = cursor.fetchone()
+
+                                                        departure_city = result[0]
+                                                        destination_city = result[1]
+                                                        travel_date = result[2]
+
+
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
+                                                            {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}},
+                                                        ]
+                                                        send_whatsapp_messagecc(
+                                                            sender_id, 
+                                                            f"Great News! Seats are still available on the bus that will be departing from *{departure_city}* to *{destination_city}* on *{travel_date}* at *{button_id}* and costs USD 13.\n\n"
+                                                            "Proceed to book ticket?",
+                                                            buttons
+                                                        ) 
+
+                                            elif message.get("type") == "text":
+
+                                                text = message.get("text", {}).get("body", "").lower()
+                                                print(f"📨 Message from {sender_id}: {text}")
+                                                
+                                                print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+
+
+                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                headers = {
+                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                    "Content-Type": "application/json"
+                                                }
+
+                                                payload = {
+                                                    "messaging_product": "whatsapp",
+                                                    "to": sender_id,
+                                                    "type": "interactive",
+                                                    "interactive": {
+                                                        "type": "list",
+                                                        "header": {
+                                                            "type": "text",
+                                                            "text": "🚍 ABC COACHES MAIN MENU"
+                                                        },
+                                                        "body": {
+                                                            "text": (
+                                                                "Welcome aboard! 👋\n\n"
+                                                                "Explore our available routes, services, and customer support options.\n"
+                                                                "Tap *OPEN MENU* below to get started. ⬇️"
+                                                            )
+                                                        },
+                                                        "action": {
+                                                            "button": "📋 OPEN MENU",
+                                                            "sections": [
+                                                                {
+                                                                    "title": "🚌 BUS ROUTES & BOOKINGS",
+                                                                    "rows": [
+                                                                        {
+                                                                            "id": "know_more",
+                                                                            "title": "ℹ️ Know More",
+                                                                            "description": "Our story, mission & travel experience"
+                                                                        },
+                                                                        {
+                                                                            "id": "why_choose",
+                                                                            "title": "💎 Why Choose Us",
+                                                                            "description": "Luxury, safety & comfort explained"
+                                                                        },
+                                                                        {
+                                                                            "id": "book_ticket",
+                                                                            "title": "🎫 Book a Ticket",
+                                                                            "description": "Reserve your seat instantly"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "title": "📦 SERVICES & EXTRAS",
+                                                                    "rows": [
+                                                                        {
+                                                                            "id": "parcel_delivery",
+                                                                            "title": "📦 Parcel Delivery",
+                                                                            "description": "Send or collect packages"
+                                                                        },
+                                                                        {
+                                                                            "id": "find_stop",
+                                                                            "title": "📍 Find Bus Stop",
+                                                                            "description": "Locate nearest pick-up point"
+                                                                        },
+                                                                        {
+                                                                            "id": "promotions",
+                                                                            "title": "🎁 Promotions & Offers",
+                                                                            "description": "Current discounts & deals"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "title": "🛎 CUSTOMER SERVICE",
+                                                                    "rows": [
+                                                                        {
+                                                                            "id": "faqs",
+                                                                            "title": "❓ FAQs",
+                                                                            "description": "Get answers to common questions"
+                                                                        },
+                                                                        {
+                                                                            "id": "policies",
+                                                                            "title": "📃 Travel Policies",
+                                                                            "description": "Baggage rules, safety, refunds"
+                                                                        },
+                                                                        {
+                                                                            "id": "get_help",
+                                                                            "title": "🆘 Get Help",
+                                                                            "description": "Talk to a support agent now"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
                                                     }
                                                 }
-                                            }
 
 
 
-                                            # Send the request to WhatsApp
-                                            response = requests.post(url, headers=headers, json=payload)
+                                                # Send the request to WhatsApp
+                                                response = requests.post(url, headers=headers, json=payload)
 
-                                            # Optional: Print result for debugging
-                                            print(response.status_code)
-                                            print(response.text)
+                                                # Optional: Print result for debugging
+                                                print(response.status_code)
+                                                print(response.text)
 
 
-                                    finally:
-                                        if connection:
-                                            print('DONE')
+                                        finally:
+                                            if connection:
+                                                print('DONE')
+
+                except Exception as e:
+                    print(e)
 
                 return
 
