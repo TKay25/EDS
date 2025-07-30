@@ -678,6 +678,11 @@ def webhook():
                                                                             "description": "Reserve your seat instantly"
                                                                         },
                                                                         {
+                                                                            "id": "routes",
+                                                                            "title": "View Routes",
+                                                                            "description": "Get info regarding our travel routes"
+                                                                        },
+                                                                        {
                                                                             "id": "parcel_delivery",
                                                                             "title": "Parcel Delivery",
                                                                             "description": "Send or collect packages"
