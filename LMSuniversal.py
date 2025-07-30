@@ -556,29 +556,22 @@ def webhook():
                                                     button_id = interactive.get("button_reply", {}).get("id")
                                                     print(f"🔘 Button clicked: {button_id}")
                                                     
-                                                    if button_id == "changeroute":
+                                                    if button_id == "book_ticket":
 
                                                         sections = [
                                                             {
-                                                                "title": "City of Departure",
+                                                                "title": "ROUTE SELECTION",
                                                                 "rows": [
-                                                                    {"id": "stHarare", "title": "Harare"},
-                                                                    {"id": "stChegutu", "title": "Chegutu"},
-                                                                    {"id": "stKadoma", "title": "Kadoma"},
-                                                                    {"id": "stKwekwe", "title": "Kwekwe"},
-                                                                    {"id": "stGweru", "title": "Gweru"},
-                                                                    {"id": "stBulawayo", "title": "Bulawayo"},
-                                                                    {"id": "stChitungwiza", "title": "Mvuma"},
-                                                                    {"id": "stMasvingo", "title": "Masvingo"},
-                                                                    {"id": "stVictoriaFalls", "title": "Victoria Falls"},
+                                                                    {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 10"},
+                                                                    {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 10"}
                                                                 ]
                                                             }
                                                         ]
 
                                                         send_whatsapp_list_messagecc(
                                                             sender_id, 
-                                                            "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
-                                                            "City of Departure",
+                                                            "Ok. Kindly select the route of travel for which you want to book a ticket", 
+                                                            "ROUTE SELECTION",
                                                             sections)     
 
 
