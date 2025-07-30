@@ -667,7 +667,7 @@ def webhook():
                                                             )
                                                         },
                                                         "action": {
-                                                            "button": "📋 OPEN MENU",
+                                                            "button": "📋ABC COACHES MENU",
                                                             "sections": [
                                                                 {
                                                                     "title": "📦ABC COACHES SERVICES",
