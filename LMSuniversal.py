@@ -258,7 +258,6 @@ def webhook():
                                                                             "title": "📦ROUTES",
                                                                             "rows": [
                                                                                 {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 10"},
-                                                                                {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 10"}
                                                                             ]
                                                                         }
                                                                     ]
@@ -275,6 +274,104 @@ def webhook():
                                                         print(response.status_code)
                                                         print(response.text)
                                                 
+                                                    elif selected_option == "HreByo":
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 DEPARTURE TIME"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "DEPARTURE TIME",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "DEPARTURE TIME",
+                                                                            "rows": [
+                                                                                {"id": "8am", "title": "8 am"},
+                                                                                {"id": "9am", "title": "9 am"},
+                                                                                {"id": "2pm", "title": "2 pm"},
+
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+
+
+
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+
+                                                    elif selected_option == "8am" or selected_option == "9am" or  selected_option == "2pm":
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 PAYMENT METHODS"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Okay. Kindly select the payment method that you would like to use to book a ticket on the menu below. ⬇️"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "PAYMENT METHODS",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "PAYMENT METHODS",
+                                                                            "rows": [
+                                                                                {"id": "ecocash", "title": "EcoCash"},
+                                                                                {"id": "onemoney", "title": "OneMoney"},
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+
+
+
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+
 
                                                     elif selected_option == "FAQs":
                                                         button_id_leave_type = str(selected_option)
