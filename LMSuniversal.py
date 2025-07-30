@@ -228,136 +228,23 @@ def webhook():
                                                     selected_option = interactive.get("list_reply", {}).get("id")
                                                     print(f"📋 User selected: {selected_option}")
 
-                                                    if selected_option == "Book":
-
-                                                        try:
-
-                                                            # Create table if it doesn't exist
-                                                            create_table_query = """
-                                                            CREATE TABLE IF NOT EXISTS ticketbookingstemp (
-                                                                id SERIAL PRIMARY KEY,
-                                                                user_id VARCHAR(50),
-                                                                departure_city VARCHAR(100),
-                                                                destination_city VARCHAR(100),
-                                                                travel_date DATE,
-                                                                booking_status VARCHAR(20) DEFAULT 'pending',
-                                                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                                                            );
-                                                            """
-
-                                                            cursor.execute(create_table_query)
-                                                            connection.commit()
-
-                                                            alter_column_query = """
-                                                            ALTER TABLE ticketbookingstemp
-                                                            ADD COLUMN IF NOT EXISTS time_dep_bus VARCHAR(255);
-                                                            """
-
-                                                            cursor.execute(alter_column_query)
-                                                            connection.commit()
-                                                            print("✅ Column 'fff' added to 'ticketbookingstemp' (if not already present).")
-
-                                                        except Exception as e:
-                                                            print("❌ Failed to connect or create table:", e)
-
-
-                                                        button_id_leave_type = str(selected_option)
+                                                    if selected_option == "book_ticket":
 
                                                         sections = [
                                                             {
-                                                                "title": "City/Town of Departure",
+                                                                "title": "ROUTE SELECTION",
                                                                 "rows": [
-                                                                    {"id": "stHarare", "title": "Harare"},
-                                                                    {"id": "stBulawayo", "title": "Bulawayo"},
-                                                                    {"id": "stVictoriaFalls", "title": "Victoria Falls"},
-                                                                    {"id": "stMutare", "title": "Mutare"},
-                                                                    {"id": "stKadoma", "title": "Kadoma"},
-                                                                    {"id": "stKwekwe", "title": "Kwekwe"},
-                                                                    {"id": "stKaroi", "title": "Karoi"},
-                                                                    {"id": "stGweru", "title": "Gweru"},
-                                                                    {"id": "stGokwe", "title": "Gokwe"},
-                                                                    {"id": "stMasvingo", "title": "Masvingo"},
+                                                                    {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 10"},
+                                                                    {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 10"}
                                                                 ]
                                                             }
                                                         ]
 
                                                         send_whatsapp_list_messagecc(
                                                             sender_id, 
-                                                            "Ok. Which city/town are you travelling from? (Muri kuda kukwira Bhazi muchibva kuguta ripi?)", 
-                                                            "City of Departure",
-                                                            sections) 
-                                                        
-                                                    elif selected_option.startswith("st"):
-                                                        city_selected = selected_option[2:]  
-                                                        print(f"🚌 User selected city of departure: {city_selected}")
-
-                                                        cursor.execute("SELECT 1 FROM ticketbookingstemp WHERE user_id = %s", (sender_number,))
-                                                        exists = cursor.fetchone()
-
-                                                        if exists:
-                                                            # Delete the existing row
-                                                            cursor.execute("DELETE FROM ticketbookingstemp WHERE user_id = %s", (sender_number,))
-                                                            print(f"🗑️ Deleted existing row for {sender_number}")
-
-                                                        # Insert new row with departure_city = 'ccc'
-                                                        cursor.execute(
-                                                            "INSERT INTO ticketbookingstemp (user_id, departure_city) VALUES (%s, %s)",
-                                                            (sender_number, city_selected)
-                                                        )
-                                                        connection.commit()
-
-                                                        print(f"✅ Inserted {sender_number} with departure_city = {city_selected}")
-
-                                                        sections = [
-                                                            {
-                                                                "title": "City of Destination",
-                                                                "rows": [
-                                                                    {"id": "dtHarare", "title": "Harare"},
-                                                                    {"id": "dtChegutu", "title": "Chegutu"},
-                                                                    {"id": "dtKadoma", "title": "Kadoma"},
-                                                                    {"id": "dtKwekwe", "title": "Kwekwe"},
-                                                                    {"id": "dtGweru", "title": "Gweru"},
-                                                                    {"id": "dtBulawayo", "title": "Bulawayo"},
-                                                                    {"id": "dtChitungwiza", "title": "Mvuma"},
-                                                                    {"id": "dtMasvingo", "title": "Masvingo"},
-                                                                    {"id": "dtVictoriaFalls", "title": "Victoria Falls"},
-                                                                ]
-                                                            }
-                                                        ]
-
-                                                        send_whatsapp_list_messagecc(
-                                                            sender_id,
-                                                            f"You selected *{city_selected}* as your departure city. What is your destination?",
-                                                            "City of Destination",
-                                                            sections)
-                                                        
-                                                    elif selected_option.startswith("dt"):
-                                                        city_selected = selected_option[2:]  
-                                                        print(f"🚌 User selected city of destination: {city_selected}")
-
-                                                        cursor.execute(
-                                                            "UPDATE ticketbookingstemp SET destination_city = %s WHERE user_id = %s",
-                                                            (city_selected, sender_number)
-                                                        )
-                                                        connection.commit()
-                                                        print(f"✅ Updated destination_city to '{city_selected}' for user_id {sender_number}")
-
-                                                        cursor.execute(
-                                                            "SELECT departure_city FROM ticketbookingstemp WHERE user_id = %s",
-                                                            (sender_number,)
-                                                        )
-                                                        result = cursor.fetchone()
-
-                                                        departure_city = result[0]
-
-                                                        send_whatsapp_messagecc(
-                                                            sender_id, 
-                                                            f"You selected *{city_selected}* as your destination city. A bus will be departing from *{departure_city}* to *{city_selected}* and costs USD 13.\n\n"
-                                                            "When would you like to travel?\n\n"
-                                                            "Kindly provide the date in the format 👇 \n\n `3 July 2025`"
-                                                        )
-
-
+                                                            "Ok. Kindly select the route of travel for which you want to book a ticket", 
+                                                            "ROUTE SELECTION",
+                                                            sections)   
                                                 
 
                                                     elif selected_option == "FAQs":
