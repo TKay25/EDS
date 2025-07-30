@@ -372,6 +372,34 @@ def webhook():
                                                         print(response.text)
 
 
+                                                    elif selected_option == "ecocash":
+
+                                                        def initiate_cagexpress_payment(phone, amount):
+                                                            url = "https://secure.cagexpress.com/api/pay"
+                                                            
+                                                            payload = {
+                                                                "integration_id": 20625,
+                                                                "integration_key": "f6559511-ab13-45b0-b75b-07b36890f6a6",
+                                                                "reference": f"ticket-{uuid.uuid4().hex[:8]}",  # unique reference
+                                                                "amount": amount,
+                                                                "mobile": phone,
+                                                                "mobile_network": "ecocash",  # you could allow user to pick between ecocash / onemoney etc.
+                                                                "return_url": "https://yourdomain.com/payment/return",  # optional
+                                                            }
+
+                                                            try:
+                                                                response = requests.post(url, json=payload)
+                                                                print("🧾 Payment initiation response:", response.json())
+                                                                return response.json()
+                                                            except Exception as e:
+                                                                print("❌ Error initiating payment:", e)
+                                                                return {"status": "error", "message": str(e)}
+
+                                                        amount = 15
+
+                                                        initiate_cagexpress_payment(sender_id, amount)
+
+
 
                                                     elif selected_option == "FAQs":
                                                         button_id_leave_type = str(selected_option)
