@@ -651,54 +651,78 @@ def webhook():
                                                 "to": sender_id,
                                                 "type": "interactive",
                                                 "interactive": {
-                                                    "type": "list",  # or "button"
+                                                    "type": "list",
                                                     "header": {
                                                         "type": "text",
-                                                        "text": "🚌 ABC COACHES"
+                                                        "text": "🚍 *ABC COACHES MAIN MENU*"
                                                     },
                                                     "body": {
-                                                        "text": "Tap to explore our services:"
+                                                        "text": (
+                                                            "Welcome aboard! 👋\n\n"
+                                                            "Explore our available routes, services, and customer support options.\n"
+                                                            "Tap *OPEN MENU* below to get started. ⬇️"
+                                                        )
                                                     },
                                                     "action": {
-                                                        "button": "OPEN MENU",
+                                                        "button": "📋 OPEN MENU",
                                                         "sections": [
                                                             {
-                                                                "title": "BUS ABC",
+                                                                "title": "🚌 BUS ROUTES & BOOKINGS",
                                                                 "rows": [
                                                                     {
                                                                         "id": "know_more",
-                                                                        "title": "Know More",
-                                                                        "description": "About the story of Imperial Lane"
+                                                                        "title": "ℹ️ Know More",
+                                                                        "description": "Our story, mission & travel experience"
                                                                     },
                                                                     {
                                                                         "id": "why_choose",
-                                                                        "title": "Why Choose Imperial Lane",
-                                                                        "description": "Luxury Cross-Border Travel"
+                                                                        "title": "💎 Why Choose Us",
+                                                                        "description": "Luxury, safety & comfort explained"
                                                                     },
                                                                     {
                                                                         "id": "book_ticket",
-                                                                        "title": "Book Ticket",
+                                                                        "title": "🎫 Book a Ticket",
                                                                         "description": "Reserve your seat instantly"
                                                                     }
                                                                 ]
                                                             },
                                                             {
-                                                                "title": "CUSTOMER SERVICE",
+                                                                "title": "📦 SERVICES & EXTRAS",
+                                                                "rows": [
+                                                                    {
+                                                                        "id": "parcel_delivery",
+                                                                        "title": "📦 Parcel Delivery",
+                                                                        "description": "Send or collect packages"
+                                                                    },
+                                                                    {
+                                                                        "id": "find_stop",
+                                                                        "title": "📍 Find Bus Stop",
+                                                                        "description": "Locate nearest pick-up point"
+                                                                    },
+                                                                    {
+                                                                        "id": "promotions",
+                                                                        "title": "🎁 Promotions & Offers",
+                                                                        "description": "Current discounts & deals"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "title": "🛎 CUSTOMER SERVICE",
                                                                 "rows": [
                                                                     {
                                                                         "id": "faqs",
-                                                                        "title": "FAQs",
-                                                                        "description": "Common questions and answers"
+                                                                        "title": "❓ FAQs",
+                                                                        "description": "Get answers to common questions"
                                                                     },
                                                                     {
                                                                         "id": "policies",
-                                                                        "title": "Our Policies",
-                                                                        "description": "Terms, conditions, and travel rules"
+                                                                        "title": "📃 Travel Policies",
+                                                                        "description": "Baggage rules, safety, refunds"
                                                                     },
                                                                     {
                                                                         "id": "get_help",
-                                                                        "title": "Get Help",
-                                                                        "description": "Talk to our support team"
+                                                                        "title": "🆘 Get Help",
+                                                                        "description": "Talk to a support agent now"
                                                                     }
                                                                 ]
                                                             }
@@ -706,6 +730,8 @@ def webhook():
                                                     }
                                                 }
                                             }
+
+
 
                                             # Send the request to WhatsApp
                                             response = requests.post(url, headers=headers, json=payload)
