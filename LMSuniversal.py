@@ -230,21 +230,50 @@ def webhook():
 
                                                     if selected_option == "book_ticket":
 
-                                                        sections = [
-                                                            {
-                                                                "title": "ROUTE SELECTION",
-                                                                "rows": [
-                                                                    {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 10"},
-                                                                    {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 10"}
-                                                                ]
-                                                            }
-                                                        ]
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
 
-                                                        send_whatsapp_list_messagecc(
-                                                            sender_id, 
-                                                            "Ok. Kindly select the route of travel for which you want to book a ticket", 
-                                                            "ROUTE SELECTION",
-                                                            sections)   
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 ABC ROUTES MENU"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Okay. Kindly select the route of travel for which you want to book a ticket on the menu below. ⬇️"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "ROUTE SELECTION",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "📦ROUTES",
+                                                                            "rows": [
+                                                                                {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 10"},
+                                                                                {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 10"}
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+
+
+
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
                                                 
 
                                                     elif selected_option == "FAQs":
