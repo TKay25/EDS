@@ -111,7 +111,7 @@ def webhook():
                 print(display_phone_number)
 
                 VERIFY_TOKENcc = "1412803596375322"
-                ACCESS_TOKENcc = "EAAUppTRo5q4BPONEIZCUZBRKXzdYmcGevte1uZAZAdubNihyw8VuAzLqpw1MJXHkfaPQwTNPssYjGE1q6DhhgLcKZAFYLohaDOxpwkZAvDRq8ofV6OAUWgbrYvh1JIELpWi5GQEnZBHWxuCxsoCNZAvTjkMf7lZB4ZCETewdm99L2XohrsJMMOKImvl7X3GVFTOFAZCwHox2pLPCBXILXZADPww8yT6kNhFzrzmvWpI33uNwkNkCkQZDZD"
+                ACCESS_TOKEN = "EAATESj1oB5YBPIzFCv7ulvosr2S2ZAiWBJrFp7bti6L0ZCWS2AOz5dUABlJ6q16a4hRwEXdq5vZAP5tp4rGXfOQ2sx0hg1EOwMpL002eqUrygbPc3jkY8FPOzR7c6tMvKJxT3XxXP8Qp9U1n30MIMVcNy9JUCZB8UyIwaAZBAjf2U32TVTwSBJlSeHoNYrGH0dwZDZD"
                 PHONE_NUMBER_IDcc = "618334968023252"
 
                 def send_whatsapp_messagecc(to, text, buttons=None):
@@ -642,7 +642,7 @@ def webhook():
 
                                             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                             headers = {
-                                                "Authorization": f"Bearer {ACCESS_TOKENcc}",
+                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
                                                 "Content-Type": "application/json"
                                             }
 
@@ -654,7 +654,7 @@ def webhook():
                                                     "type": "list",
                                                     "header": {
                                                         "type": "text",
-                                                        "text": "🚍 *ABC COACHES MAIN MENU*"
+                                                        "text": "🚍 ABC COACHES MAIN MENU"
                                                     },
                                                     "body": {
                                                         "text": (
