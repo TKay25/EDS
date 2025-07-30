@@ -670,7 +670,7 @@ def webhook():
                                                             "button": "📋 OPEN MENU",
                                                             "sections": [
                                                                 {
-                                                                    "title": "📦ABC COACHES SERVICES & EXTRAS",
+                                                                    "title": "📦ABC COACHES SERVICES",
                                                                     "rows": [
                                                                         {
                                                                             "id": "book_ticket",
