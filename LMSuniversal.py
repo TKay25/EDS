@@ -799,30 +799,7 @@ def webhook():
                                                             f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
                                                             "CAG TOURS Options",
                                                             sections)
-                                                        
-
-
-                                                elif interactive.get("type") == "button_reply":
-                                                    button_id = interactive.get("button_reply", {}).get("id")
-                                                    print(f"🔘 Button clicked: {button_id}")
-                                                    
-                                                    if button_id == "book_ticket":
-
-                                                        sections = [
-                                                            {
-                                                                "title": "ROUTE SELECTION",
-                                                                "rows": [
-                                                                    {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 15"},
-                                                                    {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 15"}
-                                                                ]
-                                                            }
-                                                        ]
-
-                                                        send_whatsapp_list_messagecc(
-                                                            sender_id, 
-                                                            "Ok. Kindly select the route of travel for which you want to book a ticket", 
-                                                            "ROUTE SELECTION",
-                                                            sections)     
+                          
 
 
                                             elif message.get("type") == "text":
@@ -879,12 +856,10 @@ def webhook():
 
 
                                                         cursor.execute("""
-                                                            SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum FROM cagwatick
-                                                            WHERE idwanumber = %s
-                                                            ORDER BY id DESC
-                                                            LIMIT 1
+                                                            SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum, status
+                                                            FROM cagwatick
+                                                            WHERE idwanumber = %s AND (status IS NULL OR status = '')
                                                         """, (sender_id[-9:],))
-                                                        result = cursor.fetchone()
 
                                                         if result:
                                                             highest_id = result[0]
