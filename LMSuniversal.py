@@ -281,6 +281,7 @@ def webhook():
                                                                             "title": "📦ROUTES",
                                                                             "rows": [
                                                                                 {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 15"},
+                                                                                {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 15"},
                                                                             ]
                                                                         }
                                                                     ]
@@ -297,9 +298,16 @@ def webhook():
                                                         print(response.status_code)
                                                         print(response.text)
                                                 
-                                                    elif selected_option == "HreByo":
+                                                    elif selected_option == "HreByo" or selected_option == "ByoHre":
 
-                                                        route = "Harare to Bulawayo"
+                                                        if selected_option == "HreByo":
+
+                                                            route = "Harare to Bulawayo"
+                                                        
+                                                        elif selected_option == "ByoHre":
+
+                                                            route = "Bulawayo to Harare"
+
                                                         amount = "15"
 
                                                         cursor.execute("SELECT status FROM cagwatick WHERE idwanumber = %s", (sender_id[-9:],))
