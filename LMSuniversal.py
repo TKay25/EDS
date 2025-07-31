@@ -26,6 +26,7 @@ from weasyprint import HTML
 import re
 from paynow import Paynow
 import time
+import random
 
 
 
@@ -9221,6 +9222,7 @@ def paynow_result():
 
     pollurlex = data.get('pollurl')
     status = data.get('status')
+    ticketref = data.get('paynowreference')
     #today_date = datetime.now()
 
     cursor.execute("""
@@ -9261,6 +9263,7 @@ def paynow_result():
             route = result[2]
             time = result[3]
             sender_id = result[1]
+            seat = random.randint(1, 65)
 
             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
             headers = {
@@ -9280,7 +9283,7 @@ def paynow_result():
                     },
                     "body": {
                         "text": (
-                            f"Great News. You have successfully purchased a USD {fare} bus ticket for the {route} route. Your bus departs at {time}"
+                            f"Great News. You have successfully purchased a `USD {fare}` bus ticket for the `{route}` route. Your bus departs at `{time}` from Harare and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref {ticketref}]\n\n Thank you!"
                         )
                     },
                     "action": {
