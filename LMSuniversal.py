@@ -281,6 +281,10 @@ def webhook():
                                                                             "title": "📦ROUTES",
                                                                             "rows": [
                                                                                 {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 15"},
+                                                                                {"id": "HreCheg", "title": "Harare to Chegutu", "description": "BUS FARE: USD 3"},
+                                                                                {"id": "HreKad", "title": "Harare to Kadoma", "description": "BUS FARE: USD 5"},
+                                                                                {"id": "HreKwek", "title": "Harare to Kwekwe", "description": "BUS FARE: USD 8"},
+                                                                                {"id": "HreGwe", "title": "Harare to Gweru", "description": "BUS FARE: USD 10"},
                                                                                 {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 15"},
                                                                             ]
                                                                         }
@@ -298,17 +302,37 @@ def webhook():
                                                         print(response.status_code)
                                                         print(response.text)
                                                 
-                                                    elif selected_option == "HreByo" or selected_option == "ByoHre":
+                                                    elif selected_option == "HreByo" or selected_option == "ByoHre" or selected_option == "HreCheg" or selected_option == "HreKad" or selected_option == "HreKwek" or selected_option == "HreGwe"  :
 
                                                         if selected_option == "HreByo":
 
                                                             route = "Harare to Bulawayo"
-                                                        
+                                                            amount = "15"
+
                                                         elif selected_option == "ByoHre":
 
                                                             route = "Bulawayo to Harare"
+                                                            amount = "15"
 
-                                                        amount = "15"
+                                                        elif selected_option == "HreCheg":
+
+                                                            route = "Harare to Chegutu"
+                                                            amount = "3"
+
+                                                        elif selected_option == "HreKad":
+
+                                                            route = "Harare to Kadoma"
+                                                            amount = "5"
+
+                                                        elif selected_option == "HreKwe":
+
+                                                            route = "Harare to Kwekwe"
+                                                            amount = "8"
+
+                                                        elif selected_option == "HreGwe":
+
+                                                            route = "Harare to Gweru"
+                                                            amount = "10"
 
                                                         cursor.execute("SELECT status FROM cagwatick WHERE idwanumber = %s", (sender_id[-9:],))
                                                         rows = cursor.fetchall()
