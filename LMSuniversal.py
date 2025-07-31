@@ -9195,7 +9195,7 @@ def paynow_result():
     print("Paynow Result Webhook:", data)
 
     pollurlex = data.get('pollurl')
-    status = data.get('pollurl')
+    status = data.get('status')
     #today_date = datetime.now()
 
     cursor.execute("""
