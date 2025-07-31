@@ -12,4 +12,3 @@ requests
 pdfkit
 weasyprint
 paynow
-time
