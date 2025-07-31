@@ -114,7 +114,7 @@ def webhook():
                 print(display_phone_number)
 
                 VERIFY_TOKENcc = "1412803596375322"
-                ACCESS_TOKEN = "EAAUppTRo5q4BPBMW6D2BKrl2VWbjoxsSzxQht1PZAAo2eViIB82iOr7Svj3FbQZA7RK9tYIWH6KAyzcWModMmRjTtNA5ygYWR7ZAcXVVNbL5Bc2LGXZAZACLOVr2KvNQGYGpX45VG413KyTOuyh76zYPiOviMcxISnqPSMXFn3QiZAux9Sdj5PdXrD7JpvBAOFcadkzZA5iTVDEhl7QsJHZBgU2svgu4zzHY21VPF3ZAW3rZCP1AZDZD"
+                ACCESS_TOKEN = "EAAUppTRo5q4BPEi0lRUQNZCZCEuK0WADltmTpdD6ygF98u3rO9xNpv54i0li1bOYxRnol3JypOXsS0qN8wPvOvTMZBIcH7dspajHWjv8mIBaCmt7ZC1rd8QkikZBrbvtuEmADtZC0GcEs5cod8bgmzvMuDBz2G5R1Y1dipXI6NLeV2OoR3GjqIL2CVQoa484d4FzFqid6jvnwxGuhZB4XWjkN3jfY4Ue68GtvEUu5b1UPZCpTe4ZD"
                 PHONE_NUMBER_IDcc = "618334968023252"
 
                 def send_whatsapp_messagecc(to, text, buttons=None):
@@ -379,10 +379,7 @@ def webhook():
 
                                                         print("yeah")
                                                            
-                                                        paynow = Paynow(
-                                                            '20625',
-                                                            'f6559511-ab13-45b0-b75b-07b36890f6a6'
-                                                            )
+                                                        paynow = Paynow('20625','f6559511-ab13-45b0-b75b-07b36890f6a6')
                                                         
                                                         print(paynow)
 
