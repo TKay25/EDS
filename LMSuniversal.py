@@ -1019,7 +1019,7 @@ def webhook():
                                                                         ]
                                                                     },
                                                                     {
-                                                                        "title": "🚌 CAG TOURS COACHES",
+                                                                        "title": "🚌 CAG TOURS",
                                                                         "rows": [
                                                                             {
                                                                                 "id": "know_more",
@@ -9299,7 +9299,7 @@ def paynow_result():
                                 ]
                             },
                             {
-                                "title": "🚌 CAG TOURS COACHES",
+                                "title": "🚌 CAG TOURS",
                                 "rows": [
                                     {
                                         "id": "know_more",
@@ -9413,7 +9413,7 @@ def paynow_result():
                                 ]
                             },
                             {
-                                "title": "🚌 CAG TOURS COACHES",
+                                "title": "🚌 CAG TOURS",
                                 "rows": [
                                     {
                                         "id": "know_more",
