@@ -897,11 +897,43 @@ def webhook():
 
                                                         payment.add('Payment for stuff', 0.01)
 
+
+                                                        cursor.execute("""
+                                                            SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum FROM cagwatick
+                                                            WHERE idwanumber = %s
+                                                            ORDER BY id DESC
+                                                            LIMIT 1
+                                                        """, (sender_id[-9:],))
+                                                        result = cursor.fetchone()
+
+                                                        if result:
+                                                            highest_id = result[0]
+                                                            cursor.execute("""
+                                                                UPDATE cagwatick
+                                                                SET pollurl = %s
+                                                                WHERE id = %s
+                                                            """, (poll_url, highest_id))
+
+                                                            connection.commit()
+
+                                                        else:
+                                                            print("No row found for this sender_id.")
+
+                                                        send_whatsapp_messagecc(
+                                                            sender_id, 
+                                                            f"We are initiating your ticket for route `{result[2]}` on bus departing at `{result[3]}`.\n\n You will receive a USSD prompt on `{result[6]}` shortly to provide your EcoCah PIN to process your USD {result[5]} bus fare payment."
+                                                        ) 
+
+
+
                                                         response = paynow.send_mobile(payment, digits_only, 'ecocash')
 
                                                         print("pending")
 
+                                    
+
                                                         if(response.success):
+
                                                             print('success')
                                                             poll_url = response.poll_url
 
@@ -931,19 +963,19 @@ def webhook():
 
                                                             status = paynow.check_transaction_status(poll_url)
 
-                                                            send_whatsapp_messagecc(
-                                                                sender_id, 
-                                                                f"We are initiating your ticket for route `{result[2]}` on bus departing at `{result[3]}`.\n\n You will receive a USSD prompt on `{result[6]}` shortly to provide your EcoCah PIN to process your USD {result[5]} bus fare payment."
-                                                            ) 
-
                                                             time.sleep(20)
 
                                                             print("Payment Status: ", status.status)
 
 
+                                                        return 'OK', 200
+
+
                                                     
                                                     except Exception as e:
                                                         print(e)
+
+                                                    return 'OK', 200
 
 
 
