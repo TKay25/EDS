@@ -267,7 +267,7 @@ def webhook():
                                                                 "type": "list",
                                                                 "header": {
                                                                     "type": "text",
-                                                                    "text": "🚍 ABC ROUTES MENU"
+                                                                    "text": "🚍 CAG TOURS MENU"
                                                                 },
                                                                 "body": {
                                                                     "text": (
@@ -488,7 +488,7 @@ def webhook():
                                                                 "type": "list",
                                                                 "header": {
                                                                     "type": "text",
-                                                                    "text": "🚍 ABC COACHES MAIN MENU"
+                                                                    "text": "🚍 CAG TOURS MAIN MENU"
                                                                 },
                                                                 "body": {
                                                                     "text": (
@@ -496,10 +496,10 @@ def webhook():
                                                                     )
                                                                 },
                                                                 "action": {
-                                                                    "button": "📋ABC COACHES MENU",
+                                                                    "button": "📋 CAG TOURS MENU",
                                                                     "sections": [
                                                                         {
-                                                                            "title": "📦ABC COACHES SERVICES",
+                                                                            "title": "📦 CAG TOURS SERVICES",
                                                                             "rows": [
                                                                                 {
                                                                                     "id": "book_ticket",
@@ -529,7 +529,7 @@ def webhook():
                                                                             ]
                                                                         },
                                                                         {
-                                                                            "title": "🚌 ABOUT ABC COACHES",
+                                                                            "title": "🚌 ABOUT CAG TOURS",
                                                                             "rows": [
                                                                                 {
                                                                                     "id": "know_more",
@@ -596,7 +596,7 @@ def webhook():
                                                         send_whatsapp_list_messagecc(
                                                             sender_id, 
                                                             "Ok. Select a FAQ for more info...", 
-                                                            "Bus Abc FAQs",
+                                                            "CAG TOURS FAQs",
                                                             sections) 
                                                         
                                                     elif selected_option == "Fares":
@@ -650,7 +650,7 @@ def webhook():
                                                         send_whatsapp_list_messagecc(
                                                             sender_id, 
                                                             f"Kindly select an option for enquiry.", 
-                                                            "Bus Abc Options",
+                                                            "CAG TOURS Options",
                                                             sections) 
 
 
@@ -669,7 +669,7 @@ def webhook():
                                                             "type": "interactive",
                                                             "interactive": {
                                                                 "type": "list",
-                                                                "header": { "type": "text", "text": "🚌 Bus ABC Schedule" },
+                                                                "header": { "type": "text", "text": "🚌 CAG TOURS Schedule" },
                                                                 "body": { "text": "Select a destination to view bus times:" },
                                                                 "action": {
                                                                     "button": "View Routes",
@@ -720,7 +720,7 @@ def webhook():
                                                         send_whatsapp_list_messagecc(
                                                             sender_id, 
                                                             f"Departures from Mbare Musika Rank. \n\n Departure Times: 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM.\n\n Kindly select an option for enquiry.", 
-                                                            "Bus Abc Options",
+                                                            "CAG TOURS Options",
                                                             sections) 
                                                         
 
@@ -743,7 +743,7 @@ def webhook():
                                                         send_whatsapp_list_messagecc(
                                                             sender_id, 
                                                             f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
-                                                            "Bus Abc Options",
+                                                            "CAG TOURS Options",
                                                             sections) 
 
                                                     elif selected_option == "vmutare":
@@ -765,7 +765,7 @@ def webhook():
                                                         send_whatsapp_list_messagecc(
                                                             sender_id, 
                                                             f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
-                                                            "Bus Abc Options",
+                                                            "CAG TOURS Options",
                                                             sections)
                                                         
 
@@ -944,7 +944,7 @@ def webhook():
                                                             "type": "list",
                                                             "header": {
                                                                 "type": "text",
-                                                                "text": "🚍 ABC COACHES MAIN MENU"
+                                                                "text": "🚍 CAG TOURS MAIN MENU"
                                                             },
                                                             "body": {
                                                                 "text": (
@@ -954,10 +954,10 @@ def webhook():
                                                                 )
                                                             },
                                                             "action": {
-                                                                "button": "📋ABC COACHES MENU",
+                                                                "button": "📋 CAG TOURS MENU",
                                                                 "sections": [
                                                                     {
-                                                                        "title": "📦ABC COACHES SERVICES",
+                                                                        "title": "📦 CAG TOURS SERVICES",
                                                                         "rows": [
                                                                             {
                                                                                 "id": "book_ticket",
@@ -987,7 +987,7 @@ def webhook():
                                                                         ]
                                                                     },
                                                                     {
-                                                                        "title": "🚌 ABOUT ABC COACHES",
+                                                                        "title": "🚌 CAG TOURS COACHES",
                                                                         "rows": [
                                                                             {
                                                                                 "id": "know_more",
@@ -9226,7 +9226,7 @@ def paynow_result():
                     "type": "list",
                     "header": {
                         "type": "text",
-                        "text": "🚍 ABC COACHES MAIN MENU"
+                        "text": "🚍 CAG TOURS MAIN MENU"
                     },
                     "body": {
                         "text": (
@@ -9234,10 +9234,10 @@ def paynow_result():
                         )
                     },
                     "action": {
-                        "button": "📋ABC COACHES MENU",
+                        "button": "📋 CAG TOURS MENU",
                         "sections": [
                             {
-                                "title": "📦ABC COACHES SERVICES",
+                                "title": "📦 CAG TOURS SERVICES",
                                 "rows": [
                                     {
                                         "id": "book_ticket",
@@ -9267,7 +9267,7 @@ def paynow_result():
                                 ]
                             },
                             {
-                                "title": "🚌 ABOUT ABC COACHES",
+                                "title": "🚌 CAG TOURS COACHES",
                                 "rows": [
                                     {
                                         "id": "know_more",
@@ -9340,7 +9340,7 @@ def paynow_result():
                     "type": "list",
                     "header": {
                         "type": "text",
-                        "text": "🚍 ABC COACHES MAIN MENU"
+                        "text": "🚍 CAG TOURS MAIN MENU"
                     },
                     "body": {
                         "text": (
@@ -9348,10 +9348,10 @@ def paynow_result():
                         )
                     },
                     "action": {
-                        "button": "📋ABC COACHES MENU",
+                        "button": "📋 CAG TOURS MENU",
                         "sections": [
                             {
-                                "title": "📦ABC COACHES SERVICES",
+                                "title": "📦 CAG TOURS SERVICES",
                                 "rows": [
                                     {
                                         "id": "book_ticket",
@@ -9381,7 +9381,7 @@ def paynow_result():
                                 ]
                             },
                             {
-                                "title": "🚌 ABOUT ABC COACHES",
+                                "title": "🚌 CAG TOURS COACHES",
                                 "rows": [
                                     {
                                         "id": "know_more",
