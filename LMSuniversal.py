@@ -376,38 +376,36 @@ def webhook():
 
                                                     elif selected_option == "ecocash":
 
-                                                        def initiate_cagexpress_payment(phone, amount):
+                                                        print("yeah")
                                                            
-                                                            paynow = Paynow(
-                                                                '20625',
-                                                                'f6559511-ab13-45b0-b75b-07b36890f6a6'
-                                                                )
+                                                        paynow = Paynow(
+                                                            '20625',
+                                                            'f6559511-ab13-45b0-b75b-07b36890f6a6'
+                                                            )
+                                                        
+                                                        print(paynow)
 
-                                                            payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
+                                                        payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
 
-                                                            payment.add('Payment for stuff', 1)
+                                                        payment.add('Payment for stuff', 1)
 
-                                                            response = paynow.send_mobile(payment, '263774822568', 'ecocash')
+                                                        response = paynow.send_mobile(payment, '0774822568', 'ecocash')
 
-                                                            print("Success:", response.success)
-                                                            print("Instructions:", response.instructions)
-                                                            print("Poll URL:", response.poll_url)
-                                                            print("Error:", response.error)
+                                                        print("Success:", response.success)
+                                                        print("Instructions:", response.instructions)
+                                                        print("Poll URL:", response.poll_url)
+                                                        print("Error:", response.error)
 
-                                                            if(response.success):
-                                                                poll_url = response.poll_url
+                                                        if(response.success):
+                                                            poll_url = response.poll_url
 
-                                                                print("Poll Url: ", poll_url)
+                                                            print("Poll Url: ", poll_url)
 
-                                                                status = paynow.check_transaction_status(poll_url)
+                                                            status = paynow.check_transaction_status(poll_url)
 
-                                                                #time.sleep(30)
+                                                            #time.sleep(30)
 
-                                                                print("Payment Status: ", status.status)
-
-                                                        amount = 15
-
-                                                        initiate_cagexpress_payment(sender_id, amount)
+                                                            print("Payment Status: ", status.status)
 
 
 
