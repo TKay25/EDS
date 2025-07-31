@@ -908,21 +908,14 @@ def webhook():
 
                                                         if result:
                                                             highest_id = result[0]
-                                                            cursor.execute("""
-                                                                UPDATE cagwatick
-                                                                SET pollurl = %s
-                                                                WHERE id = %s
-                                                            """, (poll_url, highest_id))
 
-                                                            connection.commit()
+                                                            send_whatsapp_messagecc(
+                                                                sender_id, 
+                                                                f"We are initiating your ticket for route `{result[2]}` on bus departing at `{result[3]}`.\n\n You will receive a USSD prompt on `{result[6]}` shortly to provide your EcoCah PIN to process your USD {result[5]} bus fare payment."
+                                                            ) 
 
                                                         else:
                                                             print("No row found for this sender_id.")
-
-                                                        send_whatsapp_messagecc(
-                                                            sender_id, 
-                                                            f"We are initiating your ticket for route `{result[2]}` on bus departing at `{result[3]}`.\n\n You will receive a USSD prompt on `{result[6]}` shortly to provide your EcoCah PIN to process your USD {result[5]} bus fare payment."
-                                                        ) 
 
 
 
