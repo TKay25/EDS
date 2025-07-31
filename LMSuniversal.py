@@ -9228,6 +9228,7 @@ def paynow_result():
     if result:
 
         status = result[8]
+        print(status)
 
         if status.lower() == "paid":
 
@@ -9345,6 +9346,8 @@ def paynow_result():
             fare = result[5]
             route = result[2]
             time = result[3]
+            sender_id = result[1]
+
 
             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
             headers = {
