@@ -578,14 +578,14 @@ def webhook():
                                                         print(response.text)
 
 
-                                                    elif selected_option == "FAQs":
+                                                    elif selected_option == "faqs":
                                                         button_id_leave_type = str(selected_option)
 
                                                         sections = [
                                                             {
                                                                 "title": "FAQs",
                                                                 "rows": [
-                                                                    {"id": "Fares", "title": "Fares"},
+                                                                    {"id": "Routes", "title": "routes"},
                                                                     {"id": "BusTypes", "title": "Bus Types"},
                                                                     {"id": "Privatehires", "title": "Do you do private hires?"},
                                                                     {"id": "Sunday", "title": "Do you work on Sundays"},
@@ -654,7 +654,7 @@ def webhook():
                                                             sections) 
 
 
-                                                    elif selected_option == "View":
+                                                    elif selected_option == "routes":
                                                         button_id_leave_type = str(selected_option)
 
                                                         url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -792,59 +792,6 @@ def webhook():
                                                             "ROUTE SELECTION",
                                                             sections)     
 
-
-                                                    elif button_id == "ticketbook":
-
-                                                        sections = [
-                                                            {
-                                                                "title": "Payment for Ticket",
-                                                                "rows": [
-                                                                    {"id": "EcoCash", "title": "EcoCash"},
-                                                                    {"id": "OneMoney", "title": "OneMoney"},
-                                                                    {"id": "PayNow", "title": "Bank Card"},
-                                                                    {"id": "Cash", "title": "Cash"},
-                                                                ]
-                                                            }
-                                                        ]
-
-                                                        send_whatsapp_list_messagecc(
-                                                            sender_id, 
-                                                            "Great! You may proceed to pay for your ticket and reserve a seat. Select a method of Payment below.", 
-                                                            "Payment for Ticket",
-                                                            sections) 
-
-                                                    elif button_id in ["7am", "10am", "2pm"]:
-
-                                                        print(f"🕒 User selected time: {button_id}") 
-
-                                                        cursor.execute(
-                                                            "UPDATE ticketbookingstemp SET time_dep_bus = %s WHERE user_id = %s",
-                                                            (button_id, sender_number)
-                                                        )
-                                                        connection.commit()
-
-
-                                                        cursor.execute(
-                                                            "SELECT departure_city, destination_city, travel_date FROM ticketbookingstemp WHERE user_id = %s",
-                                                            (sender_number,)
-                                                        )
-                                                        result = cursor.fetchone()
-
-                                                        departure_city = result[0]
-                                                        destination_city = result[1]
-                                                        travel_date = result[2]
-
-
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "ticketbook", "title": "Yes, book a Ticket"}},
-                                                            {"type": "reply", "reply": {"id": "changeroute", "title": "No, change my route"}},
-                                                        ]
-                                                        send_whatsapp_messagecc(
-                                                            sender_id, 
-                                                            f"Great News! Seats are still available on the bus that will be departing from *{departure_city}* to *{destination_city}* on *{travel_date}* at *{button_id}* and costs USD 13.\n\n"
-                                                            "Proceed to book ticket?",
-                                                            buttons
-                                                        ) 
 
                                             elif message.get("type") == "text":
 
