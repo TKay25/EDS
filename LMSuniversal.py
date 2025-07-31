@@ -383,8 +383,8 @@ def webhook():
                                                            
                                                             paynow = Paynow('20625',
                                                                             'f6559511-ab13-45b0-b75b-07b36890f6a6',
-                                                                            'https:eds-dfym.onrender.com/paynow/return',
-                                                                            'https:eds-dfym.onrender.com/paynow/result/update'
+                                                                            'https://eds-dfym.onrender.com/paynow/return',
+                                                                            'https://eds-dfym.onrender.com/paynow/result/update'
                                                                             )
                                                             
                                                             print(paynow)
@@ -8940,6 +8940,18 @@ def webhook():
             
         except Exception as e:
             print(f"error; {e}")
+
+
+@app.route('/paynow/return')
+def paynow_return():
+    return "<h1>Thank you! Your payment is being verified.</h1>"
+
+
+@app.route('/paynow/result/update', methods=['POST'])
+def paynow_result():
+    data = request.form.to_dict()
+    print("Paynow Result Webhook:", data)
+    return "OK", 200
 
 
 def delete_all_tables():
