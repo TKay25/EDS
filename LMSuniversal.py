@@ -10303,7 +10303,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             department = request.form.get('department')
             date_applied = request.form.get('dateapplied')
             approver_name = request.form.get('approvername')
-            approver_id = int(request.form.get('approverid'))
+            approver_id = int(np.float64(request.form.get('approverid')))
             approver_email = request.form.get('approveremailapp')
             approver_whatsapp = request.form.get('approverwhatsappapp')
             leave_days_balance = request.form.get('leavedays-bf')
