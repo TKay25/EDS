@@ -378,34 +378,41 @@ def webhook():
                                                     elif selected_option == "ecocash":
 
                                                         print("yeah")
+
+                                                        try:
                                                            
-                                                        paynow = Paynow('20625',
-                                                                        'f6559511-ab13-45b0-b75b-07b36890f6a6',
-                                                                        'https:eds-dfym.onrender.com/paynow/return',
-                                                                        'https:eds-dfym.onrender.com/paynow/result/update'
-                                                                        )
+                                                            paynow = Paynow('20625',
+                                                                            'f6559511-ab13-45b0-b75b-07b36890f6a6',
+                                                                            'https:eds-dfym.onrender.com/paynow/return',
+                                                                            'https:eds-dfym.onrender.com/paynow/result/update'
+                                                                            )
+                                                            
+                                                            print(paynow)
+
+                                                            payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
+
+                                                            payment.add('Payment for stuff', 1)
+
+                                                            response = paynow.send_mobile(payment, '0774822568', 'ecocash')
+
+                                                            print("pending")
+
+                                                            if(response.success):
+                                                                print('success')
+                                                                poll_url = response.poll_url
+
+                                                                print("Poll Url: ", poll_url)
+
+                                                                status = paynow.check_transaction_status(poll_url)
+
+                                                                time.sleep(10)
+
+                                                                print("Payment Status: ", status.status)
                                                         
-                                                        print(paynow)
+                                                        except Exception as e:
+                                                            print(e)
 
-                                                        payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
 
-                                                        payment.add('Payment for stuff', 1)
-
-                                                        response = paynow.send_mobile(payment, '0774822568', 'ecocash')
-
-                                                        print("pending")
-
-                                                        if(response.success):
-                                                            print('success')
-                                                            poll_url = response.poll_url
-
-                                                            print("Poll Url: ", poll_url)
-
-                                                            status = paynow.check_transaction_status(poll_url)
-
-                                                            time.sleep(10)
-
-                                                            print("Payment Status: ", status.status)
 
 
 
