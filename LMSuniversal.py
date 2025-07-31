@@ -279,7 +279,7 @@ def webhook():
                                                                         {
                                                                             "title": "📦ROUTES",
                                                                             "rows": [
-                                                                                {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 10"},
+                                                                                {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 15"},
                                                                             ]
                                                                         }
                                                                     ]
@@ -301,7 +301,7 @@ def webhook():
                                                         route = "Harare to Bulawayo"
                                                         amount = "15"
 
-                                                        cursor.execute("SELECT status FROM cagwatick WHERE idwanumber = %s", (sender_id,))
+                                                        cursor.execute("SELECT status FROM cagwatick WHERE idwanumber = %s", (sender_id[-9:],))
                                                         rows = cursor.fetchall()
 
                                                         if rows:
@@ -779,8 +779,8 @@ def webhook():
                                                             {
                                                                 "title": "ROUTE SELECTION",
                                                                 "rows": [
-                                                                    {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 10"},
-                                                                    {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 10"}
+                                                                    {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 15"},
+                                                                    {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 15"}
                                                                 ]
                                                             }
                                                         ]
