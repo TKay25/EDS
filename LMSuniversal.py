@@ -391,7 +391,7 @@ def webhook():
 
                                                             payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
 
-                                                            payment.add('Payment for stuff', 1)
+                                                            payment.add('Payment for stuff', 0.01)
 
                                                             response = paynow.send_mobile(payment, '0774822568', 'ecocash')
 
@@ -806,34 +806,6 @@ def webhook():
                     print(e)
 
                 return "OK", 200
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
