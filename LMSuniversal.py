@@ -393,12 +393,10 @@ def webhook():
 
                                                         response = paynow.send_mobile(payment, '0774822568', 'ecocash')
 
-                                                        print("Success:", response.success)
-                                                        print("Instructions:", response.instructions)
-                                                        print("Poll URL:", response.poll_url)
-                                                        print("Error:", response.error)
+                                                        print("pending")
 
                                                         if(response.success):
+                                                            print('success')
                                                             poll_url = response.poll_url
 
                                                             print("Poll Url: ", poll_url)
