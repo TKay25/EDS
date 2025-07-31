@@ -24,6 +24,8 @@ import requests
 import pdfkit
 from weasyprint import HTML
 import re
+from paynow import Paynow
+
 
 
 
@@ -375,25 +377,29 @@ def webhook():
                                                     elif selected_option == "ecocash":
 
                                                         def initiate_cagexpress_payment(phone, amount):
-                                                            url = "https://secure.cagexpress.com/api/pay"
-                                                            
-                                                            payload = {
-                                                                "integration_id": 20625,
-                                                                "integration_key": "f6559511-ab13-45b0-b75b-07b36890f6a6",
-                                                                "reference": f"ticket-{uuid.uuid4().hex[:8]}",  # unique reference
-                                                                "amount": amount,
-                                                                "mobile": phone,
-                                                                "mobile_network": "ecocash",  # you could allow user to pick between ecocash / onemoney etc.
-                                                                "return_url": "https://yourdomain.com/payment/return",  # optional
-                                                            }
+                                                           
+                                                            paynow = Paynow(
+                                                                '20625',
+                                                                'f6559511-ab13-45b0-b75b-07b36890f6a6'
+                                                                )
 
-                                                            try:
-                                                                response = requests.post(url, json=payload)
-                                                                print("🧾 Payment initiation response:", response.json())
-                                                                return response.json()
-                                                            except Exception as e:
-                                                                print("❌ Error initiating payment:", e)
-                                                                return {"status": "error", "message": str(e)}
+                                                            payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
+
+                                                            payment.add('Payment for stuff', 1)
+
+                                                            response = paynow.send_mobile(payment, '0774822568', 'ecocash')
+
+
+                                                            if(response.success):
+                                                                poll_url = response.poll_url
+
+                                                                print("Poll Url: ", poll_url)
+
+                                                                status = paynow.check_transaction_status(poll_url)
+
+                                                                #time.sleep(30)
+
+                                                                print("Payment Status: ", status.status)
 
                                                         amount = 15
 
