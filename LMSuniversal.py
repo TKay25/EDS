@@ -90,8 +90,8 @@ print(f"column added to Table whatsapptempapplication successfully!")
 def bad_request(e):
     return jsonify({'status': 'error', 'message': str(e)}), 400
 
-@app.route("/webhook", methods=["GET", "POST"])
-def webhook():
+@app.route("/webhooktt", methods=["GET", "POST"])
+def webhooktt():
     if request.method == "GET":
         print("ouch")
         if request.args.get("hub.verify_token") == VERIFY_TOKEN:
@@ -849,8 +849,26 @@ def webhook():
 
 
 #####################################
+@app.route("/webhook", methods=["GET", "POST"])
+def webhook():
+    if request.method == "GET":
+        print("ouch")
+        if request.args.get("hub.verify_token") == VERIFY_TOKEN:
+            return request.args.get("hub.challenge")
+        return "Verification failed", 403
 
-            elif display_phone_number == "263789339777":
+    if request.method == "POST":
+        global today_date
+        data = request.get_json()
+
+        #global ACCESS_TOKEN
+        #global PHONE_NUMBER_ID
+
+        try:
+            # Navigate the JSON structure to get the display_phone_number
+            display_phone_number = data["entry"][0]["changes"][0]["value"]["metadata"]["display_phone_number"]
+
+            if display_phone_number == "263789339777":
                 ACCESS_TOKEN = "EAATESj1oB5YBPIzFCv7ulvosr2S2ZAiWBJrFp7bti6L0ZCWS2AOz5dUABlJ6q16a4hRwEXdq5vZAP5tp4rGXfOQ2sx0hg1EOwMpL002eqUrygbPc3jkY8FPOzR7c6tMvKJxT3XxXP8Qp9U1n30MIMVcNy9JUCZB8UyIwaAZBAjf2U32TVTwSBJlSeHoNYrGH0dwZDZD"
                 PHONE_NUMBER_ID = "756962384159644"
                 VERIFY_TOKEN = "2644686099068373"
