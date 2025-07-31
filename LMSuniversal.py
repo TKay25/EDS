@@ -313,7 +313,7 @@ def webhook():
                                                                 cursor.execute("""
                                                                     INSERT INTO cagwatick (idwanumber, route, fare)
                                                                     VALUES (%s, %s, %s)
-                                                                """, (sender_id, route, amount))
+                                                                """, (sender_id[-9:], route, amount))
 
                                                                 connection.commit()
 
@@ -324,7 +324,7 @@ def webhook():
                                                             cursor.execute("""
                                                                 INSERT INTO cagwatick (idwanumber, route, fare)
                                                                 VALUES (%s, %s, %s)
-                                                            """, (sender_id, route, amount))
+                                                            """, (sender_id[-9:], route, amount))
 
                                                             connection.commit()
 
@@ -384,7 +384,7 @@ def webhook():
                                                             WHERE idwanumber = %s
                                                             ORDER BY id DESC
                                                             LIMIT 1
-                                                        """, (sender_id,))
+                                                        """, (sender_id[-9:],))
                                                         result = cursor.fetchone()
 
                                                         if result:
@@ -455,7 +455,7 @@ def webhook():
                                                             WHERE idwanumber = %s
                                                             ORDER BY id DESC
                                                             LIMIT 1
-                                                        """, (sender_id,))
+                                                        """, (sender_id[-9:],))
                                                         result = cursor.fetchone()
 
                                                         if result:
@@ -862,7 +862,7 @@ def webhook():
                                                         WHERE idwanumber = %s
                                                         ORDER BY id DESC
                                                         LIMIT 1
-                                                    """, (sender_id,))
+                                                    """, (sender_id[-9:],))
                                                     result = cursor.fetchone()
 
                                                     if result:
@@ -913,7 +913,7 @@ def webhook():
                                                                 WHERE idwanumber = %s
                                                                 ORDER BY id DESC
                                                                 LIMIT 1
-                                                            """, (sender_id,))
+                                                            """, (sender_id[-9:],))
                                                             result = cursor.fetchone()
 
                                                             if result:
@@ -9244,7 +9244,7 @@ def paynow_result():
 
             payload = {
                 "messaging_product": "whatsapp",
-                "to": sender_id,
+                "to": f"263{sender_id}",
                 "type": "interactive",
                 "interactive": {
                     "type": "list",
@@ -9354,7 +9354,7 @@ def paynow_result():
 
             payload = {
                 "messaging_product": "whatsapp",
-                "to": sender_id,
+                "to": f"263{sender_id}",
                 "type": "interactive",
                 "interactive": {
                     "type": "list",
