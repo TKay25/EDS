@@ -134,7 +134,7 @@ def webhook():
                 print(display_phone_number)
 
                 VERIFY_TOKENcc = "1412803596375322"
-                ACCESS_TOKEN = "EAAUppTRo5q4BPPI41dQ5R7FFgZBnSPpZCWf2QCPDHswhghsaQngWKILdPu0sKqRGPhOFe4oOLrAP1Xp3s8PZBuJLDQ7LR4HciwO7lZAwZCxQU1ZBZCyO2KPdS6KBO0Bq0hNsnfcxRKwrqHmplhDzLrWnEZCaDKo5xH9JrwNStoMCrxSBubBobchB9TqnhzDEQb8gaRlZC6KTLX0kUOwjFssX00sUICKvvd2Ce2Gfc9434F4dvswZDZD"
+                ACCESS_TOKEN = "EAAUppTRo5q4BPJFRLZC9azSknZCBCVnpXuNUnhedNLHuUxqMm8sGsSvoN477PL8QaShntB59ZCaXdZAYPn641JgSm43ijZB9eFRYfg6uCd9ZBTutVy9btDA0P9ZBe1osrZBF9IfCpajkSVV8IvqoByzcnh1pe2oozAxJZAx1uQV4ErscZC9lwmQvy22ZCfXOkpzcZBrfPZAyejUfloNa5aYNLgtdbWgqyf8AKr4IpLhGWNDAipxslSgZDZD"
                 PHONE_NUMBER_IDcc = "618334968023252"
 
                 def send_whatsapp_messagecc(to, text, buttons=None):
@@ -798,8 +798,7 @@ def webhook():
                                                             sender_id, 
                                                             f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
                                                             "CAG TOURS Options",
-                                                            sections)
-                          
+                                                            sections)  
 
 
                                             elif message.get("type") == "text":
@@ -856,10 +855,12 @@ def webhook():
 
 
                                                         cursor.execute("""
-                                                            SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum, status
-                                                            FROM cagwatick
-                                                            WHERE idwanumber = %s AND (status IS NULL OR status = '')
+                                                            SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum FROM cagwatick
+                                                            WHERE idwanumber = %s
+                                                            ORDER BY id DESC
+                                                            LIMIT 1
                                                         """, (sender_id[-9:],))
+                                                        result = cursor.fetchone()
 
                                                         if result:
                                                             highest_id = result[0]
@@ -9168,7 +9169,7 @@ def paynow_return():
 def paynow_result():
 
     VERIFY_TOKENcc = "1412803596375322"
-    ACCESS_TOKEN = "EAAUppTRo5q4BPPI41dQ5R7FFgZBnSPpZCWf2QCPDHswhghsaQngWKILdPu0sKqRGPhOFe4oOLrAP1Xp3s8PZBuJLDQ7LR4HciwO7lZAwZCxQU1ZBZCyO2KPdS6KBO0Bq0hNsnfcxRKwrqHmplhDzLrWnEZCaDKo5xH9JrwNStoMCrxSBubBobchB9TqnhzDEQb8gaRlZC6KTLX0kUOwjFssX00sUICKvvd2Ce2Gfc9434F4dvswZDZD"
+    ACCESS_TOKEN = "EAAUppTRo5q4BPJFRLZC9azSknZCBCVnpXuNUnhedNLHuUxqMm8sGsSvoN477PL8QaShntB59ZCaXdZAYPn641JgSm43ijZB9eFRYfg6uCd9ZBTutVy9btDA0P9ZBe1osrZBF9IfCpajkSVV8IvqoByzcnh1pe2oozAxJZAx1uQV4ErscZC9lwmQvy22ZCfXOkpzcZBrfPZAyejUfloNa5aYNLgtdbWgqyf8AKr4IpLhGWNDAipxslSgZDZD"
     PHONE_NUMBER_IDcc = "618334968023252"
 
     data = request.form.to_dict()
