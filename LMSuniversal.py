@@ -379,7 +379,11 @@ def webhook():
 
                                                         print("yeah")
                                                            
-                                                        paynow = Paynow('20625','f6559511-ab13-45b0-b75b-07b36890f6a6')
+                                                        paynow = Paynow('20625',
+                                                                        'f6559511-ab13-45b0-b75b-07b36890f6a6',
+                                                                        'https:eds-dfym.onrender.com/paynow/return',
+                                                                        'https:eds-dfym.onrender.com/paynow/result/update'
+                                                                        )
                                                         
                                                         print(paynow)
 
