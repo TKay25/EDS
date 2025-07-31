@@ -10305,8 +10305,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             approver_name = request.form.get('approvername')
             approver_id = int(np.float64(request.form.get('approverid')))
             approver_email = request.form.get('approveremailapp')
-            approver_whatsapp = request.form.get('approverwhatsappapp')
-            leave_days_balance = request.form.get('leavedays-bf')
+            approver_whatsapp = int(np.float64(request.form.get('approverwhatsappapp')))
+            leave_days_balance = float(np.float64(request.form.get('leavedays-bf')))
             unicode = request.form.get('unicode')
             leave_type = request.form.get('leaveType')
             leave_specify = request.form.get('leaveSpecify')  # Optional field
