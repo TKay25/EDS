@@ -65,6 +65,25 @@ cursor.execute(create_table_query_comp_creation)
 connection.commit()
 
 create_table_query = f"""
+CREATE TABLE IF NOT EXISTS cagwatick (
+    id SERIAL PRIMARY KEY,
+    idwanumber INT,
+    route VARCHAR (100),
+    time VARCHAR (100),
+    paymethod VARCHAR (100),    
+    fare VARCHAR (100),
+    ecocashnum INT,
+    pollurl VARCHAR (100),
+    status VARCHAR (100),
+    datebought date 
+);
+"""
+cursor.execute(create_table_query)
+connection.commit()
+
+
+
+create_table_query = f"""
 CREATE TABLE IF NOT EXISTS whatsapptempapplication (
     id SERIAL PRIMARY KEY,
     empidwa INT,
@@ -114,7 +133,7 @@ def webhook():
                 print(display_phone_number)
 
                 VERIFY_TOKENcc = "1412803596375322"
-                ACCESS_TOKEN = "EAAUppTRo5q4BPBKynzYg0kkK0YnjaE15DQwMLXjvVbMckDIMD19nWCS0txatrMLI9h64lZBwwbWjVYtkvXdDGvdlMhxA5dx1fO5ZBJ7JVRQtfZAMKOTxwpxlJnKBXQFZAN3NkjyVO4d2ji9fIZC5hBkZCjlrCkZB6lTaZBxneOtu9RBw6geRCXgaZBlXkJkIR9VAx91MOdR6qQVLzupWxOAt0FPo3mYhnTjR3s1KP1YtbeQkMxFgZD"
+                ACCESS_TOKEN = "EAAUppTRo5q4BPCTkyEHWIZApSo5zyL3OBFJjgWWDnBbBSaY9PX6d1R11O5y7Q22EQWru5KzqbPavO3WzrNldEeXfTApPmvESgjGSqK4bnZBXphi53hzN3uka4ZAsZCrJPD4YfPJCPPxlSKpBzWZAAiSU4Fztue8jRSYfJoQLEIoXyFCZCZCCr2YnFEzvvrzV6J2DH0BgKvRs8VrFhuRepUppFtsglj5cwNNh70P2s6gxBQzZBAZDZD"
                 PHONE_NUMBER_IDcc = "618334968023252"
 
                 def send_whatsapp_messagecc(to, text, buttons=None):
@@ -377,43 +396,115 @@ def webhook():
 
                                                     elif selected_option == "ecocash":
 
-                                                        print("yeah")
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
 
-                                                        try:
-                                                           
-                                                            paynow = Paynow('20625',
-                                                                            'f6559511-ab13-45b0-b75b-07b36890f6a6',
-                                                                            'https://eds-dfym.onrender.com/paynow/return',
-                                                                            'https://eds-dfym.onrender.com/paynow/result/update'
-                                                                            )
-                                                            
-                                                            print(paynow)
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 ABC COACHES MAIN MENU"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Ok. Kindly provide the EcoCash number that you would like to use to pay. \n\n eg `0777111234`"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "📋ABC COACHES MENU",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "📦ABC COACHES SERVICES",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "book_ticket",
+                                                                                    "title": "Book a Ticket",
+                                                                                    "description": "Reserve your seat instantly"
+                                                                                },
+                                                                                {
+                                                                                    "id": "routes",
+                                                                                    "title": "View Routes",
+                                                                                    "description": "Get info regarding our travel routes"
+                                                                                },
+                                                                                {
+                                                                                    "id": "parcel_delivery",
+                                                                                    "title": "Parcel Delivery",
+                                                                                    "description": "Send or collect packages"
+                                                                                },
+                                                                                {
+                                                                                    "id": "find_stop",
+                                                                                    "title": "Find Bus Stop",
+                                                                                    "description": "Locate nearest pick-up point"
+                                                                                },
+                                                                                {
+                                                                                    "id": "promotions",
+                                                                                    "title": "Promotions & Offers",
+                                                                                    "description": "Current discounts & deals"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "title": "🚌 ABOUT ABC COACHES",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "know_more",
+                                                                                    "title": "Know More",
+                                                                                    "description": "Our story, mission & travel experience"
+                                                                                },
+                                                                                {
+                                                                                    "id": "why_choose",
+                                                                                    "title": "Why Choose Us",
+                                                                                    "description": "Luxury, safety & comfort explained"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "title": "🛎 CUSTOMER SERVICE",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "faqs",
+                                                                                    "title": "❓ FAQs",
+                                                                                    "description": "Get answers to common questions"
+                                                                                },
+                                                                                {
+                                                                                    "id": "policies",
+                                                                                    "title": "Travel Policies",
+                                                                                    "description": "Baggage rules, safety, refunds"
+                                                                                },
+                                                                                {
+                                                                                    "id": "get_help",
+                                                                                    "title": "Get Help",
+                                                                                    "description": "Talk to a support agent now"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
 
-                                                            payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
 
-                                                            payment.add('Payment for stuff', 0.01)
 
-                                                            response = paynow.send_mobile(payment, '0774822568', 'ecocash')
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
 
-                                                            print("pending")
-
-                                                            if(response.success):
-                                                                print('success')
-                                                                poll_url = response.poll_url
-
-                                                                print("Poll Url: ", poll_url)
-
-                                                                status = paynow.check_transaction_status(poll_url)
-
-                                                                time.sleep(10)
-
-                                                                print("Payment Status: ", status.status)
-                                                        
-                                                        except Exception as e:
-                                                            print(e)
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
 
 
 
+
+
+
+ 
 
 
                                                     elif selected_option == "FAQs":
@@ -691,111 +782,171 @@ def webhook():
                                                 
                                                 print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
 
+                                                digits_only = ''.join(filter(str.isdigit, text.replace(" ", "")))
 
-                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                headers = {
-                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                    "Content-Type": "application/json"
-                                                }
+                                                if len(digits_only) > 9:
+                                                    
+                                                    print("Message contains more than 9 digits after removing spaces")
+                                                    # You can now process it as needed, e.g., assume it's an ID number or phone number
 
-                                                payload = {
-                                                    "messaging_product": "whatsapp",
-                                                    "to": sender_id,
-                                                    "type": "interactive",
-                                                    "interactive": {
-                                                        "type": "list",
-                                                        "header": {
-                                                            "type": "text",
-                                                            "text": "🚍 ABC COACHES MAIN MENU"
-                                                        },
-                                                        "body": {
-                                                            "text": (
-                                                                "Welcome aboard! 👋\n\n"
-                                                                "Explore our available routes, services, and customer support options.\n"
-                                                                "Tap *OPEN MENU* below to get started. ⬇️"
-                                                            )
-                                                        },
-                                                        "action": {
-                                                            "button": "📋ABC COACHES MENU",
-                                                            "sections": [
-                                                                {
-                                                                    "title": "📦ABC COACHES SERVICES",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "book_ticket",
-                                                                            "title": "Book a Ticket",
-                                                                            "description": "Reserve your seat instantly"
-                                                                        },
-                                                                        {
-                                                                            "id": "routes",
-                                                                            "title": "View Routes",
-                                                                            "description": "Get info regarding our travel routes"
-                                                                        },
-                                                                        {
-                                                                            "id": "parcel_delivery",
-                                                                            "title": "Parcel Delivery",
-                                                                            "description": "Send or collect packages"
-                                                                        },
-                                                                        {
-                                                                            "id": "find_stop",
-                                                                            "title": "Find Bus Stop",
-                                                                            "description": "Locate nearest pick-up point"
-                                                                        },
-                                                                        {
-                                                                            "id": "promotions",
-                                                                            "title": "Promotions & Offers",
-                                                                            "description": "Current discounts & deals"
-                                                                        }
-                                                                    ]
-                                                                },
-                                                                {
-                                                                    "title": "🚌 ABOUT ABC COACHES",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "know_more",
-                                                                            "title": "Know More",
-                                                                            "description": "Our story, mission & travel experience"
-                                                                        },
-                                                                        {
-                                                                            "id": "why_choose",
-                                                                            "title": "Why Choose Us",
-                                                                            "description": "Luxury, safety & comfort explained"
-                                                                        }
-                                                                    ]
-                                                                },
-                                                                {
-                                                                    "title": "🛎 CUSTOMER SERVICE",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "faqs",
-                                                                            "title": "❓ FAQs",
-                                                                            "description": "Get answers to common questions"
-                                                                        },
-                                                                        {
-                                                                            "id": "policies",
-                                                                            "title": "Travel Policies",
-                                                                            "description": "Baggage rules, safety, refunds"
-                                                                        },
-                                                                        {
-                                                                            "id": "get_help",
-                                                                            "title": "Get Help",
-                                                                            "description": "Talk to a support agent now"
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            ]
+                                                    print("yeah")
+
+                                                    try:
+                                                    
+                                                        paynow = Paynow('20625',
+                                                                        'f6559511-ab13-45b0-b75b-07b36890f6a6',
+                                                                        'https://eds-dfym.onrender.com/paynow/return',
+                                                                        'https://eds-dfym.onrender.com/paynow/result/update'
+                                                                        )
+                                                        
+                                                        print(paynow)
+
+                                                        payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
+
+                                                        payment.add('Payment for stuff', 0.01)
+
+                                                        response = paynow.send_mobile(payment, digits_only, 'ecocash')
+
+                                                        print("pending")
+
+                                                        if(response.success):
+                                                            print('success')
+                                                            poll_url = response.poll_url
+
+                                                            print("Poll Url: ", poll_url)
+
+                                                            status = paynow.check_transaction_status(poll_url)
+
+                                                            send_whatsapp_messagecc(
+                                                                sender_id, 
+                                                                f"You will receive a USSD prompt shortly to provide your EcoCah PIN to process your payment."
+                                                            ) 
+
+                                                            time.sleep(10)
+
+                                                            print("Payment Status: ", status.status)
+
+
+                                                    
+                                                    except Exception as e:
+                                                        print(e)
+
+
+
+
+
+
+
+
+
+
+                                                else:
+
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 ABC COACHES MAIN MENU"
+                                                            },
+                                                            "body": {
+                                                                "text": (
+                                                                    "Welcome aboard! 👋\n\n"
+                                                                    "Explore our available routes, services, and customer support options.\n"
+                                                                    "Tap *OPEN MENU* below to get started. ⬇️"
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "button": "📋ABC COACHES MENU",
+                                                                "sections": [
+                                                                    {
+                                                                        "title": "📦ABC COACHES SERVICES",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "book_ticket",
+                                                                                "title": "Book a Ticket",
+                                                                                "description": "Reserve your seat instantly"
+                                                                            },
+                                                                            {
+                                                                                "id": "routes",
+                                                                                "title": "View Routes",
+                                                                                "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "parcel_delivery",
+                                                                                "title": "Parcel Delivery",
+                                                                                "description": "Send or collect packages"
+                                                                            },
+                                                                            {
+                                                                                "id": "find_stop",
+                                                                                "title": "Find Bus Stop",
+                                                                                "description": "Locate nearest pick-up point"
+                                                                            },
+                                                                            {
+                                                                                "id": "promotions",
+                                                                                "title": "Promotions & Offers",
+                                                                                "description": "Current discounts & deals"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🚌 ABOUT ABC COACHES",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "know_more",
+                                                                                "title": "Know More",
+                                                                                "description": "Our story, mission & travel experience"
+                                                                            },
+                                                                            {
+                                                                                "id": "why_choose",
+                                                                                "title": "Why Choose Us",
+                                                                                "description": "Luxury, safety & comfort explained"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🛎 CUSTOMER SERVICE",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "faqs",
+                                                                                "title": "❓ FAQs",
+                                                                                "description": "Get answers to common questions"
+                                                                            },
+                                                                            {
+                                                                                "id": "policies",
+                                                                                "title": "Travel Policies",
+                                                                                "description": "Baggage rules, safety, refunds"
+                                                                            },
+                                                                            {
+                                                                                "id": "get_help",
+                                                                                "title": "Get Help",
+                                                                                "description": "Talk to a support agent now"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
                                                         }
                                                     }
-                                                }
 
 
 
-                                                # Send the request to WhatsApp
-                                                response = requests.post(url, headers=headers, json=payload)
+                                                    # Send the request to WhatsApp
+                                                    response = requests.post(url, headers=headers, json=payload)
 
-                                                # Optional: Print result for debugging
-                                                print(response.status_code)
-                                                print(response.text)
+                                                    # Optional: Print result for debugging
+                                                    print(response.status_code)
+                                                    print(response.text)
 
 
                                         finally:
