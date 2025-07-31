@@ -909,7 +909,7 @@ def webhook():
 
 
                                                             cursor.execute("""
-                                                                SELECT id FROM cagwatick
+                                                                SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum FROM cagwatick
                                                                 WHERE idwanumber = %s
                                                                 ORDER BY id DESC
                                                                 LIMIT 1
