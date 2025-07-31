@@ -9283,7 +9283,7 @@ def paynow_result():
                     },
                     "body": {
                         "text": (
-                            f"Great News. You have successfully purchased a `USD {fare}` bus ticket for the `{route}` route. Your bus departs at `{time}` from Harare and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref {ticketref}]\n\n Thank you!"
+                            f"Great News. You have successfully purchased a `USD {fare}` bus ticket for the `{route}` route. Your bus departs at `{time}` from Harare and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref `{ticketref}`]\n\n Thank you!"
                         )
                     },
                     "action": {
