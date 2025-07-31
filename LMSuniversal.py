@@ -298,6 +298,37 @@ def webhook():
                                                 
                                                     elif selected_option == "HreByo":
 
+                                                        route = "Harare to Bulawayo"
+                                                        amount = "15"
+
+                                                        cursor.execute("SELECT status FROM cagwatick WHERE idwanumber = %s", (sender_id,))
+                                                        rows = cursor.fetchall()
+
+                                                        if rows:
+                                                            # Step 2: Check if any row has empty or NULL status
+                                                            has_empty_status = any(row[0] in (None, '') for row in rows)
+
+                                                            if not has_empty_status:
+                                                                # No empty status found, safe to insert a new row
+                                                                cursor.execute("""
+                                                                    INSERT INTO cagwatick (idwanumber, route, fare)
+                                                                    VALUES (%s, %s, %s)
+                                                                """, (sender_id, route, amount))
+
+                                                                connection.commit()
+
+                                                            else:
+                                                                print("Not inserting: an existing row with empty status found for this sender_id.")
+                                                        else:
+                                                            # sender_id does not exist at all — insert new
+                                                            cursor.execute("""
+                                                                INSERT INTO cagwatick (idwanumber, route, fare)
+                                                                VALUES (%s, %s, %s)
+                                                            """, (sender_id, route, amount))
+
+                                                            connection.commit()
+
+
                                                         url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                         headers = {
                                                             "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -348,6 +379,28 @@ def webhook():
 
                                                     elif selected_option == "8am" or selected_option == "9am" or  selected_option == "2pm":
 
+                                                        cursor.execute("""
+                                                            SELECT id FROM cagwatick
+                                                            WHERE idwanumber = %s
+                                                            ORDER BY id DESC
+                                                            LIMIT 1
+                                                        """, (sender_id,))
+                                                        result = cursor.fetchone()
+
+                                                        if result:
+                                                            highest_id = result[0]
+                                                            cursor.execute("""
+                                                                UPDATE cagwatick
+                                                                SET time = %s
+                                                                WHERE id = %s
+                                                            """, (selected_option, highest_id))
+
+                                                            connection.commit()
+
+                                                        else:
+                                                            print("No row found for this sender_id.")
+
+
                                                         url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                         headers = {
                                                             "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -395,6 +448,30 @@ def webhook():
 
 
                                                     elif selected_option == "ecocash":
+
+
+                                                        cursor.execute("""
+                                                            SELECT id FROM cagwatick
+                                                            WHERE idwanumber = %s
+                                                            ORDER BY id DESC
+                                                            LIMIT 1
+                                                        """, (sender_id,))
+                                                        result = cursor.fetchone()
+
+                                                        if result:
+                                                            highest_id = result[0]
+                                                            cursor.execute("""
+                                                                UPDATE cagwatick
+                                                                SET paymethod = %s
+                                                                WHERE id = %s
+                                                            """, (selected_option, highest_id))
+
+                                                            connection.commit()
+
+                                                        else:
+                                                            print("No row found for this sender_id.")
+
+
 
                                                         url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                         headers = {
@@ -498,13 +575,6 @@ def webhook():
                                                         # Optional: Print result for debugging
                                                         print(response.status_code)
                                                         print(response.text)
-
-
-
-
-
-
- 
 
 
                                                     elif selected_option == "FAQs":
@@ -785,7 +855,29 @@ def webhook():
                                                 digits_only = ''.join(filter(str.isdigit, text.replace(" ", "")))
 
                                                 if len(digits_only) > 9:
-                                                    
+
+
+                                                    cursor.execute("""
+                                                        SELECT id FROM cagwatick
+                                                        WHERE idwanumber = %s
+                                                        ORDER BY id DESC
+                                                        LIMIT 1
+                                                    """, (sender_id,))
+                                                    result = cursor.fetchone()
+
+                                                    if result:
+                                                        highest_id = result[0]
+                                                        cursor.execute("""
+                                                            UPDATE cagwatick
+                                                            SET ecocashnum = %s
+                                                            WHERE id = %s
+                                                        """, (digits_only, highest_id))
+
+                                                        connection.commit()
+
+                                                    else:
+                                                        print("No row found for this sender_id.")
+
                                                     print("Message contains more than 9 digits after removing spaces")
                                                     # You can now process it as needed, e.g., assume it's an ID number or phone number
 
@@ -815,14 +907,36 @@ def webhook():
 
                                                             print("Poll Url: ", poll_url)
 
+
+                                                            cursor.execute("""
+                                                                SELECT id FROM cagwatick
+                                                                WHERE idwanumber = %s
+                                                                ORDER BY id DESC
+                                                                LIMIT 1
+                                                            """, (sender_id,))
+                                                            result = cursor.fetchone()
+
+                                                            if result:
+                                                                highest_id = result[0]
+                                                                cursor.execute("""
+                                                                    UPDATE cagwatick
+                                                                    SET pollurl = %s
+                                                                    WHERE id = %s
+                                                                """, (poll_url, highest_id))
+
+                                                                connection.commit()
+
+                                                            else:
+                                                                print("No row found for this sender_id.")
+
                                                             status = paynow.check_transaction_status(poll_url)
 
                                                             send_whatsapp_messagecc(
                                                                 sender_id, 
-                                                                f"You will receive a USSD prompt shortly to provide your EcoCah PIN to process your payment."
+                                                                f"We are initiating your ticket for route `{result[2]}` on bus departing at `{result[3]}`.\n\n You will receive a USSD prompt on `{result[6]}` shortly to provide your EcoCah PIN to process your USD {result[5]} bus fare payment."
                                                             ) 
 
-                                                            time.sleep(10)
+                                                            time.sleep(20)
 
                                                             print("Payment Status: ", status.status)
 
@@ -9072,8 +9186,286 @@ def paynow_return():
 
 @app.route('/paynow/result/update', methods=['POST'])
 def paynow_result():
+
+    VERIFY_TOKENcc = "1412803596375322"
+    ACCESS_TOKEN = "EAAUppTRo5q4BPCTkyEHWIZApSo5zyL3OBFJjgWWDnBbBSaY9PX6d1R11O5y7Q22EQWru5KzqbPavO3WzrNldEeXfTApPmvESgjGSqK4bnZBXphi53hzN3uka4ZAsZCrJPD4YfPJCPPxlSKpBzWZAAiSU4Fztue8jRSYfJoQLEIoXyFCZCZCCr2YnFEzvvrzV6J2DH0BgKvRs8VrFhuRepUppFtsglj5cwNNh70P2s6gxBQzZBAZDZD"
+    PHONE_NUMBER_IDcc = "618334968023252"
+
     data = request.form.to_dict()
     print("Paynow Result Webhook:", data)
+
+    pollurlex = data.get('pollurl')
+    status = data.get('pollurl')
+    #today_date = datetime.now()
+
+    cursor.execute("""
+        SELECT id FROM cagwatick
+        WHERE pollurl = %s
+        ORDER BY id DESC
+        LIMIT 1
+    """, (pollurlex,))
+    result = cursor.fetchone()
+
+    if result:
+        highest_id = result[0]
+        cursor.execute("""
+            UPDATE cagwatick
+            SET status = %s, datebought = %s
+            WHERE id = %s
+        """, (status, today_date, highest_id))
+
+        connection.commit()
+
+    else:
+        print("No row found for this sender_id.")
+
+    cursor.execute("""
+        SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum, pollurl, status, datebought FROM cagwatick
+        WHERE pollurl = %s
+    """, (pollurlex,))
+    result = cursor.fetchone()
+
+    if result:
+
+        status = result[8]
+
+        if status.lower() == "paid":
+
+            fare = result[5]
+            route = result[2]
+            time = result[3]
+            sender_id = result[1]
+
+            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+            headers = {
+                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                "Content-Type": "application/json"
+            }
+
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": sender_id,
+                "type": "interactive",
+                "interactive": {
+                    "type": "list",
+                    "header": {
+                        "type": "text",
+                        "text": "🚍 ABC COACHES MAIN MENU"
+                    },
+                    "body": {
+                        "text": (
+                            f"Great News. You have successfully purchased a USD {fare} bus ticket for the {route} route. Your bus departs at {time}"
+                        )
+                    },
+                    "action": {
+                        "button": "📋ABC COACHES MENU",
+                        "sections": [
+                            {
+                                "title": "📦ABC COACHES SERVICES",
+                                "rows": [
+                                    {
+                                        "id": "book_ticket",
+                                        "title": "Book a Ticket",
+                                        "description": "Reserve your seat instantly"
+                                    },
+                                    {
+                                        "id": "routes",
+                                        "title": "View Routes",
+                                        "description": "Get info regarding our travel routes"
+                                    },
+                                    {
+                                        "id": "parcel_delivery",
+                                        "title": "Parcel Delivery",
+                                        "description": "Send or collect packages"
+                                    },
+                                    {
+                                        "id": "find_stop",
+                                        "title": "Find Bus Stop",
+                                        "description": "Locate nearest pick-up point"
+                                    },
+                                    {
+                                        "id": "promotions",
+                                        "title": "Promotions & Offers",
+                                        "description": "Current discounts & deals"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "🚌 ABOUT ABC COACHES",
+                                "rows": [
+                                    {
+                                        "id": "know_more",
+                                        "title": "Know More",
+                                        "description": "Our story, mission & travel experience"
+                                    },
+                                    {
+                                        "id": "why_choose",
+                                        "title": "Why Choose Us",
+                                        "description": "Luxury, safety & comfort explained"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "🛎 CUSTOMER SERVICE",
+                                "rows": [
+                                    {
+                                        "id": "faqs",
+                                        "title": "❓ FAQs",
+                                        "description": "Get answers to common questions"
+                                    },
+                                    {
+                                        "id": "policies",
+                                        "title": "Travel Policies",
+                                        "description": "Baggage rules, safety, refunds"
+                                    },
+                                    {
+                                        "id": "get_help",
+                                        "title": "Get Help",
+                                        "description": "Talk to a support agent now"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+
+
+
+            # Send the request to WhatsApp
+            response = requests.post(url, headers=headers, json=payload)
+
+            # Optional: Print result for debugging
+            print(response.status_code)
+            print(response.text)
+
+
+        else:
+
+            fare = result[5]
+            route = result[2]
+            time = result[3]
+
+            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+            headers = {
+                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                "Content-Type": "application/json"
+            }
+
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": sender_id,
+                "type": "interactive",
+                "interactive": {
+                    "type": "list",
+                    "header": {
+                        "type": "text",
+                        "text": "🚍 ABC COACHES MAIN MENU"
+                    },
+                    "body": {
+                        "text": (
+                            f"Your attempt to purchase USD {fare} bus ticket for the {route} route failed, try again"
+                        )
+                    },
+                    "action": {
+                        "button": "📋ABC COACHES MENU",
+                        "sections": [
+                            {
+                                "title": "📦ABC COACHES SERVICES",
+                                "rows": [
+                                    {
+                                        "id": "book_ticket",
+                                        "title": "Book a Ticket",
+                                        "description": "Reserve your seat instantly"
+                                    },
+                                    {
+                                        "id": "routes",
+                                        "title": "View Routes",
+                                        "description": "Get info regarding our travel routes"
+                                    },
+                                    {
+                                        "id": "parcel_delivery",
+                                        "title": "Parcel Delivery",
+                                        "description": "Send or collect packages"
+                                    },
+                                    {
+                                        "id": "find_stop",
+                                        "title": "Find Bus Stop",
+                                        "description": "Locate nearest pick-up point"
+                                    },
+                                    {
+                                        "id": "promotions",
+                                        "title": "Promotions & Offers",
+                                        "description": "Current discounts & deals"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "🚌 ABOUT ABC COACHES",
+                                "rows": [
+                                    {
+                                        "id": "know_more",
+                                        "title": "Know More",
+                                        "description": "Our story, mission & travel experience"
+                                    },
+                                    {
+                                        "id": "why_choose",
+                                        "title": "Why Choose Us",
+                                        "description": "Luxury, safety & comfort explained"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "🛎 CUSTOMER SERVICE",
+                                "rows": [
+                                    {
+                                        "id": "faqs",
+                                        "title": "❓ FAQs",
+                                        "description": "Get answers to common questions"
+                                    },
+                                    {
+                                        "id": "policies",
+                                        "title": "Travel Policies",
+                                        "description": "Baggage rules, safety, refunds"
+                                    },
+                                    {
+                                        "id": "get_help",
+                                        "title": "Get Help",
+                                        "description": "Talk to a support agent now"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+
+
+
+            # Send the request to WhatsApp
+            response = requests.post(url, headers=headers, json=payload)
+
+            # Optional: Print result for debugging
+            print(response.status_code)
+            print(response.text)
+
+
+
+
+
+
+
+
+
+
+
+
+
+    else:
+        print("no result")
+
+
+
     return "OK", 200
 
 
