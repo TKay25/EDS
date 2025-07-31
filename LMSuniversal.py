@@ -25,6 +25,7 @@ import pdfkit
 from weasyprint import HTML
 import re
 from paynow import Paynow
+import time
 
 
 
@@ -403,7 +404,7 @@ def webhook():
 
                                                             status = paynow.check_transaction_status(poll_url)
 
-                                                            #time.sleep(30)
+                                                            time.sleep(10)
 
                                                             print("Payment Status: ", status.status)
 
