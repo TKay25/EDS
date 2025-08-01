@@ -134,7 +134,7 @@ def webhook():
                 print(display_phone_number)
 
                 VERIFY_TOKENcc = "1412803596375322"
-                ACCESS_TOKEN = "EAAUppTRo5q4BPJFRLZC9azSknZCBCVnpXuNUnhedNLHuUxqMm8sGsSvoN477PL8QaShntB59ZCaXdZAYPn641JgSm43ijZB9eFRYfg6uCd9ZBTutVy9btDA0P9ZBe1osrZBF9IfCpajkSVV8IvqoByzcnh1pe2oozAxJZAx1uQV4ErscZC9lwmQvy22ZCfXOkpzcZBrfPZAyejUfloNa5aYNLgtdbWgqyf8AKr4IpLhGWNDAipxslSgZDZD"
+                ACCESS_TOKEN = "EAAUppTRo5q4BPATlxuMt4ZANFhgbyrtQI7iB1bR5FAI7K5Rv9yolg1OEwgt5J8xRJKKkTc2F9lHutvNcDXyHPEZAoGEuMQlv1THfAGRuTtZBEzmwbJG04f1sLxEAUFze09rHvmtuqa50ccT6ik2nm7cfcMOI8vn6id1PZBId5fMDf2WNZASQFIBIZBX6UIyTr3vVkaaTvIwO1ZB1ZAnQS6LUMtC6b14MZBeisR6XvHIvZBSSooWwZDZD"
                 PHONE_NUMBER_IDcc = "618334968023252"
 
                 def send_whatsapp_messagecc(to, text, buttons=None):
@@ -9169,7 +9169,7 @@ def paynow_return():
 def paynow_result():
 
     VERIFY_TOKENcc = "1412803596375322"
-    ACCESS_TOKEN = "EAAUppTRo5q4BPJFRLZC9azSknZCBCVnpXuNUnhedNLHuUxqMm8sGsSvoN477PL8QaShntB59ZCaXdZAYPn641JgSm43ijZB9eFRYfg6uCd9ZBTutVy9btDA0P9ZBe1osrZBF9IfCpajkSVV8IvqoByzcnh1pe2oozAxJZAx1uQV4ErscZC9lwmQvy22ZCfXOkpzcZBrfPZAyejUfloNa5aYNLgtdbWgqyf8AKr4IpLhGWNDAipxslSgZDZD"
+    ACCESS_TOKEN = "EAAUppTRo5q4BPATlxuMt4ZANFhgbyrtQI7iB1bR5FAI7K5Rv9yolg1OEwgt5J8xRJKKkTc2F9lHutvNcDXyHPEZAoGEuMQlv1THfAGRuTtZBEzmwbJG04f1sLxEAUFze09rHvmtuqa50ccT6ik2nm7cfcMOI8vn6id1PZBId5fMDf2WNZASQFIBIZBX6UIyTr3vVkaaTvIwO1ZB1ZAnQS6LUMtC6b14MZBeisR6XvHIvZBSSooWwZDZD"
     PHONE_NUMBER_IDcc = "618334968023252"
 
     data = request.form.to_dict()
