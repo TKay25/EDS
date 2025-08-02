@@ -10565,7 +10565,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         try:
 
             # Dynamic table name safely
-            table = f"{company_name}main" # double quotes for PostgreSQL table names
+            table = f"{company_name}" # double quotes for PostgreSQL table names
 
             # 1. Add a temporary column
             cursor.execute(f'ALTER TABLE {table} ADD COLUMN new_balance NUMERIC(5, 1)')
