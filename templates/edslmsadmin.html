@@ -1018,6 +1018,28 @@
                 alert('Error: ' + error);
             });
         }
+
+        function somCompany(companyName) {
+            if (!confirm(`Are you sure you want to run SOM on Main table related to "${companyName}"?`)) return;
+
+            fetch('/run_som_company_tables', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ company_name: companyName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        }
+
+
     </script>
 
 
@@ -1030,50 +1052,6 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        });
-    </script>
-    
-    <script>
-        document.getElementById('deleteButton').addEventListener('click', async function() {
-            const button = this;
-            const statusDiv = document.getElementById('status');
-            
-            // Confirm before proceeding
-            const confirmed = confirm("Are you absolutely sure you want to delete ALL tables? This action cannot be undone.");
-            if (!confirmed) {
-                return;
-            }
-            
-            button.disabled = true;
-            button.textContent = "Deleting...";
-            statusDiv.textContent = "Deleting tables...";
-            statusDiv.className = "";
-            
-            try {
-                // Assuming you have a backend endpoint at '/delete-all-tables'
-                const response = await fetch('/delete-all-tables', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    statusDiv.textContent = "Success: " + (result.message || "All tables deleted successfully.");
-                    statusDiv.className = "success";
-                } else {
-                    throw new Error(result.error || "Failed to delete tables");
-                }
-            } catch (error) {
-                statusDiv.textContent = "Error: " + error.message;
-                statusDiv.className = "error";
-                console.error("Error:", error);
-            } finally {
-                button.disabled = false;
-                button.textContent = "Delete All Tables";
-            }
         });
     </script>
 

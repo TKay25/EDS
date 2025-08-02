@@ -10555,7 +10555,38 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         
         else:
                 return redirect(url_for('landingpage')) 
-        
+
+    @app.route('/run_som_company_tables', methods=['POST'])
+    def run_som_company_tables():
+        data = request.get_json()
+        company_name = data.get('company_name')
+
+
+        try:
+
+            # Dynamic table name safely
+            table = f"{company_name}main" # double quotes for PostgreSQL table names
+
+            # 1. Add a temporary column
+            cursor.execute(f'ALTER TABLE {table} ADD COLUMN new_balance NUMERIC(5, 1)')
+
+            # 2. Populate new_balance from other columns
+            cursor.execute(f'''UPDATE {table} SET new_balance = currentleavedaysbalance + monthlyaccumulation''')
+
+            # 3. Update leavedaysbalance from new_balance
+            cursor.execute(f'''UPDATE {table} SET currentleavedaysbalance = new_balance''')
+
+            # 4. Drop the temporary column
+            cursor.execute(f'ALTER TABLE {table} DROP COLUMN new_balance')
+
+            # Commit all changes
+            connection.commit()
+
+            return jsonify({'message': f'Successfully updated leave balances for "{company_name}".'}), 200
+
+        except Exception as e:
+            return jsonify({'message': f'Error: {str(e)}'}), 500        
+  
 
     @app.route('/delete_company_tables', methods=['POST'])
     def delete_company_tables():
@@ -10655,15 +10686,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     merged_df['ACTION'] = merged_df['Company'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 som-comp-btn" data-ID="{x}" onclick="somCompany('{x}')">SOM</button><button class="btn btn-primary3 delete-comp-btn" data-ID="{x}" onclick="deleteCompany('{x}')">Delete</button></div>''')
 
                     merged_df = merged_df[["Company ID","Company", "Date Registered","Employees","ACTION"]]
-
-
-
-
-
-
-
-
-
 
                     table_companies_html = merged_df.to_html(classes="table table-bordered table-theme", table_id="companiesTable", index=False,  escape=False,)
           
