@@ -9658,6 +9658,9 @@ def generate_leave_by_type_data(df_filtered_for_bar_chart_type):
 def run1(table_name, empid):
     print(empid)
 
+    today_date = datetime.now().strftime('%d %B %Y')
+    applied_date = datetime.now().strftime('%Y-%m-%d')    
+
     query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
     cursor.execute(query)
     rows = cursor.fetchall()
