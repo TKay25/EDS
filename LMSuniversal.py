@@ -29,11 +29,6 @@ import time
 import random
 
 
-
-
-today_date = datetime.now().strftime('%d %B %Y')
-applied_date = datetime.now().strftime('%Y-%m-%d')
-
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  
 app.secret_key = '011235'
@@ -119,7 +114,8 @@ def webhook():
         return "Verification failed", 403
 
     if request.method == "POST":
-        global today_date
+        today_date = datetime.now().strftime('%d %B %Y')
+        applied_date = datetime.now().strftime('%Y-%m-%d')
         data = request.get_json()
 
         #global ACCESS_TOKEN
@@ -9169,6 +9165,9 @@ def paynow_return():
 @app.route('/paynow/result/update', methods=['POST'])
 def paynow_result():
 
+    today_date = datetime.now().strftime('%d %B %Y')
+    applied_date = datetime.now().strftime('%Y-%m-%d')
+
     VERIFY_TOKENcc = "1412803596375322"
     ACCESS_TOKEN = "EAAUppTRo5q4BPATlxuMt4ZANFhgbyrtQI7iB1bR5FAI7K5Rv9yolg1OEwgt5J8xRJKKkTc2F9lHutvNcDXyHPEZAoGEuMQlv1THfAGRuTtZBEzmwbJG04f1sLxEAUFze09rHvmtuqa50ccT6ik2nm7cfcMOI8vn6id1PZBId5fMDf2WNZASQFIBIZBX6UIyTr3vVkaaTvIwO1ZB1ZAnQS6LUMtC6b14MZBeisR6XvHIvZBSSooWwZDZD"
     PHONE_NUMBER_IDcc = "618334968023252"
@@ -9626,6 +9625,9 @@ def generate_leave_by_department_data(df_filtered_for_bar_chart):
 
 
 def generate_leave_by_type_data(df_filtered_for_bar_chart_type):
+
+    today_date = datetime.now().strftime('%d %B %Y')
+    applied_date = datetime.now().strftime('%Y-%m-%d')
     # Ensure 'Date Applied' is a datetime object
     df_filtered_for_bar_chart_type['Leave Start Date'] = pd.to_datetime(df_filtered_for_bar_chart_type['Leave Start Date'], format='%d %B %Y', errors='coerce')
 
@@ -10241,6 +10243,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         global password
         try:
 
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
             external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
             database = 'lmsdatabase_8ag3'
 
@@ -10516,6 +10521,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             try:
 
+                today_date = datetime.now().strftime('%d %B %Y')
+                applied_date = datetime.now().strftime('%Y-%m-%d')
                 table_name = session.get('table_name')
                 empid = session.get('empid')
 
@@ -10639,6 +10646,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
     def login():
         if request.method == 'POST':
             try:
+
+                today_date = datetime.now().strftime('%d %B %Y')
+                applied_date = datetime.now().strftime('%Y-%m-%d')
+
                 # Database connection
                 external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
                 connection = psycopg2.connect(external_database_url)
@@ -10756,6 +10767,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
     def login_first_time():
         if request.method == 'POST':
             try:
+
+                today_date = datetime.now().strftime('%d %B %Y')
+                applied_date = datetime.now().strftime('%Y-%m-%d')
+
                 # Database connection
                 external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
                 connection = psycopg2.connect(external_database_url)
@@ -10843,6 +10858,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
     @app.route('/leave_application', methods=['POST'])
     def leave_application():
+
+        today_date = datetime.now().strftime('%d %B %Y')
+        applied_date = datetime.now().strftime('%Y-%m-%d')
 
         user_uuid = session.get('user_uuid')
         table_name = session.get('table_name')
@@ -11305,6 +11323,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         table_name = session.get('table_name')
         empid = session.get('empid')
 
+        today_date = datetime.now().strftime('%d %B %Y')
+        applied_date = datetime.now().strftime('%Y-%m-%d')
+
         if not user_uuid or not table_name or not empid:
             return "Session data is missing", 400
 
@@ -11387,6 +11408,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
             table_name = session.get('table_name')
             empid = session.get('empid')
 
@@ -11429,6 +11453,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         if user_uuid:
             empid = session.get('empid')
     
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
 
             role = request.form.get('role')
             current_id = request.form.get('currentId')
@@ -11465,6 +11491,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
             empid = session.get('empid')
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
     
 
             department = request.form.get('department')
@@ -11500,6 +11529,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
     def update_approver():
         user_uuid = session.get('user_uuid')
         if user_uuid:
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
 
             approver = request.form.get('approver')
             current_id = request.form.get('currentIdapprover')
@@ -11556,6 +11588,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
+
             balance = request.form.get('balance')
             current_id = request.form.get('currentIdbalance')
             company_name_w_space = request.form.get('companyname')
@@ -11586,6 +11622,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
             try:
+
+                today_date = datetime.now().strftime('%d %B %Y')
+                applied_date = datetime.now().strftime('%Y-%m-%d')
                 # Get the list of employee IDs from the request
                 data = request.get_json()
                 employee_ids = data.get('employee_ids', [])
@@ -11628,6 +11667,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
             updates = request.json.get('updates', [])
             company_name_w_space = request.json.get('companyname')
             companyname = company_name_w_space.replace(' ', '_')
@@ -11658,6 +11700,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
     def assign_bulk_approver():
         user_uuid = session.get('user_uuid')
         if user_uuid:
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
 
             table_name = session.get('table_name')
 
@@ -11702,6 +11747,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
             table_name = session.get('table_name')
 
             data = request.get_json()
@@ -11729,6 +11777,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
     def assign_bulk_accumulators():
         user_uuid = session.get('user_uuid')
         if user_uuid:
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
 
             table_name = session.get('table_name')
 
@@ -11766,6 +11816,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         if user_uuid:
 
             try:
+                today_date = datetime.now().strftime('%d %B %Y')
+                applied_date = datetime.now().strftime('%Y-%m-%d')
+
                 data = request.get_json()
                 app_id = data.get("app_id")
                 print ("eissssssssshhhhhhhhhhhhhhhhhhhhhhhhhhhh")
@@ -11828,6 +11881,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         print("JSON data:", request.get_json())  # log the parsed JSON
 
         if user_uuid:
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
 
             table_name = session.get('table_name')
             company_name = table_name.replace("main","")
@@ -12096,6 +12151,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
     def export_all_tables():
         file_path = "exported_tables.xlsx"
         try:
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
             # Connect to PostgreSQL
             connection = psycopg2.connect(external_database_url)
             cursor = connection.cursor()
@@ -12135,6 +12193,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         empid = session.get('empid')
 
         if user_uuid:
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
+
             print("Received data:", request.data)  # log the raw data
             print("JSON data:", request.get_json())  # log the parsed JSON
             table_name = session.get('table_name')
@@ -12230,6 +12293,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         print("JSON data:", request.get_json())  # log the parsed JSON
 
         if user_uuid:
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
+
             data = request.get_json()
             app_id = data.get("app_id")
 
@@ -12308,7 +12376,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
     @app.route('/download_leave_app/<app_id>')
     def download_pdf(app_id):
-        global today_date
+        today_date = datetime.now().strftime('%d %B %Y')
+        applied_date = datetime.now().strftime('%Y-%m-%d')
         user_uuid = session.get('user_uuid')
         empid = session.get('empid')
 
@@ -12388,6 +12457,11 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         print("JSON data:", request.get_json())  # log the parsed JSON
 
         if user_uuid:
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
+
             data = request.get_json()
             app_id = data.get("app_id")
 
@@ -12475,6 +12549,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         print("JSON data:", request.get_json())  # log the parsed JSON
 
         if user_uuid:
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
 
             ACCESS_TOKEN = "EAATESj1oB5YBPIzFCv7ulvosr2S2ZAiWBJrFp7bti6L0ZCWS2AOz5dUABlJ6q16a4hRwEXdq5vZAP5tp4rGXfOQ2sx0hg1EOwMpL002eqUrygbPc3jkY8FPOzR7c6tMvKJxT3XxXP8Qp9U1n30MIMVcNy9JUCZB8UyIwaAZBAjf2U32TVTwSBJlSeHoNYrGH0dwZDZD"
             PHONE_NUMBER_ID = "756962384159644"
@@ -12648,6 +12725,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
         if user_uuid:
 
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
             ACCESS_TOKEN = "EAATESj1oB5YBPIzFCv7ulvosr2S2ZAiWBJrFp7bti6L0ZCWS2AOz5dUABlJ6q16a4hRwEXdq5vZAP5tp4rGXfOQ2sx0hg1EOwMpL002eqUrygbPc3jkY8FPOzR7c6tMvKJxT3XxXP8Qp9U1n30MIMVcNy9JUCZB8UyIwaAZBAjf2U32TVTwSBJlSeHoNYrGH0dwZDZD"
             PHONE_NUMBER_ID = "756962384159644"
             VERIFY_TOKEN = "2644686099068373"
@@ -12748,6 +12828,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
             table_name = session.get('table_name')
             company_name = table_name.replace("main","")
 
@@ -12780,6 +12863,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
     def export_pdf():
         user_uuid = session.get('user_uuid')
         if user_uuid:
+
+            today_date = datetime.now().strftime('%d %B %Y')
+            applied_date = datetime.now().strftime('%Y-%m-%d')
+
             table_name = session.get('table_name')
             if not table_name:
                 return "Table name not found in session", 400
