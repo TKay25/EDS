@@ -3073,8 +3073,16 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
 async function downloadLeaveApp(appId) {
     const btn = document.querySelector(`button[data-id="${appId}"]`);
     const originalText = btn.innerHTML;
-    const firstname = document.getElementById('name-down').getAttribute('value');
-    const surname = document.getElementById('name-down2').getAttribute('value');
+    // Find the <tr> where the button is located
+    const row = btn.closest('tr');
+
+    // Find the full name from the "Employee Name" column
+    // You can improve this by assigning a class to that <td> (e.g., <td class="employee-name">)
+    const nameCell = Array.from(row.cells).find(cell =>
+        cell.textContent.trim() && !cell.querySelector('button') && isNaN(cell.textContent.trim())
+    );
+
+    const fullName = nameCell ? nameCell.textContent.trim() : 'Unknown_Name';
     
     try {
         // 1. Show loading state
@@ -3101,7 +3109,7 @@ async function downloadLeaveApp(appId) {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `leave_application_${firstname} ${surname}_${appId}.pdf`;
+        a.download = `leave_application_${fullName}_${appId}.pdf`;
         document.body.appendChild(a);
         a.click();
 

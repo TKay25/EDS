@@ -267,25 +267,26 @@ def webhook():
                                                                 "type": "list",
                                                                 "header": {
                                                                     "type": "text",
-                                                                    "text": "🚍 CAG TOURS MENU"
+                                                                    "text": "🚍 CAG TOURS DEPARTURE"
                                                                 },
                                                                 "body": {
                                                                     "text": (
-                                                                        "Okay. Kindly select the route of travel for which you want to book a ticket on the menu below. ⬇️"
+                                                                        "Okay. Kindly select your city of departure on the menu below. ⬇️"
                                                                     )
                                                                 },
                                                                 "action": {
-                                                                    "button": "ROUTE SELECTION",
+                                                                    "button": "CITY OF DEPARTURE",
                                                                     "sections": [
                                                                         {
-                                                                            "title": "📦ROUTES",
+                                                                            "title": "CITY OF DEPARTURE",
                                                                             "rows": [
-                                                                                {"id": "HreByo", "title": "Harare to Bulawayo", "description": "BUS FARE: USD 15"},
-                                                                                {"id": "HreCheg", "title": "Harare to Chegutu", "description": "BUS FARE: USD 3"},
-                                                                                {"id": "HreKad", "title": "Harare to Kadoma", "description": "BUS FARE: USD 5"},
-                                                                                {"id": "HreKwek", "title": "Harare to Kwekwe", "description": "BUS FARE: USD 8"},
-                                                                                {"id": "HreGwe", "title": "Harare to Gweru", "description": "BUS FARE: USD 10"},
-                                                                                {"id": "ByoHre", "title": "Bulawayo to Harare", "description": "BUS FARE: USD 15"},
+                                                                                {"id": "depxHre", "title": "Harare"},
+                                                                                {"id": "depxCheg", "title": "Chegutu"},
+                                                                                {"id": "depxKad", "title": "Kadoma"},
+                                                                                {"id": "depxKwek", "title": "Kwekwe"},
+                                                                                {"id": "depxGwe", "title": "Gweru"},
+                                                                                {"id": "depxShang", "title": "Shangani"},
+                                                                                {"id": "depxByo", "title": "Bulawayo"},
                                                                             ]
                                                                         }
                                                                     ]
