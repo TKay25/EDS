@@ -12393,6 +12393,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 cursor.execute(query, (app_id,))  
                 rows = cursor.fetchall()
                 df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver", "Status Date","New Leave Days Balance", "Leave Approver ID", "Department"])
+                empidx = df_leave_appsmain_approved.iat[0,1]
 
                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
                 cursor.execute(query)
@@ -12400,7 +12401,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month"])
                 print(df_employees)
-                userdf = df_employees[df_employees['id'] == empid].reset_index()
+                userdf = df_employees[df_employees['id'] == empidx].reset_index()
                 print("yeaarrrrr")
 
                 employee_name = f"{df_leave_appsmain_approved.iat[0,2].title()} {df_leave_appsmain_approved.iat[0,3].title()}"
