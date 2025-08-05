@@ -12856,7 +12856,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, currentleavedaysbalance, leavedaysappliedfor, leavedaysbalancebf  FROM {appsapproved};"
                 cursor.execute(query)
                 rows2 = cursor.fetchall()
-                df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"])
+                df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"])
                 df_apps = df_apps.sort_values(by="AppID", ascending=False)
 
                 df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
