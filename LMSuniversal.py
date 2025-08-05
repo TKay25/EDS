@@ -6185,6 +6185,22 @@ def webhook():
 
                                                         print(mom_leave)
 
+                                                        grouped = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month', 'Leave Type']).size().reset_index(name='Leave Days')
+
+                                                        # Pivot to create MultiIndex columns: (Month, Leave Type)
+                                                        pivot = grouped.pivot_table(
+                                                            index=['Emp ID', 'First Name', 'Surname'],
+                                                            columns=['Month', 'Leave Type'],
+                                                            values='Leave Days',
+                                                            fill_value=0
+                                                        )
+
+                                                        # Sort columns by Month and Leave Type
+                                                        pivot = pivot.sort_index(axis=1, level=[0, 1])
+
+                                                        # Reset index to make it a normal DataFrame (columns stay MultiIndex)
+                                                        pivot.reset_index(inplace=True)
+
                                                         def upload_excel_to_whatsapp(excel_bytes, company_reg, first_name, last_name, reference_number=None):
                                                             """Uploads an Excel file to WhatsApp servers and returns the media ID"""
                                                             compxxy = company_reg.replace("_"," ").title()
@@ -6241,7 +6257,7 @@ def webhook():
                                                         with pd.ExcelWriter(output, engine='openpyxl') as writer:
                                                             df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
                                                             df_apps.to_excel(writer, index=False, sheet_name=f'All Approved')
-                                                            mom_leave.to_excel(writer, index=False, sheet_name=f'Month on Month')
+                                                            pivot.to_excel(writer, index=True, sheet_name=f'Month on Month')
 
                                                         output.seek(0)
                                                         excel_bytes = output.getvalue()
@@ -8629,6 +8645,22 @@ def webhook():
 
                                                     print(mom_leave)
 
+                                                    grouped = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month', 'Leave Type']).size().reset_index(name='Leave Days')
+
+                                                    # Pivot to create MultiIndex columns: (Month, Leave Type)
+                                                    pivot = grouped.pivot_table(
+                                                        index=['Emp ID', 'First Name', 'Surname'],
+                                                        columns=['Month', 'Leave Type'],
+                                                        values='Leave Days',
+                                                        fill_value=0
+                                                    )
+
+                                                    # Sort columns by Month and Leave Type
+                                                    pivot = pivot.sort_index(axis=1, level=[0, 1])
+
+                                                    # Reset index to make it a normal DataFrame (columns stay MultiIndex)
+                                                    pivot.reset_index(inplace=True)
+
                                                     def upload_excel_to_whatsapp(excel_bytes, company_reg, first_name, last_name, reference_number=None):
                                                         """Uploads an Excel file to WhatsApp servers and returns the media ID"""
                                                         compxxy = company_reg.replace("_"," ").title()
@@ -8685,7 +8717,7 @@ def webhook():
                                                     with pd.ExcelWriter(output, engine='openpyxl') as writer:
                                                         df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
                                                         df_apps.to_excel(writer, index=False, sheet_name=f'All Approved')
-                                                        mom_leave.to_excel(writer, index=False, sheet_name=f'Month on Month')
+                                                        pivot.to_excel(writer, index=True, sheet_name=f'Month on Month')
 
                                                     output.seek(0)
                                                     excel_bytes = output.getvalue()
