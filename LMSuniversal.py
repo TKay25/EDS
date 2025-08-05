@@ -12846,6 +12846,52 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
             print(df_employees)
 
+
+#############################
+
+            appsapproved = f"{company_name}appsapproved"
+            companyxx = company_name.replace("_", " ").title()
+
+            query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, currentleavedaysbalance, leavedaysappliedfor, leavedaysbalancebf  FROM {appsapproved};"
+            cursor.execute(query)
+            rows2 = cursor.fetchall()
+            df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"])
+            df_apps = df_apps.sort_values(by="AppID", ascending=False)
+
+            df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
+            df_apps['Leave End Date'] = pd.to_datetime(df_apps['Leave End Date'])
+
+            # Function to expand dates and exclude Sundays
+            def expand_leave_days(row):
+                dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
+                # Exclude Sundays (weekday=6)
+                dates = [d for d in dates if d.weekday() != 6]
+                return dates
+
+            # Apply the function and explode the DataFrame
+            df_apps['Leave Dates'] = df_apps.apply(expand_leave_days, axis=1)
+            df_exploded = df_apps.explode('Leave Dates')
+
+            # Extract month and year for grouping
+            df_exploded['Month'] = df_exploded['Leave Dates'].dt.to_period('M')
+
+            # Group by Employee and Month
+            result = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month']).size().reset_index(name='Leave Days Taken')
+
+            # Pivot to MoM format (months as columns)
+            mom_leave = result.pivot_table(
+                index=['Emp ID', 'First Name', 'Surname'],
+                columns='Month',
+                values='Leave Days Taken',
+                fill_value=0
+            ).reset_index()
+
+            # Rename columns for clarity
+            mom_leave.columns.name = None
+            mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"{col.strftime('%b-%Y')}" for col in mom_leave.columns[3:]]
+
+            print(mom_leave)
+
             # Create an in-memory Excel file
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
