@@ -12830,82 +12830,88 @@ if connection.status == psycopg2.extensions.STATUS_READY:
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
-            today_date = datetime.now().strftime('%d %B %Y')
-            applied_date = datetime.now().strftime('%Y-%m-%d')
+            try:
 
-            table_name = session.get('table_name')
-            company_name = table_name.replace("main","")
+                today_date = datetime.now().strftime('%d %B %Y')
+                applied_date = datetime.now().strftime('%Y-%m-%d')
 
-
-            query = f"SELECT id, firstname, surname, whatsapp, email, address ,role, department,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
-            cursor.execute(query)
-            rows = cursor.fetchall()
-
-            df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role", "Department","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
-            df_employees = df_employees.sort_values(by="ID", ascending=True)
-
-            print(df_employees)
+                table_name = session.get('table_name')
+                company_name = table_name.replace("main","")
 
 
-#############################
+                query = f"SELECT id, firstname, surname, whatsapp, email, address ,role, department,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
+                cursor.execute(query)
+                rows = cursor.fetchall()
 
-            appsapproved = f"{company_name}appsapproved"
-            companyxx = company_name.replace("_", " ").title()
+                df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role", "Department","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
+                df_employees = df_employees.sort_values(by="ID", ascending=True)
 
-            query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, currentleavedaysbalance, leavedaysappliedfor, leavedaysbalancebf  FROM {appsapproved};"
-            cursor.execute(query)
-            rows2 = cursor.fetchall()
-            df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"])
-            df_apps = df_apps.sort_values(by="AppID", ascending=False)
+                print(df_employees)
 
-            df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
-            df_apps['Leave End Date'] = pd.to_datetime(df_apps['Leave End Date'])
 
-            # Function to expand dates and exclude Sundays
-            def expand_leave_days(row):
-                dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
-                # Exclude Sundays (weekday=6)
-                dates = [d for d in dates if d.weekday() != 6]
-                return dates
+    #############################
 
-            # Apply the function and explode the DataFrame
-            df_apps['Leave Dates'] = df_apps.apply(expand_leave_days, axis=1)
-            df_exploded = df_apps.explode('Leave Dates')
+                appsapproved = f"{company_name}appsapproved"
+                companyxx = company_name.replace("_", " ").title()
 
-            # Extract month and year for grouping
-            df_exploded['Month'] = df_exploded['Leave Dates'].dt.to_period('M')
+                query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, currentleavedaysbalance, leavedaysappliedfor, leavedaysbalancebf  FROM {appsapproved};"
+                cursor.execute(query)
+                rows2 = cursor.fetchall()
+                df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"])
+                df_apps = df_apps.sort_values(by="AppID", ascending=False)
 
-            # Group by Employee and Month
-            result = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month']).size().reset_index(name='Leave Days Taken')
+                df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
+                df_apps['Leave End Date'] = pd.to_datetime(df_apps['Leave End Date'])
 
-            # Pivot to MoM format (months as columns)
-            mom_leave = result.pivot_table(
-                index=['Emp ID', 'First Name', 'Surname'],
-                columns='Month',
-                values='Leave Days Taken',
-                fill_value=0
-            ).reset_index()
+                # Function to expand dates and exclude Sundays
+                def expand_leave_days(row):
+                    dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
+                    # Exclude Sundays (weekday=6)
+                    dates = [d for d in dates if d.weekday() != 6]
+                    return dates
 
-            # Rename columns for clarity
-            mom_leave.columns.name = None
-            mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"{col.strftime('%b-%Y')}" for col in mom_leave.columns[3:]]
+                # Apply the function and explode the DataFrame
+                df_apps['Leave Dates'] = df_apps.apply(expand_leave_days, axis=1)
+                df_exploded = df_apps.explode('Leave Dates')
 
-            print(mom_leave)
+                # Extract month and year for grouping
+                df_exploded['Month'] = df_exploded['Leave Dates'].dt.to_period('M')
 
-            # Create an in-memory Excel file
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
+                # Group by Employee and Month
+                result = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month']).size().reset_index(name='Leave Days Taken')
 
-            output.seek(0)
+                # Pivot to MoM format (months as columns)
+                mom_leave = result.pivot_table(
+                    index=['Emp ID', 'First Name', 'Surname'],
+                    columns='Month',
+                    values='Leave Days Taken',
+                    fill_value=0
+                ).reset_index()
 
-            # Send the file to the client
-            return send_file(
-                output,
-                as_attachment=True,
-                download_name=f'{company_name} LMS Book as at {today_date}.xlsx',
-                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            )
+                # Rename columns for clarity
+                mom_leave.columns.name = None
+                mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"{col.strftime('%b-%Y')}" for col in mom_leave.columns[3:]]
+
+                print(mom_leave)
+
+                # Create an in-memory Excel file
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
+
+                output.seek(0)
+
+                # Send the file to the client
+                return send_file(
+                    output,
+                    as_attachment=True,
+                    download_name=f'{company_name} LMS Book as at {today_date}.xlsx',
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+            
+            except Exception as e:
+                print(e)
+            
 
     @app.route('/export_lms_book_pdf')
     def export_pdf():
