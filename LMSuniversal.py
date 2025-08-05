@@ -12919,7 +12919,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
                     df_apps_to_excel.to_excel(writer, index=False, sheet_name='Approved Leave Apps')
                     mom_leave.to_excel(writer, index=False, sheet_name='MOM Leave')
-                    pivot.to_excel(writer, index=False, sheet_name='pivot')
+                    pivot.to_excel(writer, index=True, sheet_name='pivot')
 
 
 
