@@ -6137,11 +6137,11 @@ def webhook():
                                                         df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
                                                         df_employees = df_employees.sort_values(by="ID", ascending=True)
 
-                                                        query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, leavedaysappliedfor,   TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, leavedaysbalancebf  FROM {appsapproved};"
+                                                        query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, currentleavedaysbalance, leavedaysappliedfor, leavedaysbalancebf  FROM {appsapproved};"
                                                         cursor.execute(query)
                                                         rows2 = cursor.fetchall()
 
-                                                        df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved","Leave Days Balance"])
+                                                        df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"])
                                                         df_apps = df_apps.sort_values(by="AppID", ascending=False)
 
 
@@ -8583,15 +8583,13 @@ def webhook():
                                                     query = f"SELECT id, firstname, surname, whatsapp, email, address ,role,currentleavedaysbalance, monthlyaccumulation, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp  FROM {table_name};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
-
                                                     df_employees = pd.DataFrame(rows, columns=["ID","First Name", "Surname", "WhatsApp","Email", "Address", "Role","Leave Days Balance","Days Accumulated per Month","Leave Approver Name", "Leave Approver ID", "Leave Approver Email", "Leave Approver WhatsaApp"])
                                                     df_employees = df_employees.sort_values(by="ID", ascending=True)
 
-                                                    query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate, leavedaysappliedfor,   TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, leavedaysbalancebf  FROM {appsapproved};"
+                                                    query = f"SELECT appid, id, firstname, surname, leavetype, leaveapprovername, TO_CHAR(dateapplied, 'FMDD-Month-YYYY') AS dateapplied,  TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate,   TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, currentleavedaysbalance, leavedaysappliedfor, leavedaysbalancebf  FROM {appsapproved};"
                                                     cursor.execute(query)
                                                     rows2 = cursor.fetchall()
-
-                                                    df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved","Leave Days Balance"])
+                                                    df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Leave Days Applied for","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"])
                                                     df_apps = df_apps.sort_values(by="AppID", ascending=False)
 
                                                     print(df_employees)
