@@ -12950,7 +12950,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
                     df_employees.to_excel(writer, index=False, sheet_name=f'LMS Book {today_date}')
                     df_apps_to_excel.to_excel(writer, index=False, sheet_name='Approved Leave Apps')
-                    pivot.to_excel(writer, index=False, sheet_name='MOM Leave')
+                    pivot.to_excel(writer, index=True, sheet_name='MOM Leave')
 
 
                 output.seek(0)
