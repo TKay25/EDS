@@ -12909,9 +12909,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 )
             
             except Exception as e:
-                print(e)
-
-                return "OK", 200
+                print("Error:", str(e))
+                return f"Error occurred: {str(e)}", 500
             
 
     @app.route('/export_lms_book_pdf')
