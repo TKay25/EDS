@@ -12847,8 +12847,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 df_employees = df_employees.sort_values(by="ID", ascending=True)
 
                 print(df_employees)
-
-
     #############################
 
                 appsapproved = f"{company_name}appsapproved"
@@ -12911,6 +12909,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             
             except Exception as e:
                 print(e)
+
+        return "OK", 200
             
 
     @app.route('/export_lms_book_pdf')
