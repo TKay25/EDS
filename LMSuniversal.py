@@ -307,7 +307,7 @@ def webhook():
                                                                                         {"id": "depxGwe", "title": "Gweru"},
                                                                                         {"id": "depxShang", "title": "Shangani"},
                                                                                         {"id": "depxByo", "title": "Bulawayo"},
-                                                                                        {"id": "mainmenu", "title": "Cancel Booking"},
+                                                                                        {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                                     ]
                                                                                 }
                                                                             ]
@@ -452,7 +452,7 @@ def webhook():
                                                                             {"id": "depxGwe", "title": "Gweru"},
                                                                             {"id": "depxShang", "title": "Shangani"},
                                                                             {"id": "depxByo", "title": "Bulawayo"},
-                                                                            {"id": "mainmenu", "title": "Cancel Booking"},
+                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                         ]
                                                                     }
                                                                 ]
@@ -624,8 +624,7 @@ def webhook():
                                                                             {"id": "arrxGwe", "title": "Gweru"},
                                                                             {"id": "arrxShang", "title": "Shangani"},
                                                                             {"id": "arrxByo", "title": "Bulawayo"},                                                                            {"id": "arrxByo", "title": "Bulawayo"},
-                                                                            {"id": "mainmenu", "title": "Cancel Booking"},
-
+                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                         ]
                                                                     }
                                                                 ]
