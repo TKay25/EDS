@@ -396,9 +396,11 @@ def webhook():
                                                     traveldate = selected_option[5:]
 
                                                     cursor.execute("""
-                                                        INSERT INTO cagwatick2 (idwanumber, traveldate)
-                                                        VALUES (%s, %s)
-                                                    """, (sender_id[-9:], traveldate))
+                                                        UPDATE cagwatick2 
+                                                        SET traveldate = %s 
+                                                        WHERE idwanumber = %s 
+                                                        AND (status IS NULL OR TRIM(status) = '')
+                                                        """, (traveldate, sender_id[-9:]))
 
                                                     connection.commit()
 
@@ -476,6 +478,8 @@ def webhook():
                                                                 print(response.text)
 
                                                             else: 
+                                                                
+                                                                current_time = datetime.now().time()
 
                                                                 if converted_time9am > current_time:
 
@@ -747,11 +751,9 @@ def webhook():
                                                     city = selected_option[4:]
 
                                                     cursor.execute("""
-                                                        UPDATE cagwatick2 
-                                                        SET dep = %s 
-                                                        WHERE idwanumber = %s 
-                                                        AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (city, sender_id[-9:]))
+                                                        INSERT INTO cagwatick2 (idwanumber, dep)
+                                                        VALUES (%s, %s)
+                                                    """, (sender_id[-9:], city))
 
                                                     connection.commit()
 
