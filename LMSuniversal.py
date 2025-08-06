@@ -601,7 +601,7 @@ def webhook():
                                                                             {"id": "arrxKwek", "title": "Kwekwe"},
                                                                             {"id": "arrxGwe", "title": "Gweru"},
                                                                             {"id": "arrxShang", "title": "Shangani"},
-                                                                            {"id": "arrxByo", "title": "Bulawayo"},                                                                            {"id": "arrxByo", "title": "Bulawayo"},
+                                                                            {"id": "arrxByo", "title": "Bulawayo"},  
                                                                             {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                         ]
                                                                     }
@@ -616,7 +616,7 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
                                             
-                                                elif "depqq" in selected_option:
+                                                elif "xtime" in selected_option:
 
                                                     cursor.execute("SELECT status FROM cagwatick WHERE idwanumber = %s", (sender_id[-9:],))
                                                     rows = cursor.fetchall()
