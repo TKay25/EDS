@@ -271,105 +271,114 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        cursor.execute("""SELECT dep, arr, time, paymethod, fare, ecocashnum, pollurl, status FROM cagwatick2 WHERE idwanumber = %s""", (sender_id[-9:],))
+                                                        cursor.execute("""
+                                                            SELECT dep, arr, time, paymethod, fare, ecocashnum, pollurl, status
+                                                            FROM cagwatick2
+                                                            WHERE idwanumber = %s
+                                                            AND (
+                                                                dep IS NULL OR TRIM(dep) = '' OR
+                                                                arr IS NULL OR TRIM(arr) = '' OR
+                                                                time IS NULL OR TRIM(time) = '' OR
+                                                                paymethod IS NULL OR TRIM(paymethod) = '' OR
+                                                                fare IS NULL OR TRIM(fare) = '' OR
+                                                                ecocashnum IS NULL OR TRIM(ecocashnum) = '' OR
+                                                                pollurl IS NULL OR TRIM(pollurl) = '' OR
+                                                                status IS NULL OR LOWER(TRIM(status)) IN ('', 'none', 'failed', 'cancelled')
+                                                            )
+                                                        """, (sender_id[-9:],))
                                                         rows = cursor.fetchall()
 
-                                                        for row in rows:
-                                                            dep, arr, time_, paymethod, fare, ecocashnum, pollurl, status = row
+                                                        if rows:
 
-                                                            if (
-                                                                any(field is None or str(field).strip() == '' for field in [dep, arr, time_, paymethod, fare, ecocashnum, pollurl])
-                                                                or (status is None or str(status).strip().lower() in ("", "none", "failed", "cancelled"))):
+                                                            print("Not inserting: an existing row with empty status found for this sender_id.")
 
-                                                                print("Not inserting: an existing row with empty status found for this sender_id.")
+                                                            '''cursor.execute("SELECT dep, arr, time, paymethod, ecocashnum, pollurl FROM cagwatick2 WHERE idwanumber = %s", (sender_id[-9:],))
+                                                            rows = cursor.fetchall()
 
-                                                                '''cursor.execute("SELECT dep, arr, time, paymethod, ecocashnum, pollurl FROM cagwatick2 WHERE idwanumber = %s", (sender_id[-9:],))
-                                                                rows = cursor.fetchall()
-
-                                                                for row in rows:
-                                                                    dep = row[0]
-                                                                    arr = row[1]
-                                                                    time_ = row[2]
-                                                                    paymenthod = row[3]
-                                                                    ecocashnum = row[4]
-                                                                    pollurl = row[5]'''
-                                                                    
-                                                                payload = {
-                                                                    "messaging_product": "whatsapp",
-                                                                    "to": sender_id,
-                                                                    "type": "interactive",
-                                                                    "interactive": {
-                                                                        "type": "button",
-                                                                        "header": {
-                                                                            "type": "text",
-                                                                            "text": "🚍 CAG TOURS TICKETS"
-                                                                        },
-                                                                        "body": {
-                                                                            "text": f"You have a ticket booking that you did not complete. Kindly select an option below to proceed."
-                                                                        },
-                                                                        "footer": {
-                                                                            "text": "CAG TOURS TICKETS."
-                                                                        },
-                                                                        "action": {
-                                                                            "buttons": [
-                                                                                {"type": "reply", "reply": {"id": "previoustick", "title": "Complete the Booking"}},
-                                                                                {"type": "reply", "reply": {"id": "newtick", "title": "Book New Ticket"}},
-                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG TOURS MAIN MENU"}}
-                                                                            ]
-                                                                        }
+                                                            for row in rows:
+                                                                dep = row[0]
+                                                                arr = row[1]
+                                                                time_ = row[2]
+                                                                paymenthod = row[3]
+                                                                ecocashnum = row[4]
+                                                                pollurl = row[5]'''
+                                                                
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 CAG TOURS TICKETS"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": f"You have a ticket booking that you did not complete. Kindly select an option below to proceed."
+                                                                    },
+                                                                    "footer": {
+                                                                        "text": "CAG TOURS TICKETS."
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "previoustick", "title": "Complete the Booking"}},
+                                                                            {"type": "reply", "reply": {"id": "newtick", "title": "Book New Ticket"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG TOURS MAIN MENU"}}
+                                                                        ]
                                                                     }
                                                                 }
+                                                            }
 
-                                                                response = requests.post(url, headers=headers, json=payload)
+                                                            response = requests.post(url, headers=headers, json=payload)
 
-                                                                print(response.status_code)
-                                                                print(response.text)
+                                                            print(response.status_code)
+                                                            print(response.text)
 
 
-                                                            else:
+                                                        else:
 
-                                                                payload = {
-                                                                    "messaging_product": "whatsapp",
-                                                                    "to": sender_id,
-                                                                    "type": "interactive",
-                                                                    "interactive": {
-                                                                        "type": "list",
-                                                                        "header": {
-                                                                            "type": "text",
-                                                                            "text": "🚍 CAG TOURS DEPARTURE"
-                                                                        },
-                                                                        "body": {
-                                                                            "text": (
-                                                                                "Okay. Kindly select your city of departure on the menu below. ⬇️"
-                                                                            )
-                                                                        },
-                                                                        "action": {
-                                                                            "button": "CITY OF DEPARTURE",
-                                                                            "sections": [
-                                                                                {
-                                                                                    "title": "CITY OF DEPARTURE",
-                                                                                    "rows": [
-                                                                                        {"id": "depxHre", "title": "Harare"},
-                                                                                        {"id": "depxCheg", "title": "Chegutu"},
-                                                                                        {"id": "depxKad", "title": "Kadoma"},
-                                                                                        {"id": "depxKwek", "title": "Kwekwe"},
-                                                                                        {"id": "depxGwe", "title": "Gweru"},
-                                                                                        {"id": "depxShang", "title": "Shangani"},
-                                                                                        {"id": "depxByo", "title": "Bulawayo"},
-                                                                                        {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                    ]
-                                                                                }
-                                                                            ]
-                                                                        }
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 CAG TOURS DEPARTURE"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "Okay. Kindly select your city of departure on the menu below. ⬇️"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "CITY OF DEPARTURE",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "CITY OF DEPARTURE",
+                                                                                "rows": [
+                                                                                    {"id": "depxHre", "title": "Harare"},
+                                                                                    {"id": "depxCheg", "title": "Chegutu"},
+                                                                                    {"id": "depxKad", "title": "Kadoma"},
+                                                                                    {"id": "depxKwek", "title": "Kwekwe"},
+                                                                                    {"id": "depxGwe", "title": "Gweru"},
+                                                                                    {"id": "depxShang", "title": "Shangani"},
+                                                                                    {"id": "depxByo", "title": "Bulawayo"},
+                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                ]
+                                                                            }
+                                                                        ]
                                                                     }
                                                                 }
+                                                            }
 
-                                                                # Send the request to WhatsApp
-                                                                response = requests.post(url, headers=headers, json=payload)
+                                                            # Send the request to WhatsApp
+                                                            response = requests.post(url, headers=headers, json=payload)
 
-                                                                # Optional: Print result for debugging
-                                                                print(response.status_code)
-                                                                print(response.text)
+                                                            # Optional: Print result for debugging
+                                                            print(response.status_code)
+                                                            print(response.text)
 
                                                     except Exception as e:
 
