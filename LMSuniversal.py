@@ -334,7 +334,7 @@ def webhook():
                                                                             },
                                                                             "action": {
                                                                                 "buttons": [
-                                                                                    {"type": "reply", "reply": {"id": "previoustick", "title": "Finish Previous Booking"}},
+                                                                                    {"type": "reply", "reply": {"id": "previoustick", "title": "Complete the Booking"}},
                                                                                     {"type": "reply", "reply": {"id": "newtick", "title": "Book New Ticket"}},
                                                                                     {"type": "reply", "reply": {"id": "depxKad", "title": "Kadoma"}}
                                                                                 ]
