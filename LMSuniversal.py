@@ -259,6 +259,109 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
+                                                        cursor.execute("SELECT status FROM cagwatick2 WHERE idwanumber = %s", (sender_id[-9:],))
+                                                        rows = cursor.fetchall()
+
+                                                        if rows:
+                                                            # Step 2: Check if any row has empty or NULL status
+                                                            has_empty_status = any(row[0] in (None, '') for row in rows)
+
+                                                            if not has_empty_status:
+                                                                # No empty status found, safe to insert a new row
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "list",
+                                                                        "header": {
+                                                                            "type": "text",
+                                                                            "text": "🚍 CAG TOURS DEPARTURE"
+                                                                        },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "Okay. Kindly select your city of departure on the menu below. ⬇️"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "button": "CITY OF DEPARTURE",
+                                                                            "sections": [
+                                                                                {
+                                                                                    "title": "CITY OF DEPARTURE",
+                                                                                    "rows": [
+                                                                                        {"id": "depxHre", "title": "Harare"},
+                                                                                        {"id": "depxCheg", "title": "Chegutu"},
+                                                                                        {"id": "depxKad", "title": "Kadoma"},
+                                                                                        {"id": "depxKwek", "title": "Kwekwe"},
+                                                                                        {"id": "depxGwe", "title": "Gweru"},
+                                                                                        {"id": "depxShang", "title": "Shangani"},
+                                                                                        {"id": "depxByo", "title": "Bulawayo"},
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                # Send the request to WhatsApp
+                                                                response = requests.post(url, headers=headers, json=payload)
+
+                                                                # Optional: Print result for debugging
+                                                                print(response.status_code)
+                                                                print(response.text)
+
+
+                                                            else:
+                                                                print("Not inserting: an existing row with empty status found for this sender_id.")
+
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": {
+                                                                            "type": "text",
+                                                                            "text": "🚍 CAG TOURS TICKETS"
+                                                                        },
+                                                                        "body": {
+                                                                            "text": "You have a ticket booking that you did not complete. Kindly select an option below to proceed."
+                                                                        },
+                                                                        "footer": {
+                                                                            "text": "CAG TOURS TICKETS."
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "previoustick", "title": "Finish Previous Booking"}},
+                                                                                {"type": "reply", "reply": {"id": "newtick", "title": "Book New Ticket"}},
+                                                                                {"type": "reply", "reply": {"id": "depxKad", "title": "Kadoma"}}
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(url, headers=headers, json=payload)
+
+                                                                print(response.status_code)
+                                                                print(response.text)
+
+                                                    elif "depx" in selected_option:
+
+                                                        cursor.execute("""
+                                                            INSERT INTO cagwatick2 (idwanumber, dep)
+                                                            VALUES (%s, %s)
+                                                        """, (sender_id[-9:], selected_option))
+
+                                                        connection.commit()
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
                                                         payload = {
                                                             "messaging_product": "whatsapp",
                                                             "to": sender_id,
@@ -267,26 +370,26 @@ def webhook():
                                                                 "type": "list",
                                                                 "header": {
                                                                     "type": "text",
-                                                                    "text": "🚍 CAG TOURS DEPARTURE"
+                                                                    "text": "🚍 CAG TOURS DESTINATION"
                                                                 },
                                                                 "body": {
                                                                     "text": (
-                                                                        "Okay. Kindly select your city of departure on the menu below. ⬇️"
+                                                                        "Okay. Kindly select your destinatiuon city on the menu below. ⬇️"
                                                                     )
                                                                 },
                                                                 "action": {
-                                                                    "button": "CITY OF DEPARTURE",
+                                                                    "button": "DESTINATION CITY",
                                                                     "sections": [
                                                                         {
-                                                                            "title": "CITY OF DEPARTURE",
+                                                                            "title": "DESTINATION CITY",
                                                                             "rows": [
-                                                                                {"id": "depxHre", "title": "Harare"},
-                                                                                {"id": "depxCheg", "title": "Chegutu"},
-                                                                                {"id": "depxKad", "title": "Kadoma"},
-                                                                                {"id": "depxKwek", "title": "Kwekwe"},
-                                                                                {"id": "depxGwe", "title": "Gweru"},
-                                                                                {"id": "depxShang", "title": "Shangani"},
-                                                                                {"id": "depxByo", "title": "Bulawayo"},
+                                                                                {"id": "arrxHre", "title": "Harare"},
+                                                                                {"id": "arrxCheg", "title": "Chegutu"},
+                                                                                {"id": "arrxKad", "title": "Kadoma"},
+                                                                                {"id": "arrxKwek", "title": "Kwekwe"},
+                                                                                {"id": "arrxGwe", "title": "Gweru"},
+                                                                                {"id": "arrxShang", "title": "Shangani"},
+                                                                                {"id": "arrxByo", "title": "Bulawayo"},
                                                                             ]
                                                                         }
                                                                     ]
@@ -294,46 +397,13 @@ def webhook():
                                                             }
                                                         }
 
-
-
-                                                        # Send the request to WhatsApp
                                                         response = requests.post(url, headers=headers, json=payload)
 
                                                         # Optional: Print result for debugging
                                                         print(response.status_code)
                                                         print(response.text)
                                                 
-                                                    elif selected_option == "HreByo" or selected_option == "ByoHre" or selected_option == "HreCheg" or selected_option == "HreKad" or selected_option == "HreKwek" or selected_option == "HreGwe"  :
-
-                                                        if selected_option == "HreByo":
-
-                                                            route = "Harare to Bulawayo"
-                                                            amount = "15"
-
-                                                        elif selected_option == "ByoHre":
-
-                                                            route = "Bulawayo to Harare"
-                                                            amount = "15"
-
-                                                        elif selected_option == "HreCheg":
-
-                                                            route = "Harare to Chegutu"
-                                                            amount = "3"
-
-                                                        elif selected_option == "HreKad":
-
-                                                            route = "Harare to Kadoma"
-                                                            amount = "5"
-
-                                                        elif selected_option == "HreKwe":
-
-                                                            route = "Harare to Kwekwe"
-                                                            amount = "8"
-
-                                                        elif selected_option == "HreGwe":
-
-                                                            route = "Harare to Gweru"
-                                                            amount = "10"
+                                                    elif "depqq" in selected_option:
 
                                                         cursor.execute("SELECT status FROM cagwatick WHERE idwanumber = %s", (sender_id[-9:],))
                                                         rows = cursor.fetchall()
@@ -345,7 +415,7 @@ def webhook():
                                                             if not has_empty_status:
                                                                 # No empty status found, safe to insert a new row
                                                                 cursor.execute("""
-                                                                    INSERT INTO cagwatick (idwanumber, route, fare)
+                                                                    INSERT INTO cagwatick2 (idwanumber, route, fare)
                                                                     VALUES (%s, %s, %s)
                                                                 """, (sender_id[-9:], route, amount))
 
