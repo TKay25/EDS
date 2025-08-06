@@ -265,11 +265,9 @@ def webhook():
                                                             rows = cursor.fetchall()
 
                                                             if rows:
-                                                                # Step 2: Check if any row has empty or NULL status
                                                                 has_empty_status = any(row[0] in (None, '') for row in rows)
 
                                                                 if not has_empty_status:
-                                                                    # No empty status found, safe to insert a new row
 
                                                                     payload = {
                                                                         "messaging_product": "whatsapp",
@@ -348,6 +346,51 @@ def webhook():
 
                                                                     print(response.status_code)
                                                                     print(response.text)
+
+                                                            else:
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "list",
+                                                                        "header": {
+                                                                            "type": "text",
+                                                                            "text": "🚍 CAG TOURS DEPARTURE"
+                                                                        },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "Okay. Kindly select your city of departure on the menu below. ⬇️"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "button": "CITY OF DEPARTURE",
+                                                                            "sections": [
+                                                                                {
+                                                                                    "title": "CITY OF DEPARTURE",
+                                                                                    "rows": [
+                                                                                        {"id": "depxHre", "title": "Harare"},
+                                                                                        {"id": "depxCheg", "title": "Chegutu"},
+                                                                                        {"id": "depxKad", "title": "Kadoma"},
+                                                                                        {"id": "depxKwek", "title": "Kwekwe"},
+                                                                                        {"id": "depxGwe", "title": "Gweru"},
+                                                                                        {"id": "depxShang", "title": "Shangani"},
+                                                                                        {"id": "depxByo", "title": "Bulawayo"},
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                # Send the request to WhatsApp
+                                                                response = requests.post(url, headers=headers, json=payload)
+
+                                                                # Optional: Print result for debugging
+                                                                print(response.status_code)
+                                                                print(response.text)
+
 
                                                         except Exception as e:
 
