@@ -940,7 +940,7 @@ def webhook():
 
                                                 digits_only = ''.join(filter(str.isdigit, text.replace(" ", "")))
 
-                                                if len(digits_only) > 9:
+                                                if len(digits_only) >= 9:
 
 
                                                     cursor.execute("""
@@ -1057,121 +1057,113 @@ def webhook():
                                                     return 'OK', 200
 
 
+                                                else:
 
 
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
 
-
-
-
-
-
-                                            else:
-
-
-                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                headers = {
-                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                    "Content-Type": "application/json"
-                                                }
-
-                                                payload = {
-                                                    "messaging_product": "whatsapp",
-                                                    "to": sender_id,
-                                                    "type": "interactive",
-                                                    "interactive": {
-                                                        "type": "list",
-                                                        "header": {
-                                                            "type": "text",
-                                                            "text": "🚍 CAG TOURS MAIN MENU"
-                                                        },
-                                                        "body": {
-                                                            "text": (
-                                                                "Welcome aboard! 👋\n\n"
-                                                                "Explore our available routes, services, and customer support options.\n"
-                                                                "Tap *OPEN MENU* below to get started. ⬇️"
-                                                            )
-                                                        },
-                                                        "action": {
-                                                            "button": "📋 CAG TOURS MENU",
-                                                            "sections": [
-                                                                {
-                                                                    "title": "📦 CAG TOURS SERVICES",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "book_ticket",
-                                                                            "title": "Book a Ticket",
-                                                                            "description": "Reserve your seat instantly"
-                                                                        },
-                                                                        {
-                                                                            "id": "routes",
-                                                                            "title": "View Routes",
-                                                                            "description": "Get info regarding our travel routes"
-                                                                        },
-                                                                        {
-                                                                            "id": "parcel_delivery",
-                                                                            "title": "Parcel Delivery",
-                                                                            "description": "Send or collect packages"
-                                                                        },
-                                                                        {
-                                                                            "id": "find_stop",
-                                                                            "title": "Find Bus Stop",
-                                                                            "description": "Locate nearest pick-up point"
-                                                                        },
-                                                                        {
-                                                                            "id": "promotions",
-                                                                            "title": "Promotions & Offers",
-                                                                            "description": "Current discounts & deals"
-                                                                        }
-                                                                    ]
-                                                                },
-                                                                {
-                                                                    "title": "🚌 CAG TOURS",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "know_more",
-                                                                            "title": "Know More",
-                                                                            "description": "Our story, mission & travel experience"
-                                                                        },
-                                                                        {
-                                                                            "id": "why_choose",
-                                                                            "title": "Why Choose Us",
-                                                                            "description": "Luxury, safety & comfort explained"
-                                                                        }
-                                                                    ]
-                                                                },
-                                                                {
-                                                                    "title": "🛎 CUSTOMER SERVICE",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "faqs",
-                                                                            "title": "❓ FAQs",
-                                                                            "description": "Get answers to common questions"
-                                                                        },
-                                                                        {
-                                                                            "id": "policies",
-                                                                            "title": "Travel Policies",
-                                                                            "description": "Baggage rules, safety, refunds"
-                                                                        },
-                                                                        {
-                                                                            "id": "get_help",
-                                                                            "title": "Get Help",
-                                                                            "description": "Talk to a support agent now"
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            ]
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 CAG TOURS MAIN MENU"
+                                                            },
+                                                            "body": {
+                                                                "text": (
+                                                                    "Welcome aboard! 👋\n\n"
+                                                                    "Explore our available routes, services, and customer support options.\n"
+                                                                    "Tap *OPEN MENU* below to get started. ⬇️"
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "button": "📋 CAG TOURS MENU",
+                                                                "sections": [
+                                                                    {
+                                                                        "title": "📦 CAG TOURS SERVICES",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "book_ticket",
+                                                                                "title": "Book a Ticket",
+                                                                                "description": "Reserve your seat instantly"
+                                                                            },
+                                                                            {
+                                                                                "id": "routes",
+                                                                                "title": "View Routes",
+                                                                                "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "parcel_delivery",
+                                                                                "title": "Parcel Delivery",
+                                                                                "description": "Send or collect packages"
+                                                                            },
+                                                                            {
+                                                                                "id": "find_stop",
+                                                                                "title": "Find Bus Stop",
+                                                                                "description": "Locate nearest pick-up point"
+                                                                            },
+                                                                            {
+                                                                                "id": "promotions",
+                                                                                "title": "Promotions & Offers",
+                                                                                "description": "Current discounts & deals"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🚌 CAG TOURS",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "know_more",
+                                                                                "title": "Know More",
+                                                                                "description": "Our story, mission & travel experience"
+                                                                            },
+                                                                            {
+                                                                                "id": "why_choose",
+                                                                                "title": "Why Choose Us",
+                                                                                "description": "Luxury, safety & comfort explained"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🛎 CUSTOMER SERVICE",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "faqs",
+                                                                                "title": "❓ FAQs",
+                                                                                "description": "Get answers to common questions"
+                                                                            },
+                                                                            {
+                                                                                "id": "policies",
+                                                                                "title": "Travel Policies",
+                                                                                "description": "Baggage rules, safety, refunds"
+                                                                            },
+                                                                            {
+                                                                                "id": "get_help",
+                                                                                "title": "Get Help",
+                                                                                "description": "Talk to a support agent now"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
                                                         }
                                                     }
-                                                }
 
 
 
-                                                # Send the request to WhatsApp
-                                                response = requests.post(url, headers=headers, json=payload)
+                                                    # Send the request to WhatsApp
+                                                    response = requests.post(url, headers=headers, json=payload)
 
-                                                # Optional: Print result for debugging
-                                                print(response.status_code)
-                                                print(response.text)
+                                                    # Optional: Print result for debugging
+                                                    print(response.status_code)
+                                                    print(response.text)
 
                                         except Exception as e:
 
