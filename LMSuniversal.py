@@ -407,6 +407,67 @@ def webhook():
 
                                                         print(e)
 
+
+                                                elif selected_option == "newtick" or button_id == "newtick":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+
+                                                    delete_query = """
+                                                        DELETE FROM cagwatick2 
+                                                        WHERE idwanumber = %s AND (status IS NULL OR status = '')
+                                                    """
+                                                    cursor.execute(delete_query, (sender_id[-9:],))
+                                                    connection.commit()
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 CAG TOURS DEPARTURE"
+                                                            },
+                                                            "body": {
+                                                                "text": (
+                                                                    "Okay. Kindly select your city of departure on the menu below. ⬇️"
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "button": "CITY OF DEPARTURE",
+                                                                "sections": [
+                                                                    {
+                                                                        "title": "CITY OF DEPARTURE",
+                                                                        "rows": [
+                                                                            {"id": "depxHre", "title": "Harare"},
+                                                                            {"id": "depxCheg", "title": "Chegutu"},
+                                                                            {"id": "depxKad", "title": "Kadoma"},
+                                                                            {"id": "depxKwek", "title": "Kwekwe"},
+                                                                            {"id": "depxGwe", "title": "Gweru"},
+                                                                            {"id": "depxShang", "title": "Shangani"},
+                                                                            {"id": "depxByo", "title": "Bulawayo"},
+                                                                            {"id": "mainmenu", "title": "Cancel Booking"},
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    # Send the request to WhatsApp
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    # Optional: Print result for debugging
+                                                    print(response.status_code)
+                                                    print(response.text)
+
+
                                                 elif selected_option == "mainmenu" or button_id == "mainmenu":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
