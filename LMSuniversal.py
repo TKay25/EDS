@@ -48,8 +48,6 @@ cursor = connection.cursor()
 #VERIFY_TOKEN = "521035180620700"
 #WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
-
-
 create_table_query_comp_creation = f"""
 CREATE TABLE IF NOT EXISTS companyreg (
     compid SERIAL PRIMARY KEY,
@@ -77,6 +75,12 @@ CREATE TABLE IF NOT EXISTS cagwatick2 (
 """
 cursor.execute(create_table_query)
 connection.commit()
+
+cursor.execute("""
+    ALTER TABLE cagwatick2 ADD COLUMN traveldate date
+""")
+connection.commit()
+
 
 drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
 cursor.execute(drop_table_query)
@@ -617,6 +621,8 @@ def webhook():
                                                     # Optional: Print result for debugging
                                                     print(response.status_code)
                                                     print(response.text)
+
+
                                             
                                                 elif "arrx" in selected_option:
 
@@ -691,86 +697,59 @@ def webhook():
 
 
                                                         cursor.execute("""
-                                                            INSERT INTO cagwatick2 (idwanumber, dep)
-                                                            VALUES (%s, %s)
-                                                        """, (sender_id[-9:], selected_option))
+                                                            UPDATE cagwatick2 
+                                                            SET arr = %s 
+                                                            WHERE idwanumber = %s 
+                                                            AND (status IS NULL OR TRIM(status) = '')
+                                                            """, (city, sender_id[-9:]))
 
+                                                        if dep == "Harare":
 
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            }
 
-                                                    if rows:
-                                                        # Step 2: Check if any row has empty or NULL status
-                                                        has_empty_status = any(row[0] in (None, '') for row in rows)
-
-                                                        if not has_empty_status:
-                                                            # No empty status found, safe to insert a new row
-                                                            cursor.execute("""
-                                                                INSERT INTO cagwatick2 (idwanumber, route, fare)
-                                                                VALUES (%s)
-                                                            """, (sender_id[-9:]))
-
-                                                            connection.commit()
-
-                                                        else:
-                                                            print("Not inserting: an existing row with empty status found for this sender_id.")
-                                                    else:
-                                                        # sender_id does not exist at all — insert new
-                                                        cursor.execute("""
-                                                            INSERT INTO cagwatick (idwanumber, route, fare)
-                                                            VALUES (%s)
-                                                        """, (sender_id[-9:]))
-
-                                                        connection.commit()
-
-
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
-                                                    }
-
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "interactive",
-                                                        "interactive": {
-                                                            "type": "list",
-                                                            "header": {
-                                                                "type": "text",
-                                                                "text": "🚍 DEPARTURE TIME"
-                                                            },
-                                                            "body": {
-                                                                "text": (
-                                                                    "Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
-                                                                )
-                                                            },
-                                                            "action": {
-                                                                "button": "DEPARTURE TIME",
-                                                                "sections": [
-                                                                    {
-                                                                        "title": "DEPARTURE TIME",
-                                                                        "rows": [
-                                                                            {"id": "8am", "title": "8 am"},
-                                                                            {"id": "9am", "title": "9 am"},
-                                                                            {"id": "2pm", "title": "2 pm"},
-
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 DEPARTURE TIME"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "DEPARTURE TIME",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "DEPARTURE TIME",
+                                                                                "rows": [
+                                                                                    {"id": "txq8am", "title": "8 am"},
+                                                                                    {"id": "txq9am", "title": "9 am"},
+                                                                                    {"id": "txq2pm", "title": "2 pm"},
+                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                ]
+                                                                            }
                                                                         ]
                                                                     }
-                                                                ]
+                                                                }
                                                             }
-                                                        }
-                                                    }
 
 
 
-                                                    # Send the request to WhatsApp
-                                                    response = requests.post(url, headers=headers, json=payload)
-
-                                                    # Optional: Print result for debugging
-                                                    print(response.status_code)
-                                                    print(response.text)
 
 
-                                                elif selected_option == "8am" or selected_option == "9am" or  selected_option == "2pm":
+
+
+                                                elif "txq" in selected_option:
 
                                                     cursor.execute("""
                                                         SELECT id FROM cagwatick
