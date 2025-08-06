@@ -280,12 +280,13 @@ def webhook():
                                                                 arr IS NULL OR TRIM(arr) = '' OR
                                                                 time IS NULL OR TRIM(time) = '' OR
                                                                 paymethod IS NULL OR TRIM(paymethod) = '' OR
-                                                                fare IS NULL OR TRIM(fare) = '' OR
-                                                                ecocashnum IS NULL OR TRIM(ecocashnum) = '' OR
+                                                                fare IS NULL OR TRIM(fare::TEXT) = '' OR
+                                                                ecocashnum IS NULL OR TRIM(ecocashnum::TEXT) = '' OR
                                                                 pollurl IS NULL OR TRIM(pollurl) = '' OR
                                                                 status IS NULL OR LOWER(TRIM(status)) IN ('', 'none', 'failed', 'cancelled')
                                                             )
                                                         """, (sender_id[-9:],))
+
                                                         rows = cursor.fetchall()
 
                                                         if rows:
