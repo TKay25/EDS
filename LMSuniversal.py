@@ -61,10 +61,11 @@ cursor.execute(create_table_query_comp_creation)
 connection.commit()
 
 create_table_query = f"""
-CREATE TABLE IF NOT EXISTS cagwatick (
+CREATE TABLE IF NOT EXISTS cagwatick2 (
     id SERIAL PRIMARY KEY,
     idwanumber INT,
-    route VARCHAR (100),
+    dep VARCHAR (100),
+    arr VARCHAR (100),
     time VARCHAR (100),
     paymethod VARCHAR (100),    
     fare VARCHAR (100),
@@ -77,7 +78,9 @@ CREATE TABLE IF NOT EXISTS cagwatick (
 cursor.execute(create_table_query)
 connection.commit()
 
-
+drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
+cursor.execute(drop_table_query)
+connection.commit()
 
 create_table_query = f"""
 CREATE TABLE IF NOT EXISTS whatsapptempapplication (
