@@ -267,16 +267,6 @@ def webhook():
 
                                                 if selected_option == "book_ticket":
 
-                                                    def generate_travel_date_rows():
-                                                        today = datetime.now()
-                                                        return [
-                                                            {
-                                                                "id": f"date_{i}",
-                                                                "title": (today + timedelta(days=i)).strftime("%d %B %Y")
-                                                            }
-                                                            for i in range(10)
-                                                        ]
-
                                                     try:
 
                                                         url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -353,8 +343,6 @@ def webhook():
 
                                                         else:
 
-                                                            rowstraveldates = generate_travel_date_rows()
-
                                                             payload = {
                                                                 "messaging_product": "whatsapp",
                                                                 "to": sender_id,
@@ -363,7 +351,7 @@ def webhook():
                                                                     "type": "list",
                                                                     "header": {
                                                                         "type": "text",
-                                                                        "text": "🚍 CAG TOURS TRAVEL DATE"
+                                                                        "text": "🚍 CAG TOURS DEPARTURE"
                                                                     },
                                                                     "body": {
                                                                         "text": (
@@ -371,11 +359,20 @@ def webhook():
                                                                         )
                                                                     },
                                                                     "action": {
-                                                                        "button": "TRAVEL DATE",
+                                                                        "button": "CITY OF DEPARTURE",
                                                                         "sections": [
                                                                             {
-                                                                                "title": "TRAVEL DATE",
-                                                                                "rows": rowstraveldates
+                                                                                "title": "CITY OF DEPARTURE",
+                                                                                "rows": [
+                                                                                    {"id": "depxHarare", "title": "Harare"},
+                                                                                    {"id": "depxChegutu", "title": "Chegutu"},
+                                                                                    {"id": "depxKadoma", "title": "Kadoma"},
+                                                                                    {"id": "depxKwekwe", "title": "Kwekwe"},
+                                                                                    {"id": "depxGweru", "title": "Gweru"},
+                                                                                    {"id": "depxShangani", "title": "Shangani"},
+                                                                                    {"id": "depxBulawayo", "title": "Bulawayo"},
+                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                ]
                                                                             }
                                                                         ]
                                                                     }
@@ -403,6 +400,19 @@ def webhook():
                                                         VALUES (%s, %s)
                                                     """, (sender_id[-9:], traveldate))
 
+                                                    connection.commit()
+
+                                                    cursor.execute("""
+                                                        SELECT dep 
+                                                        FROM cagwatick2 
+                                                        WHERE idwanumber = %s 
+                                                        AND (status IS NULL OR TRIM(status) = '')
+                                                    """, (sender_id[-9:],))
+
+                                                    result = cursor.fetchone()
+
+                                                    dep = result[0]
+
                                                     try:
 
                                                         url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -411,53 +421,143 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
+                                                        if dep == "Harare":
+                                                             
+                                                            converted_time8am = (datetime.strptime("8am", "%I%p") - timedelta(minutes=45)).time()
+                                                            converted_time9am = (datetime.strptime("9am", "%I%p") - timedelta(minutes=45)).time()
+                                                            converted_time2pm = (datetime.strptime("2pm", "%I%p") - timedelta(minutes=45)).time()
 
 
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            }
 
+                                                            if converted_time8am > current_time:
 
-
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "list",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "🚍 CAG TOURS DEPARTURE"
-                                                                },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "Okay. Kindly select your city of departure on the menu below. ⬇️"
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "button": "CITY OF DEPARTURE",
-                                                                    "sections": [
-                                                                        {
-                                                                            "title": "CITY OF DEPARTURE",
-                                                                            "rows": [
-                                                                                {"id": "depxHarare", "title": "Harare"},
-                                                                                {"id": "depxChegutu", "title": "Chegutu"},
-                                                                                {"id": "depxKadoma", "title": "Kadoma"},
-                                                                                {"id": "depxKwekwe", "title": "Kwekwe"},
-                                                                                {"id": "depxGweru", "title": "Gweru"},
-                                                                                {"id": "depxShangani", "title": "Shangani"},
-                                                                                {"id": "depxBulawayo", "title": "Bulawayo"},
-                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "list",
+                                                                        "header": {
+                                                                            "type": "text",
+                                                                            "text": "🚍 DEPARTURE TIME"
+                                                                        },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "button": "DEPARTURE TIME",
+                                                                            "sections": [
+                                                                                {
+                                                                                    "title": "DEPARTURE TIME",
+                                                                                    "rows": [
+                                                                                        {"id": "txq8am", "title": "8 am"},
+                                                                                        {"id": "txq9am", "title": "9 am"},
+                                                                                        {"id": "txq2pm", "title": "2 pm"},
+                                                                                        {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                    ]
+                                                                                }
                                                                             ]
                                                                         }
-                                                                    ]
+                                                                    }
                                                                 }
-                                                            }
-                                                        }
 
-                                                        # Send the request to WhatsApp
-                                                        response = requests.post(url, headers=headers, json=payload)
+                                                                # Send the request to WhatsApp
+                                                                response = requests.post(url, headers=headers, json=payload)
 
-                                                        # Optional: Print result for debugging
-                                                        print(response.status_code)
-                                                        print(response.text)
+                                                                # Optional: Print result for debugging
+                                                                print(response.status_code)
+                                                                print(response.text)
+
+                                                            else: 
+
+                                                                if converted_time9am > current_time:
+
+                                                                    payload = {
+                                                                        "messaging_product": "whatsapp",
+                                                                        "to": sender_id,
+                                                                        "type": "interactive",
+                                                                        "interactive": {
+                                                                            "type": "list",
+                                                                            "header": {
+                                                                                "type": "text",
+                                                                                "text": "🚍 DEPARTURE TIME"
+                                                                            },
+                                                                            "body": {
+                                                                                "text": (
+                                                                                    f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                                )
+                                                                            },
+                                                                            "action": {
+                                                                                "button": "DEPARTURE TIME",
+                                                                                "sections": [
+                                                                                    {
+                                                                                        "title": "DEPARTURE TIME",
+                                                                                        "rows": [
+                                                                                            {"id": "txq9am", "title": "9 am"},
+                                                                                            {"id": "txq2pm", "title": "2 pm"},
+                                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    # Send the request to WhatsApp
+                                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                                    # Optional: Print result for debugging
+                                                                    print(response.status_code)
+                                                                    print(response.text)
+
+                                                                else:
+
+
+                                                                    payload = {
+                                                                        "messaging_product": "whatsapp",
+                                                                        "to": sender_id,
+                                                                        "type": "interactive",
+                                                                        "interactive": {
+                                                                            "type": "list",
+                                                                            "header": {
+                                                                                "type": "text",
+                                                                                "text": "🚍 DEPARTURE TIME"
+                                                                            },
+                                                                            "body": {
+                                                                                "text": (
+                                                                                    f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                                )
+                                                                            },
+                                                                            "action": {
+                                                                                "button": "DEPARTURE TIME",
+                                                                                "sections": [
+                                                                                    {
+                                                                                        "title": "DEPARTURE TIME",
+                                                                                        "rows": [
+                                                                                            {"id": "txq2pm", "title": "2 pm"},
+                                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    # Send the request to WhatsApp
+                                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                                    # Optional: Print result for debugging
+                                                                    print(response.status_code)
+                                                                    print(response.text)
+
+
 
 
  
@@ -484,20 +584,6 @@ def webhook():
                                                     cursor.execute(delete_query, (sender_id[-9:],))
                                                     connection.commit()
 
-                                                    def generate_travel_date_rows():
-                                                        today = datetime.now()
-                                                        return [
-                                                            {
-                                                                "id": f"date_{i}",
-                                                                "title": (today + timedelta(days=i)).strftime("%d %B %Y")
-                                                            }
-                                                            for i in range(10)
-                                                        ]
-
-
-
-                                                    rowstraveldates = generate_travel_date_rows()
-
                                                     payload = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
@@ -506,7 +592,7 @@ def webhook():
                                                             "type": "list",
                                                             "header": {
                                                                 "type": "text",
-                                                                "text": "🚍 CAG TOURS TRAVEL DATE"
+                                                                "text": "🚍 CAG TOURS DEPARTURE"
                                                             },
                                                             "body": {
                                                                 "text": (
@@ -514,16 +600,26 @@ def webhook():
                                                                 )
                                                             },
                                                             "action": {
-                                                                "button": "TRAVEL DATE",
+                                                                "button": "CITY OF DEPARTURE",
                                                                 "sections": [
                                                                     {
-                                                                        "title": "TRAVEL DATE",
-                                                                        "rows": rowstraveldates
+                                                                        "title": "CITY OF DEPARTURE",
+                                                                        "rows": [
+                                                                            {"id": "depxHarare", "title": "Harare"},
+                                                                            {"id": "depxChegutu", "title": "Chegutu"},
+                                                                            {"id": "depxKadoma", "title": "Kadoma"},
+                                                                            {"id": "depxKwekwe", "title": "Kwekwe"},
+                                                                            {"id": "depxGweru", "title": "Gweru"},
+                                                                            {"id": "depxShangani", "title": "Shangani"},
+                                                                            {"id": "depxBulawayo", "title": "Bulawayo"},
+                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                        ]
                                                                     }
                                                                 ]
                                                             }
                                                         }
                                                     }
+
 
                                                     # Send the request to WhatsApp
                                                     response = requests.post(url, headers=headers, json=payload)
@@ -775,11 +871,7 @@ def webhook():
                                                         print(response.status_code)
                                                         print(response.text)
 
-
-
-
                                                     else:
-
 
                                                         cursor.execute("""
                                                             UPDATE cagwatick2 
@@ -787,76 +879,96 @@ def webhook():
                                                             WHERE idwanumber = %s 
                                                             AND (status IS NULL OR TRIM(status) = '')
                                                             """, (city, sender_id[-9:]))
+                                                        
+                                                        connection.commit()
 
-                                                        if dep == "Harare":
+                                                        def generate_travel_date_rows():
+                                                            today = datetime.now()
+                                                            return [
+                                                                {
+                                                                    "id": f"date_{i}",
+                                                                    "title": (today + timedelta(days=i)).strftime("%d %B %Y")
+                                                                }
+                                                                for i in range(10)
+                                                            ]
 
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                "Content-Type": "application/json"
-                                                            }
+                                                        rowstraveldates = generate_travel_date_rows()
 
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": sender_id,
-                                                                "type": "interactive",
-                                                                "interactive": {
-                                                                    "type": "list",
-                                                                    "header": {
-                                                                        "type": "text",
-                                                                        "text": "🚍 DEPARTURE TIME"
-                                                                    },
-                                                                    "body": {
-                                                                        "text": (
-                                                                            f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
-                                                                        )
-                                                                    },
-                                                                    "action": {
-                                                                        "button": "DEPARTURE TIME",
-                                                                        "sections": [
-                                                                            {
-                                                                                "title": "DEPARTURE TIME",
-                                                                                "rows": [
-                                                                                    {"id": "txq8am", "title": "8 am"},
-                                                                                    {"id": "txq9am", "title": "9 am"},
-                                                                                    {"id": "txq2pm", "title": "2 pm"},
-                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    }
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 CAG TOURS TRAVEL DATE"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Okay. Kindly select your desired Travel Date on the menu below. ⬇️"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "TRAVEL DATE",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "TRAVEL DATE",
+                                                                            "rows": rowstraveldates
+                                                                        }
+                                                                    ]
                                                                 }
                                                             }
+                                                        }
 
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
 
-
-
-
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
 
 
                                                 elif "txq" in selected_option:
 
+                                                    timetrav = selected_option[3:]
+
+                                                    converted_time = datetime.strptime(timetrav, "%I%p")
+
+                                                    adjusted_time = converted_time - timedelta(minutes=45)
+
+                                                    adjusted_time_only = adjusted_time.time()
+
+                                                    print(adjusted_time_only)
+
+                                                    print(converted_time)
+
                                                     cursor.execute("""
-                                                        SELECT id FROM cagwatick
-                                                        WHERE idwanumber = %s
-                                                        ORDER BY id DESC
-                                                        LIMIT 1
-                                                    """, (sender_id[-9:],))
-                                                    result = cursor.fetchone()
+                                                        UPDATE cagwatick2 
+                                                        SET time = %s 
+                                                        WHERE idwanumber = %s 
+                                                        AND (status IS NULL OR TRIM(status) = '')
+                                                        """, (timetrav, sender_id[-9:]))
 
-                                                    if result:
-                                                        highest_id = result[0]
-                                                        cursor.execute("""
-                                                            UPDATE cagwatick
-                                                            SET time = %s
-                                                            WHERE id = %s
-                                                        """, (selected_option, highest_id))
+                                                    connection.commit()
 
-                                                        connection.commit()
-
+                                                    
+                                                    if adjusted_time_only > current_time:
+                                                        print("It's in the future")
                                                     else:
-                                                        print("No row found for this sender_id.")
+                                                        print("It's in the past")
 
+                                                    def generate_travel_date_rows():
+                                                        today = datetime.now()
+                                                        return [
+                                                            {
+                                                                "id": f"date_{i}",
+                                                                "title": (today + timedelta(days=i)).strftime("%d %B %Y")
+                                                            }
+                                                            for i in range(10)
+                                                        ]
+
+                                                    rowstraveldates = generate_travel_date_rows()
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
@@ -872,29 +984,24 @@ def webhook():
                                                             "type": "list",
                                                             "header": {
                                                                 "type": "text",
-                                                                "text": "🚍 PAYMENT METHODS"
+                                                                "text": "🚍 CAG TOURS TRAVEL DATE"
                                                             },
                                                             "body": {
                                                                 "text": (
-                                                                    "Okay. Kindly select the payment method that you would like to use to book a ticket on the menu below. ⬇️"
+                                                                    "Okay. Kindly select your city of departure on the menu below. ⬇️"
                                                                 )
                                                             },
                                                             "action": {
-                                                                "button": "PAYMENT METHODS",
+                                                                "button": "TRAVEL DATE",
                                                                 "sections": [
                                                                     {
-                                                                        "title": "PAYMENT METHODS",
-                                                                        "rows": [
-                                                                            {"id": "ecocash", "title": "EcoCash"},
-                                                                            {"id": "onemoney", "title": "OneMoney"},
-                                                                        ]
+                                                                        "title": "TRAVEL DATE",
+                                                                        "rows": rowstraveldates
                                                                     }
                                                                 ]
                                                             }
                                                         }
                                                     }
-
-
 
                                                     # Send the request to WhatsApp
                                                     response = requests.post(url, headers=headers, json=payload)
