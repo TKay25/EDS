@@ -809,6 +809,12 @@ def webhook():
                                             
                                                 elif "arrx" in selected_option:
 
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
                                                     city = selected_option[4:]
 
                                                     cursor.execute("""
@@ -823,12 +829,6 @@ def webhook():
                                                     dep = result[0]
 
                                                     if dep == city:
-
-                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                        headers = {
-                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                            "Content-Type": "application/json"
-                                                        }
 
                                                         payload = {
                                                             "messaging_product": "whatsapp",
