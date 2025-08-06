@@ -359,13 +359,13 @@ def webhook():
                                                                             {
                                                                                 "title": "CITY OF DEPARTURE",
                                                                                 "rows": [
-                                                                                    {"id": "depxHre", "title": "Harare"},
-                                                                                    {"id": "depxCheg", "title": "Chegutu"},
-                                                                                    {"id": "depxKad", "title": "Kadoma"},
-                                                                                    {"id": "depxKwek", "title": "Kwekwe"},
-                                                                                    {"id": "depxGwe", "title": "Gweru"},
-                                                                                    {"id": "depxShang", "title": "Shangani"},
-                                                                                    {"id": "depxByo", "title": "Bulawayo"},
+                                                                                    {"id": "depxHarare", "title": "Harare"},
+                                                                                    {"id": "depxChegutu", "title": "Chegutu"},
+                                                                                    {"id": "depxKadoma", "title": "Kadoma"},
+                                                                                    {"id": "depxKwekwe", "title": "Kwekwe"},
+                                                                                    {"id": "depxGweru", "title": "Gweru"},
+                                                                                    {"id": "depxShangani", "title": "Shangani"},
+                                                                                    {"id": "depxBulawayo", "title": "Bulawayo"},
                                                                                     {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                                 ]
                                                                             }
@@ -423,13 +423,13 @@ def webhook():
                                                                     {
                                                                         "title": "CITY OF DEPARTURE",
                                                                         "rows": [
-                                                                            {"id": "depxHre", "title": "Harare"},
-                                                                            {"id": "depxCheg", "title": "Chegutu"},
-                                                                            {"id": "depxKad", "title": "Kadoma"},
-                                                                            {"id": "depxKwek", "title": "Kwekwe"},
-                                                                            {"id": "depxGwe", "title": "Gweru"},
-                                                                            {"id": "depxShang", "title": "Shangani"},
-                                                                            {"id": "depxByo", "title": "Bulawayo"},
+                                                                            {"id": "depxHarare", "title": "Harare"},
+                                                                            {"id": "depxChegutu", "title": "Chegutu"},
+                                                                            {"id": "depxKadoma", "title": "Kadoma"},
+                                                                            {"id": "depxKwekwe", "title": "Kwekwe"},
+                                                                            {"id": "depxGweru", "title": "Gweru"},
+                                                                            {"id": "depxShangani", "title": "Shangani"},
+                                                                            {"id": "depxBulawayo", "title": "Bulawayo"},
                                                                             {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                         ]
                                                                     }
@@ -561,10 +561,12 @@ def webhook():
 
                                                 elif "depx" in selected_option:
 
+                                                    city = selected_option[4:]
+
                                                     cursor.execute("""
                                                         INSERT INTO cagwatick2 (idwanumber, dep)
                                                         VALUES (%s, %s)
-                                                    """, (sender_id[-9:], selected_option))
+                                                    """, (sender_id[-9:], city))
 
                                                     connection.commit()
 
@@ -595,13 +597,13 @@ def webhook():
                                                                     {
                                                                         "title": "DESTINATION CITY",
                                                                         "rows": [
-                                                                            {"id": "arrxHre", "title": "Harare"},
-                                                                            {"id": "arrxCheg", "title": "Chegutu"},
-                                                                            {"id": "arrxKad", "title": "Kadoma"},
-                                                                            {"id": "arrxKwek", "title": "Kwekwe"},
-                                                                            {"id": "arrxGwe", "title": "Gweru"},
-                                                                            {"id": "arrxShang", "title": "Shangani"},
-                                                                            {"id": "arrxByo", "title": "Bulawayo"},  
+                                                                            {"id": "arrxHarare", "title": "Harare"},
+                                                                            {"id": "arrxChegutu", "title": "Chegutu"},
+                                                                            {"id": "arrxKadoma", "title": "Kadoma"},
+                                                                            {"id": "arrxKwekwe", "title": "Kwekwe"},
+                                                                            {"id": "arrxGweru", "title": "Gweru"},
+                                                                            {"id": "arrxShangani", "title": "Shangani"},
+                                                                            {"id": "arrxBulawayo", "title": "Bulawayo"},  
                                                                             {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                         ]
                                                                     }
@@ -616,10 +618,84 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
                                             
-                                                elif "xtime" in selected_option:
+                                                elif "arrx" in selected_option:
 
-                                                    cursor.execute("SELECT status FROM cagwatick WHERE idwanumber = %s", (sender_id[-9:],))
-                                                    rows = cursor.fetchall()
+                                                    city = selected_option[4:]
+
+                                                    cursor.execute("""
+                                                        SELECT dep 
+                                                        FROM cagwatick2 
+                                                        WHERE idwanumber = %s 
+                                                        AND (status IS NULL OR TRIM(status) = '')
+                                                    """, (sender_id[-9:],))
+
+                                                    result = cursor.fetchone()
+
+                                                    dep = result[0]
+
+                                                    if dep == city:
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 CAG TOURS DESTINATION"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Sorry, city of departure cannot be the same as destination city. Kindly select your destinatiuon city on the menu below, or provide a different city of departure. ⬇️"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "DESTINATION CITY",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "DESTINATION CITY",
+                                                                            "rows": [
+                                                                                {"id": "arrxHarare", "title": "Harare"},
+                                                                                {"id": "arrxChegutu", "title": "Chegutu"},
+                                                                                {"id": "arrxKadoma", "title": "Kadoma"},
+                                                                                {"id": "arrxKwekwe", "title": "Kwekwe"},
+                                                                                {"id": "arrxGweru", "title": "Gweru"},
+                                                                                {"id": "arrxShangani", "title": "Shangani"},
+                                                                                {"id": "arrxBulawayo", "title": "Bulawayo"},  
+                                                                                {"id": "newtick2", "title": "Change Departure"},
+                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+
+
+
+                                                    else:
+
+
+                                                        cursor.execute("""
+                                                            INSERT INTO cagwatick2 (idwanumber, dep)
+                                                            VALUES (%s, %s)
+                                                        """, (sender_id[-9:], selected_option))
+
+
 
                                                     if rows:
                                                         # Step 2: Check if any row has empty or NULL status
