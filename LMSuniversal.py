@@ -76,10 +76,10 @@ CREATE TABLE IF NOT EXISTS cagwatick2 (
 cursor.execute(create_table_query)
 connection.commit()
 
-cursor.execute("""
+'''cursor.execute("""
     ALTER TABLE cagwatick2 ADD COLUMN traveldate date
 """)
-connection.commit()
+connection.commit()'''
 
 
 drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
@@ -267,6 +267,16 @@ def webhook():
 
                                                 if selected_option == "book_ticket":
 
+                                                    def generate_travel_date_rows():
+                                                        today = datetime.now()
+                                                        return [
+                                                            {
+                                                                "id": f"date_{i}",
+                                                                "title": (today + timedelta(days=i)).strftime("%d %B %Y")
+                                                            }
+                                                            for i in range(10)
+                                                        ]
+
                                                     try:
 
                                                         url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -276,7 +286,7 @@ def webhook():
                                                         }
 
                                                         cursor.execute("""
-                                                            SELECT dep, arr, time, paymethod, fare, ecocashnum, pollurl, status
+                                                            SELECT dep, arr, time, paymethod, fare, ecocashnum, pollurl, traveldate, status
                                                             FROM cagwatick2
                                                             WHERE idwanumber = %s
                                                             AND (
@@ -287,6 +297,7 @@ def webhook():
                                                                 fare IS NULL OR TRIM(fare::TEXT) = '' OR
                                                                 ecocashnum IS NULL OR TRIM(ecocashnum::TEXT) = '' OR
                                                                 pollurl IS NULL OR TRIM(pollurl) = '' OR
+                                                                traveldate IS NULL OR                                                          
                                                                 status IS NULL OR LOWER(TRIM(status)) IN ('', 'none', 'failed', 'cancelled')
                                                             )
                                                         """, (sender_id[-9:],))
@@ -342,6 +353,8 @@ def webhook():
 
                                                         else:
 
+                                                            rowstraveldates = generate_travel_date_rows()
+
                                                             payload = {
                                                                 "messaging_product": "whatsapp",
                                                                 "to": sender_id,
@@ -350,7 +363,7 @@ def webhook():
                                                                     "type": "list",
                                                                     "header": {
                                                                         "type": "text",
-                                                                        "text": "🚍 CAG TOURS DEPARTURE"
+                                                                        "text": "🚍 CAG TOURS TRAVEL DATE"
                                                                     },
                                                                     "body": {
                                                                         "text": (
@@ -358,20 +371,11 @@ def webhook():
                                                                         )
                                                                     },
                                                                     "action": {
-                                                                        "button": "CITY OF DEPARTURE",
+                                                                        "button": "TRAVEL DATE",
                                                                         "sections": [
                                                                             {
-                                                                                "title": "CITY OF DEPARTURE",
-                                                                                "rows": [
-                                                                                    {"id": "depxHarare", "title": "Harare"},
-                                                                                    {"id": "depxChegutu", "title": "Chegutu"},
-                                                                                    {"id": "depxKadoma", "title": "Kadoma"},
-                                                                                    {"id": "depxKwekwe", "title": "Kwekwe"},
-                                                                                    {"id": "depxGweru", "title": "Gweru"},
-                                                                                    {"id": "depxShangani", "title": "Shangani"},
-                                                                                    {"id": "depxBulawayo", "title": "Bulawayo"},
-                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                ]
+                                                                                "title": "TRAVEL DATE",
+                                                                                "rows": rowstraveldates
                                                                             }
                                                                         ]
                                                                     }
@@ -388,6 +392,80 @@ def webhook():
                                                     except Exception as e:
 
                                                         print(e)
+
+
+                                                elif "date_" in selected_option:
+
+                                                    traveldate = selected_option[5:]
+
+                                                    cursor.execute("""
+                                                        INSERT INTO cagwatick2 (idwanumber, traveldate)
+                                                        VALUES (%s, %s)
+                                                    """, (sender_id[-9:], traveldate))
+
+                                                    try:
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+
+
+
+
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 CAG TOURS DEPARTURE"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Okay. Kindly select your city of departure on the menu below. ⬇️"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "CITY OF DEPARTURE",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "CITY OF DEPARTURE",
+                                                                            "rows": [
+                                                                                {"id": "depxHarare", "title": "Harare"},
+                                                                                {"id": "depxChegutu", "title": "Chegutu"},
+                                                                                {"id": "depxKadoma", "title": "Kadoma"},
+                                                                                {"id": "depxKwekwe", "title": "Kwekwe"},
+                                                                                {"id": "depxGweru", "title": "Gweru"},
+                                                                                {"id": "depxShangani", "title": "Shangani"},
+                                                                                {"id": "depxBulawayo", "title": "Bulawayo"},
+                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+
+ 
+
+                                                    except Exception as e:
+
+                                                        print(e)
+
 
 
                                                 elif selected_option == "newtick" or button_id == "newtick":
@@ -568,9 +646,11 @@ def webhook():
                                                     city = selected_option[4:]
 
                                                     cursor.execute("""
-                                                        INSERT INTO cagwatick2 (idwanumber, dep)
-                                                        VALUES (%s, %s)
-                                                    """, (sender_id[-9:], city))
+                                                        UPDATE cagwatick2 
+                                                        SET dep = %s 
+                                                        WHERE idwanumber = %s 
+                                                        AND (status IS NULL OR TRIM(status) = '')
+                                                        """, (city, sender_id[-9:]))
 
                                                     connection.commit()
 
