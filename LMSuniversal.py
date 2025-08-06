@@ -484,6 +484,20 @@ def webhook():
                                                     cursor.execute(delete_query, (sender_id[-9:],))
                                                     connection.commit()
 
+                                                    def generate_travel_date_rows():
+                                                        today = datetime.now()
+                                                        return [
+                                                            {
+                                                                "id": f"date_{i}",
+                                                                "title": (today + timedelta(days=i)).strftime("%d %B %Y")
+                                                            }
+                                                            for i in range(10)
+                                                        ]
+
+
+
+                                                    rowstraveldates = generate_travel_date_rows()
+
                                                     payload = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
@@ -492,7 +506,7 @@ def webhook():
                                                             "type": "list",
                                                             "header": {
                                                                 "type": "text",
-                                                                "text": "🚍 CAG TOURS DEPARTURE"
+                                                                "text": "🚍 CAG TOURS TRAVEL DATE"
                                                             },
                                                             "body": {
                                                                 "text": (
@@ -500,20 +514,11 @@ def webhook():
                                                                 )
                                                             },
                                                             "action": {
-                                                                "button": "CITY OF DEPARTURE",
+                                                                "button": "TRAVEL DATE",
                                                                 "sections": [
                                                                     {
-                                                                        "title": "CITY OF DEPARTURE",
-                                                                        "rows": [
-                                                                            {"id": "depxHarare", "title": "Harare"},
-                                                                            {"id": "depxChegutu", "title": "Chegutu"},
-                                                                            {"id": "depxKadoma", "title": "Kadoma"},
-                                                                            {"id": "depxKwekwe", "title": "Kwekwe"},
-                                                                            {"id": "depxGweru", "title": "Gweru"},
-                                                                            {"id": "depxShangani", "title": "Shangani"},
-                                                                            {"id": "depxBulawayo", "title": "Bulawayo"},
-                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                        ]
+                                                                        "title": "TRAVEL DATE",
+                                                                        "rows": rowstraveldates
                                                                     }
                                                                 ]
                                                             }
