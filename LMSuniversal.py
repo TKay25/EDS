@@ -390,7 +390,6 @@ def webhook():
 
                                                         print(e)
 
-
                                                 elif "date_" in selected_option:
 
                                                     try:
@@ -621,8 +620,6 @@ def webhook():
 
                                                         print(e)
 
-                                                        
-
                                                 elif selected_option == "newtick" or button_id == "newtick":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -682,7 +679,6 @@ def webhook():
                                                     # Optional: Print result for debugging
                                                     print(response.status_code)
                                                     print(response.text)
-
 
                                                 elif selected_option == "mainmenu" or button_id == "mainmenu":
 
@@ -791,12 +787,6 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
 
-
-
-
-
-
-
                                                 elif "depx" in selected_option:
 
                                                     city = selected_option[4:]
@@ -855,9 +845,7 @@ def webhook():
                                                     # Optional: Print result for debugging
                                                     print(response.status_code)
                                                     print(response.text)
-
-
-                                            
+                     
                                                 elif "arrx" in selected_option:
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -988,40 +976,15 @@ def webhook():
 
                                                     converted_time = datetime.strptime(timetrav, "%I%p")
 
-                                                    adjusted_time = converted_time - timedelta(minutes=45)
-
-                                                    adjusted_time_only = adjusted_time.time()
-
-                                                    print(adjusted_time_only)
-
-                                                    print(converted_time)
-
                                                     cursor.execute("""
                                                         UPDATE cagwatick2 
                                                         SET time = %s 
                                                         WHERE idwanumber = %s 
                                                         AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (timetrav, sender_id[-9:]))
+                                                        """, (converted_time, sender_id[-9:]))
 
                                                     connection.commit()
 
-                                                    
-                                                    if adjusted_time_only > current_time:
-                                                        print("It's in the future")
-                                                    else:
-                                                        print("It's in the past")
-
-                                                    def generate_travel_date_rows():
-                                                        today = datetime.now()
-                                                        return [
-                                                            {
-                                                                "id": f"date_{i}",
-                                                                "title": (today + timedelta(days=i)).strftime("%d %B %Y")
-                                                            }
-                                                            for i in range(10)
-                                                        ]
-
-                                                    rowstraveldates = generate_travel_date_rows()
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
@@ -1037,24 +1000,87 @@ def webhook():
                                                             "type": "list",
                                                             "header": {
                                                                 "type": "text",
-                                                                "text": "🚍 CAG TOURS TRAVEL DATE"
+                                                                "text": "🚍 CAG TOURS MAIN MENU"
                                                             },
                                                             "body": {
                                                                 "text": (
-                                                                    "Okay. Kindly select your city of departure on the menu below. ⬇️"
+                                                                    f"You are about to book a ticket with the following details: \n\n Travelling \n *From*: {dep} \n *To*: {arr} \n *On Date*: {traveldate}. Kindly provide the EcoCash number that you would like to use to pay USD 15 for your ticket. \n\n eg `0777111234`"
                                                                 )
                                                             },
                                                             "action": {
-                                                                "button": "TRAVEL DATE",
+                                                                "button": "📋 CAG TOURS MENU",
                                                                 "sections": [
                                                                     {
-                                                                        "title": "TRAVEL DATE",
-                                                                        "rows": rowstraveldates
+                                                                        "title": "📦 CAG TOURS SERVICES",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "book_ticket",
+                                                                                "title": "Book a Ticket",
+                                                                                "description": "Reserve your seat instantly"
+                                                                            },
+                                                                            {
+                                                                                "id": "routes",
+                                                                                "title": "View Routes",
+                                                                                "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "parcel_delivery",
+                                                                                "title": "Parcel Delivery",
+                                                                                "description": "Send or collect packages"
+                                                                            },
+                                                                            {
+                                                                                "id": "find_stop",
+                                                                                "title": "Find Bus Stop",
+                                                                                "description": "Locate nearest pick-up point"
+                                                                            },
+                                                                            {
+                                                                                "id": "promotions",
+                                                                                "title": "Promotions & Offers",
+                                                                                "description": "Current discounts & deals"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🚌 ABOUT CAG TOURS",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "know_more",
+                                                                                "title": "Know More",
+                                                                                "description": "Our story, mission & travel experience"
+                                                                            },
+                                                                            {
+                                                                                "id": "why_choose",
+                                                                                "title": "Why Choose Us",
+                                                                                "description": "Luxury, safety & comfort explained"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🛎 CUSTOMER SERVICE",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "faqs",
+                                                                                "title": "❓ FAQs",
+                                                                                "description": "Get answers to common questions"
+                                                                            },
+                                                                            {
+                                                                                "id": "policies",
+                                                                                "title": "Travel Policies",
+                                                                                "description": "Baggage rules, safety, refunds"
+                                                                            },
+                                                                            {
+                                                                                "id": "get_help",
+                                                                                "title": "Get Help",
+                                                                                "description": "Talk to a support agent now"
+                                                                            }
+                                                                        ]
                                                                     }
                                                                 ]
                                                             }
                                                         }
                                                     }
+
+
 
                                                     # Send the request to WhatsApp
                                                     response = requests.post(url, headers=headers, json=payload)
@@ -1062,6 +1088,15 @@ def webhook():
                                                     # Optional: Print result for debugging
                                                     print(response.status_code)
                                                     print(response.text)
+
+
+
+
+
+
+
+
+
 
 
                                                 elif selected_option == "ecocash":
@@ -1193,7 +1228,6 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
 
-
                                                 elif selected_option == "faqs":
                                                     button_id_leave_type = str(selected_option)
 
@@ -1310,80 +1344,10 @@ def webhook():
 
                                                     requests.post(url, headers=headers, json=payload)
                                                                                                         
-
-
                                                 elif selected_option == "Contact":
                                                     button_id_leave_type = str(selected_option)
 
                                                     send_whatsapp_messagecc(sender_id, "✅ Okay. A Customer Representative has been notified to assit you. They will contact you shortly.")
-
-                                                elif selected_option == "vkariba":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "View Route & Times"},
-                                                                {"id": "Contact", "title": "Contact Support"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                                {"id": "Download", "title": "Download Brochure"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Departures from Mbare Musika Rank. \n\n Departure Times: 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM.\n\n Kindly select an option for enquiry.", 
-                                                        "CAG TOURS Options",
-                                                        sections) 
-                                                    
-
-                                                elif selected_option == "vbulawayo":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "View Route & Times"},
-                                                                {"id": "Contact", "title": "Contact Support"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                                {"id": "Download", "title": "Download Brochure"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
-                                                        "CAG TOURS Options",
-                                                        sections) 
-
-                                                elif selected_option == "vmutare":
-                                                    button_id_leave_type = str(selected_option)
-
-                                                    sections = [
-                                                        {
-                                                            "title": "Leave Type Options",
-                                                            "rows": [
-                                                                {"id": "Book", "title": "Book A Bus Ticket"},
-                                                                {"id": "View", "title": "View Route & Times"},
-                                                                {"id": "Contact", "title": "Contact Support"},
-                                                                {"id": "FAQs", "title": "FAQs"},
-                                                                {"id": "Download", "title": "Download Brochure"},
-                                                            ]
-                                                        }
-                                                    ]
-
-                                                    send_whatsapp_list_messagecc(
-                                                        sender_id, 
-                                                        f"Departures from Harare Showgrounds (CAG House). \n\n Departure Times: 8:00AM, 9:00AM, 2:00PM.\n\n Kindly select an option for enquiry.", 
-                                                        "CAG TOURS Options",
-                                                        sections)  
-
 
                                             elif message.get("type") == "text":
 
