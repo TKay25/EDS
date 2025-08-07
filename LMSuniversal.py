@@ -567,16 +567,61 @@ def webhook():
                                                                         print(response.status_code)
                                                                         print(response.text)
 
+                                                        else:
 
+                                                            if dep == "Harare":
 
+                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                                headers = {
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                }
 
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "list",
+                                                                        "header": {
+                                                                            "type": "text",
+                                                                            "text": "🚍 DEPARTURE TIME"
+                                                                        },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "button": "DEPARTURE TIME",
+                                                                            "sections": [
+                                                                                {
+                                                                                    "title": "DEPARTURE TIME",
+                                                                                    "rows": [
+                                                                                        {"id": "txq8am", "title": "8 am"},
+                                                                                        {"id": "txq9am", "title": "9 am"},
+                                                                                        {"id": "txq2pm", "title": "2 pm"},
+                                                                                        {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                # Send the request to WhatsApp
+                                                                response = requests.post(url, headers=headers, json=payload)
+
+                                                                # Optional: Print result for debugging
+                                                                print(response.status_code)
+                                                                print(response.text)
+                                                            
  
-
                                                     except Exception as e:
 
                                                         print(e)
 
-
+                                                        
 
                                                 elif selected_option == "newtick" or button_id == "newtick":
 
