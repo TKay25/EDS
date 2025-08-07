@@ -393,97 +393,60 @@ def webhook():
 
                                                 elif "date_" in selected_option:
 
-                                                    print(selected_option)
-
-                                                    traveldate = selected_option[5:]
-
-                                                    cursor.execute("""
-                                                        UPDATE cagwatick2 
-                                                        SET traveldate = %s 
-                                                        WHERE idwanumber = %s 
-                                                        AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (traveldate, sender_id[-9:]))
-
-                                                    connection.commit()
-
-                                                    cursor.execute("""
-                                                        SELECT dep 
-                                                        FROM cagwatick2 
-                                                        WHERE idwanumber = %s 
-                                                        AND (status IS NULL OR TRIM(status) = '')
-                                                    """, (sender_id[-9:],))
-
-                                                    result = cursor.fetchone()
-
-                                                    dep = result[0]
-
                                                     try:
 
-                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                        headers = {
-                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                            "Content-Type": "application/json"
-                                                        }
+                                                        print(selected_option)
 
-                                                        if dep == "Harare":
-                                                             
-                                                            converted_time8am = (datetime.strptime("8am", "%I%p") - timedelta(minutes=45)).time()
-                                                            converted_time9am = (datetime.strptime("9am", "%I%p") - timedelta(minutes=45)).time()
-                                                            converted_time2pm = (datetime.strptime("2pm", "%I%p") - timedelta(minutes=45)).time()
+                                                        traveldate = selected_option[5:]
+
+                                                        cursor.execute("""
+                                                            UPDATE cagwatick2 
+                                                            SET traveldate = %s 
+                                                            WHERE idwanumber = %s 
+                                                            AND (status IS NULL OR TRIM(status) = '')
+                                                            """, (traveldate, sender_id[-9:]))
+
+                                                        connection.commit()
+
+                                                        cursor.execute("""
+                                                            SELECT dep 
+                                                            FROM cagwatick2 
+                                                            WHERE idwanumber = %s 
+                                                            AND (status IS NULL OR TRIM(status) = '')
+                                                        """, (sender_id[-9:],))
+
+                                                        result = cursor.fetchone()
+
+                                                        dep = result[0]
+
+                                                        if traveldate == datetime.now().strftime('%d %B %Y'):
+
+                                                            current_time = datetime.now().strftime('%I%p')
+
+                                                            if dep == "Harare":
+
+                                                                target_time_8 = '08AM'
+                                                                target_time_9 = '09AM'
+                                                                target_time_2 = '02PM'
 
 
-                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                            headers = {
-                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                "Content-Type": "application/json"
-                                                            }
+                                                                if current_time < target_time_8:
 
-                                                            if converted_time8am > current_time:
+                                                                    print("It is before 8 AM")
 
-                                                                payload = {
-                                                                    "messaging_product": "whatsapp",
-                                                                    "to": sender_id,
-                                                                    "type": "interactive",
-                                                                    "interactive": {
-                                                                        "type": "list",
-                                                                        "header": {
-                                                                            "type": "text",
-                                                                            "text": "🚍 DEPARTURE TIME"
-                                                                        },
-                                                                        "body": {
-                                                                            "text": (
-                                                                                f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
-                                                                            )
-                                                                        },
-                                                                        "action": {
-                                                                            "button": "DEPARTURE TIME",
-                                                                            "sections": [
-                                                                                {
-                                                                                    "title": "DEPARTURE TIME",
-                                                                                    "rows": [
-                                                                                        {"id": "txq8am", "title": "8 am"},
-                                                                                        {"id": "txq9am", "title": "9 am"},
-                                                                                        {"id": "txq2pm", "title": "2 pm"},
-                                                                                        {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                    ]
-                                                                                }
-                                                                            ]
-                                                                        }
+                                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                                    headers = {
+                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                        "Content-Type": "application/json"
                                                                     }
-                                                                }
 
-                                                                # Send the request to WhatsApp
-                                                                response = requests.post(url, headers=headers, json=payload)
-
-                                                                # Optional: Print result for debugging
-                                                                print(response.status_code)
-                                                                print(response.text)
-
-                                                            else: 
                                                                 
-                                                                current_time = datetime.now().time()
-
-                                                                if converted_time9am > current_time:
+                                                                    
+                                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                                    headers = {
+                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                        "Content-Type": "application/json"
+                                                                    }
 
                                                                     payload = {
                                                                         "messaging_product": "whatsapp",
@@ -506,6 +469,7 @@ def webhook():
                                                                                     {
                                                                                         "title": "DEPARTURE TIME",
                                                                                         "rows": [
+                                                                                            {"id": "txq8am", "title": "8 am"},
                                                                                             {"id": "txq9am", "title": "9 am"},
                                                                                             {"id": "txq2pm", "title": "2 pm"},
                                                                                             {"id": "mainmenu", "title": "Back to Main Menu"},
@@ -523,45 +487,87 @@ def webhook():
                                                                     print(response.status_code)
                                                                     print(response.text)
 
-                                                                else:
+                                                                else: 
 
-
-                                                                    payload = {
-                                                                        "messaging_product": "whatsapp",
-                                                                        "to": sender_id,
-                                                                        "type": "interactive",
-                                                                        "interactive": {
-                                                                            "type": "list",
-                                                                            "header": {
-                                                                                "type": "text",
-                                                                                "text": "🚍 DEPARTURE TIME"
-                                                                            },
-                                                                            "body": {
-                                                                                "text": (
-                                                                                    f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
-                                                                                )
-                                                                            },
-                                                                            "action": {
-                                                                                "button": "DEPARTURE TIME",
-                                                                                "sections": [
-                                                                                    {
-                                                                                        "title": "DEPARTURE TIME",
-                                                                                        "rows": [
-                                                                                            {"id": "txq2pm", "title": "2 pm"},
-                                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                        ]
-                                                                                    }
-                                                                                ]
+                                                                    if current_time < target_time_9:
+                                                                    
+                                                                        payload = {
+                                                                            "messaging_product": "whatsapp",
+                                                                            "to": sender_id,
+                                                                            "type": "interactive",
+                                                                            "interactive": {
+                                                                                "type": "list",
+                                                                                "header": {
+                                                                                    "type": "text",
+                                                                                    "text": "🚍 DEPARTURE TIME"
+                                                                                },
+                                                                                "body": {
+                                                                                    "text": (
+                                                                                        f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                                    )
+                                                                                },
+                                                                                "action": {
+                                                                                    "button": "DEPARTURE TIME",
+                                                                                    "sections": [
+                                                                                        {
+                                                                                            "title": "DEPARTURE TIME",
+                                                                                            "rows": [
+                                                                                                {"id": "txq9am", "title": "9 am"},
+                                                                                                {"id": "txq2pm", "title": "2 pm"},
+                                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }
                                                                             }
                                                                         }
-                                                                    }
 
-                                                                    # Send the request to WhatsApp
-                                                                    response = requests.post(url, headers=headers, json=payload)
+                                                                        # Send the request to WhatsApp
+                                                                        response = requests.post(url, headers=headers, json=payload)
 
-                                                                    # Optional: Print result for debugging
-                                                                    print(response.status_code)
-                                                                    print(response.text)
+                                                                        # Optional: Print result for debugging
+                                                                        print(response.status_code)
+                                                                        print(response.text)
+
+                                                                    else:
+
+
+                                                                        payload = {
+                                                                            "messaging_product": "whatsapp",
+                                                                            "to": sender_id,
+                                                                            "type": "interactive",
+                                                                            "interactive": {
+                                                                                "type": "list",
+                                                                                "header": {
+                                                                                    "type": "text",
+                                                                                    "text": "🚍 DEPARTURE TIME"
+                                                                                },
+                                                                                "body": {
+                                                                                    "text": (
+                                                                                        f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                                    )
+                                                                                },
+                                                                                "action": {
+                                                                                    "button": "DEPARTURE TIME",
+                                                                                    "sections": [
+                                                                                        {
+                                                                                            "title": "DEPARTURE TIME",
+                                                                                            "rows": [
+                                                                                                {"id": "txq2pm", "title": "2 pm"},
+                                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            }
+                                                                        }
+
+                                                                        # Send the request to WhatsApp
+                                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                                        # Optional: Print result for debugging
+                                                                        print(response.status_code)
+                                                                        print(response.text)
 
 
 
