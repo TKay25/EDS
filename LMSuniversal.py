@@ -890,7 +890,7 @@ def webhook():
                                                             today = datetime.now()
                                                             return [
                                                                 {
-                                                                    "id": f"date_{i}_{(today + timedelta(days=i)).strftime('%d %B %Y')}",
+                                                                    "id": f"date_{(today + timedelta(days=i)).strftime('%d %B %Y')}",
                                                                     "title": (today + timedelta(days=i)).strftime("%d %B %Y")
                                                                 }
                                                                 for i in range(10)
