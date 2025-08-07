@@ -395,6 +395,12 @@ def webhook():
 
                                                     try:
 
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
                                                         print(selected_option)
 
                                                         traveldate = selected_option[5:]
@@ -434,14 +440,6 @@ def webhook():
 
                                                                     print("It is before 8 AM")
 
-                                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                                    headers = {
-                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                        "Content-Type": "application/json"
-                                                                    }
-
-                                                                
-                                                                    
                                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                                     headers = {
                                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
