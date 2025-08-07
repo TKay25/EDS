@@ -393,6 +393,8 @@ def webhook():
 
                                                 elif "date_" in selected_option:
 
+                                                    print(selected_option)
+
                                                     traveldate = selected_option[5:]
 
                                                     cursor.execute("""
@@ -888,7 +890,7 @@ def webhook():
                                                             today = datetime.now()
                                                             return [
                                                                 {
-                                                                    "id": f"date_{i}",
+                                                                    "id": f"date_{i}_{(today + timedelta(days=i)).strftime('%d %B %Y')}",
                                                                     "title": (today + timedelta(days=i)).strftime("%d %B %Y")
                                                                 }
                                                                 for i in range(10)
