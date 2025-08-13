@@ -1278,7 +1278,6 @@ def webhook():
 
                                                 if len(digits_only) >= 9:
 
-
                                                     cursor.execute("""
                                                         SELECT id FROM cagwatick2
                                                         WHERE idwanumber = %s
@@ -1308,7 +1307,7 @@ def webhook():
                                                             SET ecocashnum = %s
                                                             WHERE idwanumber = %s 
                                                             AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (digits_only, fare, sender_id[-9:]))
+                                                        """, (digits_only, sender_id[-9:]))
 
                                                         connection.commit()
 
@@ -1371,10 +1370,9 @@ def webhook():
 
 
                                                             cursor.execute("""
-                                                                SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum FROM cagwatick2
+                                                                SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum FROM cagwatick2
                                                                 WHERE idwanumber = %s
-                                                                ORDER BY id DESC
-                                                                LIMIT 1
+                                                                AND (status IS NULL OR TRIM(status) = '')
                                                             """, (sender_id[-9:],))
                                                             result = cursor.fetchone()
 
@@ -1383,8 +1381,9 @@ def webhook():
                                                                 cursor.execute("""
                                                                     UPDATE cagwatick2
                                                                     SET pollurl = %s
-                                                                    WHERE id = %s
-                                                                """, (poll_url, highest_id))
+                                                                    WHERE idwanumber = %s
+                                                                    AND (status IS NULL OR TRIM(status) = '')
+                                                                """, (poll_url, sender_id[-9:]))
 
                                                                 connection.commit()
 
