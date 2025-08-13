@@ -977,15 +977,6 @@ def webhook():
                                                     converted_time = datetime.strptime(timetrav, "%I%p")
 
                                                     cursor.execute("""
-                                                        UPDATE cagwatick2 
-                                                        SET time = %s 
-                                                        WHERE idwanumber = %s 
-                                                        AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (converted_time, sender_id[-9:]))
-
-                                                    connection.commit()
-
-                                                    cursor.execute("""
                                                         SELECT dep, arr, traveldate 
                                                         FROM cagwatick2 
                                                         WHERE idwanumber = %s 
@@ -997,6 +988,54 @@ def webhook():
                                                     dep = result[0]
                                                     arr = result[1]
                                                     traveldate = result[2]
+
+
+                                                    if (arr in ["Harare", "Bulawayo"]) and (dep in ["Harare", "Bulawayo"]):
+                                                        fare = 15
+
+                                                    elif (arr in ["Harare", "Gweru"]) and (dep in ["Harare", "Gweru"]):
+                                                        fare = 10
+
+                                                    elif (arr in ["Harare", "Chegutu"]) and (dep in ["Harare", "Chegutu"]):
+                                                        fare = 3
+
+                                                    elif (arr in ["Harare", "Kadoma"]) and (dep in ["Harare", "Kadoma"]):
+                                                        fare = 5
+
+                                                    elif (arr in ["Harare", "Kwekwe"]) and (dep in ["Harare", "Kwekwe"]):
+                                                        fare = 8
+
+                                                    elif (arr in ["Kadoma", "Kwekwe"]) and (dep in ["Kadoma", "Kwekwe"]):
+                                                        fare = 3
+
+                                                    elif (arr in ["Chegutu", "Kwekwe"]) and (dep in ["Chegutu", "Kwekwe"]):
+                                                        fare = 5
+
+                                                    elif (arr in ["Gweru", "Kwekwe"]) and (dep in ["Gweru", "Kwekwe"]):
+                                                        fare = 2
+
+                                                    elif (arr in ["Gweru", "Bulawayo"]) and (dep in ["Gweru", "Bulawayo"]):
+                                                        fare = 5
+
+                                                    elif (arr in ["Bulawayo", "Kwekwe"]) and (dep in ["Bulawayo", "Kwekwe"]):
+                                                        fare = 7
+
+                                                    elif (arr in ["Kadoma", "Chegutu"]) and (dep in ["Kadoma", "Chegutu"]):
+                                                        fare = 2
+
+                                                    else: 
+                                                        fare = 0.01
+
+
+                                                    cursor.execute("""
+                                                        UPDATE cagwatick2 
+                                                        SET time = %s, fare = %s 
+                                                        WHERE idwanumber = %s 
+                                                        AND (status IS NULL OR TRIM(status) = '')
+                                                        """, (converted_time, fare, sender_id[-9:]))
+
+                                                    connection.commit()
+
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
@@ -1250,7 +1289,7 @@ def webhook():
                                                     if result:
 
                                                         cursor.execute("""
-                                                            SELECT dep, arr, traveldate 
+                                                            SELECT dep, arr, traveldate, fare
                                                             FROM cagwatick2 
                                                             WHERE idwanumber = %s 
                                                             AND (status IS NULL OR TRIM(status) = '')
@@ -1261,47 +1300,12 @@ def webhook():
                                                         dep = resultxx[0]
                                                         arr = resultxx[1]
                                                         traveldate = resultxx[2]
-
-                                                        if (arr in ["Harare", "Bulawayo"]) and (dep in ["Harare", "Bulawayo"]):
-                                                            fare = 15
-
-                                                        elif (arr in ["Harare", "Gweru"]) and (dep in ["Harare", "Gweru"]):
-                                                            fare = 10
-
-                                                        elif (arr in ["Harare", "Chegutu"]) and (dep in ["Harare", "Chegutu"]):
-                                                            fare = 3
-
-                                                        elif (arr in ["Harare", "Kadoma"]) and (dep in ["Harare", "Kadoma"]):
-                                                            fare = 5
-
-                                                        elif (arr in ["Harare", "Kwekwe"]) and (dep in ["Harare", "Kwekwe"]):
-                                                            fare = 8
-
-                                                        elif (arr in ["Kadoma", "Kwekwe"]) and (dep in ["Kadoma", "Kwekwe"]):
-                                                            fare = 3
-
-                                                        elif (arr in ["Chegutu", "Kwekwe"]) and (dep in ["Chegutu", "Kwekwe"]):
-                                                            fare = 5
-
-                                                        elif (arr in ["Gweru", "Kwekwe"]) and (dep in ["Gweru", "Kwekwe"]):
-                                                            fare = 2
-
-                                                        elif (arr in ["Gweru", "Bulawayo"]) and (dep in ["Gweru", "Bulawayo"]):
-                                                            fare = 5
-
-                                                        elif (arr in ["Bulawayo", "Kwekwe"]) and (dep in ["Bulawayo", "Kwekwe"]):
-                                                            fare = 7
-
-                                                        elif (arr in ["Kadoma", "Chegutu"]) and (dep in ["Kadoma", "Chegutu"]):
-                                                            fare = 2
-
-                                                        else: 
-                                                            fare = 0.01
+                                                        fare = resultxx[3]
 
 
                                                         cursor.execute("""
                                                             UPDATE cagwatick2
-                                                            SET ecocashnum = %s, fare = %s
+                                                            SET ecocashnum = %s
                                                             WHERE idwanumber = %s 
                                                             AND (status IS NULL OR TRIM(status) = '')
                                                         """, (digits_only, fare, sender_id[-9:]))
