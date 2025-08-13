@@ -1055,7 +1055,7 @@ def webhook():
                                                             },
                                                             "body": {
                                                                 "text": (
-                                                                    f"You are about to book a ticket with the following details: \n\n Travelling \n *From*: {dep} \n *To*: {arr} \n *On Date*: {traveldate.strftime('%d %B %Y')}.\n\n Kindly provide the EcoCash number that you would like to use to pay USD 15 for your ticket. \n\n eg `0777111234`"
+                                                                    f"You are about to book a ticket with the following details: \n\n Travelling \n *From*: {dep} \n *To*: {arr} \n *On Date*: {traveldate}.\n\n Kindly provide the EcoCash number that you would like to use to pay USD {fare} for your ticket. \n\n eg `0777111234`"
                                                                 )
                                                             },
                                                             "action": {
