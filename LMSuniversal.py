@@ -1347,7 +1347,7 @@ def webhook():
 
                                                             send_whatsapp_messagecc(
                                                                 sender_id, 
-                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5]} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCah PIN to process your USD {result[7]} bus fare payment."
+                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCah PIN to process your USD {result[7]} bus fare payment."
                                                             ) 
 
                                                         else:
