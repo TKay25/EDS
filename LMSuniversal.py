@@ -985,6 +985,18 @@ def webhook():
 
                                                     connection.commit()
 
+                                                    cursor.execute("""
+                                                        SELECT dep, arr, traveldate 
+                                                        FROM cagwatick2 
+                                                        WHERE idwanumber = %s 
+                                                        AND (status IS NULL OR TRIM(status) = '')
+                                                    """, (sender_id[-9:],))
+
+                                                    result = cursor.fetchone()
+
+                                                    dep = result[0]
+                                                    arr = result[1]
+                                                    traveldate = result[2]
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
@@ -1094,139 +1106,6 @@ def webhook():
 
 
 
-
-
-
-
-
-                                                elif selected_option == "ecocash":
-
-
-                                                    cursor.execute("""
-                                                        SELECT id FROM cagwatick
-                                                        WHERE idwanumber = %s
-                                                        ORDER BY id DESC
-                                                        LIMIT 1
-                                                    """, (sender_id[-9:],))
-                                                    result = cursor.fetchone()
-
-                                                    if result:
-                                                        highest_id = result[0]
-                                                        cursor.execute("""
-                                                            UPDATE cagwatick
-                                                            SET paymethod = %s
-                                                            WHERE id = %s
-                                                        """, (selected_option, highest_id))
-
-                                                        connection.commit()
-
-                                                    else:
-                                                        print("No row found for this sender_id.")
-
-
-
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
-                                                    }
-
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "interactive",
-                                                        "interactive": {
-                                                            "type": "list",
-                                                            "header": {
-                                                                "type": "text",
-                                                                "text": "🚍 CAG TOURS MAIN MENU"
-                                                            },
-                                                            "body": {
-                                                                "text": (
-                                                                    "Ok. Kindly provide the EcoCash number that you would like to use to pay. \n\n eg `0777111234`"
-                                                                )
-                                                            },
-                                                            "action": {
-                                                                "button": "📋 CAG TOURS MENU",
-                                                                "sections": [
-                                                                    {
-                                                                        "title": "📦 CAG TOURS SERVICES",
-                                                                        "rows": [
-                                                                            {
-                                                                                "id": "book_ticket",
-                                                                                "title": "Book a Ticket",
-                                                                                "description": "Reserve your seat instantly"
-                                                                            },
-                                                                            {
-                                                                                "id": "routes",
-                                                                                "title": "View Routes",
-                                                                                "description": "Get info regarding our travel routes"
-                                                                            },
-                                                                            {
-                                                                                "id": "parcel_delivery",
-                                                                                "title": "Parcel Delivery",
-                                                                                "description": "Send or collect packages"
-                                                                            },
-                                                                            {
-                                                                                "id": "find_stop",
-                                                                                "title": "Find Bus Stop",
-                                                                                "description": "Locate nearest pick-up point"
-                                                                            },
-                                                                            {
-                                                                                "id": "promotions",
-                                                                                "title": "Promotions & Offers",
-                                                                                "description": "Current discounts & deals"
-                                                                            }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        "title": "🚌 ABOUT CAG TOURS",
-                                                                        "rows": [
-                                                                            {
-                                                                                "id": "know_more",
-                                                                                "title": "Know More",
-                                                                                "description": "Our story, mission & travel experience"
-                                                                            },
-                                                                            {
-                                                                                "id": "why_choose",
-                                                                                "title": "Why Choose Us",
-                                                                                "description": "Luxury, safety & comfort explained"
-                                                                            }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        "title": "🛎 CUSTOMER SERVICE",
-                                                                        "rows": [
-                                                                            {
-                                                                                "id": "faqs",
-                                                                                "title": "❓ FAQs",
-                                                                                "description": "Get answers to common questions"
-                                                                            },
-                                                                            {
-                                                                                "id": "policies",
-                                                                                "title": "Travel Policies",
-                                                                                "description": "Baggage rules, safety, refunds"
-                                                                            },
-                                                                            {
-                                                                                "id": "get_help",
-                                                                                "title": "Get Help",
-                                                                                "description": "Talk to a support agent now"
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            }
-                                                        }
-                                                    }
-
-
-
-                                                    # Send the request to WhatsApp
-                                                    response = requests.post(url, headers=headers, json=payload)
-
-                                                    # Optional: Print result for debugging
-                                                    print(response.status_code)
-                                                    print(response.text)
 
                                                 elif selected_option == "faqs":
                                                     button_id_leave_type = str(selected_option)
@@ -1362,25 +1241,77 @@ def webhook():
 
 
                                                     cursor.execute("""
-                                                        SELECT id FROM cagwatick
+                                                        SELECT id FROM cagwatick2
                                                         WHERE idwanumber = %s
-                                                        ORDER BY id DESC
-                                                        LIMIT 1
+                                                        AND (status IS NULL OR TRIM(status) = '')
                                                     """, (sender_id[-9:],))
                                                     result = cursor.fetchone()
 
                                                     if result:
-                                                        highest_id = result[0]
+
                                                         cursor.execute("""
-                                                            UPDATE cagwatick
-                                                            SET ecocashnum = %s
-                                                            WHERE id = %s
-                                                        """, (digits_only, highest_id))
+                                                            SELECT dep, arr, traveldate 
+                                                            FROM cagwatick2 
+                                                            WHERE idwanumber = %s 
+                                                            AND (status IS NULL OR TRIM(status) = '')
+                                                        """, (sender_id[-9:],))
+
+                                                        resultxx = cursor.fetchone()
+
+                                                        dep = resultxx[0]
+                                                        arr = resultxx[1]
+                                                        traveldate = resultxx[2]
+
+                                                        if (arr in ["Harare", "Bulawayo"]) and (dep in ["Harare", "Bulawayo"]):
+                                                            fare = 15
+
+                                                        elif (arr in ["Harare", "Gweru"]) and (dep in ["Harare", "Gweru"]):
+                                                            fare = 10
+
+                                                        elif (arr in ["Harare", "Chegutu"]) and (dep in ["Harare", "Chegutu"]):
+                                                            fare = 3
+
+                                                        elif (arr in ["Harare", "Kadoma"]) and (dep in ["Harare", "Kadoma"]):
+                                                            fare = 5
+
+                                                        elif (arr in ["Harare", "Kwekwe"]) and (dep in ["Harare", "Kwekwe"]):
+                                                            fare = 8
+
+                                                        elif (arr in ["Kadoma", "Kwekwe"]) and (dep in ["Kadoma", "Kwekwe"]):
+                                                            fare = 3
+
+                                                        elif (arr in ["Chegutu", "Kwekwe"]) and (dep in ["Chegutu", "Kwekwe"]):
+                                                            fare = 5
+
+                                                        elif (arr in ["Gweru", "Kwekwe"]) and (dep in ["Gweru", "Kwekwe"]):
+                                                            fare = 2
+
+                                                        elif (arr in ["Gweru", "Bulawayo"]) and (dep in ["Gweru", "Bulawayo"]):
+                                                            fare = 5
+
+                                                        elif (arr in ["Bulawayo", "Kwekwe"]) and (dep in ["Bulawayo", "Kwekwe"]):
+                                                            fare = 7
+
+                                                        elif (arr in ["Kadoma", "Chegutu"]) and (dep in ["Kadoma", "Chegutu"]):
+                                                            fare = 2
+
+                                                        else: 
+                                                            fare = 0.01
+
+
+                                                        cursor.execute("""
+                                                            UPDATE cagwatick2
+                                                            SET ecocashnum = %s, fare = %s
+                                                            WHERE idwanumber = %s 
+                                                            AND (status IS NULL OR TRIM(status) = '')
+                                                        """, (digits_only, fare, sender_id[-9:]))
 
                                                         connection.commit()
 
                                                     else:
                                                         print("No row found for this sender_id.")
+
+
 
                                                     print("Message contains more than 9 digits after removing spaces")
                                                     # You can now process it as needed, e.g., assume it's an ID number or phone number
@@ -1399,23 +1330,21 @@ def webhook():
 
                                                         payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
 
-                                                        payment.add('Payment for stuff', 0.01)
+                                                        payment.add('Payment for stuff', fare)
 
 
                                                         cursor.execute("""
-                                                            SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum FROM cagwatick
+                                                            SELECT id, idwanumber, dep, arr, time, traveldate, paymethod, fare, ecocashnum FROM cagwatick2
                                                             WHERE idwanumber = %s
-                                                            ORDER BY id DESC
-                                                            LIMIT 1
+                                                            AND (status IS NULL OR TRIM(status) = '')
                                                         """, (sender_id[-9:],))
                                                         result = cursor.fetchone()
 
                                                         if result:
-                                                            highest_id = result[0]
 
                                                             send_whatsapp_messagecc(
                                                                 sender_id, 
-                                                                f"We are initiating your ticket for route `{result[2]}` on bus departing at `{result[3]}`.\n\n You will receive a USSD prompt on `{result[6]}` shortly to provide your EcoCah PIN to process your USD {result[5]} bus fare payment."
+                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5]} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCah PIN to process your USD {result[7]} bus fare payment."
                                                             ) 
 
                                                         else:
@@ -1438,7 +1367,7 @@ def webhook():
 
 
                                                             cursor.execute("""
-                                                                SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum FROM cagwatick
+                                                                SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum FROM cagwatick2
                                                                 WHERE idwanumber = %s
                                                                 ORDER BY id DESC
                                                                 LIMIT 1
@@ -1448,7 +1377,7 @@ def webhook():
                                                             if result:
                                                                 highest_id = result[0]
                                                                 cursor.execute("""
-                                                                    UPDATE cagwatick
+                                                                    UPDATE cagwatick2
                                                                     SET pollurl = %s
                                                                     WHERE id = %s
                                                                 """, (poll_url, highest_id))
@@ -9758,7 +9687,7 @@ def paynow_result():
     #today_date = datetime.now()
 
     cursor.execute("""
-        SELECT id FROM cagwatick
+        SELECT id FROM cagwatick2
         WHERE pollurl = %s
         ORDER BY id DESC
         LIMIT 1
@@ -9768,7 +9697,7 @@ def paynow_result():
     if result:
         highest_id = result[0]
         cursor.execute("""
-            UPDATE cagwatick
+            UPDATE cagwatick2
             SET status = %s, datebought = %s
             WHERE id = %s
         """, (status, today_date, highest_id))
@@ -9779,7 +9708,7 @@ def paynow_result():
         print("No row found for this sender_id.")
 
     cursor.execute("""
-        SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum, pollurl, status, datebought FROM cagwatick
+        SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum, pollurl, status, datebought FROM cagwatick2
         WHERE pollurl = %s
     """, (pollurlex,))
     result = cursor.fetchone()
