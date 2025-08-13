@@ -9687,10 +9687,8 @@ def paynow_result():
     #today_date = datetime.now()
 
     cursor.execute("""
-        SELECT id FROM cagwatick2
+        SELECT id, idwanumber FROM cagwatick2
         WHERE pollurl = %s
-        ORDER BY id DESC
-        LIMIT 1
     """, (pollurlex,))
     result = cursor.fetchone()
 
@@ -9699,8 +9697,8 @@ def paynow_result():
         cursor.execute("""
             UPDATE cagwatick2
             SET status = %s, datebought = %s
-            WHERE id = %s
-        """, (status, today_date, highest_id))
+            WHERE pollurl = %s
+        """, (status, today_date, pollurlex))
 
         connection.commit()
 
@@ -9708,21 +9706,22 @@ def paynow_result():
         print("No row found for this sender_id.")
 
     cursor.execute("""
-        SELECT id, idwanumber, route, time, paymethod, fare, ecocashnum, pollurl, status, datebought FROM cagwatick2
+        SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought FROM cagwatick2
         WHERE pollurl = %s
     """, (pollurlex,))
     result = cursor.fetchone()
 
     if result:
 
-        status = result[8]
+        status = result[9]
         print(status)
 
         if status.lower() == "paid":
 
-            fare = result[5]
-            route = result[2]
-            time = result[3]
+            fare = result[6]
+            dep = result[2]
+            arr = result[3]
+            time = result[4]
             sender_id = result[1]
             seat = random.randint(1, 65)
 
@@ -9744,7 +9743,7 @@ def paynow_result():
                     },
                     "body": {
                         "text": (
-                            f"Great News. You have successfully purchased a `USD {fare}` bus ticket for the `{route}` route. Your bus departs at `{time}` from Harare and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref `{ticketref}`]\n\n Thank you!"
+                            f"Great News. You have successfully purchased a `USD {fare}` bus ticket for your `{dep} to `{arr}` travel route. Your bus departs at `{time}` from {dep} and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref `{ticketref}`]\n\n Thank you!"
                         )
                     },
                     "action": {
@@ -9834,9 +9833,10 @@ def paynow_result():
 
         else:
 
-            fare = result[5]
-            route = result[2]
-            time = result[3]
+            fare = result[6]
+            dep = result[2]
+            arr = result[3]
+            time = result[4]
             sender_id = result[1]
 
 
@@ -9858,7 +9858,7 @@ def paynow_result():
                     },
                     "body": {
                         "text": (
-                            f"Your attempt to purchase USD {fare} bus ticket for the {route} route failed, try again"
+                            f"Your attempt to purchase USD {fare} bus ticket for the {dep} to `{arr}` route failed, try again"
                         )
                     },
                     "action": {
