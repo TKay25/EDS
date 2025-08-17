@@ -628,39 +628,27 @@ def webhook():
                                                     payload = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
-                                                        "type": "interactive",
-                                                        "interactive": {
-                                                            "type": "list",
-                                                            "header": {
-                                                                "type": "text",
-                                                                "text": "🚍 CAG TOURS DEPARTURE"
-                                                            },
-                                                            "body": {
-                                                                "text": (
-                                                                    "Okay. Kindly select your city of departure on the menu below. ⬇️"
-                                                                )
-                                                            },
-                                                            "action": {
-                                                                "button": "CITY OF DEPARTURE",
-                                                                "sections": [
-                                                                    {
-                                                                        "title": "CITY OF DEPARTURE",
-                                                                        "rows": [
-                                                                            {"id": "depxHarare", "title": "Harare"},
-                                                                            {"id": "depxChegutu", "title": "Chegutu"},
-                                                                            {"id": "depxKadoma", "title": "Kadoma"},
-                                                                            {"id": "depxKwekwe", "title": "Kwekwe"},
-                                                                            {"id": "depxGweru", "title": "Gweru"},
-                                                                            {"id": "depxShangani", "title": "Shangani"},
-                                                                            {"id": "depxBulawayo", "title": "Bulawayo"},
-                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            }
+                                                        "type": "template",
+                                                        "template": {
+                                                            "name": "ticket1",   # your template name
+                                                            "language": { "code": "en_US" },
+                                                            "components": [
+                                                                {
+                                                                    "type": "button",
+                                                                    "sub_type": "flow",
+                                                                    "index": "0",
+                                                                    "parameters": [
+                                                                        {
+                                                                            "type": "flow",
+                                                                            "flow": {
+                                                                                "flow_id": "1055555283042703"  # copy from Meta
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
                                                         }
                                                     }
-
 
                                                     # Send the request to WhatsApp
                                                     response = requests.post(url, headers=headers, json=payload)
