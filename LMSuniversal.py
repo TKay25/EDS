@@ -250,7 +250,7 @@ def webhook():
                                             if message.get("type") == "interactive":
                                                 interactive = message.get("interactive", {})
 
-                                                print(interactive.get({"type"}))
+                                                print(interactive.get("type"))
 
 
                                                 if interactive.get("type") == "list_reply":
