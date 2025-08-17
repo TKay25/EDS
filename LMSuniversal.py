@@ -625,6 +625,16 @@ def webhook():
                                                     cursor.execute(delete_query, (sender_id[-9:],))
                                                     connection.commit()
 
+                                                    tturl = "https://graph.facebook.com/v17.0/me?fields=whatsapp_business_account"
+
+                                                    responsen = requests.get(
+                                                        tturl,
+                                                        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"}
+                                                    )
+
+                                                    data = responsen.json()
+                                                    print(data)
+
                                                     flow_api_url = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/flows"
                                                     flow_payload = {
                                                         "recipient": sender_id,
