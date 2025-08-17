@@ -623,7 +623,13 @@ def webhook():
                                                         "type": "template",
                                                         "template": {
                                                             "name": "ticket1",  # your template name
-                                                            "language": {"code": "en"}
+                                                            "language": {"code": "en"},
+                                                            "components": [
+                                                                {
+                                                                    "type": "button",
+                                                                    "index": "0"  # button index in your template
+                                                                }
+                                                            ]
                                                         }
                                                     }
 
