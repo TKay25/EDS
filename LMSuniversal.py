@@ -623,7 +623,7 @@ def webhook():
                                                         "type": "template",
                                                         "template": {
                                                             "name": "ticket1",  # your template name
-                                                            "language": {"code": "en_US"}
+                                                            "language": {"code": "en"}
                                                         }
                                                     }
 
