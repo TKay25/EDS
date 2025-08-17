@@ -281,6 +281,8 @@ def webhook():
 
                                                 elif interactive.get("type") == "nfm_reply":
                                                     response_str = interactive.get("nfm_reply", {}).get("response_json", "{}")
+                                                    selected_option = ""
+                                                    button_id = ""
                                                     
                                                     try:
                                                         form_response = json.loads(response_str)  # convert string → dict
@@ -294,8 +296,8 @@ def webhook():
 
                                                         # Now safely extract fields
                                                         travel_date = form_response.get("screen_0_Date_of_Travel_0")
-                                                        departure = form_response.get("screen_0_City_of_Departure_1")
-                                                        destination = form_response.get("screen_0_Destination_City_2")
+                                                        departure = form_response.get("screen_0_City_of_Departure_1")[2:]
+                                                        destination = form_response.get("screen_0_Destination_City_2")[2:]
                                                         seats = form_response.get("screen_0__of_seats_to_book_3")
                                                         ecocash_number = form_response.get("screen_0_EcoCash_Number__4")
 
@@ -309,10 +311,64 @@ def webhook():
                                                             VALUES (%s, %s)
                                                         """, (sender_id[-9:], departure))
 
+                                                        cursor.execute("""
+                                                            SELECT id FROM cagwatickcustomerdetails WHERE wanumber = %s 
+                                                        """, (sender_id[-9:],))
+
+                                                        result = cursor.fetchone()
+
+                                                        if result:
+                                                            print("proceed to payment")
+
+
+
+
+
+                                                        else: 
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "template",
+                                                                "template": {
+                                                                    "name": "ticketcustomerdetails",  # your template name
+                                                                    "language": {"code": "en"},
+                                                                    "components": [
+                                                                        {
+                                                                            "type": "button",
+                                                                            "index": "0",
+                                                                            "sub_type": "flow",
+                                                                            "parameters": [
+                                                                                {
+                                                                                    "type": "action",
+                                                                                    "action": {
+                                                                                    "flow_token": "unused"
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                                    # button index in your template
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+
+                                                            response = requests.post(
+                                                                f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                                headers={
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                },
+                                                                json=payload
+                                                            ) 
+
+
+
+
                                                     else:
                                                         print("personal details")
 
 
+                                                        print("📋 User submitted personal details flow response:", form_response)
 
 
 
