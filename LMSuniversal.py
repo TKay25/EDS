@@ -627,8 +627,7 @@ def webhook():
                                                             "components": [
                                                                 {
                                                                     "type": "button",
-                                                                    "sub_type": "quick_reply",
-                                                                    "index": "0"  # button index in your template
+                                                                    "sub_type": "quick_reply"
                                                                 }
                                                             ]
                                                         }
