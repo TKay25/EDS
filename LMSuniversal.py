@@ -639,13 +639,6 @@ def webhook():
                                                         data=json.dumps(payload)
                                                     )
 
-
-
-
-
-                                                    # Send the request to WhatsApp
-                                                    response = requests.post(url, headers=headers, json=payload)
-
                                                 elif selected_option == "mainmenu" or button_id == "mainmenu":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
