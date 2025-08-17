@@ -628,7 +628,16 @@ def webhook():
                                                                 {
                                                                     "type": "button",
                                                                     "index": "0",
-                                                                    "sub_type": "url"  # button index in your template
+                                                                    "sub_type": "flow",
+                                                                    "parameters": [
+                                                                        {
+                                                                            "type": "action",
+                                                                            "action": {
+                                                                            "flow_token": "unused"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                            # button index in your template
                                                                 }
                                                             ]
                                                         }
