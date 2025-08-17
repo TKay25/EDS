@@ -348,32 +348,35 @@ def webhook():
                                                                 "to": sender_id,
                                                                 "type": "template",
                                                                 "template": {
-                                                                    "name": "ticket1",   # your template name
-                                                                    "language": { "code": "en_US" },
+                                                                    "name": "ticket1",  # your template name
+                                                                    "language": {"code": "en"},
                                                                     "components": [
                                                                         {
                                                                             "type": "button",
-                                                                            "sub_type": "flow",
                                                                             "index": "0",
+                                                                            "sub_type": "flow",
                                                                             "parameters": [
                                                                                 {
-                                                                                    "type": "flow",
-                                                                                    "flow": {
-                                                                                        "flow_id": "1055555283042703"  # copy from Meta
+                                                                                    "type": "action",
+                                                                                    "action": {
+                                                                                    "flow_token": "unused"
                                                                                     }
                                                                                 }
                                                                             ]
+                                                                                    # button index in your template
                                                                         }
                                                                     ]
                                                                 }
                                                             }
 
-                                                            # Send the request to WhatsApp
-                                                            response = requests.post(url, headers=headers, json=payload)
-
-                                                            # Optional: Print result for debugging
-                                                            print(response.status_code)
-                                                            print(response.text)
+                                                            response = requests.post(
+                                                                f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                                headers={
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                },
+                                                                json=payload
+                                                            )
 
                                                     except Exception as e:
 
