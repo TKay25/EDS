@@ -617,6 +617,24 @@ def webhook():
                                                         "Content-Type": "application/json"
                                                     }'''
 
+                                                    def trigger_flow(sender_id):
+                                                        """
+                                                        Triggers a WhatsApp Flow for a specific user.
+                                                        """
+                                                        FLOW_URL = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/whatsapp_flows"
+
+                                                        flow_payload = {
+                                                            "recipient": sender_id,
+                                                            "flow": 1055555283042703
+                                                        }
+
+                                                        response = requests.post(
+                                                            FLOW_URL,
+                                                            headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+                                                            json=flow_payload
+                                                        )
+
+                                                        print("Flow response:", response.status_code, response.json())
 
                                                     delete_query = """
                                                         DELETE FROM cagwatick2 
@@ -625,28 +643,8 @@ def webhook():
                                                     cursor.execute(delete_query, (sender_id[-9:],))
                                                     connection.commit()
 
-                                                    tturl = "https://graph.facebook.com/v17.0/me?fields=whatsapp_business_account"
+                                                    trigger_flow(sender_id)
 
-                                                    responsen = requests.get(
-                                                        tturl,
-                                                        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"}
-                                                    )
-
-                                                    data = responsen.json()
-                                                    print(data)
-
-                                                    flow_api_url = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/flows"
-                                                    flow_payload = {
-                                                        "recipient": sender_id,
-                                                        "flow": "1055555283042703"  # your flow ID
-                                                    }
-                                                    response = requests.post(
-                                                        flow_api_url,
-                                                        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
-                                                        json=flow_payload
-                                                    )
-                                                    print(response.status_code)
-                                                    print(response.json())
 
 
 
