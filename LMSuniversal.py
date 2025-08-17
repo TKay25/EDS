@@ -611,11 +611,11 @@ def webhook():
 
                                                 elif selected_option == "newtick" or button_id == "newtick":
 
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    '''url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
                                                         "Authorization": f"Bearer {ACCESS_TOKEN}",
                                                         "Content-Type": "application/json"
-                                                    }
+                                                    }'''
 
 
                                                     delete_query = """
@@ -625,21 +625,15 @@ def webhook():
                                                     cursor.execute(delete_query, (sender_id[-9:],))
                                                     connection.commit()
 
+                                                    flow_api_url = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/flows"
                                                     flow_payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "flow",
-                                                        "flow": {
-                                                            "flow_id": "1055555283042703"  # your flow ID
-                                                            }
-                                                        }
+                                                        "recipient": sender_id,
+                                                        "flow": "1055555283042703"  # your flow ID
+                                                    }
                                                     response = requests.post(
-                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
-                                                        headers={
-                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                            "Content-Type": "application/json"
-                                                        },
-                                                        data=json.dumps(flow_payload)
+                                                        flow_api_url,
+                                                        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+                                                        json=flow_payload
                                                     )
                                                     print(response.status_code)
                                                     print(response.json())
