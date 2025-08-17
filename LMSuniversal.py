@@ -257,11 +257,34 @@ def webhook():
                                                     selected_option = interactive.get("list_reply", {}).get("id")
                                                     print(f"📋 User selected: {selected_option}")
                                                     button_id = ""
+                                                    form_response = ""
 
                                                 elif interactive.get("type") == "button_reply":
                                                     button_id = interactive.get("button_reply", {}).get("id")
                                                     print(f"🔘 Button clicked: {button_id}")
                                                     selected_option = ""
+                                                    form_response = ""
+
+                                                elif interactive.get("type") == "nfm_reply":
+                                                    form_response = interactive.get("nfm_reply", {}).get("response_json", {})
+                                                    print("📋 User submitted flow response:", form_response)
+                                                    selected_option = ""
+                                                    button_id = ""
+
+                                                    # Example: extract fields
+                                                    travel_dateggg = form_response.get("screen_0_Date_of_Travel_0")
+                                                    departureggg = form_response.get("screen_0_City_of_Departure_1")
+                                                    destinationggg = form_response.get("screen_0_Destination_City_2")
+                                                    seatsggg = form_response.get("screen_0__of_seats_to_book_3")
+                                                    ecocash_numberggg = form_response.get("screen_0_EcoCash_Number__4")
+
+                                                    print(f"✈️ Travel Date: {travel_dateggg}")
+                                                    print(f"🚍 From: {departureggg} → To: {destinationggg}")
+                                                    print(f"🎟 Seats: {seatsggg}")
+                                                    print(f"💵 EcoCash #: {ecocash_numberggg}")
+
+
+
 
 
 
