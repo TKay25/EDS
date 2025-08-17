@@ -266,22 +266,27 @@ def webhook():
                                                     form_response = ""
 
                                                 elif interactive.get("type") == "nfm_reply":
-                                                    form_response = interactive.get("nfm_reply", {}).get("response_json", {})
+                                                    response_str = interactive.get("nfm_reply", {}).get("response_json", "{}")
+                                                    
+                                                    try:
+                                                        form_response = json.loads(response_str)  # convert string → dict
+                                                    except Exception as e:
+                                                        print("❌ Error parsing nfm_reply response_json:", e)
+                                                        form_response = {}
+
                                                     print("📋 User submitted flow response:", form_response)
-                                                    selected_option = ""
-                                                    button_id = ""
 
-                                                    # Example: extract fields
-                                                    travel_dateggg = form_response.get("screen_0_Date_of_Travel_0")
-                                                    departureggg = form_response.get("screen_0_City_of_Departure_1")
-                                                    destinationggg = form_response.get("screen_0_Destination_City_2")
-                                                    seatsggg = form_response.get("screen_0__of_seats_to_book_3")
-                                                    ecocash_numberggg = form_response.get("screen_0_EcoCash_Number__4")
+                                                    # Now safely extract fields
+                                                    travel_date = form_response.get("screen_0_Date_of_Travel_0")
+                                                    departure = form_response.get("screen_0_City_of_Departure_1")
+                                                    destination = form_response.get("screen_0_Destination_City_2")
+                                                    seats = form_response.get("screen_0__of_seats_to_book_3")
+                                                    ecocash_number = form_response.get("screen_0_EcoCash_Number__4")
 
-                                                    print(f"✈️ Travel Date: {travel_dateggg}")
-                                                    print(f"🚍 From: {departureggg} → To: {destinationggg}")
-                                                    print(f"🎟 Seats: {seatsggg}")
-                                                    print(f"💵 EcoCash #: {ecocash_numberggg}")
+                                                    print(f"✈️ Travel Date: {travel_date}")
+                                                    print(f"🚍 From: {departure} → To: {destination}")
+                                                    print(f"🎟 Seats: {seats}")
+                                                    print(f"💵 EcoCash #: {ecocash_number}")
 
 
 
