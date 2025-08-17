@@ -624,7 +624,7 @@ def webhook():
                                                         "interactive": {
                                                             "type": "flow",
                                                             "flow": {
-                                                                "name": "ticket1",  # The name you registered in WhatsApp Cloud
+                                                                "name": "Message templates_MARKETING_0481d441-1",  # The name you registered in WhatsApp Cloud
                                                                 "language": {"code": "en_US"}
                                                             }
                                                         }
