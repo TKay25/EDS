@@ -626,10 +626,11 @@ def webhook():
                                                     connection.commit()
 
                                                     flow_payload = {
-                                                            "to": sender_id,
-                                                            "type": "flow",
-                                                            "flow": {
-                                                                "flow_id": "1055555283042703"  # your flow ID
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "flow",
+                                                        "flow": {
+                                                            "flow_id": "1055555283042703"  # your flow ID
                                                             }
                                                         }
                                                     response = requests.post(
