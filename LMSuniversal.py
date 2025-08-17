@@ -622,7 +622,7 @@ def webhook():
                                                         "to": sender_id,
                                                         "type": "template",
                                                         "template": {
-                                                            "name": "Message_templates_MARKETING_0481d441-1",  # your template name
+                                                            "name": "ticket1",  # your template name
                                                             "language": {"code": "en_US"}
                                                         }
                                                     }
