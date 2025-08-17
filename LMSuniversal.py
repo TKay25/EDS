@@ -627,14 +627,7 @@ def webhook():
                                                             "components": [
                                                                 {
                                                                     "type": "button",
-                                                                    "sub_type": "quick_reply",
-                                                                    "index": "0",  # button index in your template
-                                                                    "parameters": [
-                                                                        {
-                                                                        "type": "payload",
-                                                                        "payload": "COMPLETE_FLOW_PAYLOAD"
-                                                                        }
-                                                                    ]
+                                                                    "index": "0"  # button index in your template
                                                                 }
                                                             ]
                                                         }
