@@ -437,7 +437,7 @@ def webhook():
                                                                     "to": sender_id,
                                                                     "type": "template",
                                                                     "template": {
-                                                                        "name": "ticket2",  # your template name
+                                                                        "name": "ticketcustomerdetails",  # your template name
                                                                         "language": {"code": "en"},
                                                                         "components": [
                                                                             {
