@@ -625,37 +625,30 @@ def webhook():
                                                     cursor.execute(delete_query, (sender_id[-9:],))
                                                     connection.commit()
 
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "template",
-                                                        "template": {
-                                                            "name": "ticket1",   # your template name
-                                                            "language": { "code": "en_US" },
-                                                            "components": [
-                                                                {
-                                                                    "type": "button",
-                                                                    "sub_type": "flow",
-                                                                    "index": "0",
-                                                                    "parameters": [
-                                                                        {
-                                                                            "type": "flow",
-                                                                            "flow": {
-                                                                                "flow_id": "1055555283042703"  # copy from Meta
-                                                                            }
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            ]
+                                                    flow_payload = {
+                                                            "to": sender_id,
+                                                            "type": "flow",
+                                                            "flow": {
+                                                                "flow_id": "1055555283042703"  # your flow ID
+                                                            }
                                                         }
-                                                    }
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                        headers={
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        },
+                                                        data=json.dumps(flow_payload)
+                                                    )
+                                                    print(response.status_code)
+                                                    print(response.json())
+
+
+
+
 
                                                     # Send the request to WhatsApp
-                                                    response = requests.post(url, headers=headers, json=payload)
-
-                                                    # Optional: Print result for debugging
-                                                    print(response.status_code)
-                                                    print(response.text)
+                                                    #response = requests.post(url, headers=headers, json=payload)
 
                                                 elif selected_option == "mainmenu" or button_id == "mainmenu":
 
