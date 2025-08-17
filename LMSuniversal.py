@@ -617,16 +617,13 @@ def webhook():
                                                         "Content-Type": "application/json"
                                                     }'''
 
-                                                    payload = {
+                                                    template_payload = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
-                                                        "type": "interactive",
-                                                        "interactive": {
-                                                            "type": "flow",
-                                                            "flow": {
-                                                                "name": "Message templates_MARKETING_0481d441-1",  # The name you registered in WhatsApp Cloud
-                                                                "language": {"code": "en_US"}
-                                                            }
+                                                        "type": "template",
+                                                        "template": {
+                                                            "name": "Message_templates_MARKETING_0481d441-1",  # your template name
+                                                            "language": {"code": "en_US"}
                                                         }
                                                     }
 
@@ -636,8 +633,10 @@ def webhook():
                                                             "Authorization": f"Bearer {ACCESS_TOKEN}",
                                                             "Content-Type": "application/json"
                                                         },
-                                                        data=json.dumps(payload)
+                                                        data=json.dumps(template_payload)
                                                     )
+
+                                                    print("Template response:", response.status_code, response.json())
 
                                                 elif selected_option == "mainmenu" or button_id == "mainmenu":
 
