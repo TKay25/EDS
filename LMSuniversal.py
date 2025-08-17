@@ -617,41 +617,34 @@ def webhook():
                                                         "Content-Type": "application/json"
                                                     }'''
 
-                                                    def trigger_flow(sender_id):
-                                                        """
-                                                        Triggers a WhatsApp Flow for a specific user.
-                                                        """
-                                                        FLOW_URL = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/whatsapp_flows"
-
-                                                        flow_payload = {
-                                                            "recipient": sender_id,
-                                                            "flow": 1055555283042703
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "flow",
+                                                            "flow": {
+                                                                "name": "ticket1",  # The name you registered in WhatsApp Cloud
+                                                                "language": {"code": "en_US"}
+                                                            }
                                                         }
+                                                    }
 
-                                                        response = requests.post(
-                                                            FLOW_URL,
-                                                            headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
-                                                            json=flow_payload
-                                                        )
-
-                                                        print("Flow response:", response.status_code, response.json())
-
-                                                    delete_query = """
-                                                        DELETE FROM cagwatick2 
-                                                        WHERE idwanumber = %s AND (status IS NULL OR status = '')
-                                                    """
-                                                    cursor.execute(delete_query, (sender_id[-9:],))
-                                                    connection.commit()
-
-                                                    trigger_flow(sender_id)
-
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                        headers={
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        },
+                                                        data=json.dumps(payload)
+                                                    )
 
 
 
 
 
                                                     # Send the request to WhatsApp
-                                                    #response = requests.post(url, headers=headers, json=payload)
+                                                    response = requests.post(url, headers=headers, json=payload)
 
                                                 elif selected_option == "mainmenu" or button_id == "mainmenu":
 
