@@ -617,7 +617,7 @@ def webhook():
                                                         "Content-Type": "application/json"
                                                     }'''
 
-                                                    template_payload = {
+                                                    payload = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
                                                         "type": "template",
@@ -633,7 +633,7 @@ def webhook():
                                                             "Authorization": f"Bearer {ACCESS_TOKEN}",
                                                             "Content-Type": "application/json"
                                                         },
-                                                        data=json.dumps(template_payload)
+                                                        json=payload
                                                     )
 
                                                     print("Template response:", response.status_code, response.json())
