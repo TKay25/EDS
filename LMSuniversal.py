@@ -294,37 +294,54 @@ def webhook():
 
                                                     if "screen_0_Date_of_Travel_0" in form_response:
 
+                                                        '''id SERIAL PRIMARY KEY,
+                                                        idwanumber INT,
+                                                        dep VARCHAR (100),
+                                                        arr VARCHAR (100),
+                                                        time VARCHAR (100),
+                                                        paymethod VARCHAR (100),    
+                                                        fare VARCHAR (100),
+                                                        ecocashnum INT,'''
+
                                                         # Now safely extract fields
                                                         travel_date = form_response.get("screen_0_Date_of_Travel_0")
                                                         departure = form_response.get("screen_0_City_of_Departure_1")[2:]
                                                         destination = form_response.get("screen_0_Destination_City_2")[2:]
                                                         seats = form_response.get("screen_0__of_seats_to_book_3")
                                                         ecocash_number = form_response.get("screen_0_EcoCash_Number__4")
+                                                        paymethod = "EcoCash"
 
                                                         print(f"✈️ Travel Date: {travel_date}")
                                                         print(f"🚍 From: {departure} → To: {destination}")
                                                         print(f"🎟 Seats: {seats}")
                                                         print(f"💵 EcoCash #: {ecocash_number}")
 
-                                                        cursor.execute("""
-                                                            INSERT INTO cagwatick2 (idwanumber, dep)
-                                                            VALUES (%s, %s)
-                                                        """, (sender_id[-9:], departure))
+                                                        if departure == destination:
 
-                                                        cursor.execute("""
-                                                            SELECT id FROM cagwatickcustomerdetails WHERE wanumber = %s 
-                                                        """, (sender_id[-9:],))
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 CAG TOURS DESTINATION"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "Sorry, city of departure cannot be the same as destination city. Kindly enter valid departure and destination cities. ⬇️"
+                                                                        )
+                                                                    }
+                                                                }
+                                                            }
 
-                                                        result = cursor.fetchone()
+                                                            response = requests.post(url, headers=headers, json=payload)
 
-                                                        if result:
-                                                            print("proceed to payment")
+                                                            # Optional: Print result for debugging
+                                                            print(response.status_code)
+                                                            print(response.text)
 
-
-
-
-
-                                                        else: 
 
                                                             payload = {
                                                                 "messaging_product": "whatsapp",
@@ -360,6 +377,230 @@ def webhook():
                                                                 },
                                                                 json=payload
                                                             ) 
+
+
+                                                        else:                                                         
+                                                            
+                                                            if (destination in ["Harare", "Bulawayo"]) and (departure in ["Harare", "Bulawayo"]):
+                                                                fare = 15
+
+                                                            elif (destination in ["Harare", "Gweru"]) and (departure in ["Harare", "Gweru"]):
+                                                                fare = 10
+
+                                                            elif (destination in ["Harare", "Chegutu"]) and (departure in ["Harare", "Chegutu"]):
+                                                                fare = 3
+
+                                                            elif (destination in ["Harare", "Kadoma"]) and (departure in ["Harare", "Kadoma"]):
+                                                                fare = 5
+
+                                                            elif (destination in ["Harare", "Kwekwe"]) and (departure in ["Harare", "Kwekwe"]):
+                                                                fare = 8
+
+                                                            elif (destination in ["Kadoma", "Kwekwe"]) and (departure in ["Kadoma", "Kwekwe"]):
+                                                                fare = 3
+
+                                                            elif (destination in ["Chegutu", "Kwekwe"]) and (departure in ["Chegutu", "Kwekwe"]):
+                                                                fare = 5
+
+                                                            elif (destination in ["Gweru", "Kwekwe"]) and (departure in ["Gweru", "Kwekwe"]):
+                                                                fare = 2
+
+                                                            elif (destination in ["Gweru", "Bulawayo"]) and (departure in ["Gweru", "Bulawayo"]):
+                                                                fare = 5
+
+                                                            elif (destination in ["Bulawayo", "Kwekwe"]) and (departure in ["Bulawayo", "Kwekwe"]):
+                                                                fare = 7
+
+                                                            elif (destination in ["Kadoma", "Chegutu"]) and (departure in ["Kadoma", "Chegutu"]):
+                                                                fare = 2
+
+                                                            else: 
+                                                                fare = 0.01
+
+                                                            cursor.execute("""
+                                                            INSERT INTO cagwatick2 (idwanumber, dep, arr, seats, fare, ecocashnum, paymenthod)
+                                                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                                            """, (sender_id[-9:], departure, destination, seats, fare, ecocash_number, paymethod))
+
+                                                            connection.commit()
+
+
+                                                            cursor.execute("""
+                                                                SELECT id FROM cagwatickcustomerdetails WHERE wanumber = %s 
+                                                            """, (sender_id[-9:],))
+
+                                                            result = cursor.fetchone()
+
+                                                            if result:
+
+                                                                print("proceed to payment")
+
+                                                                if departure == "Harare":
+
+                                                                    payload = {
+                                                                        "messaging_product": "whatsapp",
+                                                                        "to": sender_id,
+                                                                        "type": "interactive",
+                                                                        "interactive": {
+                                                                            "type": "list",
+                                                                            "header": {
+                                                                                "type": "text",
+                                                                                "text": "🚍 DEPARTURE TIME"
+                                                                            },
+                                                                            "body": {
+                                                                                "text": (
+                                                                                    f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                                )
+                                                                            },
+                                                                            "action": {
+                                                                                "button": "DEPARTURE TIME",
+                                                                                "sections": [
+                                                                                    {
+                                                                                        "title": "DEPARTURE TIME",
+                                                                                        "rows": [
+                                                                                            {"id": "txq9am", "title": "9 am"},
+                                                                                            {"id": "txq11am", "title": "11 am"},
+                                                                                            {"id": "txq1pm", "title": "1 pm"},
+                                                                                            {"id": "txq2pm", "title": "2 pm"},
+                                                                                            {"id": "txq2pm2", "title": "2.30 pm"},
+                                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    # Send the request to WhatsApp
+                                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                                    # Optional: Print result for debugging
+                                                                    print(response.status_code)
+                                                                    print(response.text)
+
+                                                                elif departure == "Bulawayo":
+
+                                                                    payload = {
+                                                                        "messaging_product": "whatsapp",
+                                                                        "to": sender_id,
+                                                                        "type": "interactive",
+                                                                        "interactive": {
+                                                                            "type": "list",
+                                                                            "header": {
+                                                                                "type": "text",
+                                                                                "text": "🚍 DEPARTURE TIME"
+                                                                            },
+                                                                            "body": {
+                                                                                "text": (
+                                                                                    f"Okay. Kindly select the departure time from Bulawayo for which you want to book a ticket on the menu below. ⬇️"
+                                                                                )
+                                                                            },
+                                                                            "action": {
+                                                                                "button": "DEPARTURE TIME",
+                                                                                "sections": [
+                                                                                    {
+                                                                                        "title": "DEPARTURE TIME",
+                                                                                        "rows": [
+                                                                                            {"id": "txq9am", "title": "9 am"},
+                                                                                            {"id": "txq11am", "title": "11 am"},
+                                                                                            {"id": "txq1230pm", "title": "12.30 pm"},
+                                                                                            {"id": "txq130pm", "title": "1.30 pm"},
+                                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    # Send the request to WhatsApp
+                                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                                    # Optional: Print result for debugging
+                                                                    print(response.status_code)
+                                                                    print(response.text)
+
+
+                                                                elif departure == "Kadoma" and destination == "Chegutu":
+
+                                                                    payload = {
+                                                                        "messaging_product": "whatsapp",
+                                                                        "to": sender_id,
+                                                                        "type": "interactive",
+                                                                        "interactive": {
+                                                                            "type": "list",
+                                                                            "header": {
+                                                                                "type": "text",
+                                                                                "text": "🚍 DEPARTURE TIME"
+                                                                            },
+                                                                            "body": {
+                                                                                "text": (
+                                                                                    f"Okay. Kindly select the departure time from Kadoma for which you want to book a ticket on the menu below. ⬇️"
+                                                                                )
+                                                                            },
+                                                                            "action": {
+                                                                                "button": "DEPARTURE TIME",
+                                                                                "sections": [
+                                                                                    {
+                                                                                        "title": "DEPARTURE TIME",
+                                                                                        "rows": [
+                                                                                            {"id": "txq1.25pm", "title": "1.25 pm"},
+                                                                                            {"id": "txq3.25pm", "title": "3.25 pm"},
+                                                                                            {"id": "txq4.55pm", "title": "4.55 pm"},
+                                                                                            {"id": "txq5.55pm", "title": "5.55 pm"},
+                                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    # Send the request to WhatsApp
+                                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                                    # Optional: Print result for debugging
+                                                                    print(response.status_code)
+                                                                    print(response.text)
+
+
+
+                                                            else: 
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "template",
+                                                                    "template": {
+                                                                        "name": "ticketcustomerdetails",  # your template name
+                                                                        "language": {"code": "en"},
+                                                                        "components": [
+                                                                            {
+                                                                                "type": "button",
+                                                                                "index": "0",
+                                                                                "sub_type": "flow",
+                                                                                "parameters": [
+                                                                                    {
+                                                                                        "type": "action",
+                                                                                        "action": {
+                                                                                        "flow_token": "unused"
+                                                                                        }
+                                                                                    }
+                                                                                ]
+                                                                                        # button index in your template
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+
+                                                                response = requests.post(
+                                                                    f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                                    headers={
+                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                        "Content-Type": "application/json"
+                                                                    },
+                                                                    json=payload
+                                                                ) 
 
 
 
