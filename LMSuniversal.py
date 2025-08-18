@@ -418,7 +418,7 @@ def webhook():
 
                                                             cursor.execute("""
                                                             INSERT INTO cagwatick2 (idwanumber, dep, arr, traveldate, seats, fare, ecocashnum, paymethod)
-                                                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                                                             """, (sender_id[-9:], departure, destination, travel_date, seats, fare, ecocash_number, paymethod))
 
                                                             connection.commit()
