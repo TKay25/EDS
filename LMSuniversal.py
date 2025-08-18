@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS cagwatickcustomerdetails (
 cursor.execute(create_table_query2)
 connection.commit()
 
-'''cursor.execute("""
-    ALTER TABLE cagwatick2 ADD COLUMN seats INT
+cursor.execute("""
+    ALTER TABLE cagwatickcustomerdetails ADD COLUMN gender VARCHAR (100)
 """)
-connection.commit()'''
+connection.commit()
 
 
 drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
@@ -611,8 +611,18 @@ def webhook():
 
                                                         print("📋 User submitted personal details flow response:", form_response)
 
+                                                        firstname = form_response.get("screen_0_First_Name_0")
+                                                        surname = form_response.get("screen_0_Surname_1")
+                                                        dobuser = form_response.get("screen_0_Date_of_Birth_2")
+                                                        natid = form_response.get("screen_0_National_ID_Number_3")
+                                                        gender = form_response.get("screen_0_Gender_4")[2:]
 
+                                                        cursor.execute("""
+                                                        INSERT INTO cagwatickcustomerdetails (wanumber, firstname, surname, nationalidno, dob, gender)
+                                                        VALUES (%s, %s, %s, %s, %s, %s)
+                                                        """, (sender_id[-9:], firstname, surname, natid, dobuser, gender))
 
+                                                        connection.commit()
 
 
 
