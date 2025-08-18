@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS cagwatickcustomerdetails (
 cursor.execute(create_table_query2)
 connection.commit()
 
-'''cursor.execute("""
-    ALTER TABLE cagwatick2 ADD COLUMN traveldate date
+cursor.execute("""
+    ALTER TABLE cagwatick2 ADD COLUMN seats INT
 """)
-connection.commit()'''
+connection.commit()
 
 
 drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
