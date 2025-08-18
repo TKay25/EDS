@@ -461,7 +461,7 @@ def webhook():
                                                                                             {"id": "txq11am", "title": "11 am"},
                                                                                             {"id": "txq1pm", "title": "1 pm"},
                                                                                             {"id": "txq2pm", "title": "2 pm"},
-                                                                                            {"id": "txq2pm2", "title": "2.30 pm"},
+                                                                                            {"id": "txq2.30pm", "title": "2.30 pm"},
                                                                                             {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                                         ]
                                                                                     }
@@ -672,7 +672,7 @@ def webhook():
                                                                                             {"id": "txq11am", "title": "11 am"},
                                                                                             {"id": "txq1pm", "title": "1 pm"},
                                                                                             {"id": "txq2pm", "title": "2 pm"},
-                                                                                            {"id": "txq2pm2", "title": "2.30 pm"},
+                                                                                            {"id": "txq2.30pm", "title": "2.30 pm"},
                                                                                             {"id": "mainmenu", "title": "Back to Main Menu"},
                                                                                         ]
                                                                                     }
