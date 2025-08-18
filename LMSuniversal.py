@@ -381,7 +381,7 @@ def webhook():
                                                         else:                                                         
                                                             
                                                             if (destination in ["Harare", "Bulawayo"]) and (departure in ["Harare", "Bulawayo"]):
-                                                                fare = 15 * int(seats)
+                                                                fare = 0.01 * int(seats)
 
                                                             elif (destination in ["Harare", "Gweru"]) and (departure in ["Harare", "Gweru"]):
                                                                 fare = 10 * int(seats)
@@ -1636,7 +1636,7 @@ def webhook():
 
                                                             send_whatsapp_messagecc(
                                                                 sender_id, 
-                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCah PIN to process your USD {result[7]} bus fare payment."
+                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCash PIN to process your USD {result[7]} bus fare payment."
                                                             ) 
 
                                                         else:
@@ -1896,7 +1896,7 @@ def webhook():
 
                                                             send_whatsapp_messagecc(
                                                                 sender_id, 
-                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCah PIN to process your USD {result[7]} bus fare payment."
+                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCash PIN to process your USD {result[7]} bus fare payment."
                                                             ) 
 
                                                         else:
