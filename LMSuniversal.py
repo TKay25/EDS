@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS cagwatickcustomerdetails (
 cursor.execute(create_table_query2)
 connection.commit()
 
-cursor.execute("""
+'''cursor.execute("""
     ALTER TABLE cagwatickcustomerdetails ADD COLUMN gender VARCHAR (100)
 """)
-connection.commit()
+connection.commit()'''
 
 
 drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
