@@ -418,7 +418,7 @@ def webhook():
                                                                 fare = 0.01
 
                                                             cursor.execute("""
-                                                            INSERT INTO cagwatick2 (idwanumber, dep, arr, seats, fare, ecocashnum, paymenthod)
+                                                            INSERT INTO cagwatick2 (idwanumber, dep, arr, seats, fare, ecocashnum, paymethod)
                                                             VALUES (%s, %s, %s, %s, %s, %s, %s)
                                                             """, (sender_id[-9:], departure, destination, seats, fare, ecocash_number, paymethod))
 
@@ -656,7 +656,7 @@ def webhook():
                                                                 dep = row[0]
                                                                 arr = row[1]
                                                                 time_ = row[2]
-                                                                paymenthod = row[3]
+                                                                paymethod = row[3]
                                                                 ecocashnum = row[4]
                                                                 pollurl = row[5]'''
                                                                 
