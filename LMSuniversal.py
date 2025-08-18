@@ -1624,12 +1624,12 @@ def webhook():
 
                                                         payment.add('Payment for stuff', fare)
 
-
                                                         cursor.execute("""
                                                             SELECT id, idwanumber, dep, arr, time, traveldate, paymethod, fare, ecocashnum FROM cagwatick2
                                                             WHERE idwanumber = %s
                                                             AND (status IS NULL OR TRIM(status) = '')
                                                         """, (sender_id[-9:],))
+
                                                         result = cursor.fetchone()
 
                                                         if result:
@@ -1906,8 +1906,7 @@ def webhook():
                                                             print("No row found for this sender_id.")
 
 
-
-                                                        response = paynow.send_mobile(payment, digits_only, 'ecocash')
+                                                        response = paynow.send_mobile(payment, f"0{result[8]}", 'ecocash')
 
                                                         print("pending")
 
