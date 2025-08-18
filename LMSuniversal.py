@@ -10258,6 +10258,15 @@ def paynow_result():
     """, (pollurlex,))
     result = cursor.fetchone()
 
+    cursor.execute("""
+        SELECT firstname, surname, wanumber FROM cagwatickcustomerdetails
+        WHERE wanumber = %s
+    """, (sender_id[-9:],))
+    result55 = cursor.fetchone()
+
+    firstname55 = result55[0]
+    surname55 = result55[1]
+
     if result:
 
         status = result[9]
@@ -10290,7 +10299,7 @@ def paynow_result():
                     },
                     "body": {
                         "text": (
-                            f"Great News. You have successfully purchased a `USD {fare}` bus ticket for your `{dep} to `{arr}` travel route. Your bus departs at `{time}` from {dep} and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref `{ticketref}`]\n\n Thank you!"
+                            f"Great News {firstname55} {surname55}. You have successfully purchased a `USD {fare}` bus ticket for your `{dep} to `{arr}` travel route. Your bus departs at `{time}` from {dep} and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref `{ticketref}`]\n\n Thank you!"
                         )
                     },
                     "action": {
