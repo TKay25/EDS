@@ -1481,10 +1481,10 @@ def webhook():
 
                                                     timetrav = selected_option[3:]
 
-                                                    converted_time = datetime.strptime(timetrav, "%I%p")
+                                                    #converted_time = datetime.strptime(timetrav, "%I%p")
 
                                                     cursor.execute("""
-                                                        SELECT dep, arr, traveldate 
+                                                        SELECT dep, arr, traveldate, fare 
                                                         FROM cagwatick2 
                                                         WHERE idwanumber = %s 
                                                         AND (status IS NULL OR TRIM(status) = '')
@@ -1495,51 +1495,15 @@ def webhook():
                                                     dep = result[0]
                                                     arr = result[1]
                                                     traveldate = result[2]
-
-
-                                                    if (arr in ["Harare", "Bulawayo"]) and (dep in ["Harare", "Bulawayo"]):
-                                                        fare = 15
-
-                                                    elif (arr in ["Harare", "Gweru"]) and (dep in ["Harare", "Gweru"]):
-                                                        fare = 10
-
-                                                    elif (arr in ["Harare", "Chegutu"]) and (dep in ["Harare", "Chegutu"]):
-                                                        fare = 3
-
-                                                    elif (arr in ["Harare", "Kadoma"]) and (dep in ["Harare", "Kadoma"]):
-                                                        fare = 5
-
-                                                    elif (arr in ["Harare", "Kwekwe"]) and (dep in ["Harare", "Kwekwe"]):
-                                                        fare = 8
-
-                                                    elif (arr in ["Kadoma", "Kwekwe"]) and (dep in ["Kadoma", "Kwekwe"]):
-                                                        fare = 3
-
-                                                    elif (arr in ["Chegutu", "Kwekwe"]) and (dep in ["Chegutu", "Kwekwe"]):
-                                                        fare = 5
-
-                                                    elif (arr in ["Gweru", "Kwekwe"]) and (dep in ["Gweru", "Kwekwe"]):
-                                                        fare = 2
-
-                                                    elif (arr in ["Gweru", "Bulawayo"]) and (dep in ["Gweru", "Bulawayo"]):
-                                                        fare = 5
-
-                                                    elif (arr in ["Bulawayo", "Kwekwe"]) and (dep in ["Bulawayo", "Kwekwe"]):
-                                                        fare = 7
-
-                                                    elif (arr in ["Kadoma", "Chegutu"]) and (dep in ["Kadoma", "Chegutu"]):
-                                                        fare = 2
-
-                                                    else: 
-                                                        fare = 0.01
+                                                    fare = result[3]
 
 
                                                     cursor.execute("""
                                                         UPDATE cagwatick2 
-                                                        SET time = %s, fare = %s 
+                                                        SET time = %s 
                                                         WHERE idwanumber = %s 
                                                         AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (converted_time, fare, sender_id[-9:]))
+                                                        """, (timetrav, sender_id[-9:]))
 
                                                     connection.commit()
 
@@ -1562,7 +1526,7 @@ def webhook():
                                                             },
                                                             "body": {
                                                                 "text": (
-                                                                    f"You are about to book a ticket with the following details: \n\n Travelling \n *From*: {dep} \n *To*: {arr} \n *On Date*: {traveldate}.\n\n Kindly provide the EcoCash number that you would like to use to pay USD {fare} for your ticket. \n\n eg `0777111234`"
+                                                                    f"You are about to book a ticket with the following details: \n\n Travelling \n *From*: {dep} \n *To*: {arr} \n *On Date*: {traveldate}."
                                                                 )
                                                             },
                                                             "action": {
@@ -1648,7 +1612,90 @@ def webhook():
                                                     print(response.text)
 
 
+                                                    try:
+                                                    
+                                                        paynow = Paynow('20625',
+                                                                        'f6559511-ab13-45b0-b75b-07b36890f6a6',
+                                                                        'https://eds-dfym.onrender.com/paynow/return',
+                                                                        'https://eds-dfym.onrender.com/paynow/result/update'
+                                                                        )
+                                                        
+                                                        print(paynow)
 
+                                                        payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
+
+                                                        payment.add('Payment for stuff', fare)
+
+
+                                                        cursor.execute("""
+                                                            SELECT id, idwanumber, dep, arr, time, traveldate, paymethod, fare, ecocashnum FROM cagwatick2
+                                                            WHERE idwanumber = %s
+                                                            AND (status IS NULL OR TRIM(status) = '')
+                                                        """, (sender_id[-9:],))
+                                                        result = cursor.fetchone()
+
+                                                        if result:
+
+                                                            send_whatsapp_messagecc(
+                                                                sender_id, 
+                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCah PIN to process your USD {result[7]} bus fare payment."
+                                                            ) 
+
+                                                        else:
+                                                            print("No row found for this sender_id.")
+
+
+
+                                                        response = paynow.send_mobile(payment, digits_only, 'ecocash')
+
+                                                        print("pending")
+
+                                    
+
+                                                        if(response.success):
+
+                                                            print('success')
+                                                            poll_url = response.poll_url
+
+                                                            print("Poll Url: ", poll_url)
+
+
+                                                            cursor.execute("""
+                                                                SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum FROM cagwatick2
+                                                                WHERE idwanumber = %s
+                                                                AND (status IS NULL OR TRIM(status) = '')
+                                                            """, (sender_id[-9:],))
+                                                            result = cursor.fetchone()
+
+                                                            if result:
+                                                                highest_id = result[0]
+                                                                cursor.execute("""
+                                                                    UPDATE cagwatick2
+                                                                    SET pollurl = %s
+                                                                    WHERE idwanumber = %s
+                                                                    AND (status IS NULL OR TRIM(status) = '')
+                                                                """, (poll_url, sender_id[-9:]))
+
+                                                                connection.commit()
+
+                                                            else:
+                                                                print("No row found for this sender_id.")
+
+                                                            status = paynow.check_transaction_status(poll_url)
+
+                                                            time.sleep(20)
+
+                                                            print("Payment Status: ", status.status)
+
+
+                                                        return 'OK', 200
+
+
+                                                
+                                                    except Exception as e:
+                                                        print(e)
+
+                                                    return 'OK', 200
 
 
 
