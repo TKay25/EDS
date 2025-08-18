@@ -280,6 +280,14 @@ def webhook():
                                                     form_response = ""
 
                                                 elif interactive.get("type") == "nfm_reply":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+
                                                     response_str = interactive.get("nfm_reply", {}).get("response_json", "{}")
                                                     selected_option = ""
                                                     button_id = ""
@@ -607,7 +615,6 @@ def webhook():
 
                                                     else:
                                                         print("personal details")
-
 
                                                         print("📋 User submitted personal details flow response:", form_response)
 
