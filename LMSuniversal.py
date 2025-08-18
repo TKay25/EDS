@@ -10258,10 +10258,12 @@ def paynow_result():
     """, (pollurlex,))
     result = cursor.fetchone()
 
+    number = result[1]
+
     cursor.execute("""
         SELECT firstname, surname, wanumber FROM cagwatickcustomerdetails
         WHERE wanumber = %s
-    """, (sender_id[-9:],))
+    """, (number,))
     result55 = cursor.fetchone()
 
     firstname55 = result55[0]
