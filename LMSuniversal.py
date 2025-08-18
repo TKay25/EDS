@@ -1141,6 +1141,13 @@ def webhook():
                                                         "Content-Type": "application/json"
                                                     }'''
 
+                                                    cursor.execute("""
+                                                        DELETE FROM cagwatick2
+                                                        WHERE idwanumber = %s
+                                                        AND (status IS NULL OR TRIM(status) = '')
+                                                    """, (sender_id[-9:],))
+                                                    connection.commit()
+
                                                     payload = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
