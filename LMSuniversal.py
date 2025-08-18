@@ -10221,9 +10221,9 @@ def paynow_result():
     today_date = datetime.now().strftime('%d %B %Y')
     applied_date = datetime.now().strftime('%Y-%m-%d')
 
-    VERIFY_TOKENcc = "1412803596375322"
-    ACCESS_TOKEN = "EAAUppTRo5q4BPATlxuMt4ZANFhgbyrtQI7iB1bR5FAI7K5Rv9yolg1OEwgt5J8xRJKKkTc2F9lHutvNcDXyHPEZAoGEuMQlv1THfAGRuTtZBEzmwbJG04f1sLxEAUFze09rHvmtuqa50ccT6ik2nm7cfcMOI8vn6id1PZBId5fMDf2WNZASQFIBIZBX6UIyTr3vVkaaTvIwO1ZB1ZAnQS6LUMtC6b14MZBeisR6XvHIvZBSSooWwZDZD"
-    PHONE_NUMBER_IDcc = "618334968023252"
+    VERIFY_TOKENcc = "2498066657227806"
+    ACCESS_TOKEN = "EAAbJqZCGQ6J8BPAC5KMIrelyOpBlffUImqSf7fENf8ClprXBbcIBrXRpEIC1OscUiBedZC6RjO4bjmoqmqx0H1R2FcuAa3R1ZAwhZBZBCgeVyoTrYDXst1K6VoZAMYYN9OREl5p8ZCNYat0x8zk8Xvk74BTTjQFBnnxOJe9VxHjO95o8HmX4cC87s9ZAYb27f1ECvAZDZD"
+    PHONE_NUMBER_IDcc = "773396019188136"
 
     data = request.form.to_dict()
     print("Paynow Result Webhook:", data)
