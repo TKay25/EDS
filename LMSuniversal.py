@@ -302,15 +302,6 @@ def webhook():
 
                                                     if "screen_0_Date_of_Travel_0" in form_response:
 
-                                                        '''id SERIAL PRIMARY KEY,
-                                                        idwanumber INT,
-                                                        dep VARCHAR (100),
-                                                        arr VARCHAR (100),
-                                                        time VARCHAR (100),
-                                                        paymethod VARCHAR (100),    
-                                                        fare VARCHAR (100),
-                                                        ecocashnum INT,'''
-
                                                         # Now safely extract fields
                                                         travel_date = form_response.get("screen_0_Date_of_Travel_0")
                                                         departure = form_response.get("screen_0_City_of_Departure_1")[2:]
@@ -426,9 +417,9 @@ def webhook():
                                                                 fare = 0.01
 
                                                             cursor.execute("""
-                                                            INSERT INTO cagwatick2 (idwanumber, dep, arr, seats, fare, ecocashnum, paymethod)
+                                                            INSERT INTO cagwatick2 (idwanumber, dep, arr, traveldate, seats, fare, ecocashnum, paymethod)
                                                             VALUES (%s, %s, %s, %s, %s, %s, %s)
-                                                            """, (sender_id[-9:], departure, destination, seats, fare, ecocash_number, paymethod))
+                                                            """, (sender_id[-9:], departure, destination, travel_date, seats, fare, ecocash_number, paymethod))
 
                                                             connection.commit()
 
