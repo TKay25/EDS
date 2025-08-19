@@ -1772,7 +1772,7 @@ def webhook():
                                                         sections) 
 
 
-                                                elif selected_option == "routes":
+                                                elif selected_option == "Routes":
                                                     button_id_leave_type = str(selected_option)
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
