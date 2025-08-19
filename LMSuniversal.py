@@ -10077,17 +10077,6 @@ def paynow_result():
 
                     print("past pdf write")
 
-                    filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
-                    script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of current .py file
-                    file_path = os.path.join(script_dir, filename)
-                    
-                    with open(file_path, "wb") as f:
-                        f.write(pdf_bytes)
-                    
-                    print(f"📄 PDF saved locally at: {file_path}")
-
-
-
                     return pdf_bytes
 
                 
@@ -10100,10 +10089,14 @@ def paynow_result():
                     pdf_file = io.BytesIO(pdf_bytes)  # convert bytes to file-like object
                     pdf_file.seek(0)
 
+                    print("past bytes")
+
                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/media"
                     headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
                     files = {"file": (filename, pdf_file, "application/pdf")}
                     data = {"messaging_product": "whatsapp", "type": "document"}
+
+                    print("past data")
 
                     response = requests.post(url, headers=headers, files=files, data=data)
                     response.raise_for_status()
