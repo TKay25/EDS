@@ -10318,24 +10318,19 @@ def paynow_result():
             
 
             def upload_pdf_to_whatsapp(pdf_bytes):
-
-                filename=f"{firstname55} {surname55} CAG Tours ticket {tickid} {dep} to {arr}.pdf"
-                pdf_file = io.BytesIO(pdf_bytes)
+                filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
+                pdf_file = io.BytesIO(pdf_bytes)  # convert bytes to file-like object
                 pdf_file.seek(0)
 
                 url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/media"
-                headers = {
-                    "Authorization": f"Bearer {ACCESS_TOKEN}"
-                }
-
+                headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
                 files = {"file": (filename, pdf_file, "application/pdf")}
                 data = {"messaging_product": "whatsapp", "type": "document"}
 
-
-                response = requests.post(url, headers=headers, files=files, data = data)
-                print("📥 Full incoming data:", response.text)  # Good for debugging
+                response = requests.post(url, headers=headers, files=files, data=data)
                 response.raise_for_status()
                 return response.json()["id"]
+
 
                                                             
             def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
@@ -10361,8 +10356,8 @@ def paynow_result():
                 return response.json()
 
 
-            pdf_path = generate_leave_pdf()
-            media_id = upload_pdf_to_whatsapp(pdf_path)
+            pdf_bytes = generate_leave_pdf()
+            media_id = upload_pdf_to_whatsapp(pdf_bytes)
             send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
 
