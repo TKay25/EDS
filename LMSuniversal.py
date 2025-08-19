@@ -10308,19 +10308,19 @@ def paynow_result():
             def upload_pdf_to_whatsapp(pdf_bytes):
 
                 filename=f"{firstname55} {surname55} CAG Tours ticket {tickid} {dep} to {arr}.pdf"
-            
+                pdf_file = io.BytesIO(pdf_bytes)
+                pdf_file.seek(0)
+
                 url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/media"
                 headers = {
                     "Authorization": f"Bearer {ACCESS_TOKEN}"
                 }
 
-                files = {
-                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
-                    "type": (None, "application/pdf"),
-                    "messaging_product": (None, "whatsapp")
-                }
+                files = {"file": (filename, pdf_file, "application/pdf")}
+                data = {"messaging_product": "whatsapp", "type": "document"}
 
-                response = requests.post(url, headers=headers, files=files)
+
+                response = requests.post(url, headers=headers, files=files, data = data)
                 print("📥 Full incoming data:", response.text)  # Good for debugging
                 response.raise_for_status()
                 return response.json()["id"]
