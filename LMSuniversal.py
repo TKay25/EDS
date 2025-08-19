@@ -1670,8 +1670,8 @@ def webhook():
                                                             "type": "button",
                                                             "header": { "type": "text", "text": "🚌 CAG TOURS Schedule" },
                                                             "body": {
-                                                                "text": """✨ *Pre-Bookable Routes* ✨
-                                                                _(DIY online booking available)_
+                                                                "text": """✨ *Pre-Bookable Routes* ✨ \n
+                                                                _(DIY online booking available)_ \n
 
                                                                 ➡️ Harare → Chegutu • *$5*  
                                                                 ➡️ Harare → Kadoma • *$6*  
