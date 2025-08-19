@@ -1,13 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Test PDF</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CAG TOURS (Pvt) Ltd — Ticket Receipt</title>
+  <style>
+    :root{
+      --card-w: 420px;          /* ~A5 receipt width */
+      --brand: #111;
+      --muted: #666;
+      --border: #e5e7eb;       /* light gray */
+      --accent: #111827;       /* near-black for headings */
+    }
+
+    html,body{height:100%}
+    body {
+    margin: 0;
+    background: #f5f7fb;
+    font: 14px/1.45 "Century Gothic", Arial, sans-serif;
+    color: #111;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    }
+
+
+    .ticket{
+      width: min(var(--card-w), calc(100% - 32px));
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.06);
+      overflow:hidden;
+    }
+
+    .ticket__inner{ padding: 20px 22px; }
+
+    .brand{
+      text-align:center;
+      font-weight:700;
+      letter-spacing:.4px;
+      color:var(--brand);
+      margin-bottom: 8px;
+    }
+    .subtitle{
+      text-align:center;
+      font-size:13px;
+      color:var(--muted);
+      margin-top:-2px;
+      margin-bottom:16px;
+    }
+
+    .ref{
+      text-align:center;
+      font-weight:700;
+      border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+      padding:10px 0;
+      margin-bottom:12px;
+    }
+
+    .row{ display:flex; gap:10px; }
+    .col{ flex:1; min-width:0; }
+
+    .kv{ display:flex; gap:8px; margin:6px 0; }
+    .k{ width:140px; color:var(--muted); }
+    .v{ flex:1; font-weight:600; color:#111; }
+
+    .section-title{ margin:16px 0 8px; font-weight:700; color:var(--accent); }
+
+    .total{
+      margin-top:8px;
+      font-weight:800; font-size:16px;
+      display:flex; justify-content:space-between; align-items:center;
+      border-top:1px dashed var(--border);
+      padding-top:10px;
+    }
+
+    .qr-wrap{
+      display:grid; place-items:center; gap:6px;
+      padding: 16px 0 8px;
+    }
+    .qr{
+      width:140px; height:140px; border:1px solid var(--border);
+      display:grid; place-items:center; font-size:12px; color:var(--muted);
+    }
+    .qr-caption{ font-size:12px; color:var(--muted); }
+
+    .note{
+      border-top:1px solid var(--border);
+      margin-top:8px; padding-top:10px;
+    }
+    .note b{ font-weight:700; }
+    .note p{ margin:6px 0 0; font-size:12px; color:#333; }
+
+  </style>
 </head>
 <body>
-  <h1>Hello WeasyPrint!</h1>
-  <p>If you see this text in a PDF, it works 🎉</p>
-
   <main class="ticket" id="ticket">
     <div class="ticket__inner">
       <h1 class="brand">CAG TOURS (Pvt) Ltd</h1>
@@ -53,4 +142,3 @@
 
 </body>
 </html>
-
