@@ -10141,7 +10141,7 @@ def paynow_result():
         print("No row found for this sender_id.")
 
     cursor.execute("""
-        SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought FROM cagwatick2
+        SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
         WHERE pollurl = %s
     """, (pollurlex,))
     result = cursor.fetchone()
@@ -10149,13 +10149,16 @@ def paynow_result():
     number = result[1]
 
     cursor.execute("""
-        SELECT firstname, surname, wanumber FROM cagwatickcustomerdetails
+        SELECT firstname, surname, wanumber, nationalidno FROM cagwatickcustomerdetails
         WHERE wanumber = %s
     """, (number,))
     result55 = cursor.fetchone()
 
     firstname55 = result55[0]
     surname55 = result55[1]
+    phone55 = result55[2]
+    natidno55 = result55[3]
+
 
     if result:
 
@@ -10168,7 +10171,11 @@ def paynow_result():
             dep = result[2]
             arr = result[3]
             time = result[4]
+            traveldate = result[11]
             sender_id = result[1]
+            seats = result[12]
+            booking_date = result[10]
+            tickid = result[0]
             seat = random.randint(1, 65)
 
             url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -10273,6 +10280,89 @@ def paynow_result():
             # Optional: Print result for debugging
             print(response.status_code)
             print(response.text)
+
+            def generate_leave_pdf():
+                app = {
+                    'firstname': firstname55.title(),
+                    'surname': surname55.title(),
+                    'phone_number': phone55,
+                    'id_number':  natidno55,
+                    'Route': f"{dep} to {arr}",
+                    'travel_date': traveldate,
+                    "seats": seats,
+                    'departure_time': time,
+                    'booking_date': 'date',
+                    'payment_method': 'EcoCash',
+                    'total_fare': fare,
+                    'ticketref': ticketref,
+                }
+
+                html_out = render_template("cagticket.html", app=app)
+                
+                # ✅ Return as bytes instead of saving to file
+                pdf_bytes = HTML(string=html_out).write_pdf()
+                return pdf_bytes
+
+            
+
+            def upload_pdf_to_whatsapp(pdf_bytes):
+
+                filename=f"{firstname55} {surname55} CAG Tours ticket {tickid} {dep} to {arr}.pdf"
+            
+                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/media"
+                headers = {
+                    "Authorization": f"Bearer {ACCESS_TOKEN}"
+                }
+
+                files = {
+                    "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                    "type": (None, "application/pdf"),
+                    "messaging_product": (None, "whatsapp")
+                }
+
+                response = requests.post(url, headers=headers, files=files)
+                print("📥 Full incoming data:", response.text)  # Good for debugging
+                response.raise_for_status()
+                return response.json()["id"]
+
+                                                            
+            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                filename=f"{firstname55} {surname55} CAG Tours ticket {tickid} {dep} to {arr}.pdf"
+
+                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                headers = {
+                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": recipient_number,
+                    "type": "document",
+                    "document": {
+                        "id": media_id,            # Media ID from upload step
+                        "filename": filename       # Desired file name on recipient's phone
+                    }
+                }
+
+                response = requests.post(url, headers=headers, json=payload)
+                response.raise_for_status()
+                return response.json()
+
+
+            pdf_path = generate_leave_pdf()
+            media_id = upload_pdf_to_whatsapp(pdf_path)
+            send_whatsapp_pdf_by_media_id(sender_id, media_id)
+
+
+
+
+
+
+
+
+
+
+
 
             return "OK", 200
 

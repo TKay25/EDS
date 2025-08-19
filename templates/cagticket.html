@@ -115,29 +115,27 @@
     <div class="ticket__inner">
       <h1 class="brand">CAG TOURS (Pvt) Ltd</h1>
       <div class="subtitle">Bus Ticket Receipt</div>
-      <div class="ref">REF: <span id="ref">A7F86051</span></div>
-
-      <div class="kv"><div class="k">Passenger:</div><div class="v" id="passenger">Thodenda and Thandohwenkosi Muchinguri</div></div>
-      <div class="kv"><div class="k">Phone Number:</div><div class="v" id="phone">0785541592</div></div>
-      <div class="kv"><div class="k">ID Number:</div><div class="v" id="idno">06-214404B75</div></div>
-      <div class="kv"><div class="k">Route:</div><div class="v" id="route">Harare to Bulawayo</div></div>
+      <div class="ref">REF: <span id="ref">{{app.ticketref}} </span></div>
+      <div class="kv"><div class="k">Passenger:</div><div class="v" id="passenger">{{app.firstname}} {{app.surname}}</div></div>
+      <div class="kv"><div class="k">Phone Number:</div><div class="v" id="phone">{{app.phone_number}}</div></div>
+      <div class="kv"><div class="k">ID Number:</div><div class="v" id="idno">{{app.id_number}}</div></div>
+      <div class="kv"><div class="k">Route:</div><div class="v" id="route">{{app.Route}}</div></div>
 
       <div class="row">
         <div class="col">
-          <div class="kv"><div class="k">Travel Date:</div><div class="v" id="travel_date">06/08/2025</div></div>
-          <div class="kv"><div class="k">Departure Time:</div><div class="v" id="depart_time">11:00</div></div>
-          <div class="kv"><div class="k">Booking Date:</div><div class="v" id="booking_date">06/08/2025</div></div>
+          <div class="kv"><div class="k">Travel Date:</div><div class="v" id="travel_date">{{app.travel_date}}</div></div>
+          <div class="kv"><div class="k">Departure Time:</div><div class="v" id="depart_time">{{app.departure_time}}</div></div>
+          <div class="kv"><div class="k">Booking Date:</div><div class="v" id="booking_date">{{app.booking_date}}</div></div>
         </div>
         <div class="col">
-          <div class="kv"><div class="k">Booking Time:</div><div class="v" id="booking_time">09:37</div></div>
-          <div class="kv"><div class="k">Seats:</div><div class="v" id="seats">J4, J3</div></div>
-          <div class="kv"><div class="k">Payment Method:</div><div class="v" id="pay_method">Online</div></div>
+          <div class="kv"><div class="k">Seats:</div><div class="v" id="seats">{{app.seats}}</div></div>
+          <div class="kv"><div class="k">Payment Method:</div><div class="v" id="pay_method">{{app.payment_method}}</div></div>
         </div>
       </div>
 
       <div class="total">
         <span>TOTAL</span>
-        <span id="total">$30.00</span>
+        <span id="total">USD {{app.total_fare}}</span>
       </div>
 
       <div class="qr-wrap">
@@ -162,22 +160,6 @@
   </main>
 
   <script>
-    // ---- OPTIONAL: Populate programmatically ----
-    const data = {
-      ref: 'A7F86051',
-      passenger: 'Thodenda and Thandohwenkosi Muchinguri',
-      phone: '0785541592',
-      idno: '06-214404B75',
-      route: 'Harare to Bulawayo',
-      travel_date: '06/08/2025',
-      depart_time: '11:00',
-      booking_date: '06/08/2025',
-      booking_time: '09:37',
-      seats: 'J4, J3',
-      pay_method: 'online',
-      total: '$30.00',
-      qr: '' // put a data URL or image path here
-    };
 
     for (const [k,v] of Object.entries(data)){
       const el = document.getElementById(k);
