@@ -8568,11 +8568,11 @@ def webhook():
 
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
 
-                                                    query = f"SELECT id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
 
-                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
+                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor"])    
 
                                                     if len(df_employeesappspendingcheck) == 0:
 
