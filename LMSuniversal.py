@@ -10045,7 +10045,12 @@ def paynow_result():
                 print(response.status_code)
                 print(response.text)
 
+                print("receipt start")
+
                 def generate_leave_pdf():
+
+                    print("receipt start 1")
+
                     app_data = {
                         'firstname': firstname55.title(),
                         'surname': surname55.title(),
@@ -10082,6 +10087,9 @@ def paynow_result():
                 
 
                 def upload_pdf_to_whatsapp(pdf_bytes):
+
+                    print("receipt start 2")
+
                     filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
                     pdf_file = io.BytesIO(pdf_bytes)  # convert bytes to file-like object
                     pdf_file.seek(0)
@@ -10098,6 +10106,9 @@ def paynow_result():
 
                                                                 
                 def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+
+                    print("receipt start 3")
+
                     filename=f"{firstname55} {surname55} CAG Tours ticket {tickid} {dep} to {arr}.pdf"
 
                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -10119,6 +10130,7 @@ def paynow_result():
                     response.raise_for_status()
                     return response.json()
 
+                print("initiating receipt")
 
                 pdf_bytes = generate_leave_pdf()
                 media_id = upload_pdf_to_whatsapp(pdf_bytes)
