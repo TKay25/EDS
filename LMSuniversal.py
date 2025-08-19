@@ -9869,258 +9869,260 @@ def paynow_return():
 @app.route('/paynow/result/update', methods=['POST'])
 def paynow_result():
 
-    today_date = datetime.now().strftime('%d %B %Y')
-    applied_date = datetime.now().strftime('%Y-%m-%d')
+    try:
 
-    VERIFY_TOKENcc = "2498066657227806"
-    ACCESS_TOKEN = "EAAbJqZCGQ6J8BPAC5KMIrelyOpBlffUImqSf7fENf8ClprXBbcIBrXRpEIC1OscUiBedZC6RjO4bjmoqmqx0H1R2FcuAa3R1ZAwhZBZBCgeVyoTrYDXst1K6VoZAMYYN9OREl5p8ZCNYat0x8zk8Xvk74BTTjQFBnnxOJe9VxHjO95o8HmX4cC87s9ZAYb27f1ECvAZDZD"
-    PHONE_NUMBER_IDcc = "773396019188136"
+        today_date = datetime.now().strftime('%d %B %Y')
+        applied_date = datetime.now().strftime('%Y-%m-%d')
 
-    data = request.form.to_dict()
-    print("Paynow Result Webhook:", data)
+        VERIFY_TOKENcc = "2498066657227806"
+        ACCESS_TOKEN = "EAAbJqZCGQ6J8BPAC5KMIrelyOpBlffUImqSf7fENf8ClprXBbcIBrXRpEIC1OscUiBedZC6RjO4bjmoqmqx0H1R2FcuAa3R1ZAwhZBZBCgeVyoTrYDXst1K6VoZAMYYN9OREl5p8ZCNYat0x8zk8Xvk74BTTjQFBnnxOJe9VxHjO95o8HmX4cC87s9ZAYb27f1ECvAZDZD"
+        PHONE_NUMBER_IDcc = "773396019188136"
 
-    pollurlex = data.get('pollurl')
-    status = data.get('status')
-    ticketref = data.get('paynowreference')
+        data = request.form.to_dict()
+        print("Paynow Result Webhook:", data)
 
-    cursor.execute("""
-        SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
-        WHERE pollurl = %s
-    """, (pollurlex,))
-    result = cursor.fetchone()
-
-    if result:
+        pollurlex = data.get('pollurl')
+        status = data.get('status')
+        ticketref = data.get('paynowreference')
 
         cursor.execute("""
-            UPDATE cagwatick2
-            SET status = %s, datebought = %s
+            SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
             WHERE pollurl = %s
-        """, (status, today_date, pollurlex))
+        """, (pollurlex,))
+        result = cursor.fetchone()
 
-        connection.commit()
+        if result:
 
-    else:
-        print("No row found for this sender_id_ stage last.")
+            cursor.execute("""
+                UPDATE cagwatick2
+                SET status = %s, datebought = %s
+                WHERE pollurl = %s
+            """, (status, today_date, pollurlex))
 
-    cursor.execute("""
-        SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
-        WHERE pollurl = %s
-    """, (pollurlex,))
-    result = cursor.fetchone()
+            connection.commit()
 
-    number = result[1]
+        else:
+            print("No row found for this sender_id_ stage last.")
 
-    cursor.execute("""
-        SELECT firstname, surname, wanumber, nationalidno FROM cagwatickcustomerdetails
-        WHERE wanumber = %s
-    """, (number,))
-    result55 = cursor.fetchone()
+        cursor.execute("""
+            SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
+            WHERE pollurl = %s
+        """, (pollurlex,))
+        result = cursor.fetchone()
 
-    firstname55 = result55[0]
-    surname55 = result55[1]
-    phone55 = result55[2]
-    natidno55 = result55[3]
+        number = result[1]
 
+        cursor.execute("""
+            SELECT firstname, surname, wanumber, nationalidno FROM cagwatickcustomerdetails
+            WHERE wanumber = %s
+        """, (number,))
+        result55 = cursor.fetchone()
 
-    if result:
-
-        status = result[9]
-        print(status)
-
-        if status.lower() == "paid":
-
-            fare = result[6]
-            dep = result[2]
-            arr = result[3]
-            time = result[4]
-            traveldate = result[11]
-            sender_id = result[1]
-            seats = result[12]
-            booking_date = result[10]
-            tickid = result[0]
-            seat = random.randint(1, 65)
-
-            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-            headers = {
-                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                "Content-Type": "application/json"
-            }
-
-            payload = {
-                "messaging_product": "whatsapp",
-                "to": f"263{sender_id}",
-                "type": "interactive",
-                "interactive": {
-                    "type": "list",
-                    "header": {
-                        "type": "text",
-                        "text": "🚍 CAG TOURS MAIN MENU"
-                    },
-                    "body": {
-                        "text": (
-                            f"Great News {firstname55} {surname55}. You have successfully purchased a `USD {fare}` bus ticket for your `{dep} to `{arr}` travel route. Your bus departs at `{time}` from {dep} and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref `{ticketref}`]\n\n Thank you!"
-                        )
-                    },
-                    "action": {
-                        "button": "📋 CAG TOURS MENU",
-                        "sections": [
-                            {
-                                "title": "📦 CAG TOURS SERVICES",
-                                "rows": [
-                                    {
-                                        "id": "book_ticket",
-                                        "title": "Book a Ticket",
-                                        "description": "Reserve your seat instantly"
-                                    },
-                                    {
-                                        "id": "routes",
-                                        "title": "View Routes",
-                                        "description": "Get info regarding our travel routes"
-                                    },
-                                    {
-                                        "id": "parcel_delivery",
-                                        "title": "Parcel Delivery",
-                                        "description": "Send or collect packages"
-                                    },
-                                    {
-                                        "id": "find_stop",
-                                        "title": "Find Bus Stop",
-                                        "description": "Locate nearest pick-up point"
-                                    },
-                                    {
-                                        "id": "promotions",
-                                        "title": "Promotions & Offers",
-                                        "description": "Current discounts & deals"
-                                    }
-                                ]
-                            },
-                            {
-                                "title": "🚌 CAG TOURS",
-                                "rows": [
-                                    {
-                                        "id": "know_more",
-                                        "title": "Know More",
-                                        "description": "Our story, mission & travel experience"
-                                    },
-                                    {
-                                        "id": "why_choose",
-                                        "title": "Why Choose Us",
-                                        "description": "Luxury, safety & comfort explained"
-                                    }
-                                ]
-                            },
-                            {
-                                "title": "🛎 CUSTOMER SERVICE",
-                                "rows": [
-                                    {
-                                        "id": "faqs",
-                                        "title": "❓ FAQs",
-                                        "description": "Get answers to common questions"
-                                    },
-                                    {
-                                        "id": "policies",
-                                        "title": "Travel Policies",
-                                        "description": "Baggage rules, safety, refunds"
-                                    },
-                                    {
-                                        "id": "get_help",
-                                        "title": "Get Help",
-                                        "description": "Talk to a support agent now"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                }
-            }
+        firstname55 = result55[0]
+        surname55 = result55[1]
+        phone55 = result55[2]
+        natidno55 = result55[3]
 
 
+        if result:
 
-            # Send the request to WhatsApp
-            response = requests.post(url, headers=headers, json=payload)
+            status = result[9]
+            print(status)
 
-            # Optional: Print result for debugging
-            print(response.status_code)
-            print(response.text)
+            if status.lower() == "paid":
 
-            def generate_leave_pdf():
-                app_data = {
-                    'firstname': firstname55.title(),
-                    'surname': surname55.title(),
-                    'phone_number': phone55,
-                    'id_number':  natidno55,
-                    'Route': f"{dep} to {arr}",
-                    'travel_date': traveldate,
-                    "seats": seats,
-                    'departure_time': time,
-                    'booking_date': 'date',
-                    'payment_method': 'EcoCash',
-                    'total_fare': fare,
-                    'ticketref': ticketref,
-                }
-
-                html_out = render_template("cagticket.html", app=app_data)
-                
-                # ✅ Return as bytes instead of saving to file
-                pdf_bytes = HTML(string=html_out).write_pdf()
-
-                filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
-                script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of current .py file
-                file_path = os.path.join(script_dir, filename)
-                
-                with open(file_path, "wb") as f:
-                    f.write(pdf_bytes)
-                
-                print(f"📄 PDF saved locally at: {file_path}")
-
-
-
-                return pdf_bytes
-
-            
-
-            def upload_pdf_to_whatsapp(pdf_bytes):
-                filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
-                pdf_file = io.BytesIO(pdf_bytes)  # convert bytes to file-like object
-                pdf_file.seek(0)
-
-                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/media"
-                headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
-                files = {"file": (filename, pdf_file, "application/pdf")}
-                data = {"messaging_product": "whatsapp", "type": "document"}
-
-                response = requests.post(url, headers=headers, files=files, data=data)
-                response.raise_for_status()
-                return response.json()["id"]
-
-
-                                                            
-            def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
-                filename=f"{firstname55} {surname55} CAG Tours ticket {tickid} {dep} to {arr}.pdf"
+                fare = result[6]
+                dep = result[2]
+                arr = result[3]
+                time = result[4]
+                traveldate = result[11]
+                sender_id = result[1]
+                seats = result[12]
+                booking_date = result[10]
+                tickid = result[0]
+                seat = random.randint(1, 65)
 
                 url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                 headers = {
                     "Authorization": f"Bearer {ACCESS_TOKEN}",
                     "Content-Type": "application/json"
                 }
+
                 payload = {
                     "messaging_product": "whatsapp",
-                    "to": recipient_number,
-                    "type": "document",
-                    "document": {
-                        "id": media_id,            # Media ID from upload step
-                        "filename": filename       # Desired file name on recipient's phone
+                    "to": f"263{sender_id}",
+                    "type": "interactive",
+                    "interactive": {
+                        "type": "list",
+                        "header": {
+                            "type": "text",
+                            "text": "🚍 CAG TOURS MAIN MENU"
+                        },
+                        "body": {
+                            "text": (
+                                f"Great News {firstname55} {surname55}. You have successfully purchased a `USD {fare}` bus ticket for your `{dep} to `{arr}` travel route. Your bus departs at `{time}` from {dep} and you have been allocated seat number `{seat}`.\n Attached is you ticket [ticketref `{ticketref}`]\n\n Thank you!"
+                            )
+                        },
+                        "action": {
+                            "button": "📋 CAG TOURS MENU",
+                            "sections": [
+                                {
+                                    "title": "📦 CAG TOURS SERVICES",
+                                    "rows": [
+                                        {
+                                            "id": "book_ticket",
+                                            "title": "Book a Ticket",
+                                            "description": "Reserve your seat instantly"
+                                        },
+                                        {
+                                            "id": "routes",
+                                            "title": "View Routes",
+                                            "description": "Get info regarding our travel routes"
+                                        },
+                                        {
+                                            "id": "parcel_delivery",
+                                            "title": "Parcel Delivery",
+                                            "description": "Send or collect packages"
+                                        },
+                                        {
+                                            "id": "find_stop",
+                                            "title": "Find Bus Stop",
+                                            "description": "Locate nearest pick-up point"
+                                        },
+                                        {
+                                            "id": "promotions",
+                                            "title": "Promotions & Offers",
+                                            "description": "Current discounts & deals"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "title": "🚌 CAG TOURS",
+                                    "rows": [
+                                        {
+                                            "id": "know_more",
+                                            "title": "Know More",
+                                            "description": "Our story, mission & travel experience"
+                                        },
+                                        {
+                                            "id": "why_choose",
+                                            "title": "Why Choose Us",
+                                            "description": "Luxury, safety & comfort explained"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "title": "🛎 CUSTOMER SERVICE",
+                                    "rows": [
+                                        {
+                                            "id": "faqs",
+                                            "title": "❓ FAQs",
+                                            "description": "Get answers to common questions"
+                                        },
+                                        {
+                                            "id": "policies",
+                                            "title": "Travel Policies",
+                                            "description": "Baggage rules, safety, refunds"
+                                        },
+                                        {
+                                            "id": "get_help",
+                                            "title": "Get Help",
+                                            "description": "Talk to a support agent now"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
                     }
                 }
 
+
+
+                # Send the request to WhatsApp
                 response = requests.post(url, headers=headers, json=payload)
-                response.raise_for_status()
-                return response.json()
+
+                # Optional: Print result for debugging
+                print(response.status_code)
+                print(response.text)
+
+                def generate_leave_pdf():
+                    app_data = {
+                        'firstname': firstname55.title(),
+                        'surname': surname55.title(),
+                        'phone_number': phone55,
+                        'id_number':  natidno55,
+                        'Route': f"{dep} to {arr}",
+                        'travel_date': traveldate,
+                        "seats": seats,
+                        'departure_time': time,
+                        'booking_date': 'date',
+                        'payment_method': 'EcoCash',
+                        'total_fare': fare,
+                        'ticketref': ticketref,
+                    }
+
+                    html_out = render_template("cagticket.html", app=app_data)
+                    
+                    # ✅ Return as bytes instead of saving to file
+                    pdf_bytes = HTML(string=html_out).write_pdf()
+
+                    filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
+                    script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of current .py file
+                    file_path = os.path.join(script_dir, filename)
+                    
+                    with open(file_path, "wb") as f:
+                        f.write(pdf_bytes)
+                    
+                    print(f"📄 PDF saved locally at: {file_path}")
 
 
-            pdf_bytes = generate_leave_pdf()
-            media_id = upload_pdf_to_whatsapp(pdf_bytes)
-            send_whatsapp_pdf_by_media_id(sender_id, media_id)
+
+                    return pdf_bytes
+
+                
+
+                def upload_pdf_to_whatsapp(pdf_bytes):
+                    filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
+                    pdf_file = io.BytesIO(pdf_bytes)  # convert bytes to file-like object
+                    pdf_file.seek(0)
+
+                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/media"
+                    headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+                    files = {"file": (filename, pdf_file, "application/pdf")}
+                    data = {"messaging_product": "whatsapp", "type": "document"}
+
+                    response = requests.post(url, headers=headers, files=files, data=data)
+                    response.raise_for_status()
+                    return response.json()["id"]
+
+
+                                                                
+                def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                    filename=f"{firstname55} {surname55} CAG Tours ticket {tickid} {dep} to {arr}.pdf"
+
+                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                    headers = {
+                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                        "Content-Type": "application/json"
+                    }
+                    payload = {
+                        "messaging_product": "whatsapp",
+                        "to": recipient_number,
+                        "type": "document",
+                        "document": {
+                            "id": media_id,            # Media ID from upload step
+                            "filename": filename       # Desired file name on recipient's phone
+                        }
+                    }
+
+                    response = requests.post(url, headers=headers, json=payload)
+                    response.raise_for_status()
+                    return response.json()
+
+
+                pdf_bytes = generate_leave_pdf()
+                media_id = upload_pdf_to_whatsapp(pdf_bytes)
+                send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
 
 
@@ -10133,139 +10135,142 @@ def paynow_result():
 
 
 
-            return "OK", 200
+                return "OK", 200
+
+
+            else:
+
+                fare = result[6]
+                dep = result[2]
+                arr = result[3]
+                time = result[4]
+                sender_id = result[1]
+
+
+                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                headers = {
+                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                    "Content-Type": "application/json"
+                }
+
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": f"263{sender_id}",
+                    "type": "interactive",
+                    "interactive": {
+                        "type": "list",
+                        "header": {
+                            "type": "text",
+                            "text": "🚍 CAG TOURS MAIN MENU"
+                        },
+                        "body": {
+                            "text": (
+                                f"Your attempt to purchase USD {fare} bus ticket for the {dep} to `{arr}` route failed, try again"
+                            )
+                        },
+                        "action": {
+                            "button": "📋 CAG TOURS MENU",
+                            "sections": [
+                                {
+                                    "title": "📦 CAG TOURS SERVICES",
+                                    "rows": [
+                                        {
+                                            "id": "book_ticket",
+                                            "title": "Book a Ticket",
+                                            "description": "Reserve your seat instantly"
+                                        },
+                                        {
+                                            "id": "routes",
+                                            "title": "View Routes",
+                                            "description": "Get info regarding our travel routes"
+                                        },
+                                        {
+                                            "id": "parcel_delivery",
+                                            "title": "Parcel Delivery",
+                                            "description": "Send or collect packages"
+                                        },
+                                        {
+                                            "id": "find_stop",
+                                            "title": "Find Bus Stop",
+                                            "description": "Locate nearest pick-up point"
+                                        },
+                                        {
+                                            "id": "promotions",
+                                            "title": "Promotions & Offers",
+                                            "description": "Current discounts & deals"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "title": "🚌 CAG TOURS",
+                                    "rows": [
+                                        {
+                                            "id": "know_more",
+                                            "title": "Know More",
+                                            "description": "Our story, mission & travel experience"
+                                        },
+                                        {
+                                            "id": "why_choose",
+                                            "title": "Why Choose Us",
+                                            "description": "Luxury, safety & comfort explained"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "title": "🛎 CUSTOMER SERVICE",
+                                    "rows": [
+                                        {
+                                            "id": "faqs",
+                                            "title": "❓ FAQs",
+                                            "description": "Get answers to common questions"
+                                        },
+                                        {
+                                            "id": "policies",
+                                            "title": "Travel Policies",
+                                            "description": "Baggage rules, safety, refunds"
+                                        },
+                                        {
+                                            "id": "get_help",
+                                            "title": "Get Help",
+                                            "description": "Talk to a support agent now"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+
+
+
+                # Send the request to WhatsApp
+                response = requests.post(url, headers=headers, json=payload)
+
+                # Optional: Print result for debugging
+                print(response.status_code)
+                print(response.text)
+
+
+
+
+
+
+
+
+
+
+
 
 
         else:
-
-            fare = result[6]
-            dep = result[2]
-            arr = result[3]
-            time = result[4]
-            sender_id = result[1]
-
-
-            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-            headers = {
-                "Authorization": f"Bearer {ACCESS_TOKEN}",
-                "Content-Type": "application/json"
-            }
-
-            payload = {
-                "messaging_product": "whatsapp",
-                "to": f"263{sender_id}",
-                "type": "interactive",
-                "interactive": {
-                    "type": "list",
-                    "header": {
-                        "type": "text",
-                        "text": "🚍 CAG TOURS MAIN MENU"
-                    },
-                    "body": {
-                        "text": (
-                            f"Your attempt to purchase USD {fare} bus ticket for the {dep} to `{arr}` route failed, try again"
-                        )
-                    },
-                    "action": {
-                        "button": "📋 CAG TOURS MENU",
-                        "sections": [
-                            {
-                                "title": "📦 CAG TOURS SERVICES",
-                                "rows": [
-                                    {
-                                        "id": "book_ticket",
-                                        "title": "Book a Ticket",
-                                        "description": "Reserve your seat instantly"
-                                    },
-                                    {
-                                        "id": "routes",
-                                        "title": "View Routes",
-                                        "description": "Get info regarding our travel routes"
-                                    },
-                                    {
-                                        "id": "parcel_delivery",
-                                        "title": "Parcel Delivery",
-                                        "description": "Send or collect packages"
-                                    },
-                                    {
-                                        "id": "find_stop",
-                                        "title": "Find Bus Stop",
-                                        "description": "Locate nearest pick-up point"
-                                    },
-                                    {
-                                        "id": "promotions",
-                                        "title": "Promotions & Offers",
-                                        "description": "Current discounts & deals"
-                                    }
-                                ]
-                            },
-                            {
-                                "title": "🚌 CAG TOURS",
-                                "rows": [
-                                    {
-                                        "id": "know_more",
-                                        "title": "Know More",
-                                        "description": "Our story, mission & travel experience"
-                                    },
-                                    {
-                                        "id": "why_choose",
-                                        "title": "Why Choose Us",
-                                        "description": "Luxury, safety & comfort explained"
-                                    }
-                                ]
-                            },
-                            {
-                                "title": "🛎 CUSTOMER SERVICE",
-                                "rows": [
-                                    {
-                                        "id": "faqs",
-                                        "title": "❓ FAQs",
-                                        "description": "Get answers to common questions"
-                                    },
-                                    {
-                                        "id": "policies",
-                                        "title": "Travel Policies",
-                                        "description": "Baggage rules, safety, refunds"
-                                    },
-                                    {
-                                        "id": "get_help",
-                                        "title": "Get Help",
-                                        "description": "Talk to a support agent now"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                }
-            }
+            print("no result")
 
 
 
-            # Send the request to WhatsApp
-            response = requests.post(url, headers=headers, json=payload)
+        return "OK", 200
 
-            # Optional: Print result for debugging
-            print(response.status_code)
-            print(response.text)
-
-
-
-
-
-
-
-
-
-
-
-
-
-    else:
-        print("no result")
-
-
-
-    return "OK", 200
+    except Exception as e:
+        print("Error:", e)
 
 
 def delete_all_tables():
