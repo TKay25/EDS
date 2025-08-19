@@ -1588,6 +1588,72 @@ def webhook():
                                                         sections) 
 
 
+                                                elif selected_option == "more_routes":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload_additional = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", "text": "🌍 Additional Routes" },
+                                                            "body": {
+                                                                "text": """🚌 *Additional Routes*  
+                                                    _(Book via agent/terminal)_
+
+                                                    Harare → Kariba • *$14*  
+                                                    ⏰ 7:00, 8:30, 10:00, 12:30, 14:30, 20:00 • Mbare  
+
+                                                    Harare → Victoria Falls • *$25*  
+                                                    ⏰ 5:15, 16:00, 18:00 • Showgrounds  
+
+                                                    Chitungwiza → Mutare • *$18*  
+                                                    ⏰ 6:00 • C-Junction  
+
+                                                    Harare → Gokwe Centre • *$16*  
+                                                    ⏰ 4:45, 11:00, 15:30 • Mbare  
+
+                                                    Harare → Karoi • *$12*  
+                                                    ⏰ 14:00 • Mbare  
+
+                                                    Harare → Magunje • *$14*  
+                                                    ⏰ 6:00, 13:00 • Mbare  
+
+                                                    Harare → Sagambe • *$20*  
+                                                    ⏰ 5:15, 11:00, 16:00 • Mbare  
+
+                                                    Harare → Mutare (Direct) • *$18*  
+                                                    ⏰ 11:15 • Mbare  
+
+                                                    Harare → Chirundu • *$15*  
+                                                    ⏰ 9:00 • Westgate  
+
+                                                    Harare → Mukumbura • *$22*  
+                                                    ⏰ 7:00, 14:00 • Mbare  
+                                                    """
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "contact", "title": "📞 Contact Agent"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "🏠 Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+
+                                                    response = requests.post(url, headers=headers, json=payload_additional)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
+
                                                 elif selected_option == "routes":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -1596,7 +1662,7 @@ def webhook():
                                                         "Content-Type": "application/json"
                                                     }
 
-                                                    payload = {
+                                                    payload_prebook = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
                                                         "type": "interactive",
@@ -1605,55 +1671,31 @@ def webhook():
                                                             "header": { "type": "text", "text": "🚌 CAG TOURS Schedule" },
                                                             "body": {
                                                                 "text": """✨ *Pre-Bookable Routes* ✨
-                                                    _(DIY online booking available)_
+                                                                _(DIY online booking available)_
 
-                                                    ➡️ Harare → Chegutu • *$5*  
-                                                    ➡️ Harare → Kadoma • *$6*  
-                                                    ➡️ Harare → Kwekwe • *$8*  
-                                                    ➡️ Harare → Gweru  • *$10*  
-                                                    ➡️ Harare → Bulawayo • *$15*  
+                                                                ➡️ Harare → Chegutu • *$5*  
+                                                                ➡️ Harare → Kadoma • *$6*  
+                                                                ➡️ Harare → Kwekwe • *$8*  
+                                                                ➡️ Harare → Gweru  • *$10*  
+                                                                ➡️ Harare → Bulawayo • *$15*  
 
-                                                    ➡️ Chegutu → Kadoma • *$5*  
-                                                    ➡️ Chegutu → Gweru  • *$7*  
-                                                    ➡️ Kadoma → Bulawayo • *$10*  
-                                                    ➡️ Kwekwe → Bulawayo • *$8*  
-                                                    ➡️ Gweru → Bulawayo • *$5*  
-
-                                                    -----------------------------
-
-                                                    🌍 *Additional Routes*  
-                                                    _(Book via agent or terminal)_
-
-                                                    🚌 Harare → Kariba • *$14* • Mbare  
-                                                    🚌 Harare → Victoria Falls • *$25* • Showgrounds  
-                                                    🚌 Harare → Gokwe • *$16* • Mbare  
-                                                    🚌 Harare → Karoi / Magunje • *$12–14* • Mbare  
-                                                    🚌 Harare → Mutare / Chirundu • *$15–18* • Mbare/Westgate  
-                                                    🚌 Harare → Mukumbura • *$22* • Mbare  
-                                                    """
+                                                                ➡️ Chegutu → Kadoma • *$5*  
+                                                                ➡️ Chegutu → Gweru  • *$7*  
+                                                                ➡️ Kadoma → Bulawayo • *$10*  
+                                                                ➡️ Kwekwe → Bulawayo • *$8*  
+                                                                ➡️ Gweru → Bulawayo • *$5*  
+                                                                """
                                                             },
                                                             "action": {
                                                                 "buttons": [
-                                                                    {
-                                                                        "type": "reply",
-                                                                        "reply": {"id": "prebook", "title": "✅ Pre-Book Routes"}
-                                                                    },
-                                                                    {
-                                                                        "type": "reply",
-                                                                        "reply": {"id": "contact", "title": "📞 Contact Agent"}
-                                                                    },
-                                                                    {
-                                                                        "type": "reply",
-                                                                        "reply": {"id": "mainmenu", "title": "🏠 Main Menu"}
-                                                                    }
+                                                                    {"type": "reply", "reply": {"id": "more_routes", "title": "🌍 Additional Routes"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "🏠 Main Menu"}}
                                                                 ]
                                                             }
                                                         }
                                                     }
 
-
-
-                                                    response = requests.post(url, headers=headers, json=payload)
+                                                    response = requests.post(url, headers=headers, json=payload_prebook)
 
                                                     print(response.status_code)
                                                     print(response.text)
