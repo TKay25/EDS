@@ -1292,189 +1292,6 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
 
-                                                elif "depx" in selected_option:
-
-                                                    city = selected_option[4:]
-
-                                                    cursor.execute("""
-                                                        INSERT INTO cagwatick2 (idwanumber, dep)
-                                                        VALUES (%s, %s)
-                                                    """, (sender_id[-9:], city))
-
-                                                    connection.commit()
-
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
-                                                    }
-
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "interactive",
-                                                        "interactive": {
-                                                            "type": "list",
-                                                            "header": {
-                                                                "type": "text",
-                                                                "text": "🚍 CAG TOURS DESTINATION"
-                                                            },
-                                                            "body": {
-                                                                "text": (
-                                                                    "Okay. Kindly select your destinatiuon city on the menu below. ⬇️"
-                                                                )
-                                                            },
-                                                            "action": {
-                                                                "button": "DESTINATION CITY",
-                                                                "sections": [
-                                                                    {
-                                                                        "title": "DESTINATION CITY",
-                                                                        "rows": [
-                                                                            {"id": "arrxHarare", "title": "Harare"},
-                                                                            {"id": "arrxChegutu", "title": "Chegutu"},
-                                                                            {"id": "arrxKadoma", "title": "Kadoma"},
-                                                                            {"id": "arrxKwekwe", "title": "Kwekwe"},
-                                                                            {"id": "arrxGweru", "title": "Gweru"},
-                                                                            {"id": "arrxShangani", "title": "Shangani"},
-                                                                            {"id": "arrxBulawayo", "title": "Bulawayo"},  
-                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            }
-                                                        }
-                                                    }
-
-                                                    response = requests.post(url, headers=headers, json=payload)
-
-                                                    # Optional: Print result for debugging
-                                                    print(response.status_code)
-                                                    print(response.text)
-                     
-                                                elif "arrx" in selected_option:
-
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
-                                                    }
-
-                                                    city = selected_option[4:]
-
-                                                    cursor.execute("""
-                                                        SELECT dep 
-                                                        FROM cagwatick2 
-                                                        WHERE idwanumber = %s 
-                                                        AND (status IS NULL OR TRIM(status) = '')
-                                                    """, (sender_id[-9:],))
-
-                                                    result = cursor.fetchone()
-
-                                                    dep = result[0]
-
-                                                    if dep == city:
-
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "list",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "🚍 CAG TOURS DESTINATION"
-                                                                },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "Sorry, city of departure cannot be the same as destination city. Kindly select your destinatiuon city on the menu below, or provide a different city of departure. ⬇️"
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "button": "DESTINATION CITY",
-                                                                    "sections": [
-                                                                        {
-                                                                            "title": "DESTINATION CITY",
-                                                                            "rows": [
-                                                                                {"id": "arrxHarare", "title": "Harare"},
-                                                                                {"id": "arrxChegutu", "title": "Chegutu"},
-                                                                                {"id": "arrxKadoma", "title": "Kadoma"},
-                                                                                {"id": "arrxKwekwe", "title": "Kwekwe"},
-                                                                                {"id": "arrxGweru", "title": "Gweru"},
-                                                                                {"id": "arrxShangani", "title": "Shangani"},
-                                                                                {"id": "arrxBulawayo", "title": "Bulawayo"},  
-                                                                                {"id": "newtick2", "title": "Change Departure"},
-                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                            ]
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            }
-                                                        }
-
-                                                        response = requests.post(url, headers=headers, json=payload)
-
-                                                        # Optional: Print result for debugging
-                                                        print(response.status_code)
-                                                        print(response.text)
-
-                                                    else:
-
-                                                        cursor.execute("""
-                                                            UPDATE cagwatick2 
-                                                            SET arr = %s 
-                                                            WHERE idwanumber = %s 
-                                                            AND (status IS NULL OR TRIM(status) = '')
-                                                            """, (city, sender_id[-9:]))
-                                                        
-                                                        connection.commit()
-
-                                                        def generate_travel_date_rows():
-                                                            today = datetime.now()
-                                                            return [
-                                                                {
-                                                                    "id": f"date_{(today + timedelta(days=i)).strftime('%d %B %Y')}",
-                                                                    "title": (today + timedelta(days=i)).strftime("%d %B %Y")
-                                                                }
-                                                                for i in range(10)
-                                                            ]
-
-                                                        rowstraveldates = generate_travel_date_rows()
-
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "list",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "🚍 CAG TOURS TRAVEL DATE"
-                                                                },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "Okay. Kindly select your desired Travel Date on the menu below. ⬇️"
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "button": "TRAVEL DATE",
-                                                                    "sections": [
-                                                                        {
-                                                                            "title": "TRAVEL DATE",
-                                                                            "rows": rowstraveldates
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            }
-                                                        }
-
-                                                        # Send the request to WhatsApp
-                                                        response = requests.post(url, headers=headers, json=payload)
-
-                                                        # Optional: Print result for debugging
-                                                        print(response.status_code)
-                                                        print(response.text)
-
-
                                                 elif "txq" in selected_option:
 
                                                     timetrav = selected_option[3:]
@@ -1773,7 +1590,6 @@ def webhook():
 
 
                                                 elif selected_option == "routes":
-                                                    button_id_leave_type = str(selected_option)
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
@@ -1790,73 +1606,73 @@ def webhook():
                                                             "header": { "type": "text", "text": "🚌 CAG TOURS Schedule" },
                                                             "body": {
                                                                 "text": """✨ *Pre-Bookable Routes* ✨
-                                                    _(Available for DIY online booking)_
+                                                            _(Available for DIY online booking)_
 
-                                                    ➡️ Harare → Chegutu   • *$5*  
-                                                    ➡️ Harare → Kadoma    • *$6*  
-                                                    ➡️ Harare → Kwekwe    • *$8*  
-                                                    ➡️ Harare → Gweru     • *$10*  
-                                                    ➡️ Harare → Bulawayo  • *$15*  
+                                                            ➡️ Harare → Chegutu   • *$5*  
+                                                            ➡️ Harare → Kadoma    • *$6*  
+                                                            ➡️ Harare → Kwekwe    • *$8*  
+                                                            ➡️ Harare → Gweru     • *$10*  
+                                                            ➡️ Harare → Bulawayo  • *$15*  
 
-                                                    ➡️ Chegutu → Kadoma   • *$5*  
-                                                    ➡️ Chegutu → Kwekwe   • *$5*  
-                                                    ➡️ Chegutu → Gweru    • *$7*  
-                                                    ➡️ Chegutu → Bulawayo • *$12*  
+                                                            ➡️ Chegutu → Kadoma   • *$5*  
+                                                            ➡️ Chegutu → Kwekwe   • *$5*  
+                                                            ➡️ Chegutu → Gweru    • *$7*  
+                                                            ➡️ Chegutu → Bulawayo • *$12*  
 
-                                                    ➡️ Kadoma → Kwekwe    • *$5*  
-                                                    ➡️ Kadoma → Gweru     • *$5*  
-                                                    ➡️ Kadoma → Bulawayo  • *$10*  
+                                                            ➡️ Kadoma → Kwekwe    • *$5*  
+                                                            ➡️ Kadoma → Gweru     • *$5*  
+                                                            ➡️ Kadoma → Bulawayo  • *$10*  
 
-                                                    ➡️ Kwekwe → Gweru     • *$5*  
-                                                    ➡️ Kwekwe → Bulawayo  • *$8*  
+                                                            ➡️ Kwekwe → Gweru     • *$5*  
+                                                            ➡️ Kwekwe → Bulawayo  • *$8*  
 
-                                                    ➡️ Gweru → Bulawayo   • *$5*  
+                                                            ➡️ Gweru → Bulawayo   • *$5*  
 
-                                                    -----------------------------
+                                                            -----------------------------
 
-                                                    🌍 *Additional Routes*  
-                                                    _(Book via agent or terminal only)_
+                                                            🌍 *Additional Routes*  
+                                                            _(Book via agent or terminal only)_
 
-                                                    🚌 Harare → Kariba  • *$14*  
-                                                    ⏰ 7:00, 8:30, 10:00, 12:30, 14:30, 20:00  
-                                                    📍 Mbare Musika Rank  
+                                                            🚌 Harare → Kariba  • *$14*  
+                                                            ⏰ 7:00, 8:30, 10:00, 12:30, 14:30, 20:00  
+                                                            📍 Mbare Musika Rank  
 
-                                                    🚌 Harare → Victoria Falls  • *$25*  
-                                                    ⏰ 5:15, 16:00, 18:00  
-                                                    📍 Showgrounds  
+                                                            🚌 Harare → Victoria Falls  • *$25*  
+                                                            ⏰ 5:15, 16:00, 18:00  
+                                                            📍 Showgrounds  
 
-                                                    🚌 Chitungwiza → Mutare  • *$18*  
-                                                    ⏰ 6:00  
-                                                    📍 C-Junction  
+                                                            🚌 Chitungwiza → Mutare  • *$18*  
+                                                            ⏰ 6:00  
+                                                            📍 C-Junction  
 
-                                                    🚌 Harare → Gokwe Centre  • *$16*  
-                                                    ⏰ 4:45, 11:00, 15:30  
-                                                    📍 Mbare Musika Rank  
+                                                            🚌 Harare → Gokwe Centre  • *$16*  
+                                                            ⏰ 4:45, 11:00, 15:30  
+                                                            📍 Mbare Musika Rank  
 
-                                                    🚌 Harare → Karoi  • *$12*  
-                                                    ⏰ 14:00  
-                                                    📍 Mbare Musika Rank  
+                                                            🚌 Harare → Karoi  • *$12*  
+                                                            ⏰ 14:00  
+                                                            📍 Mbare Musika Rank  
 
-                                                    🚌 Harare → Magunje  • *$14*  
-                                                    ⏰ 6:00, 13:00  
-                                                    📍 Mbare Musika Rank  
+                                                            🚌 Harare → Magunje  • *$14*  
+                                                            ⏰ 6:00, 13:00  
+                                                            📍 Mbare Musika Rank  
 
-                                                    🚌 Harare → Sagambe  • *$20*  
-                                                    ⏰ 5:15, 11:00, 16:00  
-                                                    📍 Mbare Musika Rank  
+                                                            🚌 Harare → Sagambe  • *$20*  
+                                                            ⏰ 5:15, 11:00, 16:00  
+                                                            📍 Mbare Musika Rank  
 
-                                                    🚌 Harare → Mutare (Direct)  • *$18*  
-                                                    ⏰ 11:15  
-                                                    📍 Mbare Musika Rank  
+                                                            🚌 Harare → Mutare (Direct)  • *$18*  
+                                                            ⏰ 11:15  
+                                                            📍 Mbare Musika Rank  
 
-                                                    🚌 Harare → Chirundu  • *$15*  
-                                                    ⏰ 9:00  
-                                                    📍 Westgate  
+                                                            🚌 Harare → Chirundu  • *$15*  
+                                                            ⏰ 9:00  
+                                                            📍 Westgate  
 
-                                                    🚌 Harare → Mukumbura  • *$22*  
-                                                    ⏰ 7:00, 14:00  
-                                                    📍 Mbare Musika Rank  
-                                                    """
+                                                            🚌 Harare → Mukumbura  • *$22*  
+                                                            ⏰ 7:00, 14:00  
+                                                            📍 Mbare Musika Rank  
+                                                            """
                                                             },
                                                             "action": {
                                                                 "buttons": [
