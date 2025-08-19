@@ -151,57 +151,8 @@
         <b>IMPORTANT:</b>
         <p>Please arrive at least 15 minutes before departure. Carry your ID.</p>
       </div>
-
-      <div class="print-actions">
-        <button onclick="window.print()">Print</button>
-        <button onclick="downloadPNG()">Download PNG</button>
-      </div>
     </div>
   </main>
 
-  <script>
-
-    for (const [k,v] of Object.entries(data)){
-      const el = document.getElementById(k);
-      if(el) el.textContent = v;
-    }
-
-    // If you provide a QR image URL (or data URL), show it instead of fallback
-    (function(){
-      const img = document.getElementById('qr-img');
-      if(data.qr){
-        img.src = data.qr;
-        img.onload = () => { document.getElementById('qr-fallback').style.display='none'; img.style.display='block'; };
-      }
-    })();
-
-    // ---- OPTIONAL: Download ticket as PNG (client-side) ----
-    async function downloadPNG(){
-      // Uses HTMLCanvasElement to rasterize via CSS paint (no external libs). For higher fidelity, consider html2canvas.
-      const node = document.getElementById('ticket');
-      const svg = new Blob([
-        `<?xml version="1.0" standalone="no"?>\n`+
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${node.offsetWidth}" height="${node.offsetHeight}">`+
-        `<foreignObject width="100%" height="100%">`+
-        new XMLSerializer().serializeToString(node)+
-        `</foreignObject></svg>`
-      ], {type: 'image/svg+xml;charset=utf-8'});
-
-      const url = URL.createObjectURL(svg);
-      const img = new Image();
-      img.onload = function(){
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-        const a = document.createElement('a');
-        a.download = `ticket-${data.ref || 'receipt'}.png`;
-        a.href = canvas.toDataURL('image/png');
-        a.click();
-      };
-      img.src = url;
-    }
-  </script>
 </body>
 </html>
