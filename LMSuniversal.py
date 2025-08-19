@@ -9938,7 +9938,7 @@ def paynow_result():
                 time = result[4]
                 traveldate = result[11]
                 sender_id = result[1]
-                seats = result[12]
+                seats = str(result[12])
                 booking_date = result[10]
                 tickid = result[0]
                 seat = random.randint(1, 65)
@@ -10058,7 +10058,7 @@ def paynow_result():
                         'phone_number': phone55,
                         'id_number':  natidno55,
                         'route': f"{dep} to {arr}",
-                        'travel_date': traveldate,
+                        'travel_date': "date",
                         "seats": seats,
                         'departure_time': time,
                         'booking_date': 'date',
