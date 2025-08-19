@@ -1417,12 +1417,15 @@ def webhook():
                                                         }
                                                     }
 
+
+
                                                     # Send the request to WhatsApp
                                                     response = requests.post(url, headers=headers, json=payload)
 
                                                     # Optional: Print result for debugging
                                                     print(response.status_code)
                                                     print(response.text)
+
 
                                                     try:
                                                     
@@ -1460,12 +1463,15 @@ def webhook():
 
                                                         print("pending")
 
+                                    
+
                                                         if(response.success):
 
                                                             print('success')
                                                             poll_url = response.poll_url
 
                                                             print("Poll Url: ", poll_url)
+
 
                                                             cursor.execute("""
                                                                 SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum FROM cagwatick2
@@ -1475,7 +1481,7 @@ def webhook():
                                                             result = cursor.fetchone()
 
                                                             if result:
-
+                                                                highest_id = result[0]
                                                                 cursor.execute("""
                                                                     UPDATE cagwatick2
                                                                     SET pollurl = %s
@@ -1494,12 +1500,18 @@ def webhook():
 
                                                             print("Payment Status: ", status.status)
 
+
                                                         return 'OK', 200
 
+
+                                                
                                                     except Exception as e:
                                                         print(e)
 
                                                     return 'OK', 200
+
+
+
 
                                                 elif selected_option == "faqs":
                                                     button_id_leave_type = str(selected_option)
@@ -10126,7 +10138,13 @@ def paynow_result():
         connection.commit()
 
     else:
-        print("No row found for this sender_id _ stage confirmation.")
+        print("No row found for this sender_id_ stage last.")
+
+    cursor.execute("""
+        SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
+        WHERE pollurl = %s
+    """, (pollurlex,))
+    result = cursor.fetchone()
 
     number = result[1]
 
