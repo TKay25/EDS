@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CAG TOURS (Pvt) Ltd — Ticket Receipt</title>
+  <style>
+    :root{
+      --card-w: 420px;          /* ~A5 receipt width */
+      --brand: #111;
+      --muted: #666;
+      --border: #e5e7eb;       /* light gray */
+      --accent: #111827;       /* near-black for headings */
+    }
+
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:#f5f7fb;
+      font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+            "Segoe UI Emoji", "Segoe UI Symbol";
+      color:#111;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+
+    .ticket{
+      width: min(var(--card-w), calc(100% - 32px));
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.06);
+      overflow:hidden;
+    }
+
+    .ticket__inner{ padding: 20px 22px; }
+
+    .brand{
+      text-align:center;
+      font-weight:700;
+      letter-spacing:.4px;
+      color:var(--brand);
+      margin-bottom: 8px;
+    }
+    .subtitle{
+      text-align:center;
+      font-size:13px;
+      color:var(--muted);
+      margin-top:-2px;
+      margin-bottom:16px;
+    }
+
+    .ref{
+      text-align:center;
+      font-weight:700;
+      border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+      padding:10px 0;
+      margin-bottom:12px;
+    }
+
+    .row{ display:flex; gap:10px; }
+    .col{ flex:1; min-width:0; }
+
+    .kv{ display:flex; gap:8px; margin:6px 0; }
+    .k{ width:140px; color:var(--muted); }
+    .v{ flex:1; font-weight:600; color:#111; }
+
+    .section-title{ margin:16px 0 8px; font-weight:700; color:var(--accent); }
+
+    .total{
+      margin-top:8px;
+      font-weight:800; font-size:16px;
+      display:flex; justify-content:space-between; align-items:center;
+      border-top:1px dashed var(--border);
+      padding-top:10px;
+    }
+
+    .qr-wrap{
+      display:grid; place-items:center; gap:6px;
+      padding: 16px 0 8px;
+    }
+    .qr{
+      width:140px; height:140px; border:1px solid var(--border);
+      display:grid; place-items:center; font-size:12px; color:var(--muted);
+    }
+    .qr-caption{ font-size:12px; color:var(--muted); }
+
+    .note{
+      border-top:1px solid var(--border);
+      margin-top:8px; padding-top:10px;
+    }
+    .note b{ font-weight:700; }
+    .note p{ margin:6px 0 0; font-size:12px; color:#333; }
+
+    .print-actions{ display:flex; justify-content:center; gap:8px; margin:14px 0 4px; }
+    button{
+      appearance:none; border:1px solid var(--border); background:#fff;
+      padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600;
+    }
+    button:hover{ background:#f8fafc; }
+
+    /* Print */
+    @media print{
+      body{ background:#fff; padding:0; }
+      .ticket{ box-shadow:none; border:none; border-radius:0; }
+      .print-actions{ display:none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="ticket" id="ticket">
+    <div class="ticket__inner">
+      <h1 class="brand">CAG TOURS (Pvt) Ltd</h1>
+      <div class="subtitle">Bus Ticket Receipt</div>
+      <div class="ref">REF: <span id="ref">A7F86051</span></div>
+
+      <div class="kv"><div class="k">Passenger:</div><div class="v" id="passenger">Thodenda and Thandohwenkosi Muchinguri</div></div>
+      <div class="kv"><div class="k">Phone Number:</div><div class="v" id="phone">0785541592</div></div>
+      <div class="kv"><div class="k">ID Number:</div><div class="v" id="idno">06-214404B75</div></div>
+      <div class="kv"><div class="k">Route:</div><div class="v" id="route">Harare to Bulawayo</div></div>
+
+      <div class="row">
+        <div class="col">
+          <div class="kv"><div class="k">Travel Date:</div><div class="v" id="travel_date">06/08/2025</div></div>
+          <div class="kv"><div class="k">Departure Time:</div><div class="v" id="depart_time">11:00</div></div>
+          <div class="kv"><div class="k">Booking Date:</div><div class="v" id="booking_date">06/08/2025</div></div>
+        </div>
+        <div class="col">
+          <div class="kv"><div class="k">Booking Time:</div><div class="v" id="booking_time">09:37</div></div>
+          <div class="kv"><div class="k">Seats:</div><div class="v" id="seats">J4, J3</div></div>
+          <div class="kv"><div class="k">Payment Method:</div><div class="v" id="pay_method">Online</div></div>
+        </div>
+      </div>
+
+      <div class="total">
+        <span>TOTAL</span>
+        <span id="total">$30.00</span>
+      </div>
+
+      <div class="qr-wrap">
+        <div class="qr" id="qr">
+          <!-- Replace src below with your generated QR image -->
+          <img id="qr-img" src="" alt="QR Code" style="width:100%;height:100%;object-fit:cover;display:none;"/>
+          <span id="qr-fallback">QR</span>
+        </div>
+        <div class="qr-caption">Scan for booking details</div>
+      </div>
+
+      <div class="note">
+        <b>IMPORTANT:</b>
+        <p>Please arrive at least 15 minutes before departure. Carry your ID.</p>
+      </div>
+
+      <div class="print-actions">
+        <button onclick="window.print()">Print</button>
+        <button onclick="downloadPNG()">Download PNG</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ---- OPTIONAL: Populate programmatically ----
+    const data = {
+      ref: 'A7F86051',
+      passenger: 'Thodenda and Thandohwenkosi Muchinguri',
+      phone: '0785541592',
+      idno: '06-214404B75',
+      route: 'Harare to Bulawayo',
+      travel_date: '06/08/2025',
+      depart_time: '11:00',
+      booking_date: '06/08/2025',
+      booking_time: '09:37',
+      seats: 'J4, J3',
+      pay_method: 'online',
+      total: '$30.00',
+      qr: '' // put a data URL or image path here
+    };
+
+    for (const [k,v] of Object.entries(data)){
+      const el = document.getElementById(k);
+      if(el) el.textContent = v;
+    }
+
+    // If you provide a QR image URL (or data URL), show it instead of fallback
+    (function(){
+      const img = document.getElementById('qr-img');
+      if(data.qr){
+        img.src = data.qr;
+        img.onload = () => { document.getElementById('qr-fallback').style.display='none'; img.style.display='block'; };
+      }
+    })();
+
+    // ---- OPTIONAL: Download ticket as PNG (client-side) ----
+    async function downloadPNG(){
+      // Uses HTMLCanvasElement to rasterize via CSS paint (no external libs). For higher fidelity, consider html2canvas.
+      const node = document.getElementById('ticket');
+      const svg = new Blob([
+        `<?xml version="1.0" standalone="no"?>\n`+
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${node.offsetWidth}" height="${node.offsetHeight}">`+
+        `<foreignObject width="100%" height="100%">`+
+        new XMLSerializer().serializeToString(node)+
+        `</foreignObject></svg>`
+      ], {type: 'image/svg+xml;charset=utf-8'});
+
+      const url = URL.createObjectURL(svg);
+      const img = new Image();
+      img.onload = function(){
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        const a = document.createElement('a');
+        a.download = `ticket-${data.ref || 'receipt'}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+      };
+      img.src = url;
+    }
+  </script>
+</body>
+</html>
