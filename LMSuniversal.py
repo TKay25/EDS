@@ -10282,7 +10282,7 @@ def paynow_result():
             print(response.text)
 
             def generate_leave_pdf():
-                app = {
+                app_data = {
                     'firstname': firstname55.title(),
                     'surname': surname55.title(),
                     'phone_number': phone55,
@@ -10297,10 +10297,22 @@ def paynow_result():
                     'ticketref': ticketref,
                 }
 
-                html_out = render_template("cagticket.html", app=app)
+                html_out = render_template("cagticket.html", app=app_data)
                 
                 # ✅ Return as bytes instead of saving to file
                 pdf_bytes = HTML(string=html_out).write_pdf()
+
+                filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
+                script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of current .py file
+                file_path = os.path.join(script_dir, filename)
+                
+                with open(file_path, "wb") as f:
+                    f.write(pdf_bytes)
+                
+                print(f"📄 PDF saved locally at: {file_path}")
+
+
+
                 return pdf_bytes
 
             
