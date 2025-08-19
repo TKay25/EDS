@@ -10124,19 +10124,7 @@ def paynow_result():
                 media_id = upload_pdf_to_whatsapp(pdf_bytes)
                 send_whatsapp_pdf_by_media_id(sender_id, media_id)
 
-
-
-
-
-
-
-
-
-
-
-
                 return "OK", 200
-
 
             else:
 
@@ -10271,6 +10259,8 @@ def paynow_result():
 
     except Exception as e:
         print("Error:", e)
+        return "Error: no ticket found", 200
+
 
 
 def delete_all_tables():
