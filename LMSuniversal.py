@@ -1606,92 +1606,52 @@ def webhook():
                                                             "header": { "type": "text", "text": "🚌 CAG TOURS Schedule" },
                                                             "body": {
                                                                 "text": """✨ *Pre-Bookable Routes* ✨
-                                                            _(Available for DIY online booking)_
+                                                    _(DIY online booking available)_
 
-                                                            ➡️ Harare → Chegutu   • *$5*  
-                                                            ➡️ Harare → Kadoma    • *$6*  
-                                                            ➡️ Harare → Kwekwe    • *$8*  
-                                                            ➡️ Harare → Gweru     • *$10*  
-                                                            ➡️ Harare → Bulawayo  • *$15*  
+                                                    ➡️ Harare → Chegutu • *$5*  
+                                                    ➡️ Harare → Kadoma • *$6*  
+                                                    ➡️ Harare → Kwekwe • *$8*  
+                                                    ➡️ Harare → Gweru  • *$10*  
+                                                    ➡️ Harare → Bulawayo • *$15*  
 
-                                                            ➡️ Chegutu → Kadoma   • *$5*  
-                                                            ➡️ Chegutu → Kwekwe   • *$5*  
-                                                            ➡️ Chegutu → Gweru    • *$7*  
-                                                            ➡️ Chegutu → Bulawayo • *$12*  
+                                                    ➡️ Chegutu → Kadoma • *$5*  
+                                                    ➡️ Chegutu → Gweru  • *$7*  
+                                                    ➡️ Kadoma → Bulawayo • *$10*  
+                                                    ➡️ Kwekwe → Bulawayo • *$8*  
+                                                    ➡️ Gweru → Bulawayo • *$5*  
 
-                                                            ➡️ Kadoma → Kwekwe    • *$5*  
-                                                            ➡️ Kadoma → Gweru     • *$5*  
-                                                            ➡️ Kadoma → Bulawayo  • *$10*  
+                                                    -----------------------------
 
-                                                            ➡️ Kwekwe → Gweru     • *$5*  
-                                                            ➡️ Kwekwe → Bulawayo  • *$8*  
+                                                    🌍 *Additional Routes*  
+                                                    _(Book via agent or terminal)_
 
-                                                            ➡️ Gweru → Bulawayo   • *$5*  
-
-                                                            -----------------------------
-
-                                                            🌍 *Additional Routes*  
-                                                            _(Book via agent or terminal only)_
-
-                                                            🚌 Harare → Kariba  • *$14*  
-                                                            ⏰ 7:00, 8:30, 10:00, 12:30, 14:30, 20:00  
-                                                            📍 Mbare Musika Rank  
-
-                                                            🚌 Harare → Victoria Falls  • *$25*  
-                                                            ⏰ 5:15, 16:00, 18:00  
-                                                            📍 Showgrounds  
-
-                                                            🚌 Chitungwiza → Mutare  • *$18*  
-                                                            ⏰ 6:00  
-                                                            📍 C-Junction  
-
-                                                            🚌 Harare → Gokwe Centre  • *$16*  
-                                                            ⏰ 4:45, 11:00, 15:30  
-                                                            📍 Mbare Musika Rank  
-
-                                                            🚌 Harare → Karoi  • *$12*  
-                                                            ⏰ 14:00  
-                                                            📍 Mbare Musika Rank  
-
-                                                            🚌 Harare → Magunje  • *$14*  
-                                                            ⏰ 6:00, 13:00  
-                                                            📍 Mbare Musika Rank  
-
-                                                            🚌 Harare → Sagambe  • *$20*  
-                                                            ⏰ 5:15, 11:00, 16:00  
-                                                            📍 Mbare Musika Rank  
-
-                                                            🚌 Harare → Mutare (Direct)  • *$18*  
-                                                            ⏰ 11:15  
-                                                            📍 Mbare Musika Rank  
-
-                                                            🚌 Harare → Chirundu  • *$15*  
-                                                            ⏰ 9:00  
-                                                            📍 Westgate  
-
-                                                            🚌 Harare → Mukumbura  • *$22*  
-                                                            ⏰ 7:00, 14:00  
-                                                            📍 Mbare Musika Rank  
-                                                            """
+                                                    🚌 Harare → Kariba • *$14* • Mbare  
+                                                    🚌 Harare → Victoria Falls • *$25* • Showgrounds  
+                                                    🚌 Harare → Gokwe • *$16* • Mbare  
+                                                    🚌 Harare → Karoi / Magunje • *$12–14* • Mbare  
+                                                    🚌 Harare → Mutare / Chirundu • *$15–18* • Mbare/Westgate  
+                                                    🚌 Harare → Mukumbura • *$22* • Mbare  
+                                                    """
                                                             },
                                                             "action": {
                                                                 "buttons": [
                                                                     {
                                                                         "type": "reply",
-                                                                        "reply": { "id": "prebook", "title": "✅ Pre-Book Routes" }
+                                                                        "reply": {"id": "prebook", "title": "✅ Pre-Book Routes"}
                                                                     },
                                                                     {
                                                                         "type": "reply",
-                                                                        "reply": { "id": "contact", "title": "📞 Contact Agent" }
+                                                                        "reply": {"id": "contact", "title": "📞 Contact Agent"}
                                                                     },
                                                                     {
                                                                         "type": "reply",
-                                                                        "reply": { "id": "mainmenu", "title": "Main Menu" }
+                                                                        "reply": {"id": "mainmenu", "title": "🏠 Main Menu"}
                                                                     }
                                                                 ]
                                                             }
                                                         }
                                                     }
+
 
 
                                                     requests.post(url, headers=headers, json=payload)
