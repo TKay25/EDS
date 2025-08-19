@@ -10057,7 +10057,7 @@ def paynow_result():
                         'surname': surname55.title(),
                         'phone_number': phone55,
                         'id_number':  natidno55,
-                        'Route': f"{dep} to {arr}",
+                        'route': f"{dep} to {arr}",
                         'travel_date': traveldate,
                         "seats": seats,
                         'departure_time': time,
