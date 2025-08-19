@@ -1520,7 +1520,6 @@ def webhook():
                                                         {
                                                             "title": "FAQs",
                                                             "rows": [
-                                                                {"id": "Routes", "title": "routes"},
                                                                 {"id": "BusTypes", "title": "Bus Types"},
                                                                 {"id": "Privatehires", "title": "Do you do private hires?"},
                                                                 {"id": "Sunday", "title": "Do you work on Sundays"},
@@ -1655,7 +1654,10 @@ def webhook():
 
 
                                                     requests.post(url, headers=headers, json=payload)
-                                                                                                        
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
                                                 elif selected_option == "Contact":
                                                     button_id_leave_type = str(selected_option)
 
