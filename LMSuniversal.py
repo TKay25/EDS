@@ -10067,6 +10067,8 @@ def paynow_result():
                         'ticketref': ticketref,
                     }
 
+                    print(app_data)
+
                     print("past vars")
 
                     html_out = render_template("cagticket.html", app=app_data)
