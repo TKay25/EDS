@@ -7655,6 +7655,7 @@ def webhook():
                                                                 
 
                                                                 def upload_pdf_to_whatsapp(pdf_bytes):
+
                                                                     compxxy = company_reg.replace("_"," ").title()
                                                                     filename=f"leave_application_{all_approved_declined_cancelled.iat[0,0]}_{first_name}_{last_name}_{compxxy}.pdf"
                                                                 
@@ -10072,10 +10073,13 @@ def paynow_result():
 
                     print("past html render")
                     
-                    # ✅ Return as bytes instead of saving to file
-                    pdf_bytes = HTML(string=html_out).write_pdf()
-
-                    print("past pdf write")
+                    try:
+                        pdf_bytes = HTML(string=html_out).write_pdf()
+                        print("past pdf write")
+                    except Exception as e:
+                        print("❌ WeasyPrint error:", e)
+                        with open("debug.html", "w") as f:
+                            f.write(html_out)   # save HTML for debugging
 
                     return pdf_bytes
 
