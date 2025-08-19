@@ -10066,10 +10066,16 @@ def paynow_result():
                         'ticketref': ticketref,
                     }
 
+                    print("past vars")
+
                     html_out = render_template("cagticket.html", app=app_data)
+
+                    print("past html render")
                     
                     # ✅ Return as bytes instead of saving to file
                     pdf_bytes = HTML(string=html_out).write_pdf()
+
+                    print("past pdf write")
 
                     filename = f"{firstname55}_{surname55}_CAG_Tours_ticket_{tickid}_{dep}_to_{arr}.pdf"
                     script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of current .py file
