@@ -964,11 +964,6 @@ def webhook():
                                                                                 "id": "find_stop",
                                                                                 "title": "Find Bus Stop",
                                                                                 "description": "Locate nearest pick-up point"
-                                                                            },
-                                                                            {
-                                                                                "id": "promotions",
-                                                                                "title": "Promotions & Offers",
-                                                                                "description": "Current discounts & deals"
                                                                             }
                                                                         ]
                                                                     },
@@ -1103,11 +1098,6 @@ def webhook():
                                                                                 "id": "find_stop",
                                                                                 "title": "Find Bus Stop",
                                                                                 "description": "Locate nearest pick-up point"
-                                                                            },
-                                                                            {
-                                                                                "id": "promotions",
-                                                                                "title": "Promotions & Offers",
-                                                                                "description": "Current discounts & deals"
                                                                             }
                                                                         ]
                                                                     },
@@ -1710,11 +1700,6 @@ def webhook():
                                                                                 "id": "find_stop",
                                                                                 "title": "Find Bus Stop",
                                                                                 "description": "Locate nearest pick-up point"
-                                                                            },
-                                                                            {
-                                                                                "id": "promotions",
-                                                                                "title": "Promotions & Offers",
-                                                                                "description": "Current discounts & deals"
                                                                             }
                                                                         ]
                                                                     },
@@ -1822,11 +1807,6 @@ def webhook():
                                                                                 "id": "find_stop",
                                                                                 "title": "Find Bus Stop",
                                                                                 "description": "Locate nearest pick-up point"
-                                                                            },
-                                                                            {
-                                                                                "id": "promotions",
-                                                                                "title": "Promotions & Offers",
-                                                                                "description": "Current discounts & deals"
                                                                             }
                                                                         ]
                                                                     },
@@ -1938,11 +1918,6 @@ def webhook():
                                                                                 "id": "find_stop",
                                                                                 "title": "Find Bus Stop",
                                                                                 "description": "Locate nearest pick-up point"
-                                                                            },
-                                                                            {
-                                                                                "id": "promotions",
-                                                                                "title": "Promotions & Offers",
-                                                                                "description": "Current discounts & deals"
                                                                             }
                                                                         ]
                                                                     },
@@ -2107,11 +2082,6 @@ def webhook():
                                                                             "id": "find_stop",
                                                                             "title": "Find Bus Stop",
                                                                             "description": "Locate nearest pick-up point"
-                                                                        },
-                                                                        {
-                                                                            "id": "promotions",
-                                                                            "title": "Promotions & Offers",
-                                                                            "description": "Current discounts & deals"
                                                                         }
                                                                     ]
                                                                 },
@@ -10452,11 +10422,6 @@ def paynow_result():
                                             "id": "find_stop",
                                             "title": "Find Bus Stop",
                                             "description": "Locate nearest pick-up point"
-                                        },
-                                        {
-                                            "id": "promotions",
-                                            "title": "Promotions & Offers",
-                                            "description": "Current discounts & deals"
                                         }
                                     ]
                                 },
@@ -10666,11 +10631,6 @@ def paynow_result():
                                             "id": "find_stop",
                                             "title": "Find Bus Stop",
                                             "description": "Locate nearest pick-up point"
-                                        },
-                                        {
-                                            "id": "promotions",
-                                            "title": "Promotions & Offers",
-                                            "description": "Current discounts & deals"
                                         }
                                     ]
                                 },
