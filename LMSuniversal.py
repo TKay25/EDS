@@ -1433,20 +1433,33 @@ def webhook():
                                                             "type": "button",
                                                             "header": { "type": "text", "text": "🚌 CAG TOURS Schedule" },
                                                             "body": {
-                                                                "text": """✨ *Pre-Bookable Routes* ✨ \n
-                                                                _(DIY online booking available)_ \n
-
-                                                                ➡️ Harare → Chegutu • *$5*
-                                                                ➡️ Harare → Kadoma • *$6*
-                                                                ➡️ Harare → Kwekwe • *$8*
-                                                                ➡️ Harare → Gweru • *$10*
-                                                                ➡️ Harare → Bulawayo • *$15*
-                                                                ➡️ Chegutu → Kadoma • *$5*
-                                                                ➡️ Chegutu → Gweru • *$7*
-                                                                ➡️ Kadoma → Bulawayo • *$10*
-                                                                ➡️ Kwekwe → Bulawayo • *$8*
-                                                                ➡️ Gweru → Bulawayo • *$5*
-                                                                """
+                                                            "text": (
+                                                                "✨ *Pre-Bookable Routes* ✨\n"
+                                                                "_(DIY online booking available)_\n\n"
+                                                                "➡️ Harare → Chegutu • *$5*\n"
+                                                                "➡️ Harare → Kadoma • *$6*\n"
+                                                                "➡️ Harare → Kwekwe • *$8*\n"
+                                                                "➡️ Harare → Gweru • *$10*\n"
+                                                                "➡️ Harare → Bulawayo • *$15*\n"
+                                                                "➡️ Chegutu → Kadoma • *$5*\n"
+                                                                "➡️ Chegutu → Gweru • *$7*\n"
+                                                                "➡️ Kadoma → Bulawayo • *$10*\n"
+                                                                "➡️ Kwekwe → Bulawayo • *$8*\n"
+                                                                "➡️ Gweru → Bulawayo • *$5*\n\n"
+                                                                "*Additional Routes*\n"
+                                                                "_These routes are not yet available for online DIY pre-booking._\n"
+                                                                "Contact our agents or visit terminals for booking.\n\n"
+                                                                "📍 Harare - Kariba • $14 • 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM • Mbare Musika Rank\n"
+                                                                "📍 Harare - Victoria Falls • $25 • 5:15AM, 4:00PM, 6:00PM • Harare Showgrounds\n"
+                                                                "📍 Chitungwiza - Mutare • $18 • 6:00AM • C-Junction\n"
+                                                                "📍 Harare - Gokwe Centre • $16 • 4:45AM, 11:00AM, 3:30PM • Mbare Musika Rank\n"
+                                                                "📍 Harare - Karoi • $12 • 2:00PM • Mbare Musika Rank\n"
+                                                                "📍 Harare - Magunje • $14 • 6:00AM, 1:00PM • Mbare Musika Rank\n"
+                                                                "📍 Harare - Sagambe • $20 • 5:15AM, 11:00AM, 4:00PM • Mbare Musika Rank\n"
+                                                                "📍 Harare - Mutare Direct • $18 • 11:15AM • Mbare Musika Rank\n"
+                                                                "📍 Harare - Chirundu • $15 • 9:00AM • Westgate\n"
+                                                                "📍 Harare - Mukumbura • $22 • 7:00AM, 2:00PM • Mbare Musika Rank"
+                                                            )
                                                             },
                                                             "action": {
                                                                 "buttons": [
