@@ -1594,6 +1594,52 @@ def webhook():
                                                         print(response.status_code)
                                                         print(response.text)
 
+
+                                                elif selected_option == "private_hire":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", 
+                                                            "text": "🚌 CAG TOURS PRIVATE HIRE" },
+                                                            "body": {
+                                                            "text": ("Select a Private Hire option below to proceed")
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "quote_hire", "title": "Request Quotation"}},
+                                                                    {"type": "reply", "reply": {"id": "proceed_hire", "title": "Proceed to Hire"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text) 
+
+                                                elif selected_option == "quote_hire":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+
+
+
                                                 elif selected_option == "why_choose":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
