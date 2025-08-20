@@ -9937,10 +9937,8 @@ def paynow_result():
                 arr = result[3]
                 time = result[4]
                 traveldate = result[11]
-                travel_date_obj = datetime.strptime(traveldate, "%Y-%m-%d")
-
                 # Format as "19 August 2025"
-                formatted_date_travel = travel_date_obj.strftime("%d %B %Y")
+                formatted_date_travel = traveldate.strftime("%d %B %Y")
                 sender_id = result[1]
                 seats = str(result[12])
                 booking_date = result[10]
