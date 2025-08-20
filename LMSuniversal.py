@@ -783,7 +783,7 @@ def webhook():
                                                         except Exception as e:
                                                             print(e)
 
-                                                if selected_option == "book_ticket":
+                                                if selected_option == "book_ticket" or button_id == "book_ticket":
 
                                                     try:
 
@@ -1450,6 +1450,7 @@ def webhook():
                                                             },
                                                             "action": {
                                                                 "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "book_ticket", "title": "🌍 Book a Ticket"}},
                                                                     {"type": "reply", "reply": {"id": "more_routes", "title": "🌍 Additional Routes"}},
                                                                     {"type": "reply", "reply": {"id": "mainmenu", "title": "🏠 Main Menu"}}
                                                                 ]
