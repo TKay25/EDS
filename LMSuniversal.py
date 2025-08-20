@@ -9936,9 +9936,11 @@ def paynow_result():
                 dep = result[2]
                 arr = result[3]
                 time = result[4]
+                date_bought = result[10]
                 traveldate = result[11]
                 # Format as "19 August 2025"
                 formatted_date_travel = traveldate.strftime("%d %B %Y")
+                formatted_date_bought = date_bought.strftime("%d %B %Y")
                 sender_id = result[1]
                 seats = str(result[12])
                 booking_date = result[10]
@@ -10061,9 +10063,9 @@ def paynow_result():
                         'id_number':  natidno55,
                         'route': f"{dep} to {arr}",
                         'travel_date': formatted_date_travel,
+                        'booking_date': formatted_date_bought,
                         "seats": seats,
                         'departure_time': time,
-                        'booking_date': 'date',
                         'payment_method': 'EcoCash',
                         'total_fare': fare,
                         'ticketref': ticketref,
