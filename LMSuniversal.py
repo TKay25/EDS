@@ -1669,7 +1669,7 @@ def webhook():
 
 
 
-                                                elif selected_option == "ticket_use_validity":
+                                                elif selected_option == "ticket_use_validity" or button_id == "ticket_use_validity":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
@@ -1710,7 +1710,7 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text) 
 
-                                                elif selected_option == "cancel_reschedule":
+                                                elif selected_option == "cancel_reschedule" or button_id == "cancel_reschedule":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
@@ -1750,7 +1750,7 @@ def webhook():
                                                     print(response.text) 
 
 
-                                                elif selected_option == "depart_checkin":
+                                                elif selected_option == "depart_checkin" or button_id == "depart_checkin":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
