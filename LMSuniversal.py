@@ -1667,6 +1667,68 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
 
+                                                elif selected_option == "policies":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 CAG TOURS TRAVEL POLICIES"
+                                                            },
+                                                            "body": {
+                                                                "text": (
+                                                                    f"Select an enquiry option below to proceed."
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "button": "📋 CAG TOURS TRAVEL POLICIES",
+                                                                "sections": [
+                                                                    {
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "ticket_use_validity",
+                                                                                "title": "Ticket Uses & Validity",
+                                                                                "description": "View ticket validity policies"
+                                                                            },
+                                                                            {
+                                                                                "id": "cancel_reschedule",
+                                                                                "title": "Cancellation & Rescheduling",
+                                                                                "description": "View cancellation policies"
+                                                                            },
+                                                                            {
+                                                                                "id": "depart_checkin",
+                                                                                "title": "Departure & Check-In",
+                                                                                "description": "View departure policies"
+                                                                            },
+                                                                            {
+                                                                                "id": "main_menu",
+                                                                                "title": "CAG Main Menu"                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+
+
+                                                    # Send the request to WhatsApp
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    # Optional: Print result for debugging
+                                                    print(response.status_code)
+                                                    print(response.text)
+
                                                 elif selected_option == "why_choose":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
