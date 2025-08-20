@@ -1629,12 +1629,40 @@ def webhook():
 
                                                 elif selected_option == "quote_hire":
 
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "template",
+                                                        "template": {
+                                                            "name": "privatehire",  # your template name
+                                                            "language": {"code": "en"},
+                                                            "components": [
+                                                                {
+                                                                    "type": "button",
+                                                                    "index": "0",
+                                                                    "sub_type": "flow",
+                                                                    "parameters": [
+                                                                        {
+                                                                            "type": "action",
+                                                                            "action": {
+                                                                            "flow_token": "unused"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                            # button index in your template
+                                                                }
+                                                            ]
+                                                        }
                                                     }
 
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                        headers={
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        },
+                                                        json=payload
+                                                    ) 
 
 
 
