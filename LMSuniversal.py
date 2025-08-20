@@ -1697,13 +1697,13 @@ def webhook():
                                                                         "rows": [
                                                                             {
                                                                                 "id": "ticket_use_validity",
-                                                                                "title": "Ticket Uses & Validity",
+                                                                                "title": "Ticket Validity",
                                                                                 "description": "View ticket validity policies"
                                                                             },
                                                                             {
                                                                                 "id": "cancel_reschedule",
-                                                                                "title": "Cancellation & Rescheduling",
-                                                                                "description": "View cancellation policies"
+                                                                                "title": "Cancellation",
+                                                                                "description": "View cancellation & rescheduling policies"
                                                                             },
                                                                             {
                                                                                 "id": "depart_checkin",
