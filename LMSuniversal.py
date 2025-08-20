@@ -1808,7 +1808,7 @@ def webhook():
                                                     print(response.text)
 
 
-                                                elif selected_option == "routes":
+                                                elif selected_option == "routes" or button_id == "routes":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
