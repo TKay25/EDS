@@ -1615,7 +1615,7 @@ def webhook():
                                                             "action": {
                                                                 "buttons": [
                                                                     {"type": "reply", "reply": {"id": "quote_hire", "title": "Request Quotation"}},
-                                                                    {"type": "reply", "reply": {"id": "proceed_hire", "title": "Proceed to Hire"}},
+                                                                    {"type": "reply", "reply": {"id": "Followup", "title": "Follow Up on Quotation"}},
                                                                     {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
                                                                 ]
                                                             }
@@ -1627,7 +1627,7 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text) 
 
-                                                elif selected_option == "quote_hire":
+                                                elif selected_option == "quote_hire" or button_id == "quote_hire":
 
                                                     payload = {
                                                         "messaging_product": "whatsapp",
