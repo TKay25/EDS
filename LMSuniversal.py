@@ -973,7 +973,7 @@ def webhook():
                                                                             {
                                                                                 "id": "know_more",
                                                                                 "title": "Know More",
-                                                                                "description": "Our story, mission & travel experience"
+                                                                                "description": "Our story & travel experience"
                                                                             },
                                                                             {
                                                                                 "id": "why_choose",
@@ -1107,7 +1107,7 @@ def webhook():
                                                                             {
                                                                                 "id": "know_more",
                                                                                 "title": "Know More",
-                                                                                "description": "Our story, mission & travel experience"
+                                                                                "description": "Our story & travel experience"
                                                                             },
                                                                             {
                                                                                 "id": "why_choose",
@@ -1476,7 +1476,7 @@ def webhook():
                                                                             {
                                                                                 "id": "know_more",
                                                                                 "title": "Know More",
-                                                                                "description": "Our story, mission & travel experience"
+                                                                                "description": "Our story & travel experience"
                                                                             },
                                                                             {
                                                                                 "id": "why_choose",
@@ -1589,7 +1589,7 @@ def webhook():
                                                                             {
                                                                                 "id": "know_more",
                                                                                 "title": "Know More",
-                                                                                "description": "Our story, mission & travel experience"
+                                                                                "description": "Our story & travel experience"
                                                                             },
                                                                             {
                                                                                 "id": "why_choose",
@@ -1753,7 +1753,7 @@ def webhook():
                                                                         {
                                                                             "id": "know_more",
                                                                             "title": "Know More",
-                                                                            "description": "Our story, mission & travel experience"
+                                                                            "description": "Our story & travel experience"
                                                                         },
                                                                         {
                                                                             "id": "why_choose",
@@ -10093,7 +10093,7 @@ def paynow_result():
                                         {
                                             "id": "know_more",
                                             "title": "Know More",
-                                            "description": "Our story, mission & travel experience"
+                                            "description": "Our story & travel experience"
                                         },
                                         {
                                             "id": "why_choose",
@@ -10302,7 +10302,7 @@ def paynow_result():
                                         {
                                             "id": "know_more",
                                             "title": "Know More",
-                                            "description": "Our story, mission & travel experience"
+                                            "description": "Our story & travel experience"
                                         },
                                         {
                                             "id": "why_choose",
