@@ -1612,7 +1612,15 @@ def webhook():
                                                             "header": { "type": "text", 
                                                             "text": "🚌 CAG TOURS PRIVATE HIRE" },
                                                             "body": {
-                                                            "text": ("Select a Private Hire option below to proceed")
+                                                            "text": (
+                                                                "✨ *Private Hire Services* ✨\n\n"
+                                                                "🚘 *Corporate Travel* — Reliable transport for business events & meetings. Professional drivers, flexible schedules, WiFi fleet.\n\n"
+                                                                "💍 *Wedding Transport* — Luxury rides with décor, champagne service & red carpet touch.\n\n"
+                                                                "🎒 *School Trips* — Safe buses with certified drivers, GPS tracking & first aid equipped.\n\n"
+                                                                "🦁 *Tourism & Safaris* — Custom tours with guides, park permits, comfy viewing vehicles & refreshments.\n\n"
+                                                                "🏆 *Sports Teams* — Extra luggage space, branding options & multiple vehicles for squads.\n\n"
+                                                                "🎶 *Special Events* — Concerts, festivals & VIP packages with late-night service & multiple pickups.\n\n"
+                                                                "Select a Private Hire option below to proceed")
                                                             },
                                                             "action": {
                                                                 "buttons": [
