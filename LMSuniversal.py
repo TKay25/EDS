@@ -1403,7 +1403,121 @@ def webhook():
 
                                                         print(response.status_code)
                                                         print(response.text)
-                          
+                                            
+
+
+                                                elif selected_option == "why_choose":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 WHY CHOOSE CAG TOURS"
+                                                            },
+                                                            "body": {
+                                                                "text": (
+                                                                    "🚗 *Professional Drivers*\n"
+                                                                    "We have experienced drivers trained to the highest standards.\n\n"
+                                                                    "🛡️ *Safety First*\n"
+                                                                    "We have a regular maintenance schedule for all our vehicles ensuring maximum safety.\n\n"
+                                                                    "🤝 *Customer Service*\n"
+                                                                    "Our customer friendly support is available to assist with any travel needs.\n\n"
+                                                                    "🌿 *Eco-Conscious*\n"
+                                                                    "Our Operations are environmentally conscious for a greener future."
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "button": "📋 CAG TOURS MENU",
+                                                                "sections": [
+                                                                    {
+                                                                        "title": "📦 CAG TOURS SERVICES",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "book_ticket",
+                                                                                "title": "Book a Ticket",
+                                                                                "description": "Reserve your seat instantly"
+                                                                            },
+                                                                            {
+                                                                                "id": "routes",
+                                                                                "title": "View Routes",
+                                                                                "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "parcel_delivery",
+                                                                                "title": "Parcel Delivery",
+                                                                                "description": "Send or collect packages"
+                                                                            },
+                                                                            {
+                                                                                "id": "find_stop",
+                                                                                "title": "Find Bus Stop",
+                                                                                "description": "Locate nearest pick-up point"
+                                                                            },
+                                                                            {
+                                                                                "id": "promotions",
+                                                                                "title": "Promotions & Offers",
+                                                                                "description": "Current discounts & deals"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🚌 CAG TOURS",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "know_more",
+                                                                                "title": "Know More",
+                                                                                "description": "Our story, mission & travel experience"
+                                                                            },
+                                                                            {
+                                                                                "id": "why_choose",
+                                                                                "title": "Why Choose Us",
+                                                                                "description": "Luxury, safety & comfort explained"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🛎 CUSTOMER SERVICE",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "faqs",
+                                                                                "title": "❓ FAQs",
+                                                                                "description": "Get answers to common questions"
+                                                                            },
+                                                                            {
+                                                                                "id": "policies",
+                                                                                "title": "Travel Policies",
+                                                                                "description": "Baggage rules, safety, refunds"
+                                                                            },
+                                                                            {
+                                                                                "id": "get_help",
+                                                                                "title": "Get Help",
+                                                                                "description": "Talk to a support agent now"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
+
+
                                                 elif selected_option == "know_more":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -1412,7 +1526,7 @@ def webhook():
                                                         "Content-Type": "application/json"
                                                     }
 
-                                                    payload_city_conn = {
+                                                    payload = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
                                                         "type": "interactive",
@@ -1510,7 +1624,7 @@ def webhook():
                                                     }
 
 
-                                                    response = requests.post(url, headers=headers, json=payload_city_conn)
+                                                    response = requests.post(url, headers=headers, json=payload)
 
                                                     print(response.status_code)
                                                     print(response.text)
