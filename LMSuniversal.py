@@ -951,6 +951,11 @@ def webhook():
                                                                                 "description": "Get info regarding our travel routes"
                                                                             },
                                                                             {
+                                                                                "id": "private_hire",
+                                                                                "title": "Private Hire",
+                                                                                "description": "Book buses for private trips or group travel"
+                                                                            },
+                                                                            {
                                                                                 "id": "parcel_delivery",
                                                                                 "title": "Parcel Delivery",
                                                                                 "description": "Send or collect packages"
@@ -1083,6 +1088,11 @@ def webhook():
                                                                                 "id": "routes",
                                                                                 "title": "View Routes",
                                                                                 "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "private_hire",
+                                                                                "title": "Private Hire",
+                                                                                "description": "Book buses for private trips or group travel"
                                                                             },
                                                                             {
                                                                                 "id": "parcel_delivery",
@@ -1632,10 +1642,16 @@ def webhook():
                                                                                 "description": "Get info regarding our travel routes"
                                                                             },
                                                                             {
+                                                                                "id": "private_hire",
+                                                                                "title": "Private Hire",
+                                                                                "description": "Book buses for private trips or group travel"
+                                                                            },
+                                                                            {
                                                                                 "id": "parcel_delivery",
                                                                                 "title": "Parcel Delivery",
                                                                                 "description": "Send or collect packages"
                                                                             },
+                                                                        
                                                                             {
                                                                                 "id": "find_stop",
                                                                                 "title": "Find Bus Stop",
@@ -1737,6 +1753,11 @@ def webhook():
                                                                                 "id": "routes",
                                                                                 "title": "View Routes",
                                                                                 "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "private_hire",
+                                                                                "title": "Private Hire",
+                                                                                "description": "Book buses for private trips or group travel"
                                                                             },
                                                                             {
                                                                                 "id": "parcel_delivery",
@@ -1848,6 +1869,11 @@ def webhook():
                                                                                 "id": "routes",
                                                                                 "title": "View Routes",
                                                                                 "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "private_hire",
+                                                                                "title": "Private Hire",
+                                                                                "description": "Book buses for private trips or group travel"
                                                                             },
                                                                             {
                                                                                 "id": "parcel_delivery",
@@ -2012,6 +2038,11 @@ def webhook():
                                                                             "id": "routes",
                                                                             "title": "View Routes",
                                                                             "description": "Get info regarding our travel routes"
+                                                                        },
+                                                                        {
+                                                                            "id": "private_hire",
+                                                                            "title": "Private Hire",
+                                                                            "description": "Book buses for private trips or group travel"
                                                                         },
                                                                         {
                                                                             "id": "parcel_delivery",
@@ -10354,6 +10385,11 @@ def paynow_result():
                                             "description": "Get info regarding our travel routes"
                                         },
                                         {
+                                            "id": "private_hire",
+                                            "title": "Private Hire",
+                                            "description": "Book buses for private trips or group travel"
+                                        },
+                                        {
                                             "id": "parcel_delivery",
                                             "title": "Parcel Delivery",
                                             "description": "Send or collect packages"
@@ -10561,6 +10597,11 @@ def paynow_result():
                                             "id": "routes",
                                             "title": "View Routes",
                                             "description": "Get info regarding our travel routes"
+                                        },
+                                        {
+                                            "id": "private_hire",
+                                            "title": "Private Hire",
+                                            "description": "Book buses for private trips or group travel"
                                         },
                                         {
                                             "id": "parcel_delivery",
