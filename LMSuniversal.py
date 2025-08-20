@@ -1615,7 +1615,7 @@ def webhook():
                                                             "action": {
                                                                 "buttons": [
                                                                     {"type": "reply", "reply": {"id": "quote_hire", "title": "Request Quotation"}},
-                                                                    {"type": "reply", "reply": {"id": "Followup", "title": "Follow Up on Quotation"}},
+                                                                    {"type": "reply", "reply": {"id": "Followup", "title": "Quotation Follow Up"}},
                                                                     {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
                                                                 ]
                                                             }
