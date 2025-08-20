@@ -1667,6 +1667,130 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
 
+
+
+                                                elif selected_option == "ticket_use_validity":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", 
+                                                            "text": "🚌 CAG TOURS TICKETS" },
+                                                            "body": {
+                                                                "text": (
+                                                                    "🎟 *Ticket Validity*\n\n"
+                                                                    "✅ Tickets apply only to the *named passenger*, *route*, *date*, and *time*.\n"
+                                                                    "📩 Booking confirmation is the passenger's responsibility.\n"
+                                                                    "🪪 Present *ID* and *ticket reference* at check-in.\n"
+                                                                    "✏️ Altered tickets after purchase may be void.\n"
+                                                                    "❌ Lost tickets are non-refundable."
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "cancel_reschedule", "title": "Travel Cancellation"}},
+                                                                    {"type": "reply", "reply": {"id": "depart_checkin", "title": "Departure & Check-In"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text) 
+
+                                                elif selected_option == "cancel_reschedule":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", 
+                                                            "text": "🚌 CAG TOURS TRAVEL" },
+                                                            "body": {
+                                                                "text": (
+                                                                    "❌ *Cancellation & Rescheduling*\n\n"
+                                                                    "⏰ If requested more than *24hrs before departure*, tickets may be refunded or rescheduled with a *50% admin fee*.\n"
+                                                                    "🚫 No refund or rescheduling within *3hrs of departure*.\n"
+                                                                    "📝 Verbal quotes are invalid unless *written confirmation* is provided."
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "ticket_use_validity", "title": "Ticket Validity"}},
+                                                                    {"type": "reply", "reply": {"id": "depart_checkin", "title": "Departure & Check-In"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text) 
+
+
+                                                elif selected_option == "depart_checkin":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", 
+                                                            "text": "🚌 CAG TOURS TRAVEL" },
+                                                            "body": {
+                                                                "text": (
+                                                                    "🕒 *Departure & Check-In*\n\n"
+                                                                    "✅ Check-in must be completed *30 minutes before departure*.\n"
+                                                                    "⚠️ Arriving less than *5 minutes early* may result in losing your seat to stand-by passengers.\n"
+                                                                    "🚫 Latecomers must purchase a *new ticket*.\n"
+                                                                    "⏳ Travel times are *not guaranteed*.\n"
+                                                                    "🚌 CAG Tours is *not liable* for delays or cancellations — no refunds in such cases."
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "ticket_use_validity", "title": "Ticket Validity"}},
+                                                                    {"type": "reply", "reply": {"id": "cancel_reschedule", "title": "Travel Cancellation"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text) 
+
                                                 elif selected_option == "policies":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -1702,7 +1826,7 @@ def webhook():
                                                                             },
                                                                             {
                                                                                 "id": "cancel_reschedule",
-                                                                                "title": "Cancellation",
+                                                                                "title": "Travel Cancellation",
                                                                                 "description": "View cancellation & rescheduling policies"
                                                                             },
                                                                             {
@@ -1711,7 +1835,7 @@ def webhook():
                                                                                 "description": "View departure policies"
                                                                             },
                                                                             {
-                                                                                "id": "main_menu",
+                                                                                "id": "mainmenu",
                                                                                 "title": "CAG Main Menu"                                                                            }
                                                                         ]
                                                                     }
