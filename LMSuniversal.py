@@ -10059,7 +10059,7 @@ def paynow_result():
                     app_data = {
                         'firstname': firstname55.title(),
                         'surname': surname55.title(),
-                        'phone_number': phone55,
+                        'phone_number': f"0{phone55}",
                         'id_number':  natidno55,
                         'route': f"{dep} to {arr}",
                         'travel_date': formatted_date_travel,
