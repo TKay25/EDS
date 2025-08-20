@@ -1436,17 +1436,16 @@ def webhook():
                                                                 "text": """✨ *Pre-Bookable Routes* ✨ \n
                                                                 _(DIY online booking available)_ \n
 
-                                                                ➡️ Harare → Chegutu • *$5*  
-                                                                ➡️ Harare → Kadoma • *$6*  
-                                                                ➡️ Harare → Kwekwe • *$8*  
-                                                                ➡️ Harare → Gweru  • *$10*  
-                                                                ➡️ Harare → Bulawayo • *$15*  
-
-                                                                ➡️ Chegutu → Kadoma • *$5*  
-                                                                ➡️ Chegutu → Gweru  • *$7*  
-                                                                ➡️ Kadoma → Bulawayo • *$10*  
-                                                                ➡️ Kwekwe → Bulawayo • *$8*  
-                                                                ➡️ Gweru → Bulawayo • *$5*  
+                                                                ➡️ Harare → Chegutu • *$5*
+                                                                ➡️ Harare → Kadoma • *$6*
+                                                                ➡️ Harare → Kwekwe • *$8*
+                                                                ➡️ Harare → Gweru • *$10*
+                                                                ➡️ Harare → Bulawayo • *$15*
+                                                                ➡️ Chegutu → Kadoma • *$5*
+                                                                ➡️ Chegutu → Gweru • *$7*
+                                                                ➡️ Kadoma → Bulawayo • *$10*
+                                                                ➡️ Kwekwe → Bulawayo • *$8*
+                                                                ➡️ Gweru → Bulawayo • *$5*
                                                                 """
                                                             },
                                                             "action": {
