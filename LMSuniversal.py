@@ -730,50 +730,6 @@ def webhook():
                                                                     print(response.status_code)
                                                                     print(response.text)
 
-
-                                                                elif dep == "Kadoma" and arr == "Chegutu":
-
-                                                                    payload = {
-                                                                        "messaging_product": "whatsapp",
-                                                                        "to": sender_id,
-                                                                        "type": "interactive",
-                                                                        "interactive": {
-                                                                            "type": "list",
-                                                                            "header": {
-                                                                                "type": "text",
-                                                                                "text": "🚍 DEPARTURE TIME"
-                                                                            },
-                                                                            "body": {
-                                                                                "text": (
-                                                                                    f"Okay. Kindly select the departure time from Kadoma for which you want to book a ticket on the menu below. ⬇️"
-                                                                                )
-                                                                            },
-                                                                            "action": {
-                                                                                "button": "DEPARTURE TIME",
-                                                                                "sections": [
-                                                                                    {
-                                                                                        "title": "DEPARTURE TIME",
-                                                                                        "rows": [
-                                                                                            {"id": "txq1.25pm", "title": "1.25 pm"},
-                                                                                            {"id": "txq3.25pm", "title": "3.25 pm"},
-                                                                                            {"id": "txq4.55pm", "title": "4.55 pm"},
-                                                                                            {"id": "txq5.55pm", "title": "5.55 pm"},
-                                                                                            {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                        ]
-                                                                                    }
-                                                                                ]
-                                                                            }
-                                                                        }
-                                                                    }
-
-                                                                    # Send the request to WhatsApp
-                                                                    response = requests.post(url, headers=headers, json=payload)
-
-                                                                    # Optional: Print result for debugging
-                                                                    print(response.status_code)
-                                                                    print(response.text)
-
-
                                                             else:
                                                                 print("No matching record found")
 
@@ -1423,20 +1379,21 @@ def webhook():
                                                                 "body": {
                                                                 "text": (
                                                                     "✨ *Pre-Bookable Routes* ✨\n"
-                                                                    "DIY online booking available for the following routes\n\n"
+                                                                    "DIY online booking available for the following routes from Harare\n\n"
 
-                                                                    "➡️ Harare → Chegutu • *USD 5* 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM \n"
-                                                                    "➡️ Harare → Kadoma • *USD 6* 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM\n"
-                                                                    "➡️ Harare → Kwekwe • *USD 8* 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM\n"
-                                                                    "➡️ Harare → Gweru • *USD 10* 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM\n"
-                                                                    "➡️ Harare → Bulawayo • *USD 15* 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM\n\n"
+                                                                    "➡️ Harare → Chegutu • *USD 5*\n"
+                                                                    "➡️ Harare → Kadoma • *USD 6*\n"
+                                                                    "➡️ Harare → Kwekwe • *USD 8*\n"
+                                                                    "➡️ Harare → Gweru • *USD 10*\n"
+                                                                    "➡️ Harare → Bulawayo • *USD 15*\n\n"
+                                                                    "Departure Times from Harare • 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM"
                                                                 )
                                                                 },
                                                                 "action": {
                                                                     "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "book_ticket", "title": "🌍 Book a Ticket"}},
-                                                                        {"type": "reply", "reply": {"id": "more_routes", "title": "🌍 Additional Routes"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "🏠 Main Menu"}}
+                                                                        {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
+                                                                        {"type": "reply", "reply": {"id": "more_routes", "title": "Additional Routes"}},
+                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
                                                                     ]
                                                                 }
                                                             }
