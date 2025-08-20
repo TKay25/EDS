@@ -1403,6 +1403,117 @@ def webhook():
 
                                                         print(response.status_code)
                                                         print(response.text)
+                          
+                                                elif selected_option == "know_more":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload_city_conn = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 ABOUT CAG TOURS"
+                                                            },
+                                                            "body": {
+                                                                "text": (
+                                                                    "CAG Travellers Coaches is your travel company of choice in Zimbabwe. We've grown from humble beginnings to become the leading transportation provider in the country, connecting communities and facilitating commerce across the nation.\n\n"
+                                                                    "✨ *Our Journey* ✨\n\n"
+                                                                    "🚌 1998 – Humble Beginnings\n"
+                                                                    "CAG Travellers Coaches was founded by Gordon Nhanhanga with a single rebuilt 'Blue Face' AVM 615 bus, serving the Mbare–Kuwadzana route.\n\n"
+                                                                    "🌱 2011 – Next Generation\n"
+                                                                    "Gordon's children, Sam and Afra, launched CAG Tours, expanding the family's transport legacy.\n\n"
+                                                                    "🏆 2023 – Award-Winning Service\n"
+                                                                    "CAG received 25 awards for service excellence, becoming Zimbabwe's trusted name in transport.\n\n"
+                                                                    "🚀 2025 – Transport Revolution\n"
+                                                                    "We launched a pre-booking system to formalize the transport industry, offering safer and more organized travel."
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "button": "📋 CAG TOURS MENU",
+                                                                "sections": [
+                                                                    {
+                                                                        "title": "📦 CAG TOURS SERVICES",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "book_ticket",
+                                                                                "title": "Book a Ticket",
+                                                                                "description": "Reserve your seat instantly"
+                                                                            },
+                                                                            {
+                                                                                "id": "routes",
+                                                                                "title": "View Routes",
+                                                                                "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "parcel_delivery",
+                                                                                "title": "Parcel Delivery",
+                                                                                "description": "Send or collect packages"
+                                                                            },
+                                                                            {
+                                                                                "id": "find_stop",
+                                                                                "title": "Find Bus Stop",
+                                                                                "description": "Locate nearest pick-up point"
+                                                                            },
+                                                                            {
+                                                                                "id": "promotions",
+                                                                                "title": "Promotions & Offers",
+                                                                                "description": "Current discounts & deals"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🚌 CAG TOURS",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "know_more",
+                                                                                "title": "Know More",
+                                                                                "description": "Our story, mission & travel experience"
+                                                                            },
+                                                                            {
+                                                                                "id": "why_choose",
+                                                                                "title": "Why Choose Us",
+                                                                                "description": "Luxury, safety & comfort explained"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🛎 CUSTOMER SERVICE",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "faqs",
+                                                                                "title": "❓ FAQs",
+                                                                                "description": "Get answers to common questions"
+                                                                            },
+                                                                            {
+                                                                                "id": "policies",
+                                                                                "title": "Travel Policies",
+                                                                                "description": "Baggage rules, safety, refunds"
+                                                                            },
+                                                                            {
+                                                                                "id": "get_help",
+                                                                                "title": "Get Help",
+                                                                                "description": "Talk to a support agent now"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+
+                                                    response = requests.post(url, headers=headers, json=payload_city_conn)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
 
 
                                                 elif selected_option == "routes":
@@ -1465,136 +1576,6 @@ def webhook():
                                                 print(f"📨 Message from {sender_id}: {text}")
                                                 
                                                 print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
-
-
-                                                '''if len(digits_only) >= 9:
-
-                                                    cursor.execute("""
-                                                        SELECT id FROM cagwatick2
-                                                        WHERE idwanumber = %s
-                                                        AND (status IS NULL OR TRIM(status) = '')
-                                                    """, (sender_id[-9:],))
-                                                    result = cursor.fetchone()
-
-                                                    if result:
-
-                                                        cursor.execute("""
-                                                            SELECT dep, arr, traveldate, fare
-                                                            FROM cagwatick2 
-                                                            WHERE idwanumber = %s 
-                                                            AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (sender_id[-9:],))
-
-                                                        resultxx = cursor.fetchone()
-
-                                                        dep = resultxx[0]
-                                                        arr = resultxx[1]
-                                                        traveldate = resultxx[2]
-                                                        fare = resultxx[3]
-
-
-                                                        cursor.execute("""
-                                                            UPDATE cagwatick2
-                                                            SET ecocashnum = %s
-                                                            WHERE idwanumber = %s 
-                                                            AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (digits_only, sender_id[-9:]))
-
-                                                        connection.commit()
-
-                                                    else:
-                                                        print("No row found for this sender_id.")
-
-
-
-                                                    print("Message contains more than 9 digits after removing spaces")
-                                                    # You can now process it as needed, e.g., assume it's an ID number or phone number
-
-                                                    print("yeah")
-
-                                                    try:
-                                                    
-                                                        paynow = Paynow('20625',
-                                                                        'f6559511-ab13-45b0-b75b-07b36890f6a6',
-                                                                        'https://eds-dfym.onrender.com/paynow/return',
-                                                                        'https://eds-dfym.onrender.com/paynow/result/update'
-                                                                        )
-                                                        
-                                                        print(paynow)
-
-                                                        payment = paynow.create_payment('Order', 'takudzwazvaks@gmail.com')
-
-                                                        payment.add('Payment for stuff', fare)
-
-
-                                                        cursor.execute("""
-                                                            SELECT id, idwanumber, dep, arr, time, traveldate, paymethod, fare, ecocashnum FROM cagwatick2
-                                                            WHERE idwanumber = %s
-                                                            AND (status IS NULL OR TRIM(status) = '')
-                                                        """, (sender_id[-9:],))
-                                                        result = cursor.fetchone()
-
-                                                        if result:
-
-                                                            send_whatsapp_messagecc(
-                                                                sender_id, 
-                                                                f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCash PIN to process your USD {result[7]} bus fare payment."
-                                                            ) 
-
-                                                        else:
-                                                            print("No row found for this sender_id.")
-
-
-                                                        response = paynow.send_mobile(payment, f"0{result[8]}", 'ecocash')
-
-                                                        print("pending")
-
-                                    
-
-                                                        if(response.success):
-
-                                                            print('success')
-                                                            poll_url = response.poll_url
-
-                                                            print("Poll Url: ", poll_url)
-
-                                                            cursor.execute("""
-                                                                SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum FROM cagwatick2
-                                                                WHERE idwanumber = %s
-                                                                AND (status IS NULL OR TRIM(status) = '')
-                                                            """, (sender_id[-9:],))
-                                                            result = cursor.fetchone()
-
-                                                            if result:
-                                                                highest_id = result[0]
-                                                                cursor.execute("""
-                                                                    UPDATE cagwatick2
-                                                                    SET pollurl = %s
-                                                                    WHERE idwanumber = %s
-                                                                    AND (status IS NULL OR TRIM(status) = '')
-                                                                """, (poll_url, sender_id[-9:]))
-
-                                                                connection.commit()
-
-                                                            else:
-                                                                print("No row found for this sender_id.")
-
-                                                            status = paynow.check_transaction_status(poll_url)
-
-                                                            time.sleep(20)
-
-                                                            print("Payment Status: ", status.status)
-
-
-                                                        return 'OK', 200
-
-
-                                                
-                                                    except Exception as e:
-                                                        print(e)
-
-                                                    return 'OK', 200'''
-
 
                                                 url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                 headers = {
