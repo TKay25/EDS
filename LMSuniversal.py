@@ -1683,7 +1683,7 @@ def webhook():
                                                             "type": "list",
                                                             "header": {
                                                                 "type": "text",
-                                                                "text": "🚍 CAG TOURS TRAVEL POLICIES"
+                                                                "text": "🚍 CAG TOURS POLICIES"
                                                             },
                                                             "body": {
                                                                 "text": (
@@ -1691,7 +1691,7 @@ def webhook():
                                                                 )
                                                             },
                                                             "action": {
-                                                                "button": "📋 CAG TOURS TRAVEL POLICIES",
+                                                                "button": "📋 CAG TOURS POLICIES",
                                                                 "sections": [
                                                                     {
                                                                         "rows": [
