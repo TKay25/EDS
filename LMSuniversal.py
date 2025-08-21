@@ -1234,6 +1234,102 @@ def webhook():
 
                                                     return 'OK', 200
 
+                                                elif selected_option == "BusTypes" or button_id == "BusTypes":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
+                                                            "body": {
+                                                            "text": (
+                                                            "🚍 ZhongTong (55-Seater)\n"
+                                                            "✅ 55 Reclining Seats\n"
+                                                            "✅ Climate Control\n"
+                                                            "✅ Reading Lights\n\n"
+
+                                                            "🚍 Yutong (49-Seater)\n"
+                                                            "✅ 49 Comfortable Seats\n"
+                                                            "✅ Premium Seating\n"
+                                                            "✅ Air Conditioning\n\n"
+
+                                                            "🚍 Higer (61-Seater)\n"
+                                                            "✅ 61 Luxury Seats\n"
+                                                            "✅ Advanced Climate Control\n"
+                                                            "✅ Enhanced Safety"
+                                                            )
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "Privatehires", "title": "Do you do private hires?"}},
+                                                                    {"type": "reply", "reply": {"id": "Sunday", "title": "Do you work on Sundays"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
+                                                elif selected_option == "Privatehires" or button_id == "Privatehires":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
+                                                            "body": {
+                                                            "text": (
+                                                            "🌟 Yes, we do private hire! 🌟\n\n"
+                                                            "At CAG Tours, we provide tailored private transport solutions for every occasion:\n"
+                                                            "• 🚘 Corporate Travel – reliable, professional, WiFi-enabled fleet\n"
+                                                            "• 💍 Wedding Transport – elegant decorations, champagne & red-carpet service\n"
+                                                            "• 🏫 School Trips – safe, GPS-tracked, first-aid equipped\n"
+                                                            "• 🦁 Tourism & Safaris – custom itineraries, knowledgeable guides\n"
+                                                            "• ⚽ Sports Teams – extra luggage space, team branding options\n"
+                                                            "• 🎶 Special Events – VIP packages, multiple pickup points, late-night service\n\n"
+                                                            "Why choose us?\n"
+                                                            "✅ Reliable & on-time\n"
+                                                            "✅ Modern, comfortable fleet\n"
+                                                            "✅ Experienced professional drivers\n"
+                                                            "✅ Fully customizable to your needs\n\n"
+                                                            "How can we assist with your private hire today? 😊"
+                                                            )
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "BusTypes", "title": "Bus Types"}},
+                                                                    {"type": "reply", "reply": {"id": "Sunday", "title": "Do you work on Sundays"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
                                                 elif selected_option == "faqs":
                                                     button_id_leave_type = str(selected_option)
 
@@ -1244,6 +1340,7 @@ def webhook():
                                                                 {"id": "BusTypes", "title": "Bus Types"},
                                                                 {"id": "Privatehires", "title": "Do you do private hires?"},
                                                                 {"id": "Sunday", "title": "Do you work on Sundays"},
+                                                                {"id": "mainmenu", "title": "CAG Tours Main Menu"},
                                                             ]
                                                         }
                                                     ]
