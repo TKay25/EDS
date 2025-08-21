@@ -1269,8 +1269,8 @@ def webhook():
                                                             },
                                                             "action": {
                                                                 "buttons": [
-                                                                    {"type": "reply", "reply": {"id": "Privatehires", "title": "Do you do private hires?"}},
-                                                                    {"type": "reply", "reply": {"id": "Sunday", "title": "Do you work on Sundays"}},
+                                                                    {"type": "reply", "reply": {"id": "Privatehires", "title": "Offer private hires?"}},
+                                                                    {"type": "reply", "reply": {"id": "Sunday", "title": "You work on Sundays"}},
                                                                     {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
                                                                 ]
                                                             }
@@ -1318,7 +1318,7 @@ def webhook():
                                                             "action": {
                                                                 "buttons": [
                                                                     {"type": "reply", "reply": {"id": "BusTypes", "title": "Bus Types"}},
-                                                                    {"type": "reply", "reply": {"id": "Sunday", "title": "Do you work on Sundays"}},
+                                                                    {"type": "reply", "reply": {"id": "Sunday", "title": "You work on Sundays"}},
                                                                     {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
                                                                 ]
                                                             }
@@ -1338,8 +1338,8 @@ def webhook():
                                                             "title": "FAQs",
                                                             "rows": [
                                                                 {"id": "BusTypes", "title": "Bus Types"},
-                                                                {"id": "Privatehires", "title": "Do you do private hires?"},
-                                                                {"id": "Sunday", "title": "Do you work on Sundays"},
+                                                                {"id": "Privatehires", "title": "Offer private hires?"},
+                                                                {"id": "Sunday", "title": "You work on Sundays"},
                                                                 {"id": "mainmenu", "title": "CAG Tours Main Menu"},
                                                             ]
                                                         }
