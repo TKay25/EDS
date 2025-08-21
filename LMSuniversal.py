@@ -2332,12 +2332,12 @@ def webhook():
                                                             "header": { "type": "text", 
                                                             "text": "🚌 CAG TOURS AGENTS" },
                                                             "body": {
-                                                                "text": ("*John Mukamuri*:\n Harare CBD - Corner Speke & Mbuya Nehanda \n +263 77 123 4567 \n john.mukamuri@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: All Routes\n\n"
-                                                                "*Sarah Chigumba*: \nBulawayo City Centre \n +263 77 234 5678 \n sarah.chigumba@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare, Victoria Falls\n\n"
-                                                                "*David Moyo*: \nMutare Town Centre \n +263 77 345 6789 \n david.moyo@cagtours.co.zw \n 8:00 AM - 4:30 PM (Mon-Fri) \n Specializes in: Harare, Chitungwiza\n\n"
-                                                                "*Grace Sibanda*: \nVictoria Falls Tourism Centre \n +263 77 456 7890 \n grace.sibanda@cagtours.co.zw \n 7:00 AM - 6:00 PM Daily \n Specializes in: Harare, Bulawayo\n\n"
-                                                                "*Peter Ndlovu*: \nKariba Town Centre \n +263 77 567 8901 \n peter.ndlovu@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare\n\n"
-                                                                "*Mary Dube*: \nGweru Central Business District \n +263 77 678 9012 \n mary.dube@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: Harare, Bulawayo, Kwekwe")},
+                                                                "text": ("*John Mukamuri*:\n Harare CBD - Corner Speke & Mbuya Nehanda \n +263771234567 \n john.mukamuri@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: All Routes\n\n"
+                                                                "*Sarah Chigumba*: \nBulawayo City Centre \n +263772345678 \n sarah.chigumba@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare, Victoria Falls\n\n"
+                                                                "*David Moyo*: \nMutare Town Centre \n +263773456789 \n david.moyo@cagtours.co.zw \n 8:00 AM - 4:30 PM (Mon-Fri) \n Specializes in: Harare, Chitungwiza\n\n"
+                                                                "*Grace Sibanda*: \nVictoria Falls Tourism Centre \n +263774567890 \n grace.sibanda@cagtours.co.zw \n 7:00 AM - 6:00 PM Daily \n Specializes in: Harare, Bulawayo\n\n"
+                                                                "*Peter Ndlovu*: \nKariba Town Centre \n +263775678901 \n peter.ndlovu@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare\n\n"
+                                                                "*Mary Dube*: \nGweru Central Business District \n +263776789012 \n mary.dube@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: Harare, Bulawayo, Kwekwe")},
                                                             "action": {
                                                                 "buttons": [
                                                                     {"type": "reply", "reply": {"id": "find_stop", "title": "Terminals"}},
@@ -2371,11 +2371,11 @@ def webhook():
                                                             "text": "🚌 CAG TOURS TERMINALS" },
                                                             "body": {
                                                                 "text": (
-                                                                    "*Harare Main Terminal*:\n 106 Samora Machel Ave, Harare \n +263 78 694 9273 \n 5:00 AM - 10:00 PM \n Routes: Bulawayo, Kariba, Victoria Falls, Mutare\n\n"
-                                                                    "*Mbare Musika Rank*:\n Mbare Musika Bus Terminal \n +263 78 694 9273 \n 4:30 AM - 8:30 PM \n Routes: Kariba, Gokwe, Karoi, Mukumbura, Honde Valley\n\n"
-                                                                    "*Harare Showgrounds*:\n Agricultural Showgrounds \n +263 78 694 9273 \n 5:00 AM - 7:00 PM \n Routes: Bulawayo, Victoria Falls\n\n"
-                                                                    "*Bulawayo Terminal*:\n City Centre \n +263 78 694 9273 \n 6:00 AM - 9:00 PM \n Routes: Harare, Victoria Falls\n\n"
-                                                                    "*Chitungwiza Terminal*:\n C-Junction \n +263 78 694 9273 \n 5:30 AM - 7:00 PM \n Routes: Mutare, Sagambe")
+                                                                    "*Harare Main Terminal*:\n 106 Samora Machel Ave, Harare \n +263786949273 \n 5:00 AM - 10:00 PM \n Routes: Bulawayo, Kariba, Victoria Falls, Mutare\n\n"
+                                                                    "*Mbare Musika Rank*:\n Mbare Musika Bus Terminal \n +263786949273 \n 4:30 AM - 8:30 PM \n Routes: Kariba, Gokwe, Karoi, Mukumbura, Honde Valley\n\n"
+                                                                    "*Harare Showgrounds*:\n Agricultural Showgrounds \n +263786949273 \n 5:00 AM - 7:00 PM \n Routes: Bulawayo, Victoria Falls\n\n"
+                                                                    "*Bulawayo Terminal*:\n City Centre \n +263786949273 \n 6:00 AM - 9:00 PM \n Routes: Harare, Victoria Falls\n\n"
+                                                                    "*Chitungwiza Terminal*:\n C-Junction \n +263786949273 \n 5:30 AM - 7:00 PM \n Routes: Mutare, Sagambe")
                                                             },
                                                             "action": {
                                                                 "buttons": [
