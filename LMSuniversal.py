@@ -961,9 +961,9 @@ def webhook():
                                                                                 "description": "Send or collect packages"
                                                                             },
                                                                             {
-                                                                                "id": "find_stop",
-                                                                                "title": "Find Bus Stop",
-                                                                                "description": "Locate nearest pick-up point"
+                                                                            "id": "find_stop",
+                                                                            "title": "Terminals & Agents",
+                                                                            "description": "Locate nearest terminal or agent"
                                                                             }
                                                                         ]
                                                                     },
@@ -1095,9 +1095,9 @@ def webhook():
                                                                                 "description": "Send or collect packages"
                                                                             },
                                                                             {
-                                                                                "id": "find_stop",
-                                                                                "title": "Find Bus Stop",
-                                                                                "description": "Locate nearest pick-up point"
+                                                                            "id": "find_stop",
+                                                                            "title": "Terminals & Agents",
+                                                                            "description": "Locate nearest terminal or agent"
                                                                             }
                                                                         ]
                                                                     },
@@ -2045,9 +2045,9 @@ def webhook():
                                                                             },
                                                                         
                                                                             {
-                                                                                "id": "find_stop",
-                                                                                "title": "Find Bus Stop",
-                                                                                "description": "Locate nearest pick-up point"
+                                                                            "id": "find_stop",
+                                                                            "title": "Terminals & Agents",
+                                                                            "description": "Locate nearest terminal or agent"
                                                                             }
                                                                         ]
                                                                     },
@@ -2152,9 +2152,9 @@ def webhook():
                                                                                 "description": "Send or collect packages"
                                                                             },
                                                                             {
-                                                                                "id": "find_stop",
-                                                                                "title": "Find Bus Stop",
-                                                                                "description": "Locate nearest pick-up point"
+                                                                            "id": "find_stop",
+                                                                            "title": "Terminals & Agents",
+                                                                            "description": "Locate nearest terminal or agent"
                                                                             }
                                                                         ]
                                                                     },
@@ -2263,9 +2263,9 @@ def webhook():
                                                                                 "description": "Send or collect packages"
                                                                             },
                                                                             {
-                                                                                "id": "find_stop",
-                                                                                "title": "Find Bus Stop",
-                                                                                "description": "Locate nearest pick-up point"
+                                                                            "id": "find_stop",
+                                                                            "title": "Terminals & Agents",
+                                                                            "description": "Locate nearest terminal or agent"
                                                                             }
                                                                         ]
                                                                     },
@@ -2505,8 +2505,8 @@ def webhook():
                                                                         },
                                                                         {
                                                                             "id": "find_stop",
-                                                                            "title": "Find Bus Stop",
-                                                                            "description": "Locate nearest pick-up point"
+                                                                            "title": "Terminals & Agents",
+                                                                            "description": "Locate nearest terminal or agent"
                                                                         }
                                                                     ]
                                                                 },
@@ -10845,8 +10845,8 @@ def paynow_result():
                                         },
                                         {
                                             "id": "find_stop",
-                                            "title": "Find Bus Stop",
-                                            "description": "Locate nearest pick-up point"
+                                            "title": "Terminals & Agents",
+                                            "description": "Locate nearest terminal or agent"
                                         }
                                     ]
                                 },
@@ -11054,8 +11054,8 @@ def paynow_result():
                                         },
                                         {
                                             "id": "find_stop",
-                                            "title": "Find Bus Stop",
-                                            "description": "Locate nearest pick-up point"
+                                            "title": "Terminals & Agents",
+                                            "description": "Locate nearest terminal or agent"
                                         }
                                     ]
                                 },
