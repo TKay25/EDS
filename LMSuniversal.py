@@ -2315,6 +2315,83 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
 
+                                                elif selected_option == "agents" or button_id == "agents":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", 
+                                                            "text": "🚌 CAG TOURS AGENTS" },
+                                                            "body": {
+                                                                "text": ("*John Mukamuri*:\n Harare CBD - Corner Speke & Mbuya Nehanda \n +263 77 123 4567 \n john.mukamuri@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: All Routes\n\n"
+                                                                "*Sarah Chigumba*: \nBulawayo City Centre \n +263 77 234 5678 \n sarah.chigumba@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare, Victoria Falls\n\n"
+                                                                "*David Moyo*: \nMutare Town Centre \n +263 77 345 6789 \n david.moyo@cagtours.co.zw \n 8:00 AM - 4:30 PM (Mon-Fri) \n Specializes in: Harare, Chitungwiza\n\n"
+                                                                "*Grace Sibanda*: \nVictoria Falls Tourism Centre \n +263 77 456 7890 \n grace.sibanda@cagtours.co.zw \n 7:00 AM - 6:00 PM Daily \n Specializes in: Harare, Bulawayo\n\n"
+                                                                "*Peter Ndlovu*: \nKariba Town Centre \n +263 77 567 8901 \n peter.ndlovu@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare\n\n"
+                                                                "*Mary Dube*: \nGweru Central Business District \n +263 77 678 9012 \n mary.dube@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: Harare, Bulawayo, Kwekwe")},
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "find_stop", "title": "Terminals"}},
+                                                                    {"type": "reply", "reply": {"id": "book_ticket", "title": "Book Bus Ticket"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
+                                                elif selected_option == "find_stop" or button_id == "find_stop":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", 
+                                                            "text": "🚌 CAG TOURS TERMINALS" },
+                                                            "body": {
+                                                                "text": (
+                                                                    "*Harare Main Terminal*:\n 106 Samora Machel Ave, Harare \n +263 78 694 9273 \n 5:00 AM - 10:00 PM \n Routes: Bulawayo, Kariba, Victoria Falls, Mutare\n\n"
+                                                                    "*Mbare Musika Rank*:\n Mbare Musika Bus Terminal \n +263 78 694 9273 \n 4:30 AM - 8:30 PM \n Routes: Kariba, Gokwe, Karoi, Mukumbura, Honde Valley\n\n"
+                                                                    "*Harare Showgrounds*:\n Agricultural Showgrounds \n +263 78 694 9273 \n 5:00 AM - 7:00 PM \n Routes: Bulawayo, Victoria Falls\n\n"
+                                                                    "*Bulawayo Terminal*:\n City Centre \n +263 78 694 9273 \n 6:00 AM - 9:00 PM \n Routes: Harare, Victoria Falls\n\n"
+                                                                    "*Chitungwiza Terminal*:\n C-Junction \n +263 78 694 9273 \n 5:30 AM - 7:00 PM \n Routes: Mutare, Sagambe")
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "agents", "title": "Agents"}},
+                                                                    {"type": "reply", "reply": {"id": "book_ticket", "title": "Book Bus Ticket"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text) 
+
 
                                                 elif selected_option == "routes" or button_id == "routes":
 
