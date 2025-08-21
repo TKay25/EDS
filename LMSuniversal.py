@@ -1282,6 +1282,42 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
 
+
+                                                elif selected_option == "Sunday" or button_id == "Sunday":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": { "type": "text", "text": "🚌 CAG TOURS" },
+                                                            "body": {
+                                                            "text": (
+                                                            "Absolutely! We’re here 7 days a week, Sundays included! 😊"
+                                                            )
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "BusTypes", "title": "Bus Types"}},
+                                                                    {"type": "reply", "reply": {"id": "Privatehires", "title": "Offer private hires?"}},
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
                                                 elif selected_option == "Privatehires" or button_id == "Privatehires":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
