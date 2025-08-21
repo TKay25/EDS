@@ -1248,7 +1248,7 @@ def webhook():
                                                         "type": "interactive",
                                                         "interactive": {
                                                             "type": "button",
-                                                            "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
+                                                            "header": { "type": "text", "text": "🚌 CAG TOURS BUSES" },
                                                             "body": {
                                                             "text": (
                                                             "🚍 ZhongTong (55-Seater)\n"
@@ -1296,7 +1296,7 @@ def webhook():
                                                         "type": "interactive",
                                                         "interactive": {
                                                             "type": "button",
-                                                            "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
+                                                            "header": { "type": "text", "text": "🚌 CAG TOURS PRIVATE HIRE" },
                                                             "body": {
                                                             "text": (
                                                             "🌟 Yes, we do private hire! 🌟\n\n"
