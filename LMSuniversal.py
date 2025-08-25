@@ -4075,6 +4075,8 @@ def webhook():
 
                                                 elif button_id == "Dontsubmit":
 
+                                                    companyxx = company_reg.replace("_", " ").title()
+
                                                     sections = [
                                                         {
                                                             "title": "User Options",
@@ -5948,6 +5950,8 @@ def webhook():
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
 
                                             elif button_id == "Dontsubmit":
+
+                                                companyxx = company_reg.replace("_", " ").title()
 
                                                 sections = [
                                                     {
@@ -8255,6 +8259,8 @@ def webhook():
 
 
                                                     elif button_id == "Dontsubmit":
+
+                                                        companyxx = company_reg.replace("_", " ").title()
 
                                                         sections = [
                                                             {
@@ -10963,6 +10969,8 @@ def webhook():
 
 
                                                 elif button_id == "Dontsubmit":
+
+                                                    companyxx = company_reg.replace("_", " ").title()
 
                                                     sections = [
                                                         {
