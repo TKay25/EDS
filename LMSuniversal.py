@@ -2857,7 +2857,7 @@ def webhook():
                                                     cursor.execute("""
                                                         DELETE FROM whatsapptempapplication
                                                         WHERE empidwa = %s
-                                                    """, (str(id_user)))  
+                                                    """, (str(id_user),))  
                                                     
                                                     connection.commit()
 
@@ -4376,7 +4376,7 @@ def webhook():
                                                 cursor.execute("""
                                                     DELETE FROM whatsapptempapplication
                                                     WHERE empidwa = %s
-                                                """, (str(id_user)))  
+                                                """, (str(id_user),))  
                                                 
                                                 connection.commit()
 
@@ -6264,7 +6264,7 @@ def webhook():
                                                         cursor.execute("""
                                                             DELETE FROM whatsapptempapplication
                                                             WHERE empidwa = %s
-                                                        """, (str(id_user)))  
+                                                        """, (str(id_user),))  
                                                         
                                                         connection.commit()
                                                         
@@ -8608,7 +8608,7 @@ def webhook():
                                                     cursor.execute("""
                                                         DELETE FROM whatsapptempapplication
                                                         WHERE empidwa = %s
-                                                    """, (str(id_user)))  
+                                                    """, (str(id_user),))  
                                                     
                                                     connection.commit()
 
