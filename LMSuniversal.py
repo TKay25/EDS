@@ -3471,25 +3471,43 @@ def webhook():
 
                                                     if len(df_employeesappspendingcheck) == 0:
 
-                                                        sections = [
-                                                            {
-                                                                "title": "Leave Type Options",
-                                                                "rows": [
-                                                                    {"id": "Annual", "title": "Annual Leave"},
-                                                                    {"id": "Sick", "title": "Sick Leave"},
-                                                                    {"id": "Study", "title": "Study Leave"},
-                                                                    {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                    {"id": "Parental", "title": "Parental Leave"},
-                                                                    {"id": "Other", "title": "Other"},
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "template",
+                                                            "template": {
+                                                                "name": "leavappslms",  # your template name
+                                                                "language": {"code": "en"},
+                                                                "components": [
+                                                                    {
+                                                                        "type": "button",
+                                                                        "index": "0",
+                                                                        "sub_type": "flow",
+                                                                        "parameters": [
+                                                                            {
+                                                                                "type": "action",
+                                                                                "action": {
+                                                                                "flow_token": "unused"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                                # button index in your template
+                                                                    }
                                                                 ]
                                                             }
-                                                        ]
+                                                        }
 
-                                                        send_whatsapp_list_message(
-                                                            sender_id, 
-                                                            f"{first_name}, kindly select the type of Leave that you are applying for.", 
-                                                            "Leave Type Options",
-                                                            sections) 
+                                                        response = requests.post(
+                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                            headers={
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            },
+                                                            json=payload
+                                                        ) 
+
+                                                        print(response.status_code)
+                                                        print(response.text)
 
                                                     elif len(df_employeesappspendingcheck) > 0:
 
@@ -4232,25 +4250,43 @@ def webhook():
 
                                                 if len(df_employeesappspendingcheck) == 0:
 
-                                                        sections = [
-                                                            {
-                                                                "title": "Leave Type Options",
-                                                                "rows": [
-                                                                    {"id": "Annual", "title": "Annual Leave"},
-                                                                    {"id": "Sick", "title": "Sick Leave"},
-                                                                    {"id": "Study", "title": "Study Leave"},
-                                                                    {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                    {"id": "Parental", "title": "Parental Leave"},
-                                                                    {"id": "Other", "title": "Other"},
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "template",
+                                                            "template": {
+                                                                "name": "leavappslms",  # your template name
+                                                                "language": {"code": "en"},
+                                                                "components": [
+                                                                    {
+                                                                        "type": "button",
+                                                                        "index": "0",
+                                                                        "sub_type": "flow",
+                                                                        "parameters": [
+                                                                            {
+                                                                                "type": "action",
+                                                                                "action": {
+                                                                                "flow_token": "unused"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                                # button index in your template
+                                                                    }
                                                                 ]
                                                             }
-                                                        ]
+                                                        }
 
-                                                        send_whatsapp_list_message(
-                                                            sender_id, 
-                                                            f"{first_name}, kindly select the type of Leave that you are applying for.", 
-                                                            "Leave Type Options",
-                                                            sections) 
+                                                        response = requests.post(
+                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                            headers={
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            },
+                                                            json=payload
+                                                        ) 
+
+                                                        print(response.status_code)
+                                                        print(response.text)
 
                                                 elif len(df_employeesappspendingcheck) > 0:
 
@@ -6603,25 +6639,43 @@ def webhook():
 
                                                         if len(df_employeesappspendingcheck) == 0:
 
-                                                            sections = [
-                                                                {
-                                                                    "title": "Leave Type Options",
-                                                                    "rows": [
-                                                                        {"id": "Annual", "title": "Annual Leave"},
-                                                                        {"id": "Sick", "title": "Sick Leave"},
-                                                                        {"id": "Study", "title": "Study Leave"},
-                                                                        {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                        {"id": "Parental", "title": "Parental Leave"},
-                                                                        {"id": "Other", "title": "Other"},
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "template",
+                                                                "template": {
+                                                                    "name": "leavappslms",  # your template name
+                                                                    "language": {"code": "en"},
+                                                                    "components": [
+                                                                        {
+                                                                            "type": "button",
+                                                                            "index": "0",
+                                                                            "sub_type": "flow",
+                                                                            "parameters": [
+                                                                                {
+                                                                                    "type": "action",
+                                                                                    "action": {
+                                                                                    "flow_token": "unused"
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                                    # button index in your template
+                                                                        }
                                                                     ]
                                                                 }
-                                                            ]
+                                                            }
 
-                                                            send_whatsapp_list_message(
-                                                                sender_id, 
-                                                                f"{first_name}, kindly select the type of Leave that you are applying for.", 
-                                                                "Leave Type Options",
-                                                                sections) 
+                                                            response = requests.post(
+                                                                f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                                headers={
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                },
+                                                                json=payload
+                                                            ) 
+
+                                                            print(response.status_code)
+                                                            print(response.text)
 
                                                         elif len(df_employeesappspendingcheck) > 0:
 
@@ -9082,25 +9136,43 @@ def webhook():
 
                                                     if len(df_employeesappspendingcheck) == 0:
 
-                                                        sections = [
-                                                            {
-                                                                "title": "Leave Type Options",
-                                                                "rows": [
-                                                                    {"id": "Annual", "title": "Annual Leave"},
-                                                                    {"id": "Sick", "title": "Sick Leave"},
-                                                                    {"id": "Study", "title": "Study Leave"},
-                                                                    {"id": "Bereavement", "title": "Bereavement Leave"},
-                                                                    {"id": "Parental", "title": "Parental Leave"},
-                                                                    {"id": "Other", "title": "Other"},
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "template",
+                                                            "template": {
+                                                                "name": "leavappslms",  # your template name
+                                                                "language": {"code": "en"},
+                                                                "components": [
+                                                                    {
+                                                                        "type": "button",
+                                                                        "index": "0",
+                                                                        "sub_type": "flow",
+                                                                        "parameters": [
+                                                                            {
+                                                                                "type": "action",
+                                                                                "action": {
+                                                                                "flow_token": "unused"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                                # button index in your template
+                                                                    }
                                                                 ]
                                                             }
-                                                        ]
+                                                        }
 
-                                                        send_whatsapp_list_message(
-                                                            sender_id, 
-                                                            f"{first_name}, kindly select the type of Leave that you are applying for.", 
-                                                            "Leave Type Options",
-                                                            sections) 
+                                                        response = requests.post(
+                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                            headers={
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            },
+                                                            json=payload
+                                                        ) 
+
+                                                        print(response.status_code)
+                                                        print(response.text)
 
                                                     elif len(df_employeesappspendingcheck) > 0:
 
