@@ -10735,38 +10735,44 @@ def paynow_result():
         status = data.get('status')
         ticketref = data.get('paynowreference')
 
-        cursor.execute("""
-            SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
-            WHERE pollurl = %s
-        """, (pollurlex,))
-        result = cursor.fetchone()
+        with connection.cursor() as cursor:
+
+            cursor.execute("""
+                SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
+                WHERE pollurl = %s
+            """, (pollurlex,))
+            result = cursor.fetchone()
 
         if result:
 
-            cursor.execute("""
-                UPDATE cagwatick2
-                SET status = %s, datebought = %s
-                WHERE pollurl = %s
-            """, (status, today_date, pollurlex))
+            with connection.cursor() as cursor:
 
-            connection.commit()
+                cursor.execute("""
+                    UPDATE cagwatick2
+                    SET status = %s, datebought = %s
+                    WHERE pollurl = %s
+                """, (status, today_date, pollurlex))
+
+                connection.commit()
 
         else:
             print("No row found for this sender_id_ stage last.")
 
-        cursor.execute("""
-            SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
-            WHERE pollurl = %s
-        """, (pollurlex,))
-        result = cursor.fetchone()
+        with connection.cursor() as cursor:
 
-        number = result[1]
+            cursor.execute("""
+                SELECT id, idwanumber, dep, arr, time, paymethod, fare, ecocashnum, pollurl, status, datebought, traveldate, seats FROM cagwatick2
+                WHERE pollurl = %s
+            """, (pollurlex,))
+            result = cursor.fetchone()
 
-        cursor.execute("""
-            SELECT firstname, surname, wanumber, nationalidno FROM cagwatickcustomerdetails
-            WHERE wanumber = %s
-        """, (number,))
-        result55 = cursor.fetchone()
+            number = result[1]
+
+            cursor.execute("""
+                SELECT firstname, surname, wanumber, nationalidno FROM cagwatickcustomerdetails
+                WHERE wanumber = %s
+            """, (number,))
+            result55 = cursor.fetchone()
 
         firstname55 = result55[0]
         surname55 = result55[1]
