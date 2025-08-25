@@ -2890,16 +2890,72 @@ def webhook():
                                                         current_date += timedelta(days=1)
 
                                                     # ✅ Ask user to confirm submission
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": f"Submitapp_{appid}", "title": "Yes, Submit"}},
-                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                    ]
-                                                    send_whatsapp_message(
-                                                        sender_id,
-                                                        f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                        f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                        buttons
-                                                    )
+
+                                                    start_dateyu = datetime.strptime(leave_start_date_form, "%Y-%m-%d").date()
+                                                    end_dateyu   = datetime.strptime(leave_end_date_form, "%Y-%m-%d").date()
+
+                                                    # Validation check
+                                                    if end_dateyu < start_dateyu:
+
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"Oops, sorry {first_name}, your leave end date should be a day later than you leave start date."
+                                                        )
+
+                                                        print("❌ Error: End date cannot be before start date")
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "template",
+                                                            "template": {
+                                                                "name": "leavappslms",  # your template name
+                                                                "language": {"code": "en"},
+                                                                "components": [
+                                                                    {
+                                                                        "type": "button",
+                                                                        "index": "0",
+                                                                        "sub_type": "flow",
+                                                                        "parameters": [
+                                                                            {
+                                                                                "type": "action",
+                                                                                "action": {
+                                                                                "flow_token": "unused"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                                # button index in your template
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+
+                                                        response = requests.post(
+                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                            headers={
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            },
+                                                            json=payload
+                                                        ) 
+
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+                                                    else:
+                                                        print("✅ Dates are valid")
+
+
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": f"Submitapp_{appid}", "title": "Yes, Submit"}},
+                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                            buttons
+                                                        )
 
 
 
@@ -4345,16 +4401,72 @@ def webhook():
                                                     current_date += timedelta(days=1)
 
                                                 # ✅ Ask user to confirm submission
-                                                buttons = [
-                                                    {"type": "reply", "reply": {"id": f"Submitapp_{appid}", "title": "Yes, Submit"}},
-                                                    {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                ]
-                                                send_whatsapp_message(
-                                                    sender_id,
-                                                    f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                    f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                    buttons
-                                                )
+
+                                                start_dateyu = datetime.strptime(leave_start_date_form, "%Y-%m-%d").date()
+                                                end_dateyu   = datetime.strptime(leave_end_date_form, "%Y-%m-%d").date()
+
+                                                # Validation check
+                                                if end_dateyu < start_dateyu:
+
+                                                    send_whatsapp_message(
+                                                        sender_id,
+                                                        f"Oops, sorry {first_name}, your leave end date should be a day later than you leave start date."
+                                                    )
+
+                                                    print("❌ Error: End date cannot be before start date")
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "template",
+                                                        "template": {
+                                                            "name": "leavappslms",  # your template name
+                                                            "language": {"code": "en"},
+                                                            "components": [
+                                                                {
+                                                                    "type": "button",
+                                                                    "index": "0",
+                                                                    "sub_type": "flow",
+                                                                    "parameters": [
+                                                                        {
+                                                                            "type": "action",
+                                                                            "action": {
+                                                                            "flow_token": "unused"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                            # button index in your template
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                        headers={
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        },
+                                                        json=payload
+                                                    ) 
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
+                                                else:
+                                                    print("✅ Dates are valid")
+
+
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": f"Submitapp_{appid}", "title": "Yes, Submit"}},
+                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                    ]
+                                                    send_whatsapp_message(
+                                                        sender_id,
+                                                        f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                        f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                        buttons
+                                                    )
 
 
                                             if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
@@ -6169,16 +6281,71 @@ def webhook():
                                                             current_date += timedelta(days=1)
 
                                                         # ✅ Ask user to confirm submission
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": f"Submitapp_{appid}", "title": "Yes, Submit"}},
-                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                            buttons
-                                                        )
+                                                        start_dateyu = datetime.strptime(leave_start_date_form, "%Y-%m-%d").date()
+                                                        end_dateyu   = datetime.strptime(leave_end_date_form, "%Y-%m-%d").date()
+
+                                                        # Validation check
+                                                        if end_dateyu < start_dateyu:
+
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"Oops, sorry {first_name}, your leave end date should be a day later than you leave start date."
+                                                            )
+
+                                                            print("❌ Error: End date cannot be before start date")
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "template",
+                                                                "template": {
+                                                                    "name": "leavappslms",  # your template name
+                                                                    "language": {"code": "en"},
+                                                                    "components": [
+                                                                        {
+                                                                            "type": "button",
+                                                                            "index": "0",
+                                                                            "sub_type": "flow",
+                                                                            "parameters": [
+                                                                                {
+                                                                                    "type": "action",
+                                                                                    "action": {
+                                                                                    "flow_token": "unused"
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                                    # button index in your template
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+
+                                                            response = requests.post(
+                                                                f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                                headers={
+                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                    "Content-Type": "application/json"
+                                                                },
+                                                                json=payload
+                                                            ) 
+
+                                                            print(response.status_code)
+                                                            print(response.text)
+
+                                                        else:
+                                                            print("✅ Dates are valid")
+
+
+                                                            buttons = [
+                                                                {"type": "reply", "reply": {"id": f"Submitapp_{appid}", "title": "Yes, Submit"}},
+                                                                {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                            ]
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                                f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                                buttons
+                                                            )
 
                                                         
                                                     if button_id == "Track" or selected_option == "Track":
@@ -8450,16 +8617,71 @@ def webhook():
                                                         current_date += timedelta(days=1)
 
                                                     # ✅ Ask user to confirm submission
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": f"Submitapp_{appid}", "title": "Yes, Submit"}},
-                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                    ]
-                                                    send_whatsapp_message(
-                                                        sender_id,
-                                                        f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                        f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                        buttons
-                                                    )
+                                                    start_dateyu = datetime.strptime(leave_start_date_form, "%Y-%m-%d").date()
+                                                    end_dateyu   = datetime.strptime(leave_end_date_form, "%Y-%m-%d").date()
+
+                                                    # Validation check
+                                                    if end_dateyu < start_dateyu:
+
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"Oops, sorry {first_name}, your leave end date should be a day later than you leave start date."
+                                                        )
+
+                                                        print("❌ Error: End date cannot be before start date")
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "template",
+                                                            "template": {
+                                                                "name": "leavappslms",  # your template name
+                                                                "language": {"code": "en"},
+                                                                "components": [
+                                                                    {
+                                                                        "type": "button",
+                                                                        "index": "0",
+                                                                        "sub_type": "flow",
+                                                                        "parameters": [
+                                                                            {
+                                                                                "type": "action",
+                                                                                "action": {
+                                                                                "flow_token": "unused"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                                # button index in your template
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+
+                                                        response = requests.post(
+                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                            headers={
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            },
+                                                            json=payload
+                                                        ) 
+
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+                                                    else:
+                                                        print("✅ Dates are valid")
+
+
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": f"Submitapp_{appid}", "title": "Yes, Submit"}},
+                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                            buttons
+                                                        )
 
 
                                                 if selected_option == "Empmgt":
