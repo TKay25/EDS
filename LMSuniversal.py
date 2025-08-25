@@ -4132,136 +4132,85 @@ def webhook():
                                                         print(e)
 
                                                 elif "start" in text.lower():
-                                                    try:
-                                                        # Match: "start 20 july 2025"
-                                                        match = re.match(r"start\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                        if not match:
-                                                            raise ValueError("Invalid format")
+                                                        
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "template",
+                                                        "template": {
+                                                            "name": "leavappslms",  # your template name
+                                                            "language": {"code": "en"},
+                                                            "components": [
+                                                                {
+                                                                    "type": "button",
+                                                                    "index": "0",
+                                                                    "sub_type": "flow",
+                                                                    "parameters": [
+                                                                        {
+                                                                            "type": "action",
+                                                                            "action": {
+                                                                            "flow_token": "unused"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                            # button index in your template
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
 
-                                                        date_part = match.group(1)
-                                                        parsed_date = datetime.strptime(date_part, "%d %B %Y")  # Will raise ValueError if invalid
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                        headers={
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        },
+                                                        json=payload
+                                                    ) 
 
-                                                        # ✅ Now it's safe to update the DB
-                                                        cursor.execute("""
-                                                            UPDATE whatsapptempapplication
-                                                            SET startdate = %s
-                                                            WHERE empidwa = %s
-                                                        """, (date_part, id_user))
-                                                        connection.commit()
-
-                                                        cursor.execute("""
-                                                            SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                            WHERE empidwa = %s
-                                                        """, (id_user,))
-                                                        result = cursor.fetchone()
-                                                        leavetypewa = result[1] if result else "your"
-
-                                                        send_whatsapp_message(sender_id,
-                                                            f"✅ Got it! Start date saved.\n\nNow enter your last day on {leavetypewa} leave like this:\n"
-                                                            "`end 28 July 2025`"
-                                                        )
-
-                                                    except ValueError:
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            f"❌ Invalid start date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                            "`start 24 january 2025`\n\n"
-                                                            "Example: `start 15 march 2024`"
-                                                        )
-
-                                                    except Exception as e:
-                                                        import traceback
-                                                        print("🔴 Unexpected error:", e)
-                                                        traceback.print_exc()
-
-                                                        try:
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                "⚠️ Something went wrong while processing your start date. Please try again or contact support."
-                                                            )
-                                                        except Exception as send_err:
-                                                            print("🔴 Failed to send WhatsApp error message:", send_err)
+                                                    print(response.status_code)
+                                                    print(response.text)
 
 
                                                 elif "end" in text.lower():
 
-                                                    try:
-                                                        # ✅ Match "end 24 january 2025"
-                                                        match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                        if not match:
-                                                            raise ValueError("Invalid end date format.")
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "template",
+                                                        "template": {
+                                                            "name": "leavappslms",  # your template name
+                                                            "language": {"code": "en"},
+                                                            "components": [
+                                                                {
+                                                                    "type": "button",
+                                                                    "index": "0",
+                                                                    "sub_type": "flow",
+                                                                    "parameters": [
+                                                                        {
+                                                                            "type": "action",
+                                                                            "action": {
+                                                                            "flow_token": "unused"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                            # button index in your template
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
 
-                                                        date_part = match.group(1)
-                                                        parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                        headers={
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        },
+                                                        json=payload
+                                                    ) 
 
-                                                        # ✅ Update DB now that it's valid
-                                                        cursor.execute("""
-                                                            UPDATE whatsapptempapplication
-                                                            SET enddate = %s
-                                                            WHERE empidwa = %s
-                                                        """, (date_part, id_user))
-                                                        connection.commit()
-
-                                                        # ✅ Fetch full leave application
-                                                        cursor.execute("""
-                                                            SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                            WHERE empidwa = %s
-                                                        """, (id_user,))
-                                                        result = cursor.fetchone()
-
-                                                        if not result:
-                                                            raise Exception("No leave record found.")
-
-                                                        appid = result[0]
-                                                        leavetype = result[2]
-                                                        startdate = result[3]
-                                                        enddate = result[4]
-
-                                                        # ✅ Ensure both dates are datetime.date objects
-                                                        if isinstance(startdate, str):
-                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                        if isinstance(enddate, str):
-                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                        # ✅ Calculate business days
-                                                        business_days = 0
-                                                        current_date = startdate
-                                                        while current_date <= enddate:
-                                                            if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                                business_days += 1
-                                                            current_date += timedelta(days=1)
-
-                                                        # ✅ Ask user to confirm submission
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                            buttons
-                                                        )
-
-                                                    except ValueError:
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                            "`end 24 january 2025`\n\n"
-                                                            "Example: `end 28 march 2024`"
-                                                        )
-
-                                                    except Exception as e:
-                                                        import traceback
-                                                        print("🔴 ERROR during end date processing:", e)
-                                                        traceback.print_exc()
-                                                        try:
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                "⚠️ Something went wrong while processing your end date. Please try again or contact support."
-                                                            )
-                                                        except Exception as send_err:
-                                                            print("🔴 Failed to send error message via WhatsApp:", send_err)
+                                                    print(response.status_code)
+                                                    print(response.text)
                                                             
                                                 else:
                                                     send_whatsapp_message(
@@ -5962,141 +5911,91 @@ def webhook():
 
                                             elif "start" in text.lower():
                                                 
-                                                try:
-                                                    # Match: "start 20 july 2025"
-                                                    match = re.match(r"start\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                    if not match:
-                                                        raise ValueError("Invalid format")
+                                                payload = {
+                                                    "messaging_product": "whatsapp",
+                                                    "to": sender_id,
+                                                    "type": "template",
+                                                    "template": {
+                                                        "name": "leavappslms",  # your template name
+                                                        "language": {"code": "en"},
+                                                        "components": [
+                                                            {
+                                                                "type": "button",
+                                                                "index": "0",
+                                                                "sub_type": "flow",
+                                                                "parameters": [
+                                                                    {
+                                                                        "type": "action",
+                                                                        "action": {
+                                                                        "flow_token": "unused"
+                                                                        }
+                                                                    }
+                                                                ]
+                                                                        # button index in your template
+                                                            }
+                                                        ]
+                                                    }
+                                                }
 
-                                                    date_part = match.group(1)
-                                                    parsed_date = datetime.strptime(date_part, "%d %B %Y")  # Will raise ValueError if invalid
+                                                response = requests.post(
+                                                    f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                    headers={
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    },
+                                                    json=payload
+                                                ) 
 
-                                                    # ✅ Now it's safe to update the DB
-                                                    cursor.execute("""
-                                                        UPDATE whatsapptempapplication
-                                                        SET startdate = %s
-                                                        WHERE empidwa = %s
-                                                    """, (date_part, id_user))
-                                                    connection.commit()
-
-                                                    cursor.execute("""
-                                                        SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (id_user,))
-                                                    result = cursor.fetchone()
-                                                    leavetypewa = result[1] if result else "your"
-
-                                                    send_whatsapp_message(sender_id,
-                                                        f"✅ Got it! Start date saved.\n\nNow enter your last day on {leavetypewa} leave like this:\n"
-                                                        "`end 28 July 2025`"
-                                                    )
-
-                                                except ValueError:
-                                                    send_whatsapp_message(
-                                                        sender_id,
-                                                        f"❌ Invalid start date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                        "`start 24 january 2025`\n\n"
-                                                        "Example: `start 15 march 2024`"
-                                                    )
-
-                                                except Exception as e:
-                                                    import traceback
-                                                    print("🔴 Unexpected error:", e)
-                                                    traceback.print_exc()
-
-                                                    try:
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "⚠️ Something went wrong while processing your start date. Please try again or contact support."
-                                                        )
-                                                    except Exception as send_err:
-                                                        print("🔴 Failed to send WhatsApp error message:", send_err)
+                                                print(response.status_code)
+                                                print(response.text)
 
                                             elif "end" in text.lower():
 
-                                                try:
-                                                    # ✅ Match "end 24 january 2025"
-                                                    match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                    if not match:
-                                                        raise ValueError("Invalid end date format.")
+                                                payload = {
+                                                    "messaging_product": "whatsapp",
+                                                    "to": sender_id,
+                                                    "type": "template",
+                                                    "template": {
+                                                        "name": "leavappslms",  # your template name
+                                                        "language": {"code": "en"},
+                                                        "components": [
+                                                            {
+                                                                "type": "button",
+                                                                "index": "0",
+                                                                "sub_type": "flow",
+                                                                "parameters": [
+                                                                    {
+                                                                        "type": "action",
+                                                                        "action": {
+                                                                        "flow_token": "unused"
+                                                                        }
+                                                                    }
+                                                                ]
+                                                                        # button index in your template
+                                                            }
+                                                        ]
+                                                    }
+                                                }
 
-                                                    date_part = match.group(1)
-                                                    parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
+                                                response = requests.post(
+                                                    f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                    headers={
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    },
+                                                    json=payload
+                                                ) 
 
-                                                    # ✅ Update DB now that it's valid
-                                                    cursor.execute("""
-                                                        UPDATE whatsapptempapplication
-                                                        SET enddate = %s
-                                                        WHERE empidwa = %s
-                                                    """, (date_part, id_user))
-                                                    connection.commit()
-
-                                                    # ✅ Fetch full leave application
-                                                    cursor.execute("""
-                                                        SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (id_user,))
-                                                    result = cursor.fetchone()
-
-                                                    if not result:
-                                                        raise Exception("No leave record found.")
-
-                                                    appid = result[0]
-                                                    leavetype = result[2]
-                                                    startdate = result[3]
-                                                    enddate = result[4]
-
-                                                    # ✅ Ensure both dates are datetime.date objects
-                                                    if isinstance(startdate, str):
-                                                        startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                    if isinstance(enddate, str):
-                                                        enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                    # ✅ Calculate business days
-                                                    business_days = 0
-                                                    current_date = startdate
-                                                    while current_date <= enddate:
-                                                        if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                            business_days += 1
-                                                        current_date += timedelta(days=1)
-
-                                                    # ✅ Ask user to confirm submission
-                                                    buttons = [
-                                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                    ]
-                                                    send_whatsapp_message(
-                                                        sender_id,
-                                                        f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                        f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                        buttons
-                                                    )
-
-                                                except ValueError:
-                                                    send_whatsapp_message(
-                                                        sender_id,
-                                                        f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                        "`end 24 january 2025`\n\n"
-                                                        "Example: `end 28 march 2024`"
-                                                    )
-
-                                                except Exception as e:
-                                                    import traceback
-                                                    print("🔴 ERROR during end date processing:", e)
-                                                    traceback.print_exc()
-                                                    try:
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            "⚠️ Something went wrong while processing your end date. Please try again or contact support."
-                                                        )
-                                                    except Exception as send_err:
-                                                        print("🔴 Failed to send error message via WhatsApp:", send_err)
+                                                print(response.status_code)
+                                                print(response.text)
                                                         
                                             else:
                                                 send_whatsapp_message(
                                                     sender_id, 
                                                     f"{bot} LMS Bot Here 😎. Say 'hello' to start!"
                                                 )
+
+
 
                                 elif role_foc_8 == "Administrator":
 
@@ -8227,136 +8126,85 @@ def webhook():
 
                                                     elif "start" in text.lower():
 
-                                                        try:
-                                                            # Match: "start 20 july 2025"
-                                                            match = re.match(r"start\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                            if not match:
-                                                                raise ValueError("Invalid format")
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "template",
+                                                            "template": {
+                                                                "name": "leavappslms",  # your template name
+                                                                "language": {"code": "en"},
+                                                                "components": [
+                                                                    {
+                                                                        "type": "button",
+                                                                        "index": "0",
+                                                                        "sub_type": "flow",
+                                                                        "parameters": [
+                                                                            {
+                                                                                "type": "action",
+                                                                                "action": {
+                                                                                "flow_token": "unused"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                                # button index in your template
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
 
-                                                            date_part = match.group(1)
-                                                            parsed_date = datetime.strptime(date_part, "%d %B %Y")  # Will raise ValueError if invalid
+                                                        response = requests.post(
+                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                            headers={
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            },
+                                                            json=payload
+                                                        ) 
 
-                                                            # ✅ Now it's safe to update the DB
-                                                            cursor.execute("""
-                                                                UPDATE whatsapptempapplication
-                                                                SET startdate = %s
-                                                                WHERE empidwa = %s
-                                                            """, (date_part, id_user))
-                                                            connection.commit()
-
-                                                            cursor.execute("""
-                                                                SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                                WHERE empidwa = %s
-                                                            """, (id_user,))
-                                                            result = cursor.fetchone()
-                                                            leavetypewa = result[1] if result else "your"
-
-                                                            send_whatsapp_message(sender_id,
-                                                                f"✅ Got it! Start date saved.\n\nNow enter your last day on {leavetypewa} leave like this:\n"
-                                                                "`end 28 July 2025`"
-                                                            )
-
-                                                        except ValueError:
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"❌ Invalid start date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                                "`start 24 january 2025`\n\n"
-                                                                "Example: `start 15 march 2024`"
-                                                            )
-
-                                                        except Exception as e:
-                                                            import traceback
-                                                            print("🔴 Unexpected error:", e)
-                                                            traceback.print_exc()
-
-                                                            try:
-                                                                send_whatsapp_message(
-                                                                    sender_id,
-                                                                    "⚠️ Something went wrong while processing your start date. Please try again or contact support."
-                                                                )
-                                                            except Exception as send_err:
-                                                                print("🔴 Failed to send WhatsApp error message:", send_err)
+                                                        print(response.status_code)
+                                                        print(response.text)
 
                                                     elif "end" in text.lower():
 
-                                                        try:
-                                                            # ✅ Match "end 24 january 2025"
-                                                            match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                            if not match:
-                                                                raise ValueError("Invalid end date format.")
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "template",
+                                                            "template": {
+                                                                "name": "leavappslms",  # your template name
+                                                                "language": {"code": "en"},
+                                                                "components": [
+                                                                    {
+                                                                        "type": "button",
+                                                                        "index": "0",
+                                                                        "sub_type": "flow",
+                                                                        "parameters": [
+                                                                            {
+                                                                                "type": "action",
+                                                                                "action": {
+                                                                                "flow_token": "unused"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                                # button index in your template
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
 
-                                                            date_part = match.group(1)
-                                                            parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
+                                                        response = requests.post(
+                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                            headers={
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            },
+                                                            json=payload
+                                                        ) 
 
-                                                            # ✅ Update DB now that it's valid
-                                                            cursor.execute("""
-                                                                UPDATE whatsapptempapplication
-                                                                SET enddate = %s
-                                                                WHERE empidwa = %s
-                                                            """, (date_part, id_user))
-                                                            connection.commit()
+                                                        print(response.status_code)
+                                                        print(response.text)
 
-                                                            # ✅ Fetch full leave application
-                                                            cursor.execute("""
-                                                                SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                WHERE empidwa = %s
-                                                            """, (id_user,))
-                                                            result = cursor.fetchone()
 
-                                                            if not result:
-                                                                raise Exception("No leave record found.")
-
-                                                            appid = result[0]
-                                                            leavetype = result[2]
-                                                            startdate = result[3]
-                                                            enddate = result[4]
-
-                                                            # ✅ Ensure both dates are datetime.date objects
-                                                            if isinstance(startdate, str):
-                                                                startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                            if isinstance(enddate, str):
-                                                                enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                            # ✅ Calculate business days
-                                                            business_days = 0
-                                                            current_date = startdate
-                                                            while current_date <= enddate:
-                                                                if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                                    business_days += 1
-                                                                current_date += timedelta(days=1)
-
-                                                            # ✅ Ask user to confirm submission
-                                                            buttons = [
-                                                                {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                                {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                            ]
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                                f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                                buttons
-                                                            )
-
-                                                        except ValueError:
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                                "`end 24 january 2025`\n\n"
-                                                                "Example: `end 28 march 2024`"
-                                                            )
-
-                                                        except Exception as e:
-                                                            import traceback
-                                                            print("🔴 ERROR during end date processing:", e)
-                                                            traceback.print_exc()
-                                                            try:
-                                                                send_whatsapp_message(
-                                                                    sender_id,
-                                                                    "⚠️ Something went wrong while processing your end date. Please try again or contact support."
-                                                                )
-                                                            except Exception as send_err:
-                                                                print("🔴 Failed to send error message via WhatsApp:", send_err)
-                                                                
                                                     else:
                                                         send_whatsapp_message(
                                                             sender_id, 
@@ -10893,136 +10741,86 @@ def webhook():
 
                                                 elif "start" in text.lower():
 
-                                                    try:
-                                                        # Match: "start 20 july 2025"
-                                                        match = re.match(r"start\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                        if not match:
-                                                            raise ValueError("Invalid format")
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "template",
+                                                        "template": {
+                                                            "name": "leavappslms",  # your template name
+                                                            "language": {"code": "en"},
+                                                            "components": [
+                                                                {
+                                                                    "type": "button",
+                                                                    "index": "0",
+                                                                    "sub_type": "flow",
+                                                                    "parameters": [
+                                                                        {
+                                                                            "type": "action",
+                                                                            "action": {
+                                                                            "flow_token": "unused"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                            # button index in your template
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
 
-                                                        date_part = match.group(1)
-                                                        parsed_date = datetime.strptime(date_part, "%d %B %Y")  # Will raise ValueError if invalid
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                        headers={
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        },
+                                                        json=payload
+                                                    ) 
 
-                                                        # ✅ Now it's safe to update the DB
-                                                        cursor.execute("""
-                                                            UPDATE whatsapptempapplication
-                                                            SET startdate = %s
-                                                            WHERE empidwa = %s
-                                                        """, (date_part, id_user))
-                                                        connection.commit()
-
-                                                        cursor.execute("""
-                                                            SELECT empidwa, leavetypewa FROM whatsapptempapplication
-                                                            WHERE empidwa = %s
-                                                        """, (id_user,))
-                                                        result = cursor.fetchone()
-                                                        leavetypewa = result[1] if result else "your"
-
-                                                        send_whatsapp_message(sender_id,
-                                                            f"✅ Got it! Start date saved.\n\nNow enter your last day on {leavetypewa} leave like this:\n"
-                                                            "`end 28 July 2025`"
-                                                        )
-
-                                                    except ValueError:
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            f"❌ Invalid start date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                            "`start 24 january 2025`\n\n"
-                                                            "Example: `start 15 march 2024`"
-                                                        )
-
-                                                    except Exception as e:
-                                                        import traceback
-                                                        print("🔴 Unexpected error:", e)
-                                                        traceback.print_exc()
-
-                                                        try:
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                "⚠️ Something went wrong while processing your start date. Please try again or contact support."
-                                                            )
-                                                        except Exception as send_err:
-                                                            print("🔴 Failed to send WhatsApp error message:", send_err)
+                                                    print(response.status_code)
+                                                    print(response.text)
 
 
                                                 elif "end" in text.lower():
 
-                                                    try:
-                                                        # ✅ Match "end 24 january 2025"
-                                                        match = re.match(r"end\s+(\d{1,2}\s+[a-zA-Z]+\s+\d{4})", text.strip(), re.IGNORECASE)
-                                                        if not match:
-                                                            raise ValueError("Invalid end date format.")
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "template",
+                                                        "template": {
+                                                            "name": "leavappslms",  # your template name
+                                                            "language": {"code": "en"},
+                                                            "components": [
+                                                                {
+                                                                    "type": "button",
+                                                                    "index": "0",
+                                                                    "sub_type": "flow",
+                                                                    "parameters": [
+                                                                        {
+                                                                            "type": "action",
+                                                                            "action": {
+                                                                            "flow_token": "unused"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                            # button index in your template
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
 
-                                                        date_part = match.group(1)
-                                                        parsed_end_date = datetime.strptime(date_part, "%d %B %Y").date()  # Will raise ValueError if invalid
+                                                    response = requests.post(
+                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages",
+                                                        headers={
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        },
+                                                        json=payload
+                                                    ) 
 
-                                                        # ✅ Update DB now that it's valid
-                                                        cursor.execute("""
-                                                            UPDATE whatsapptempapplication
-                                                            SET enddate = %s
-                                                            WHERE empidwa = %s
-                                                        """, (date_part, id_user))
-                                                        connection.commit()
+                                                    print(response.status_code)
+                                                    print(response.text)
 
-                                                        # ✅ Fetch full leave application
-                                                        cursor.execute("""
-                                                            SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                            WHERE empidwa = %s
-                                                        """, (id_user,))
-                                                        result = cursor.fetchone()
 
-                                                        if not result:
-                                                            raise Exception("No leave record found.")
-
-                                                        appid = result[0]
-                                                        leavetype = result[2]
-                                                        startdate = result[3]
-                                                        enddate = result[4]
-
-                                                        # ✅ Ensure both dates are datetime.date objects
-                                                        if isinstance(startdate, str):
-                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                        if isinstance(enddate, str):
-                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
-
-                                                        # ✅ Calculate business days
-                                                        business_days = 0
-                                                        current_date = startdate
-                                                        while current_date <= enddate:
-                                                            if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                                business_days += 1
-                                                            current_date += timedelta(days=1)
-
-                                                        # ✅ Ask user to confirm submission
-                                                        buttons = [
-                                                            {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
-                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
-                                                        ]
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
-                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
-                                                            buttons
-                                                        )
-
-                                                    except ValueError:
-                                                        send_whatsapp_message(
-                                                            sender_id,
-                                                            f"❌ Invalid end date message format, {first_name}. Please use the date format givem below 👇:\n"
-                                                            "`end 24 january 2025`\n\n"
-                                                            "Example: `end 28 march 2024`"
-                                                        )
-
-                                                    except Exception as e:
-                                                        import traceback
-                                                        print("🔴 ERROR during end date processing:", e)
-                                                        traceback.print_exc()
-                                                        try:
-                                                            send_whatsapp_message(
-                                                                sender_id,
-                                                                "⚠️ Something went wrong while processing your end date. Please try again or contact support."
-                                                            )
-                                                        except Exception as send_err:
-                                                            print("🔴 Failed to send error message via WhatsApp:", send_err)
                                                             
                                                 else:
                                                     send_whatsapp_message(
