@@ -2842,6 +2842,57 @@ def webhook():
 
                                                     print("📋 User submitted flow response:", form_response)
 
+                                                    leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
+                                                    leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
+                                                    leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
+
+                                                    cursor.execute("""
+                                                        INSERT INTO whatsapptempapplication (empidwa, leavetypewa, startdate, enddate)
+                                                        VALUES (%s, %s, %s, %s)
+                                                    """, (id_user, leavetype_form, leave_start_date_form, leave_end_date_form))
+
+                                                    connection.commit()
+
+                                                    # ✅ Fetch full leave application
+                                                    cursor.execute("""
+                                                        SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                        WHERE empidwa = %s
+                                                    """, (id_user,))
+                                                    result = cursor.fetchone()
+
+                                                    if not result:
+                                                        raise Exception("No leave record found.")
+
+                                                    appid = result[0]
+                                                    leavetype = result[2]
+                                                    startdate = result[3]
+                                                    enddate = result[4]
+
+                                                    # ✅ Ensure both dates are datetime.date objects
+                                                    if isinstance(startdate, str):
+                                                        startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                    if isinstance(enddate, str):
+                                                        enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                    # ✅ Calculate business days
+                                                    business_days = 0
+                                                    current_date = startdate
+                                                    while current_date <= enddate:
+                                                        if current_date.weekday() != 6:  # Weekday: Mon-Fri
+                                                            business_days += 1
+                                                        current_date += timedelta(days=1)
+
+                                                    # ✅ Ask user to confirm submission
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                    ]
+                                                    send_whatsapp_message(
+                                                        sender_id,
+                                                        f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                        f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                        buttons
+                                                    )
 
 
 
@@ -4265,7 +4316,57 @@ def webhook():
 
                                                 print("📋 User submitted flow response:", form_response)
 
+                                                leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
+                                                leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
+                                                leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
 
+                                                cursor.execute("""
+                                                    INSERT INTO whatsapptempapplication (empidwa, leavetypewa, startdate, enddate)
+                                                    VALUES (%s, %s, %s, %s)
+                                                """, (id_user, leavetype_form, leave_start_date_form, leave_end_date_form))
+
+                                                connection.commit()
+
+                                                # ✅ Fetch full leave application
+                                                cursor.execute("""
+                                                    SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                    WHERE empidwa = %s
+                                                """, (id_user,))
+                                                result = cursor.fetchone()
+
+                                                if not result:
+                                                    raise Exception("No leave record found.")
+
+                                                appid = result[0]
+                                                leavetype = result[2]
+                                                startdate = result[3]
+                                                enddate = result[4]
+
+                                                # ✅ Ensure both dates are datetime.date objects
+                                                if isinstance(startdate, str):
+                                                    startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                if isinstance(enddate, str):
+                                                    enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                # ✅ Calculate business days
+                                                business_days = 0
+                                                current_date = startdate
+                                                while current_date <= enddate:
+                                                    if current_date.weekday() != 6:  # Weekday: Mon-Fri
+                                                        business_days += 1
+                                                    current_date += timedelta(days=1)
+
+                                                # ✅ Ask user to confirm submission
+                                                buttons = [
+                                                    {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                    {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                ]
+                                                send_whatsapp_message(
+                                                    sender_id,
+                                                    f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                    f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                    buttons
+                                                )
 
 
                                             if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
@@ -6049,7 +6150,57 @@ def webhook():
 
                                                         print("📋 User submitted flow response:", form_response)
 
+                                                        leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
+                                                        leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
+                                                        leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
 
+                                                        cursor.execute("""
+                                                            INSERT INTO whatsapptempapplication (empidwa, leavetypewa, startdate, enddate)
+                                                            VALUES (%s, %s, %s, %s)
+                                                        """, (id_user, leavetype_form, leave_start_date_form, leave_end_date_form))
+
+                                                        connection.commit()
+
+                                                        # ✅ Fetch full leave application
+                                                        cursor.execute("""
+                                                            SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (id_user,))
+                                                        result = cursor.fetchone()
+
+                                                        if not result:
+                                                            raise Exception("No leave record found.")
+
+                                                        appid = result[0]
+                                                        leavetype = result[2]
+                                                        startdate = result[3]
+                                                        enddate = result[4]
+
+                                                        # ✅ Ensure both dates are datetime.date objects
+                                                        if isinstance(startdate, str):
+                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                        if isinstance(enddate, str):
+                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                        # ✅ Calculate business days
+                                                        business_days = 0
+                                                        current_date = startdate
+                                                        while current_date <= enddate:
+                                                            if current_date.weekday() != 6:  # Weekday: Mon-Fri
+                                                                business_days += 1
+                                                            current_date += timedelta(days=1)
+
+                                                        # ✅ Ask user to confirm submission
+                                                        buttons = [
+                                                            {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                            {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                        ]
+                                                        send_whatsapp_message(
+                                                            sender_id,
+                                                            f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                            f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                            buttons
+                                                        )
 
                                                         
                                                     if button_id == "Track" or selected_option == "Track":
@@ -8294,7 +8445,57 @@ def webhook():
 
                                                     print("📋 User submitted flow response:", form_response)
 
-                                                    
+                                                    leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
+                                                    leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
+                                                    leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
+
+                                                    cursor.execute("""
+                                                        INSERT INTO whatsapptempapplication (empidwa, leavetypewa, startdate, enddate)
+                                                        VALUES (%s, %s, %s, %s)
+                                                    """, (id_user, leavetype_form, leave_start_date_form, leave_end_date_form))
+
+                                                    connection.commit()
+
+                                                    # ✅ Fetch full leave application
+                                                    cursor.execute("""
+                                                        SELECT id, empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
+                                                        WHERE empidwa = %s
+                                                    """, (id_user,))
+                                                    result = cursor.fetchone()
+
+                                                    if not result:
+                                                        raise Exception("No leave record found.")
+
+                                                    appid = result[0]
+                                                    leavetype = result[2]
+                                                    startdate = result[3]
+                                                    enddate = result[4]
+
+                                                    # ✅ Ensure both dates are datetime.date objects
+                                                    if isinstance(startdate, str):
+                                                        startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
+                                                    if isinstance(enddate, str):
+                                                        enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                    # ✅ Calculate business days
+                                                    business_days = 0
+                                                    current_date = startdate
+                                                    while current_date <= enddate:
+                                                        if current_date.weekday() != 6:  # Weekday: Mon-Fri
+                                                            business_days += 1
+                                                        current_date += timedelta(days=1)
+
+                                                    # ✅ Ask user to confirm submission
+                                                    buttons = [
+                                                        {"type": "reply", "reply": {"id": "Submitapp", "title": "Yes, Submit"}},
+                                                        {"type": "reply", "reply": {"id": "Dontsubmit", "title": "No"}}
+                                                    ]
+                                                    send_whatsapp_message(
+                                                        sender_id,
+                                                        f"📝 Do you wish to submit your `{business_days}-day {leavetype} Leave Application` from "
+                                                        f"`{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`, {first_name}?",
+                                                        buttons
+                                                    )
 
 
                                                 if selected_option == "Empmgt":
