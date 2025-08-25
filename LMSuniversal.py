@@ -2820,6 +2820,38 @@ def webhook():
                                                     print(f"🔘 Button clicked: {button_id}")
                                                     selected_option = ""
 
+
+                                                elif interactive.get("type") == "nfm_reply":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+
+                                                    response_str = interactive.get("nfm_reply", {}).get("response_json", "{}")
+                                                    selected_option = ""
+                                                    button_id = ""
+                                                    
+                                                    try:
+                                                        form_response = json.loads(response_str)  # convert string → dict
+                                                    except Exception as e:
+                                                        print("❌ Error parsing nfm_reply response_json:", e)
+                                                        form_response = {}
+
+                                                    print("📋 User submitted flow response:", form_response)
+
+
+
+
+
+
+
+
+
+
+
                                                 if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
                                                     button_id_leave_type = str(selected_option)
 
@@ -4210,6 +4242,31 @@ def webhook():
                                                 button_id = interactive.get("button_reply", {}).get("id")
                                                 print(f"🔘 Button clicked: {button_id}")
                                                 selected_option = ""
+
+
+                                            elif interactive.get("type") == "nfm_reply":
+
+                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                headers = {
+                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                    "Content-Type": "application/json"
+                                                }
+
+
+                                                response_str = interactive.get("nfm_reply", {}).get("response_json", "{}")
+                                                selected_option = ""
+                                                button_id = ""
+                                                
+                                                try:
+                                                    form_response = json.loads(response_str)  # convert string → dict
+                                                except Exception as e:
+                                                    print("❌ Error parsing nfm_reply response_json:", e)
+                                                    form_response = {}
+
+                                                print("📋 User submitted flow response:", form_response)
+
+
+
 
                                             if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
 
@@ -5970,6 +6027,28 @@ def webhook():
                                                         selected_option = interactive.get("list_reply", {}).get("id")
                                                         print(f"📋 User selected: {selected_option}")
                                                         button_id = ""
+
+                                                    elif interactive.get("type") == "nfm_reply":
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+
+                                                        response_str = interactive.get("nfm_reply", {}).get("response_json", "{}")
+                                                        selected_option = ""
+                                                        button_id = ""
+                                                        
+                                                        try:
+                                                            form_response = json.loads(response_str)  # convert string → dict
+                                                        except Exception as e:
+                                                            print("❌ Error parsing nfm_reply response_json:", e)
+                                                            form_response = {}
+
+                                                        print("📋 User submitted flow response:", form_response)
+
 
 
                                                         
@@ -8193,6 +8272,30 @@ def webhook():
                                                     selected_option = interactive.get("list_reply", {}).get("id")
                                                     print(f"📋 User selected: {selected_option}")
                                                     button_id = ""
+
+                                                elif interactive.get("type") == "nfm_reply":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+
+                                                    response_str = interactive.get("nfm_reply", {}).get("response_json", "{}")
+                                                    selected_option = ""
+                                                    button_id = ""
+                                                    
+                                                    try:
+                                                        form_response = json.loads(response_str)  # convert string → dict
+                                                    except Exception as e:
+                                                        print("❌ Error parsing nfm_reply response_json:", e)
+                                                        form_response = {}
+
+                                                    print("📋 User submitted flow response:", form_response)
+
+                                                    
+
 
                                                 if selected_option == "Empmgt":
 
