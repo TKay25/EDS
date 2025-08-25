@@ -4017,6 +4017,29 @@ def webhook():
                                                     else:
                                                         print("No record found for the user.")
 
+                                                elif button_id == "Dontsubmit":
+
+                                                    sections = [
+                                                        {
+                                                            "title": "User Options",
+                                                            "rows": [
+                                                                {"id": "Apply", "title": "Apply for Leave"},
+                                                                {"id": "Track", "title": "Track My Application"},
+                                                                {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                {"id": "myhist", "title": "My Applications History"},
+                                                                {"id": "Myinfo", "title": "My Info"}
+                                                            ]
+                                                        }
+                                                    ]
+
+
+                                                    send_whatsapp_list_message(
+                                                        sender_id, 
+                                                        f"Leave Application not submitted. \n\n Hello {first_name} {last_name} from {companyxx}!\n\n {bot} LMS Bot Here 😎. How can I assist you?", 
+                                                    "User Options",
+                                                    sections)
+
+
                                             else:
 
                                                 text = message.get("text", {}).get("body", "").lower()
@@ -5812,6 +5835,28 @@ def webhook():
                                                         print(e)
                                                         return jsonify({"message": "Error approving leave application.", "error": str(e)}), 500
 
+                                            elif button_id == "Dontsubmit":
+
+                                                sections = [
+                                                    {
+                                                        "title": "Approver Options",
+                                                        "rows": [
+                                                            {"id": "Apply", "title": "Apply for Leave"},
+                                                            {"id": "Track", "title": "Track My Application"},
+                                                            {"id": "Checkbal", "title": "Check Days Balance"},
+                                                            {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                            {"id": "myhist", "title": "My Applications History"},
+                                                            {"id": "Myinfo", "title": "My Info"}
+                                                        ]
+                                                    }
+                                                ]
+
+                                                send_whatsapp_list_message(
+                                                    sender_id, 
+                                                    f"Leave Application not submitted. \n\n Hello {first_name} {last_name} from {companyxx}!\n\n {bot} LMS Bot Here 😎. How can I assist you?", 
+                                                "User Options",
+                                                sections)
+
                                         else:
 
                                             text = message.get("text", {}).get("body", "").lower()
@@ -7493,15 +7538,6 @@ def webhook():
 
                                                             print(e)
 
-
-
-
-
-
-
-
-
-
                                                     elif button_id == "Cancelapp" :
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -8049,7 +8085,34 @@ def webhook():
                                                                 sender_id,
                                                                 f"Sorry {first_name}, we encountered an error preparing your document -- {e}. Please try again later."
                                                             )
-                                                        
+
+
+                                                    elif button_id == "Dontsubmit":
+
+                                                        sections = [
+                                                            {
+                                                                "title": "Administrator Options",
+                                                                "rows": [
+                                                                    {"id": "Apply", "title": "Apply for Leave"},
+                                                                    {"id": "Track", "title": "Track My Application"},
+                                                                    {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                    {"id": "myhist", "title": "My Applications History"},
+                                                                    {"id": "Myinfo", "title": "My Info"},
+                                                                    {"id": "Empmgt", "title": "Employee Management"},
+                                                                    {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                    {"id": "Company", "title": "Company Profile"}
+                                                                ]
+                                                            }
+                                                        ]
+
+                                                        send_whatsapp_list_message(
+                                                            sender_id, 
+                                                            f"Leave Application not submitted. \n\n Hello {first_name} {last_name} from {companyxx}!\n\n {bot} LMS Bot Here 😎. How can I assist you?", 
+                                                        "Administrator Options",
+                                                        sections)
+
+
+  
                                                 elif message.get("type") == "text":
                                                     text = message.get("text", {}).get("body", "").lower()
                                                     print(f"📨 Message from {sender_id}: {text}")
@@ -10672,6 +10735,41 @@ def webhook():
                                                         f"Hey {first_name}, select an option below on how you want to add or remove employees to or from your company's Leave Management System.",
                                                         buttons
                                                     )
+
+
+
+
+
+                                                elif button_id == "Dontsubmit":
+
+                                                    sections = [
+                                                        {
+                                                            "title": "MY PROFILE",
+                                                            "rows": [
+                                                                {"id": "Apply", "title": "Apply for Leave"},
+                                                                {"id": "Track", "title": "Track My Application"},
+                                                                {"id": "Checkbal", "title": "Check Days Balance"},
+                                                                {"id": "myhist", "title": "My Applications History"},
+                                                                {"id": "Myinfo", "title": "My Info"},
+                                                                {"id": "Pending", "title": "Apps Pending My Approval"},
+                                                            ]
+                                                        },
+                                                        {
+                                                            "title": "ADMINISTRATION",
+                                                            "rows": [
+                                                                {"id": "Empmgt", "title": "Employee Management"},
+                                                                {"id": "Analyticscomp", "title": "Analytics & Insights"},
+                                                                {"id": "Company", "title": "Company Profile"},
+                                                            ]
+                                                        }
+                                                    ]
+
+                                                    send_whatsapp_list_message(
+                                                        sender_id, 
+                                                        f"Leave Application not submitted. \n\n Hello {first_name} {last_name} from {companyxx}!\n\n {bot} LMS Bot Here 😎. How can I assist you?", 
+                                                    "Admin/Approver Options",
+                                                    sections)
+
 
                                             elif message.get("type") == "text":
 
