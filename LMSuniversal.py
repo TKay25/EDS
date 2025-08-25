@@ -2896,13 +2896,6 @@ def webhook():
 
 
 
-
-
-
-
-
-
-
                                                 if selected_option in ["Annual","Sick","Study","Parental", "Bereavement","Other"] :
                                                     button_id_leave_type = str(selected_option)
 
@@ -3610,8 +3603,11 @@ def webhook():
                                                             buttons
                                                         )
                                                 
-                                                elif button_id == "Submitapp":
+                                                elif "Submitapp" in button_id:
                                         
+                                                    result_appid = button_id.split("_", 1)[1]   # "ii"
+                                                    print(result_appid)
+
                                                     try:
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -3619,10 +3615,11 @@ def webhook():
                                                         companyxx = company_reg.replace("_", " ").title()
 
                                                         cursor.execute("""
-                                                            SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                            WHERE empidwa = %s
-                                                        """, (id_user,))
-                                                
+                                                            SELECT id, empidwa, leavetypewa, startdate, enddate
+                                                            FROM whatsapptempapplication
+                                                            WHERE empidwa = %s AND id = %s
+                                                        """, (id_user, result_appid))
+
                                                         result = cursor.fetchone()
 
                                                         appid = result[0]
@@ -3699,8 +3696,8 @@ def webhook():
 
                                                                         cursor.execute("""
                                                                             SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                            WHERE empidwa = %s
-                                                                        """, (id_user,))
+                                                                            WHERE empidwa = %s AND id = %s
+                                                                        """, (id_user, result_appid))
                                                                 
                                                                         result = cursor.fetchone()
 
@@ -3830,8 +3827,6 @@ def webhook():
 
                                                                         if leavedaysbalancebf >= 0:
 
-
-
                                                                             status = "Pending"
 
                                                                             insert_query = f"""
@@ -3849,6 +3844,13 @@ def webhook():
                                                                             leaveappid = df_employees.iat[0,0]
                                                                             companyxx = company_reg.replace("_"," ").title()
                                                                             approovvver = leaveapprovername.title()
+
+                                                                            cursor.execute("""
+                                                                                DELETE FROM whatsapptempapplication
+                                                                                WHERE empidwa = %s AND id = %s
+                                                                            """, (str(id_user), result_appid))  
+                                                                            
+                                                                            connection.commit()
 
                                                                             buttons = [
                                                                             {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
@@ -4893,19 +4895,23 @@ def webhook():
                                                 "User Options",
                                                 sections)
 
-                                            elif button_id == "Submitapp":
+                                            elif "Submitapp" in button_id:
                                     
+                                                result_appid = button_id.split("_", 1)[1]   # "ii"
+                                                print(result_appid)
+
                                                 try:
-                                                    
+
                                                     table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                     table_name_apps_approved = f"{company_reg}appsapproved"
                                                     companyxx = company_reg.replace("_", " ").title()
 
                                                     cursor.execute("""
-                                                        SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                        WHERE empidwa = %s
-                                                    """, (id_user,))
-                                            
+                                                        SELECT id, empidwa, leavetypewa, startdate, enddate
+                                                        FROM whatsapptempapplication
+                                                        WHERE empidwa = %s AND id = %s
+                                                    """, (id_user, result_appid))
+
                                                     result = cursor.fetchone()
 
                                                     appid = result[0]
@@ -4978,8 +4984,8 @@ def webhook():
 
                                                                 cursor.execute("""
                                                                     SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                    WHERE empidwa = %s
-                                                                """, (id_user,))
+                                                                    WHERE empidwa = %s AND id = %s
+                                                                    """, (id_user, result_appid))
                                                         
                                                                 result = cursor.fetchone()
 
@@ -5124,6 +5130,13 @@ def webhook():
                                                                     leaveappid = df_employees.iat[0,0]
                                                                     companyxx = company_reg.replace("_"," ").title()
                                                                     approovvver = leaveapprovername.title()
+
+                                                                    cursor.execute("""
+                                                                        DELETE FROM whatsapptempapplication
+                                                                        WHERE empidwa = %s AND id = %s
+                                                                    """, (str(id_user), result_appid))  
+                                                                    
+                                                                    connection.commit()
 
                                                                     buttons = [
                                                                     {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
@@ -6824,18 +6837,23 @@ def webhook():
                                                                 buttons
                                                             )
 
-                                                    elif button_id == "Submitapp":
+                                                    elif "Submitapp" in button_id:
                                             
+                                                        result_appid = button_id.split("_", 1)[1]   # "ii"
+                                                        print(result_appid)
+
                                                         try:
+
                                                             table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
                                                             table_name_apps_approved = f"{company_reg}appsapproved"
                                                             companyxx = company_reg.replace("_", " ").title()
 
                                                             cursor.execute("""
-                                                                SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                WHERE empidwa = %s
-                                                            """, (id_user,))
-                                                    
+                                                                SELECT id, empidwa, leavetypewa, startdate, enddate
+                                                                FROM whatsapptempapplication
+                                                                WHERE empidwa = %s AND id = %s
+                                                            """, (id_user, result_appid))
+
                                                             result = cursor.fetchone()
 
                                                             appid = result[0]
@@ -6908,8 +6926,8 @@ def webhook():
 
                                                                         cursor.execute("""
                                                                             SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                            WHERE empidwa = %s
-                                                                        """, (id_user,))
+                                                                            WHERE empidwa = %s AND id = %s
+                                                                            """, (id_user, result_appid))
                                                                 
                                                                         result = cursor.fetchone()
 
@@ -7055,6 +7073,13 @@ def webhook():
                                                                             leaveappid = df_employees.iat[0,0]
                                                                             companyxx = company_reg.replace("_"," ").title()
                                                                             approovvver = leaveapprovername.title()
+
+                                                                            cursor.execute("""
+                                                                                DELETE FROM whatsapptempapplication
+                                                                                WHERE empidwa = %s AND id = %s
+                                                                            """, (str(id_user), result_appid))  
+                                                                            
+                                                                            connection.commit()
 
                                                                             buttons = [
                                                                                 {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
@@ -9344,8 +9369,11 @@ def webhook():
                                                             buttons
                                                         )
 
-                                                elif button_id == "Submitapp":
+                                                elif "Submitapp" in button_id:
                                         
+                                                    result_appid = button_id.split("_", 1)[1]   # "ii"
+                                                    print(result_appid)
+
                                                     try:
 
                                                         table_name_apps_pending_approval = f"{company_reg}appspendingapproval"
@@ -9353,10 +9381,11 @@ def webhook():
                                                         companyxx = company_reg.replace("_", " ").title()
 
                                                         cursor.execute("""
-                                                            SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                            WHERE empidwa = %s
-                                                        """, (id_user,))
-                                                
+                                                            SELECT id, empidwa, leavetypewa, startdate, enddate
+                                                            FROM whatsapptempapplication
+                                                            WHERE empidwa = %s AND id = %s
+                                                        """, (id_user, result_appid))
+
                                                         result = cursor.fetchone()
 
                                                         appid = result[0]
@@ -9429,8 +9458,8 @@ def webhook():
 
                                                                     cursor.execute("""
                                                                         SELECT id ,empidwa, leavetypewa, startdate, enddate FROM whatsapptempapplication
-                                                                        WHERE empidwa = %s
-                                                                    """, (id_user,))
+                                                                        WHERE empidwa = %s AND id = %s
+                                                                    """, (id_user, result_appid))
                                                             
                                                                     result = cursor.fetchone()
 
@@ -9575,6 +9604,13 @@ def webhook():
                                                                         leaveappid = df_employees.iat[0,0]
                                                                         companyxx = company_reg.replace("_"," ").title()
                                                                         approovvver = leaveapprovername.title()
+
+                                                                        cursor.execute("""
+                                                                            DELETE FROM whatsapptempapplication
+                                                                            WHERE empidwa = %s AND id = %s
+                                                                        """, (str(id_user), result_appid))  
+                                                                        
+                                                                        connection.commit()
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
