@@ -2845,6 +2845,13 @@ def webhook():
                                                     leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
                                                     leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
                                                     leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
+                                        
+                                                    cursor.execute("""
+                                                        DELETE FROM whatsapptempapplication
+                                                        WHERE empidwa = %s
+                                                    """, (str(id_user)))  
+                                                    
+                                                    connection.commit()
 
                                                     cursor.execute("""
                                                         INSERT INTO whatsapptempapplication (empidwa, leavetypewa, startdate, enddate)
@@ -3847,8 +3854,8 @@ def webhook():
 
                                                                             cursor.execute("""
                                                                                 DELETE FROM whatsapptempapplication
-                                                                                WHERE empidwa = %s AND id = %s
-                                                                            """, (str(id_user), result_appid))  
+                                                                                WHERE empidwa = %s
+                                                                            """, (str(id_user)))  
                                                                             
                                                                             connection.commit()
 
@@ -4270,6 +4277,13 @@ def webhook():
                                                 leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
                                                 leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
                                                 leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
+
+                                                cursor.execute("""
+                                                    DELETE FROM whatsapptempapplication
+                                                    WHERE empidwa = %s
+                                                """, (str(id_user)))  
+                                                
+                                                connection.commit()
 
                                                 cursor.execute("""
                                                     INSERT INTO whatsapptempapplication (empidwa, leavetypewa, startdate, enddate)
@@ -5133,11 +5147,11 @@ def webhook():
 
                                                                     cursor.execute("""
                                                                         DELETE FROM whatsapptempapplication
-                                                                        WHERE empidwa = %s AND id = %s
-                                                                    """, (str(id_user), result_appid))  
+                                                                        WHERE empidwa = %s
+                                                                    """, (str(id_user)))  
                                                                     
                                                                     connection.commit()
-
+                                                                    
                                                                     buttons = [
                                                                     {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
                                                                     {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
@@ -6066,6 +6080,13 @@ def webhook():
                                                         leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
                                                         leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
 
+                                                        cursor.execute("""
+                                                            DELETE FROM whatsapptempapplication
+                                                            WHERE empidwa = %s
+                                                        """, (str(id_user)))  
+                                                        
+                                                        connection.commit()
+                                                        
                                                         cursor.execute("""
                                                             INSERT INTO whatsapptempapplication (empidwa, leavetypewa, startdate, enddate)
                                                             VALUES (%s, %s, %s, %s)
@@ -7076,8 +7097,8 @@ def webhook():
 
                                                                             cursor.execute("""
                                                                                 DELETE FROM whatsapptempapplication
-                                                                                WHERE empidwa = %s AND id = %s
-                                                                            """, (str(id_user), result_appid))  
+                                                                                WHERE empidwa = %s
+                                                                            """, (str(id_user)))  
                                                                             
                                                                             connection.commit()
 
@@ -8321,6 +8342,13 @@ def webhook():
                                                     leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
                                                     leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
                                                     leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
+
+                                                    cursor.execute("""
+                                                        DELETE FROM whatsapptempapplication
+                                                        WHERE empidwa = %s
+                                                    """, (str(id_user)))  
+                                                    
+                                                    connection.commit()
 
                                                     cursor.execute("""
                                                         INSERT INTO whatsapptempapplication (empidwa, leavetypewa, startdate, enddate)
@@ -9607,8 +9635,8 @@ def webhook():
 
                                                                         cursor.execute("""
                                                                             DELETE FROM whatsapptempapplication
-                                                                            WHERE empidwa = %s AND id = %s
-                                                                        """, (str(id_user), result_appid))  
+                                                                            WHERE empidwa = %s
+                                                                        """, (str(id_user)))  
                                                                         
                                                                         connection.commit()
 
