@@ -3106,28 +3106,28 @@ def webhook():
                                                     table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, currentleavedaysbalance  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
 
-                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
+                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp", "currentleavedaysbalance"])    
 
                                                     if len(df_employeesappspendingcheck) == 0:
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
-                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
+                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"]) 
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
-                                                        df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])  
+                                                        df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])  
                                 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
-                                                        df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])
+                                                        df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])
                                 
                                                         all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                         all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
@@ -3166,6 +3166,7 @@ def webhook():
                                                                         'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
                                                                         'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
                                                                         'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                        "currentleavedaysbalance": all_approved_declined_cancelled.iat[0,11],
                                                                         'address': address_foc_8, 
                                                                         'whatsapp': whatsapp_foc_8, 
                                                                         'email': email_foc_8, 
@@ -4531,28 +4532,28 @@ def webhook():
                                                 table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, appid  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, appid, currentleavedaysbalance  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                 cursor.execute(query)
                                                 rows = cursor.fetchall()
 
-                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp","appid"])    
+                                                df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp","appid", "currentleavedaysbalance"])    
 
                                                 if len(df_employeesappspendingcheck) == 0:
 
-                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
-                                                    df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
+                                                    df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"]) 
 
-                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
-                                                    df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])  
+                                                    df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])  
                             
-                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
-                                                    df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])
+                                                    df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])
                             
                                                     all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                     all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
@@ -4591,6 +4592,7 @@ def webhook():
                                                                     'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
                                                                     'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
                                                                     'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                    'currentleavedaysbalance': all_approved_declined_cancelled.iat[0,11],
                                                                     'address': address_foc_8, 
                                                                     'whatsapp': whatsapp_foc_8, 
                                                                     'email': email_foc_8, 
@@ -5406,10 +5408,10 @@ def webhook():
                                                         companyxx = company_name.replace("_", " ").title()
                                                         app_namexx = approver_name.title()
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, leave_days_balance  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
-                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
+                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "leave_days_balance"]) 
 
                                                         df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
 
@@ -5429,6 +5431,7 @@ def webhook():
                                                                 'start_date':  df_employeesappsapprovedcheck.iat[0,5].strftime('%d %B %Y'),
                                                                 'end_date':  df_employeesappsapprovedcheck.iat[0,6].strftime('%d %B %Y'),
                                                                 'days_requested':  df_employeesappsapprovedcheck.iat[0,7], 
+                                                                'currentleavedaysbalance': df_employeesappsapprovedcheck.iat[0,11],
                                                                 'address': address, 
                                                                 'whatsapp': f"+263{whatsappemp}", 
                                                                 'email': email, 
@@ -5942,28 +5945,28 @@ def webhook():
                                                         table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, currentleavedaysbalance  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
 
-                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp"])    
+                                                        df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp", "currentleavedaysbalance"])    
 
                                                         if len(df_employeesappspendingcheck) == 0:
 
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
-                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"]) 
+                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"]) 
 
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
-                                                            df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])  
+                                                            df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])  
                                     
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
-                                                            df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf"])
+                                                            df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])
                                     
                                                             all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                             all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
@@ -6001,6 +6004,7 @@ def webhook():
                                                                             'start_date':  all_approved_declined_cancelled.iat[0,5].strftime('%d %B %Y'),
                                                                             'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
                                                                             'days_requested':  all_approved_declined_cancelled.iat[0,7], 
+                                                                            'currentleavedaysbalance': all_approved_declined_cancelled.iat[0,11],
                                                                             'address': address_foc_8, 
                                                                             'whatsapp': whatsapp_foc_8, 
                                                                             'email': email_foc_8, 
@@ -8427,28 +8431,28 @@ def webhook():
                                                     table_name_apps_cancelled = f"{company_reg}appscancelled"
 
 
-                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, appid, department  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
+                                                    query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leaveapproverwhatsapp, appid, department, currentleavedaysbalance  FROM {table_name_apps_pending_approval} WHERE id = {str(id_user)};"
                                                     cursor.execute(query)
                                                     rows = cursor.fetchall()
 
-                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp", "appid", "department"])    
+                                                    df_employeesappspendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor", "leaveapproverwhatsapp", "appid", "department", "currentleavedaysbalance"])    
 
                                                     if len(df_employeesappspendingcheck) == 0:
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department, currentleavedaysbalance  FROM {table_name_apps_approved} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
-                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department"]) 
+                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department", "currentleavedaysbalance"]) 
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department, currentleavedaysbalance  FROM {table_name_apps_declined} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
-                                                        df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department"])  
+                                                        df_employeesappsdeclinedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department", "currentleavedaysbalance"])  
                                 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department, currentleavedaysbalance  FROM {table_name_apps_cancelled} WHERE id = {str(id_user)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
-                                                        df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department"])
+                                                        df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department", "currentleavedaysbalance"])
                                 
                                                         all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
                                                         all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
@@ -8488,6 +8492,7 @@ def webhook():
                                                                         'end_date':  all_approved_declined_cancelled.iat[0,6].strftime('%d %B %Y'),
                                                                         'days_requested':  all_approved_declined_cancelled.iat[0,7], 
                                                                         'department':  all_approved_declined_cancelled.iat[0,11], 
+                                                                        'currentleavedaysbalance': all_approved_declined_cancelled.iat[0,12], 
                                                                         'address': address_foc_8, 
                                                                         'whatsapp': whatsapp_foc_8, 
                                                                         'email': email_foc_8, 
@@ -9578,10 +9583,10 @@ def webhook():
                                                             companyxx = company_name.replace("_", " ").title()
                                                             app_namexx = approver_name.title()
 
-                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
+                                                            query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department, currentleavedaysbalance  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
                                                             cursor.execute(query)
                                                             rows = cursor.fetchall()
-                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department"]) 
+                                                            df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department", "currentleavedaysbalance"]) 
 
                                                             df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
 
@@ -9601,6 +9606,7 @@ def webhook():
                                                                     'end_date':  df_employeesappsapprovedcheck.iat[0,6].strftime('%d %B %Y'),
                                                                     'days_requested':  df_employeesappsapprovedcheck.iat[0,7], 
                                                                     'department':  department, 
+                                                                    'currentleavedaysbalance': df_employeesappsapprovedcheck.iat[0,12],
                                                                     'address': address, 
                                                                     'whatsapp': f"+263{whatsappemp}", 
                                                                     'email': email, 
@@ -14071,10 +14077,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
             company_name = table_name.replace("main","")
             try:
                 table_name_apps_approved = company_name + 'appsapproved'
-                query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, leavedaysbalancebf, leaveapproverid, department FROM {table_name_apps_approved} WHERE appid = %s;"""
+                query = f"""SELECT appid, id, firstname, surname, leavetype, TO_CHAR(dateapplied, 'FMDD Month YYYY') AS dateapplied, TO_CHAR(leavestartdate, 'FMDD Month YYYY') AS leavestartdate, TO_CHAR(leaveenddate, 'FMDD Month YYYY') AS leaveenddate,  leavedaysappliedfor, leaveapprovername, TO_CHAR(statusdate, 'FMDD Month YYYY') AS statusdate, leavedaysbalancebf, leaveapproverid, department, currentleavedaysbalance FROM {table_name_apps_approved} WHERE appid = %s;"""
                 cursor.execute(query, (app_id,))  
                 rows = cursor.fetchall()
-                df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver", "Status Date","New Leave Days Balance", "Leave Approver ID", "Department"])
+                df_leave_appsmain_approved = pd.DataFrame(rows, columns=["App ID","ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver", "Status Date","New Leave Days Balance", "Leave Approver ID", "Department", "currentleavedaysbalance"])
                 empidx = df_leave_appsmain_approved.iat[0,1]
 
                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation FROM {table_name};"
@@ -14112,6 +14118,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     'start_date': df_leave_appsmain_approved.iat[0,6],
                     'end_date': df_leave_appsmain_approved.iat[0,7],
                     'days_requested': df_leave_appsmain_approved.iat[0,8], 
+                    'currentleavedaysbalance': df_leave_appsmain_approved.iat[0,14],
                     'address': userdf.iat[0,6], 
                     'whatsapp': f"0{userdf.iat[0,4]}", 
                     'email': userdf.iat[0,5], 
@@ -14312,10 +14319,10 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 companyxx = company_name.replace("_", " ").title()
                 app_namexx = approver_name.title()
 
-                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
+                query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, department, currentleavedaysbalance  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
                 cursor.execute(query)
                 rows = cursor.fetchall()
-                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department"]) 
+                df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department", "currentleavedaysbalance"]) 
 
                 df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
 
@@ -14337,6 +14344,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                         'end_date':  df_employeesappsapprovedcheck.iat[0,6].strftime('%d %B %Y'),
                         'days_requested':  df_employeesappsapprovedcheck.iat[0,7], 
                         'department': df_employeesappsapprovedcheck.iat[0,11],
+                        'currentleavedaysbalance': df_employeesappsapprovedcheck.iat[0,12],
                         'address': address, 
                         'whatsapp': f"+263{whatsappemp}", 
                         'email': email, 
