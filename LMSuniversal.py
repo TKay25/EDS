@@ -2846,6 +2846,14 @@ def webhook():
                                                     leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
                                                     leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
                                         
+
+                                                    print("Values to insert:")
+                                                    print("id_user:", id_user, type(id_user))
+                                                    print("leavetype_form:", leavetype_form, type(leavetype_form))
+                                                    print("leave_start_date_form:", leave_start_date_form, type(leave_start_date_form))
+                                                    print("leave_end_date_form:", leave_end_date_form, type(leave_end_date_form))
+
+
                                                     cursor.execute("""
                                                         DELETE FROM whatsapptempapplication
                                                         WHERE empidwa = %s
@@ -4358,6 +4366,12 @@ def webhook():
                                                 leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
                                                 leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
                                                 leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
+
+                                                print("Values to insert:")
+                                                print("id_user:", id_user, type(id_user))
+                                                print("leavetype_form:", leavetype_form, type(leavetype_form))
+                                                print("leave_start_date_form:", leave_start_date_form, type(leave_start_date_form))
+                                                print("leave_end_date_form:", leave_end_date_form, type(leave_end_date_form))
 
                                                 cursor.execute("""
                                                     DELETE FROM whatsapptempapplication
@@ -6240,6 +6254,12 @@ def webhook():
                                                         leavetype_form = form_response.get("screen_0_Leave_Type_0")[2:]
                                                         leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
                                                         leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
+
+                                                        print("Values to insert:")
+                                                        print("id_user:", id_user, type(id_user))
+                                                        print("leavetype_form:", leavetype_form, type(leavetype_form))
+                                                        print("leave_start_date_form:", leave_start_date_form, type(leave_start_date_form))
+                                                        print("leave_end_date_form:", leave_end_date_form, type(leave_end_date_form))
 
                                                         cursor.execute("""
                                                             DELETE FROM whatsapptempapplication
@@ -8579,6 +8599,12 @@ def webhook():
                                                     leave_start_date_form = form_response.get("screen_0_Leave_Start_Date_1")
                                                     leave_end_date_form = form_response.get("screen_0_Leave_End_Date_2")
 
+                                                    print("Values to insert:")
+                                                    print("id_user:", id_user, type(id_user))
+                                                    print("leavetype_form:", leavetype_form, type(leavetype_form))
+                                                    print("leave_start_date_form:", leave_start_date_form, type(leave_start_date_form))
+                                                    print("leave_end_date_form:", leave_end_date_form, type(leave_end_date_form))
+                                                    
                                                     cursor.execute("""
                                                         DELETE FROM whatsapptempapplication
                                                         WHERE empidwa = %s
