@@ -2438,7 +2438,7 @@ def webhook():
                                                                                 "title": "System Admin"
                                                                             },
                                                                             {
-                                                                                "id": "maimenu",
+                                                                                "id": "mainmenu",
                                                                                 "title": "CAG MAIN MENU"
                                                                             }
                                                                         ]
