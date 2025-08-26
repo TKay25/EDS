@@ -4618,6 +4618,7 @@ def webhook():
 
                                                     firstnameemp2 = df_employeesappspendingcheck.iat[0,2]
                                                     appid = df_employeesappspendingcheck.iat[0,10]
+                                                    print(appid)
                                                     surnameemp2 = df_employeesappspendingcheck.iat[0,3]
                                                     leave_type2 = df_employeesappspendingcheck.iat[0,1]
                                                     days = df_employeesappspendingcheck.iat[0,9]
@@ -5678,9 +5679,23 @@ def webhook():
                                                         print(table_name_apps_pending_approval)
 
                                                         query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
+                                                        print("chiwiwwwwiiiiii1")
                                                         cursor.execute(query, (app_id,))
+                                                        print("chiwiwwwwiiiiii2")
                                                         result = cursor.fetchone()
-                                                        app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
+                                                        print("chiwiwwwwiiiiii3")
+
+                                                        if result:
+                                                            (app_id, employee_number, first_name, surname, department,
+                                                            leave_type, leave_specify, approver_name, approver_id,
+                                                            approver_email, approver_whatsapp, leave_days_balance,
+                                                            date_applied, start_date, end_date, leave_days,
+                                                            leavedaysbalancebf, statuspre) = result
+                                                        else:
+                                                            print(f"No record found for appid={app_id}")
+                                                            # Handle gracefully, e.g. raise exception or return early
+
+                                                        #app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
                                                         print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
                                                         print(employee_number)
                                                         print(approver_name)
