@@ -2420,9 +2420,9 @@ def webhook():
                                                             "body": {
                                                                 "text": (
                                                                     f"Choose a help option below:\n\n"
-                                                                    f"1️⃣ Sales Support: {sales_support_url}\n"
-                                                                    f"2️⃣ Pre-Book Hotline: {prebook_hotline_url}\n"
-                                                                    f"3️⃣ Private Hiring: {private_hiring_url}\n"
+                                                                    f"1️⃣ Sales Support: {sales_support_url}\n\n"
+                                                                    f"2️⃣ Pre-Book Hotline: {prebook_hotline_url}\n\n"
+                                                                    f"3️⃣ Private Hiring: {private_hiring_url}\n\n"
                                                                     f"3️⃣ System Admin: {system_admin_url}"
                                                                 )
                                                             },
