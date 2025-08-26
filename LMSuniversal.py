@@ -5776,10 +5776,10 @@ def webhook():
                                                         companyxx = company_name.replace("_", " ").title()
                                                         app_namexx = approver_name.title()
 
-                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, leave_days_balance  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
+                                                        query = f"SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate, leavedaysbalancebf, currentleavedaysbalance  FROM {table_name_apps_approved} WHERE id = {str(employee_number)};"
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
-                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "leave_days_balance"]) 
+                                                        df_employeesappsapprovedcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"]) 
 
                                                         df_employeesappsapprovedcheck = df_employeesappsapprovedcheck.sort_values(by="appid", ascending=False)  
 
