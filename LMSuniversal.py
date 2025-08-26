@@ -5685,7 +5685,11 @@ def webhook():
                                                         result = cursor.fetchone()
                                                         print("chiwiwwwwiiiiii3")
 
+                                                        print(result)
+
                                                         if result:
+
+
                                                             (app_id, employee_number, first_name, surname, department,
                                                             leave_type, leave_specify, approver_name, approver_id,
                                                             approver_email, approver_whatsapp, leave_days_balance,
