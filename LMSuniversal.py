@@ -2400,42 +2400,43 @@ def webhook():
                                                         "Content-Type": "application/json"
                                                     }
 
+                                                    # WhatsApp links with pre-filled messages
+                                                    sales_support_url = "https://wa.me/263774822568?text=Hello%2C%20I%20need%20Sales%20Support"
+                                                    prebook_hotline_url = "https://wa.me/263774822568?text=Hello%2C%20I%20want%20to%20pre-book%20a%20trip"
+                                                    private_hiring_url = "https://wa.me/263774822568?text=Hello%2C%20I%20need%20Private%20Hiring%20assistance"
+                                                    system_admin_url = "https://wa.me/263774822568?text=Hello%2C%20System%20Admin"
+
+
                                                     payload = {
                                                         "messaging_product": "whatsapp",
                                                         "to": sender_id,
                                                         "type": "interactive",
                                                         "interactive": {
                                                             "type": "button",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 CAG TOURS GET HELP"
+                                                            },
                                                             "body": {
-                                                                "text": "🚍 CAG TOURS HOTLINES\n\nTap a button below to open a direct WhatsApp chat:"
+                                                                "text": (
+                                                                    f"Choose a help option below:\n\n"
+                                                                    f"1️⃣ Sales Support: {sales_support_url}\n"
+                                                                    f"2️⃣ Pre-Book Hotline: {prebook_hotline_url}\n"
+                                                                    f"3️⃣ Private Hiring: {private_hiring_url}\n"
+                                                                    f"3️⃣ System Admin: {system_admin_url}"
+                                                                )
                                                             },
                                                             "action": {
                                                                 "buttons": [
-                                                                    {
-                                                                        "type": "url",
-                                                                        "url": "https://wa.me/263771234567?text=Hello%20Sales%20Support",
-                                                                        "title": "Sales Support"
-                                                                    },
-                                                                    {
-                                                                        "type": "url",
-                                                                        "url": "https://wa.me/263772345678?text=Hello%20Pre-Book%20Hotline",
-                                                                        "title": "Pre-Book Hotline"
-                                                                    },
-                                                                    {
-                                                                        "type": "url",
-                                                                        "url": "https://wa.me/263773456789?text=Hello%20Private%20Hiring",
-                                                                        "title": "Private Hiring"
-                                                                    }
+                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
                                                                 ]
                                                             }
                                                         }
                                                     }
 
                                                     response = requests.post(url, headers=headers, json=payload)
-
                                                     print(response.status_code)
                                                     print(response.text)
-
 
                                                 elif selected_option == "routes" or button_id == "routes":
 
