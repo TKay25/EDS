@@ -2392,6 +2392,73 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text) 
 
+                                                elif selected_option == "get_help" or button_id == "get_help":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 CAG TOURS GET HELP"
+                                                            },
+                                                            "body": {
+                                                                "text": (
+                                                                    "Select from the following options to get help."
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "button": "📋 CAG TOURS GET HELP",
+                                                                "sections": [
+                                                                    {
+                                                                        "title": "📦 CAG TOURS HELP",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "sales_support",
+                                                                                "title": "Sales Support"
+                                                                            },
+                                                                            {
+                                                                                "id": "prebook_hotline",
+                                                                                "title": "Pre-Book Hotline"                                                                            
+                                                                            },
+                                                                            {
+                                                                                "id": "private_hiring_help",
+                                                                                "title": "Private Hiring"
+                                                                            },
+                                                                            {
+                                                                                "id": "system_admin",
+                                                                                "title": "System Admin"
+                                                                            },
+                                                                            {
+                                                                                "id": "maimenu",
+                                                                                "title": "CAG MAIN MENU"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
+
+
+
+
+
 
                                                 elif selected_option == "routes" or button_id == "routes":
 
