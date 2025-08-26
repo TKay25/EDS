@@ -5697,7 +5697,7 @@ def webhook():
                                                         print("\nTable Data:")
                                                         # Print rows with column names
                                                         for row in rows:
-                                                            row_dict = {columns_info[i][0]: row[i] for i in range(len(row))}
+                                                            row_dict = {columns[i][0]: row[i] for i in range(len(row))}
                                                             print(row_dict)
 
                                                         try:
