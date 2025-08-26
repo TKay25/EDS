@@ -5680,7 +5680,7 @@ def webhook():
 
                                                         query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
                                                         print("chiwiwwwwiiiiii1")
-                                                        cursor.execute(query, (app_id,))
+                                                        cursor.execute(query, (int(app_id),))   # ensure it's int
                                                         print("chiwiwwwwiiiiii2")
                                                         result = cursor.fetchone()
                                                         print("chiwiwwwwiiiiii3")
@@ -5689,15 +5689,15 @@ def webhook():
 
                                                         if result:
 
-
                                                             (app_id, employee_number, first_name, surname, department,
                                                             leave_type, leave_specify, approver_name, approver_id,
                                                             approver_email, approver_whatsapp, leave_days_balance,
                                                             date_applied, start_date, end_date, leave_days,
                                                             leavedaysbalancebf, statuspre) = result
+
                                                         else:
+
                                                             print(f"No record found for appid={app_id}")
-                                                            # Handle gracefully, e.g. raise exception or return early
 
                                                         #app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
                                                         print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
@@ -10156,7 +10156,7 @@ def webhook():
                                                             print(table_name_apps_pending_approval)
 
                                                             query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
-                                                            cursor.execute(query, (app_id,))
+                                                            cursor.execute(query, (int(app_id),))   # ensure it's int
                                                             result = cursor.fetchone()
                                                             app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, approver_id, approver_email, approver_whatsapp, leave_days_balance, date_applied, start_date, end_date, leave_days, leavedaysbalancebf, statuspre = result
                                                             print("chiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
