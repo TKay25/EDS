@@ -5656,6 +5656,8 @@ def webhook():
 
                                                 app_id = button_id.split("_")[1]
                                                 print(app_id)
+                                                intappid = int(app_id)
+
 
                                                 if "approve5" in button_id.lower():
 
@@ -5704,7 +5706,6 @@ def webhook():
 
                                                             query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
                                                             print("chiwiwwwwiiiiii1")
-                                                            intappid = int(app_id)
                                                             print("intappid:", intappid)
                                                             print("Type of intappid:", type(intappid))
                                                             cursor.execute(query, (intappid,))   # ensure it's int
@@ -5756,7 +5757,7 @@ def webhook():
                                                             print("Error inserting data:", e)
 
                                                         query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
-                                                        cursor.execute(query, (app_id,))
+                                                        cursor.execute(query, (intappid,))
                                                         connection.commit()
 
                                                         query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
@@ -10161,6 +10162,8 @@ def webhook():
 
                                                     app_id = button_id.split("_")[1]
                                                     print(app_id)
+                                                    intappid = int(app_id)
+
 
                                                     if "approve5" in button_id.lower():
 
@@ -10186,9 +10189,10 @@ def webhook():
 
                                                             try:
 
-
                                                                 query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
-                                                                cursor.execute(query, (int(app_id),))  
+                                                                print("intappid:", intappid)
+                                                                print("Type of intappid:", type(intappid))
+                                                                cursor.execute(query, (intappid,))  
                                                                 print(query)
     
                                                                 result = cursor.fetchone()
@@ -10223,7 +10227,7 @@ def webhook():
                                                                 print("Error inserting data:", e)
 
                                                             query = f"""DELETE FROM {table_name_apps_pending_approval} WHERE appid = %s"""
-                                                            cursor.execute(query, (app_id,))
+                                                            cursor.execute(query, (intappid,))
                                                             connection.commit()
 
                                                             query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
