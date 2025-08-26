@@ -5704,7 +5704,10 @@ def webhook():
 
                                                             query = f"SELECT * FROM {table_name_apps_pending_approval} WHERE appid = %s;"
                                                             print("chiwiwwwwiiiiii1")
-                                                            cursor.execute(query, (int(app_id),))   # ensure it's int
+                                                            intappid = int(app_id)
+                                                            print("intappid:", intappid)
+                                                            print("Type of intappid:", type(intappid))
+                                                            cursor.execute(query, (intappid,))   # ensure it's int
                                                             print(query)
 
                                                             print("chiwiwwwwiiiiii2")
