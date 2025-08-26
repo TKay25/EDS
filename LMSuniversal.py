@@ -5678,6 +5678,27 @@ def webhook():
                                                         print("bababababababababa")
                                                         print(table_name_apps_pending_approval)
 
+                                                        query = """
+                                                        SELECT column_name, data_type
+                                                        FROM information_schema.columns
+                                                        WHERE table_name = %s
+                                                        ORDER BY ordinal_position;
+                                                        """
+
+                                                        cursor.execute(query, (table_name_apps_pending_approval,))
+                                                        columns = cursor.fetchall()
+
+                                                        for col_name, data_type in columns:
+                                                            print(f"{col_name}: {data_type}")
+
+                                                        cursor.execute(f"SELECT * FROM {table_name_apps_pending_approval};")
+                                                        rows = cursor.fetchall()
+
+                                                        print("\nTable Data:")
+                                                        # Print rows with column names
+                                                        for row in rows:
+                                                            row_dict = {columns_info[i][0]: row[i] for i in range(len(row))}
+                                                            print(row_dict)
 
                                                         try:
 
