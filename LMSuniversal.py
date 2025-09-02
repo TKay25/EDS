@@ -4127,7 +4127,7 @@ def webhook():
                                                             approverapp = int(approver_whatsapp)
 
                                                             send_whatsapp_message(f"263{approverapp}", f"Hey {approver_name} from {companyxx}! \n\n {first_name} {surname} has cancelled `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`!\n\n"
-                                                                "Send `hello`to view your Options."
+                                                                "Send `hello` to view your Options."
                                                             )                                         
                                                     
                                                     else:
@@ -5529,7 +5529,7 @@ def webhook():
                                                         approverapp = int(approver_whatsapp)
 
                                                         send_whatsapp_message(f"263{approverapp}", f"Hey {approver_name} from {companyxx}! \n\n {first_name} {surname} has cancelled `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`!\n\n"
-                                                            "Send `hello`to view your Options."
+                                                            "Send `hello` to view your Options."
                                                         )                                         
                                             
                                                 else:
@@ -7891,7 +7891,7 @@ def webhook():
                                                                 approverapp = int(approver_whatsapp)
 
                                                                 send_whatsapp_message(f"263{approverapp}", f"Hey {approver_name} from {companyxx}! \n\n {first_name} {surname} has cancelled `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`!\n\n"
-                                                                    "Send `hello`to view your Options.",
+                                                                    "Send `hello` to view your Options.",
                                                                     buttons
                                                                 )                                           
                                                         
@@ -10638,7 +10638,7 @@ def webhook():
                                                             approverapp = int(approver_whatsapp)
 
                                                             send_whatsapp_message(f"263{approverapp}", f"Hey {approver_name} from {companyxx}! \n\n {first_name} {surname} has cancelled `{leave_type} Leave Application` for `{leave_days} days` from `{start_date.strftime('%d %B %Y')}` to `{end_date.strftime('%d %B %Y')}`!\n\n"
-                                                                "Send `hello`to view your Options.")  
+                                                                "Send `hello` to view your Options.")  
 
                                                     else:
                                                         print("No record found for the user.")
