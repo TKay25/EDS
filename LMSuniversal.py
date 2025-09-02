@@ -3088,7 +3088,7 @@ def webhook():
                                                             leaveapprovername = userdf.iat[0,8]
                                                             leaveapproverid = userdf.iat[0,9]
                                                             leaveapproveremail = userdf.iat[0, 10]
-                                                            leaveapproverwhatsapp = userdf.iat[0,11]
+                                                            leaveapproverwhatsapp = int(userdf.iat[0,11])
                                                             role = userdf.iat[0,7]
                                                             leavedaysbalance = userdf.iat[0,12]
                                                             department = userdf.iat[0,14] 
@@ -3856,7 +3856,7 @@ def webhook():
                                                                         leaveapprovername = userdf.iat[0,8]
                                                                         leaveapproverid = userdf.iat[0,9]
                                                                         leaveapproveremail = userdf.iat[0, 10]
-                                                                        leaveapproverwhatsapp = userdf.iat[0,11]
+                                                                        leaveapproverwhatsapp = int(userdf.iat[0,11])
                                                                         role = userdf.iat[0,7]
                                                                         leavedaysbalance = userdf.iat[0,12]
                                                                         department = userdf.iat[0,14] 
@@ -5237,7 +5237,7 @@ def webhook():
                                                                 leaveapprovername = userdf.iat[0,8]
                                                                 leaveapproverid = userdf.iat[0,9]
                                                                 leaveapproveremail = userdf.iat[0, 10]
-                                                                leaveapproverwhatsapp = userdf.iat[0,11]
+                                                                leaveapproverwhatsapp = int(userdf.iat[0,11])
                                                                 role = userdf.iat[0,7]
                                                                 leavedaysbalance = userdf.iat[0,12]
                                                                 department = userdf.iat[0,14] 
@@ -5570,7 +5570,7 @@ def webhook():
                                                         leaveapprovername = userdf.iat[0,8]
                                                         leaveapproverid = userdf.iat[0,9]
                                                         leaveapproveremail = userdf.iat[0, 10]
-                                                        leaveapproverwhatsapp = userdf.iat[0,11]
+                                                        leaveapproverwhatsapp = int(userdf.iat[0,11])
                                                         role = userdf.iat[0,7]
                                                         leavedaysbalance = userdf.iat[0,12]
                                                         department = userdf.iat[0,14] 
@@ -6751,7 +6751,7 @@ def webhook():
                                                                 leaveapprovername = userdf.iat[0,8]
                                                                 leaveapproverid = userdf.iat[0,9]
                                                                 leaveapproveremail = userdf.iat[0, 10]
-                                                                leaveapproverwhatsapp = userdf.iat[0,11]
+                                                                leaveapproverwhatsapp = int(userdf.iat[0,11])
                                                                 role = userdf.iat[0,7]
                                                                 leavedaysbalance = userdf.iat[0,12]
                                                                 department = userdf.iat[0,14] 
@@ -7318,7 +7318,7 @@ def webhook():
                                                                         leaveapprovername = userdf.iat[0,8]
                                                                         leaveapproverid = userdf.iat[0,9]
                                                                         leaveapproveremail = userdf.iat[0, 10]
-                                                                        leaveapproverwhatsapp = userdf.iat[0,11]
+                                                                        leaveapproverwhatsapp = int(userdf.iat[0,11])
                                                                         role = userdf.iat[0,7]
                                                                         leavedaysbalance = userdf.iat[0,12]
                                                                         department = userdf.iat[0,14] 
@@ -9364,7 +9364,7 @@ def webhook():
                                                             leaveapprovername = userdf.iat[0,8]
                                                             leaveapproverid = userdf.iat[0,9]
                                                             leaveapproveremail = userdf.iat[0, 10]
-                                                            leaveapproverwhatsapp = userdf.iat[0,11]
+                                                            leaveapproverwhatsapp = int(userdf.iat[0,11])
                                                             role = userdf.iat[0,7]
                                                             leavedaysbalance = userdf.iat[0,12]
                                                             department = userdf.iat[0,14] 
@@ -9938,7 +9938,7 @@ def webhook():
                                                                     leaveapprovername = userdf.iat[0,8]
                                                                     leaveapproverid = userdf.iat[0,9]
                                                                     leaveapproveremail = userdf.iat[0, 10]
-                                                                    leaveapproverwhatsapp = userdf.iat[0,11]
+                                                                    leaveapproverwhatsapp = int(userdf.iat[0,11])
                                                                     role = userdf.iat[0,7]
                                                                     leavedaysbalance = userdf.iat[0,12]
                                                                     department = userdf.iat[0,14] 
@@ -12075,7 +12075,7 @@ def run1(table_name, empid):
     leaveapprovername = userdf.iat[0,8]
     leaveapproverid = userdf.iat[0,9]
     leaveapproveremail = userdf.iat[0, 10]
-    leaveapproverwhatsapp = userdf.iat[0,11]
+    leaveapproverwhatsapp = int(userdf.iat[0,11])
     role = userdf.iat[0,7]
     leavedaysbalance = userdf.iat[0,12]
     department = userdf.iat[0,14]
@@ -13394,7 +13394,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     leaveapprovername = userdf.iat[0,9]
                     leaveapproverid = userdf.iat[0,9]
                     leaveapproveremail = userdf.iat[0, 10]
-                    leaveapproverwhatsapp = userdf.iat[0,12]
+                    leaveapproverwhatsapp = int(userdf.iat[0,12])
                     role = userdf.iat[0,7]
                     leavedaysbalance = userdf.iat[0,12]
                     print('check')
