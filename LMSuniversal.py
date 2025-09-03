@@ -2764,7 +2764,7 @@ def webhook():
                                                     print(response.text)
 
 
-                                                elif language.lower() ==  "english" :                                    
+                                                elif language ==  "english" :                                    
 
                                                     text = message.get("text", {}).get("body", "").lower()
                                                     print(f"📨 Message from {sender_id}: {text}")
