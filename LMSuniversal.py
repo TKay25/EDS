@@ -2717,164 +2717,170 @@ def webhook():
 
                                             elif message.get("type") == "text":
 
-                                                cursor.execute("""
-                                                    SELECT firstname, surname, wanumber, nationalidno, language FROM cagwatickcustomerdetails
-                                                    WHERE wanumber = %s
-                                                """, (sender_id[-9:],))
+                                                try:
 
-                                                result55 = cursor.fetchone()
- 
-                                                language = result55[4]  
+                                                    cursor.execute("""
+                                                        SELECT firstname, surname, wanumber, nationalidno, language FROM cagwatickcustomerdetails
+                                                        WHERE wanumber = %s
+                                                    """, (sender_id[-9:],))
 
-                                                if language == "":
+                                                    result55 = cursor.fetchone()
+    
+                                                    language = result55[4]  
 
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
-                                                    }
+                                                    if language == "" or language == None:
 
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "interactive",
-                                                        "interactive": {
-                                                            "type": "button",
-                                                            "header": {
-                                                                "type": "text",
-                                                                "text": "🚍 CAG TOURS LANGUAGE"
-                                                            },
-                                                            "body": {
-                                                                "text": f"Kindly select your prefered Language/ Sicela ukhethe ulimi olukhethayo."
-                                                            },
-                                                            "footer": {
-                                                                "text": "CAG TOURS LANGUAGE."
-                                                            },
-                                                            "action": {
-                                                                "buttons": [
-                                                                    {"type": "reply", "reply": {"id": "langenglish", "title": "English"}},
-                                                                    {"type": "reply", "reply": {"id": "langndebele", "title": "Ndebele"}}                                                                ]
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "button",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 CAG TOURS LANGUAGE"
+                                                                },
+                                                                "body": {
+                                                                    "text": f"Kindly select your prefered Language/ Sicela ukhethe ulimi olukhethayo."
+                                                                },
+                                                                "footer": {
+                                                                    "text": "CAG TOURS LANGUAGE."
+                                                                },
+                                                                "action": {
+                                                                    "buttons": [
+                                                                        {"type": "reply", "reply": {"id": "langenglish", "title": "English"}},
+                                                                        {"type": "reply", "reply": {"id": "langndebele", "title": "Ndebele"}}                                                                ]
+                                                                }
                                                             }
                                                         }
-                                                    }
 
-                                                    response = requests.post(url, headers=headers, json=payload)
+                                                        response = requests.post(url, headers=headers, json=payload)
 
-                                                    print(response.status_code)
-                                                    print(response.text)
+                                                        print(response.status_code)
+                                                        print(response.text)
 
 
-                                                elif language ==  "english" :                                    
+                                                    elif language ==  "english" :                                    
 
-                                                    text = message.get("text", {}).get("body", "").lower()
-                                                    print(f"📨 Message from {sender_id}: {text}")
-                                                    
-                                                    print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+                                                        text = message.get("text", {}).get("body", "").lower()
+                                                        print(f"📨 Message from {sender_id}: {text}")
+                                                        
+                                                        print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
 
-                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                    headers = {
-                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                        "Content-Type": "application/json"
-                                                    }
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
 
-                                                    payload = {
-                                                        "messaging_product": "whatsapp",
-                                                        "to": sender_id,
-                                                        "type": "interactive",
-                                                        "interactive": {
-                                                            "type": "list",
-                                                            "header": {
-                                                                "type": "text",
-                                                                "text": "🚍 CAG TOURS MAIN MENU"
-                                                            },
-                                                            "body": {
-                                                                "text": (
-                                                                    "Welcome aboard! 👋\n\n"
-                                                                    "Explore our available routes, services, and customer support options.\n"
-                                                                    "Tap *OPEN MENU* below to get started. ⬇️"
-                                                                )
-                                                            },
-                                                            "action": {
-                                                                "button": "📋 CAG TOURS MENU",
-                                                                "sections": [
-                                                                    {
-                                                                        "title": "📦 CAG TOURS SERVICES",
-                                                                        "rows": [
-                                                                            {
-                                                                                "id": "book_ticket",
-                                                                                "title": "Book a Ticket",
-                                                                                "description": "Reserve your seat instantly"
-                                                                            },
-                                                                            {
-                                                                                "id": "routes",
-                                                                                "title": "View Routes",
-                                                                                "description": "Get info regarding our travel routes"
-                                                                            },
-                                                                            {
-                                                                                "id": "private_hire",
-                                                                                "title": "Private Hire",
-                                                                                "description": "Book buses for private trips or group travel"
-                                                                            },
-                                                                            {
-                                                                                "id": "parcel_delivery",
-                                                                                "title": "Parcel Delivery",
-                                                                                "description": "Send or collect packages"
-                                                                            },
-                                                                            {
-                                                                                "id": "find_stop",
-                                                                                "title": "Terminals & Agents",
-                                                                                "description": "Locate nearest terminal or agent"
-                                                                            }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        "title": "🚌 CAG TOURS",
-                                                                        "rows": [
-                                                                            {
-                                                                                "id": "know_more",
-                                                                                "title": "Know More",
-                                                                                "description": "Our story & travel experience"
-                                                                            },
-                                                                            {
-                                                                                "id": "why_choose",
-                                                                                "title": "Why Choose Us",
-                                                                                "description": "Luxury, safety & comfort explained"
-                                                                            }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        "title": "🛎 CUSTOMER SERVICE",
-                                                                        "rows": [
-                                                                            {
-                                                                                "id": "faqs",
-                                                                                "title": "❓ FAQs",
-                                                                                "description": "Get answers to common questions"
-                                                                            },
-                                                                            {
-                                                                                "id": "policies",
-                                                                                "title": "Travel Policies",
-                                                                                "description": "Baggage rules, safety, refunds"
-                                                                            },
-                                                                            {
-                                                                                "id": "get_help",
-                                                                                "title": "Get Help",
-                                                                                "description": "Talk to a support agent now"
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                ]
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 CAG TOURS MAIN MENU"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Welcome aboard! 👋\n\n"
+                                                                        "Explore our available routes, services, and customer support options.\n"
+                                                                        "Tap *OPEN MENU* below to get started. ⬇️"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "📋 CAG TOURS MENU",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "📦 CAG TOURS SERVICES",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "book_ticket",
+                                                                                    "title": "Book a Ticket",
+                                                                                    "description": "Reserve your seat instantly"
+                                                                                },
+                                                                                {
+                                                                                    "id": "routes",
+                                                                                    "title": "View Routes",
+                                                                                    "description": "Get info regarding our travel routes"
+                                                                                },
+                                                                                {
+                                                                                    "id": "private_hire",
+                                                                                    "title": "Private Hire",
+                                                                                    "description": "Book buses for private trips or group travel"
+                                                                                },
+                                                                                {
+                                                                                    "id": "parcel_delivery",
+                                                                                    "title": "Parcel Delivery",
+                                                                                    "description": "Send or collect packages"
+                                                                                },
+                                                                                {
+                                                                                    "id": "find_stop",
+                                                                                    "title": "Terminals & Agents",
+                                                                                    "description": "Locate nearest terminal or agent"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "title": "🚌 CAG TOURS",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "know_more",
+                                                                                    "title": "Know More",
+                                                                                    "description": "Our story & travel experience"
+                                                                                },
+                                                                                {
+                                                                                    "id": "why_choose",
+                                                                                    "title": "Why Choose Us",
+                                                                                    "description": "Luxury, safety & comfort explained"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "title": "🛎 CUSTOMER SERVICE",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "faqs",
+                                                                                    "title": "❓ FAQs",
+                                                                                    "description": "Get answers to common questions"
+                                                                                },
+                                                                                {
+                                                                                    "id": "policies",
+                                                                                    "title": "Travel Policies",
+                                                                                    "description": "Baggage rules, safety, refunds"
+                                                                                },
+                                                                                {
+                                                                                    "id": "get_help",
+                                                                                    "title": "Get Help",
+                                                                                    "description": "Talk to a support agent now"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
                                                             }
                                                         }
-                                                    }
 
 
 
-                                                    # Send the request to WhatsApp
-                                                    response = requests.post(url, headers=headers, json=payload)
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
 
-                                                    # Optional: Print result for debugging
-                                                    print(response.status_code)
-                                                    print(response.text)
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+                                                except Exception as e:
+
+                                                    print(e)
 
                                         except Exception as e:
 
