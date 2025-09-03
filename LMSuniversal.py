@@ -3085,9 +3085,9 @@ def webhook():
                                                         text = message.get("text", {}).get("body", "").strip().lower()
                                                         print(f"📨 Message from {sender_id}: {text}")
 
-                                                        if text == "english":    
+                                                        if text.lower() == "english":    
 
-                                                            language = text 
+                                                            language = text.lower()
 
                                                             cursor.execute("""
                                                                 UPDATE cagwatickcustomerdetails 
@@ -3203,9 +3203,9 @@ def webhook():
                                                             print(response.status_code)
                                                             print(response.text)
 
-                                                        elif text == "ndebele":
+                                                        elif text.lower() == "ndebele":
 
-                                                            language = text 
+                                                            language = text.lower()
 
                                                             cursor.execute("""
                                                                 UPDATE cagwatickcustomerdetails 
