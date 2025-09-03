@@ -3118,7 +3118,8 @@ def webhook():
                                                                         "text": (
                                                                             "Welcome aboard! 👋\n\n"
                                                                             "Explore our available routes, services, and customer support options.\n"
-                                                                            "Tap *OPEN MENU* below to get started. ⬇️"
+                                                                            "Tap *OPEN MENU* below to get started. ⬇️\n\n"
+                                                                            "Ukutjhugulula konke kube ngesiNdebele, thumela umlayezo othe `ndebele`"
                                                                         )
                                                                     },
                                                                     "action": {
@@ -3235,7 +3236,8 @@ def webhook():
                                                                         "text": (
                                                                             "Siyalamukela! 👋\n\n"
                                                                             "Khetha indlela, izinsiza, kumbe ukusekelwa kwabathengi.\n"
-                                                                            "Cofa *IMENU CAG TOURS* ngezansi ⬇️"
+                                                                            "Cofa *IMENU CAG TOURS* ngezansi ⬇️\n\n"
+                                                                            "To translate to everything to English, send a message written `english`"
                                                                         )
                                                                     },
                                                                     "action": {
