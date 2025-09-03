@@ -1282,7 +1282,6 @@ def webhook():
                                                     print(response.status_code)
                                                     print(response.text)
 
-
                                                 elif selected_option == "Sunday" or button_id == "Sunday":
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
@@ -2492,117 +2491,390 @@ def webhook():
 
                                                     send_whatsapp_messagecc(sender_id, "✅ Okay. A Customer Representative has been notified to assit you. They will contact you shortly.")
 
-                                            elif message.get("type") == "text":
+                                                elif button_id.startswith("lang"):
+                                                    
+                                                    language = button_id[len("lang"):]  
 
-                                                text = message.get("text", {}).get("body", "").lower()
-                                                print(f"📨 Message from {sender_id}: {text}")
-                                                
-                                                print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+                                                    cursor.execute("""
+                                                        UPDATE cagwatickcustomerdetails 
+                                                        SET language = %s 
+                                                        WHERE wanumber = %s 
+                                                        """, (language, sender_id[-9:]))
 
-                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                headers = {
-                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                    "Content-Type": "application/json"
-                                                }
+                                                    connection.commit()
 
-                                                payload = {
-                                                    "messaging_product": "whatsapp",
-                                                    "to": sender_id,
-                                                    "type": "interactive",
-                                                    "interactive": {
-                                                        "type": "list",
-                                                        "header": {
-                                                            "type": "text",
-                                                            "text": "🚍 CAG TOURS MAIN MENU"
-                                                        },
-                                                        "body": {
-                                                            "text": (
-                                                                "Welcome aboard! 👋\n\n"
-                                                                "Explore our available routes, services, and customer support options.\n"
-                                                                "Tap *OPEN MENU* below to get started. ⬇️"
-                                                            )
-                                                        },
-                                                        "action": {
-                                                            "button": "📋 CAG TOURS MENU",
-                                                            "sections": [
-                                                                {
-                                                                    "title": "📦 CAG TOURS SERVICES",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "book_ticket",
-                                                                            "title": "Book a Ticket",
-                                                                            "description": "Reserve your seat instantly"
-                                                                        },
-                                                                        {
-                                                                            "id": "routes",
-                                                                            "title": "View Routes",
-                                                                            "description": "Get info regarding our travel routes"
-                                                                        },
-                                                                        {
-                                                                            "id": "private_hire",
-                                                                            "title": "Private Hire",
-                                                                            "description": "Book buses for private trips or group travel"
-                                                                        },
-                                                                        {
-                                                                            "id": "parcel_delivery",
-                                                                            "title": "Parcel Delivery",
-                                                                            "description": "Send or collect packages"
-                                                                        },
-                                                                        {
-                                                                            "id": "find_stop",
-                                                                            "title": "Terminals & Agents",
-                                                                            "description": "Locate nearest terminal or agent"
-                                                                        }
-                                                                    ]
+                                                    if language == "english":
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 CAG TOURS MAIN MENU"
                                                                 },
-                                                                {
-                                                                    "title": "🚌 CAG TOURS",
-                                                                    "rows": [
-                                                                        {
-                                                                            "id": "know_more",
-                                                                            "title": "Know More",
-                                                                            "description": "Our story & travel experience"
-                                                                        },
-                                                                        {
-                                                                            "id": "why_choose",
-                                                                            "title": "Why Choose Us",
-                                                                            "description": "Luxury, safety & comfort explained"
-                                                                        }
-                                                                    ]
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Welcome aboard! 👋\n\n"
+                                                                        "Explore our available routes, services, and customer support options.\n"
+                                                                        "Tap *OPEN MENU* below to get started. ⬇️"
+                                                                    )
                                                                 },
-                                                                {
-                                                                    "title": "🛎 CUSTOMER SERVICE",
-                                                                    "rows": [
+                                                                "action": {
+                                                                    "button": "📋 CAG TOURS MENU",
+                                                                    "sections": [
                                                                         {
-                                                                            "id": "faqs",
-                                                                            "title": "❓ FAQs",
-                                                                            "description": "Get answers to common questions"
+                                                                            "title": "📦 CAG TOURS SERVICES",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "book_ticket",
+                                                                                    "title": "Book a Ticket",
+                                                                                    "description": "Reserve your seat instantly"
+                                                                                },
+                                                                                {
+                                                                                    "id": "routes",
+                                                                                    "title": "View Routes",
+                                                                                    "description": "Get info regarding our travel routes"
+                                                                                },
+                                                                                {
+                                                                                    "id": "private_hire",
+                                                                                    "title": "Private Hire",
+                                                                                    "description": "Book buses for private trips or group travel"
+                                                                                },
+                                                                                {
+                                                                                    "id": "parcel_delivery",
+                                                                                    "title": "Parcel Delivery",
+                                                                                    "description": "Send or collect packages"
+                                                                                },
+                                                                                {
+                                                                                "id": "find_stop",
+                                                                                "title": "Terminals & Agents",
+                                                                                "description": "Locate nearest terminal or agent"
+                                                                                }
+                                                                            ]
                                                                         },
                                                                         {
-                                                                            "id": "policies",
-                                                                            "title": "Travel Policies",
-                                                                            "description": "Baggage rules, safety, refunds"
+                                                                            "title": "🚌 CAG TOURS",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "know_more",
+                                                                                    "title": "Know More",
+                                                                                    "description": "Our story & travel experience"
+                                                                                },
+                                                                                {
+                                                                                    "id": "why_choose",
+                                                                                    "title": "Why Choose Us",
+                                                                                    "description": "Luxury, safety & comfort explained"
+                                                                                }
+                                                                            ]
                                                                         },
                                                                         {
-                                                                            "id": "get_help",
-                                                                            "title": "Get Help",
-                                                                            "description": "Talk to a support agent now"
+                                                                            "title": "🛎 CUSTOMER SERVICE",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "faqs",
+                                                                                    "title": "❓ FAQs",
+                                                                                    "description": "Get answers to common questions"
+                                                                                },
+                                                                                {
+                                                                                    "id": "policies",
+                                                                                    "title": "Travel Policies",
+                                                                                    "description": "Baggage rules, safety, refunds"
+                                                                                },
+                                                                                {
+                                                                                    "id": "get_help",
+                                                                                    "title": "Get Help",
+                                                                                    "description": "Talk to a support agent now"
+                                                                                }
+                                                                            ]
                                                                         }
                                                                     ]
                                                                 }
-                                                            ]
+                                                            }
+                                                        }
+
+
+
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+                                                    elif language == "ndebele":
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "list",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "🚍 CAG TOURS IMENU ENKULU"
+                                                                },
+                                                                "body": {
+                                                                    "text": (
+                                                                        "Siyalamukela! 👋\n\n"
+                                                                        "Khetha indlela, izinsiza, kumbe ukusekelwa kwabathengi.\n"
+                                                                        "Cofa *VULA IMENU* ngezansi ⬇️"
+                                                                    )
+                                                                },
+                                                                "action": {
+                                                                    "button": "📋 IMENU CAG TOURS",
+                                                                    "sections": [
+                                                                        {
+                                                                            "title": "📦 IZINSIZA ZE CAG TOURS",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "book_ticket",
+                                                                                    "title": "Bhuka Ithikithi",
+                                                                                    "description": "Gcina isihlalo sakho masinyane"
+                                                                                },
+                                                                                {
+                                                                                    "id": "routes",
+                                                                                    "title": "Bona Izindlela",
+                                                                                    "description": "Thola ulwazi ngezindlela zethu"
+                                                                                },
+                                                                                {
+                                                                                    "id": "private_hire",
+                                                                                    "title": "Ukuqasha Imota",
+                                                                                    "description": "Qasha amabhasi okuhamba labanye"
+                                                                                },
+                                                                                {
+                                                                                    "id": "parcel_delivery",
+                                                                                    "title": "Ukuthumela Amaphasela",
+                                                                                    "description": "Thumela kumbe amukela iphasela"
+                                                                                },
+                                                                                {
+                                                                                    "id": "find_stop",
+                                                                                    "title": "Amastop & Ama-ejenti",
+                                                                                    "description": "Thola i-terminal kumbe i-ejenti eseduzane"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "title": "🚌 NGOHLA CAG TOURS",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "know_more",
+                                                                                    "title": "Okunengi Ngathi",
+                                                                                    "description": "Indaba yethu lokuhamba"
+                                                                                },
+                                                                                {
+                                                                                    "id": "why_choose",
+                                                                                    "title": "Kungani Usikhetha",
+                                                                                    "description": "Ukuphepha, induduzo, ubukhazikhazi"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "title": "🛎 UKUSEKELWA KWABATHENGI",
+                                                                            "rows": [
+                                                                                {
+                                                                                    "id": "faqs",
+                                                                                    "title": "❓ Imibuzo Evame",
+                                                                                    "description": "Phendula imibuzo evamileyo"
+                                                                                },
+                                                                                {
+                                                                                    "id": "policies",
+                                                                                    "title": "Inqubomgomo Yethu",
+                                                                                    "description": "Imithetho yokuhamba, impahla, imali"
+                                                                                },
+                                                                                {
+                                                                                    "id": "get_help",
+                                                                                    "title": "Thola Usizo",
+                                                                                    "description": "Khuluma lomsebenzi wethu khathesi"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
+
+                                            elif message.get("type") == "text":
+
+                                                cursor.execute("""
+                                                    SELECT firstname, surname, wanumber, nationalidno, language FROM cagwatickcustomerdetails
+                                                    WHERE wanumber = %s
+                                                """, (sender_id[-9:],))
+
+                                                result55 = cursor.fetchone()
+ 
+                                                language = result55[4]  
+
+                                                if language == "":
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "button",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 CAG TOURS LANGUAGE"
+                                                            },
+                                                            "body": {
+                                                                "text": f"Kindly select your prefered Language/ Sicela ukhethe ulimi olukhethayo."
+                                                            },
+                                                            "footer": {
+                                                                "text": "CAG TOURS LANGUAGE."
+                                                            },
+                                                            "action": {
+                                                                "buttons": [
+                                                                    {"type": "reply", "reply": {"id": "langenglish", "title": "English"}},
+                                                                    {"type": "reply", "reply": {"id": "langndebele", "title": "Ndebele"}}                                                                ]
+                                                            }
                                                         }
                                                     }
-                                                }
+
+                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                    print(response.status_code)
+                                                    print(response.text)
+
+
+                                                elif language.lower() ==  "english" :                                    
+
+                                                    text = message.get("text", {}).get("body", "").lower()
+                                                    print(f"📨 Message from {sender_id}: {text}")
+                                                    
+                                                    print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrssrsrsrsrsrs")
+
+                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                    headers = {
+                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                        "Content-Type": "application/json"
+                                                    }
+
+                                                    payload = {
+                                                        "messaging_product": "whatsapp",
+                                                        "to": sender_id,
+                                                        "type": "interactive",
+                                                        "interactive": {
+                                                            "type": "list",
+                                                            "header": {
+                                                                "type": "text",
+                                                                "text": "🚍 CAG TOURS MAIN MENU"
+                                                            },
+                                                            "body": {
+                                                                "text": (
+                                                                    "Welcome aboard! 👋\n\n"
+                                                                    "Explore our available routes, services, and customer support options.\n"
+                                                                    "Tap *OPEN MENU* below to get started. ⬇️"
+                                                                )
+                                                            },
+                                                            "action": {
+                                                                "button": "📋 CAG TOURS MENU",
+                                                                "sections": [
+                                                                    {
+                                                                        "title": "📦 CAG TOURS SERVICES",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "book_ticket",
+                                                                                "title": "Book a Ticket",
+                                                                                "description": "Reserve your seat instantly"
+                                                                            },
+                                                                            {
+                                                                                "id": "routes",
+                                                                                "title": "View Routes",
+                                                                                "description": "Get info regarding our travel routes"
+                                                                            },
+                                                                            {
+                                                                                "id": "private_hire",
+                                                                                "title": "Private Hire",
+                                                                                "description": "Book buses for private trips or group travel"
+                                                                            },
+                                                                            {
+                                                                                "id": "parcel_delivery",
+                                                                                "title": "Parcel Delivery",
+                                                                                "description": "Send or collect packages"
+                                                                            },
+                                                                            {
+                                                                                "id": "find_stop",
+                                                                                "title": "Terminals & Agents",
+                                                                                "description": "Locate nearest terminal or agent"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🚌 CAG TOURS",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "know_more",
+                                                                                "title": "Know More",
+                                                                                "description": "Our story & travel experience"
+                                                                            },
+                                                                            {
+                                                                                "id": "why_choose",
+                                                                                "title": "Why Choose Us",
+                                                                                "description": "Luxury, safety & comfort explained"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "title": "🛎 CUSTOMER SERVICE",
+                                                                        "rows": [
+                                                                            {
+                                                                                "id": "faqs",
+                                                                                "title": "❓ FAQs",
+                                                                                "description": "Get answers to common questions"
+                                                                            },
+                                                                            {
+                                                                                "id": "policies",
+                                                                                "title": "Travel Policies",
+                                                                                "description": "Baggage rules, safety, refunds"
+                                                                            },
+                                                                            {
+                                                                                "id": "get_help",
+                                                                                "title": "Get Help",
+                                                                                "description": "Talk to a support agent now"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
 
 
 
-                                                # Send the request to WhatsApp
-                                                response = requests.post(url, headers=headers, json=payload)
+                                                    # Send the request to WhatsApp
+                                                    response = requests.post(url, headers=headers, json=payload)
 
-                                                # Optional: Print result for debugging
-                                                print(response.status_code)
-                                                print(response.text)
+                                                    # Optional: Print result for debugging
+                                                    print(response.status_code)
+                                                    print(response.text)
 
                                         except Exception as e:
 
