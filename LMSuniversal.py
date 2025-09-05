@@ -5109,8 +5109,8 @@ def webhook():
                                                                             cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
                                                                             connection.commit()
 
-                                                                            query = f"SELECT appid FROM {table_name_apps_pending_approval};"
-                                                                            cursor.execute(query)
+                                                                            query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                                            cursor.execute(query, (int(np.int64(id_user)),))
                                                                             rows = cursor.fetchall()
 
                                                                             df_employees = pd.DataFrame(rows, columns=["id"])
@@ -6497,8 +6497,8 @@ def webhook():
                                                                     cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
                                                                     connection.commit()
 
-                                                                    query = f"SELECT appid FROM {table_name_apps_pending_approval};"
-                                                                    cursor.execute(query)
+                                                                    query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                                    cursor.execute(query, (int(np.int64(id_user)),))
                                                                     rows = cursor.fetchall()
 
                                                                     df_employees = pd.DataFrame(rows, columns=["id"])
@@ -8587,8 +8587,8 @@ def webhook():
                                                                             cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
                                                                             connection.commit()
 
-                                                                            query = f"SELECT appid FROM {table_name_apps_pending_approval};"
-                                                                            cursor.execute(query)
+                                                                            query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                                            cursor.execute(query, (int(np.int64(id_user)),))
                                                                             rows = cursor.fetchall()
 
                                                                             df_employees = pd.DataFrame(rows, columns=["id"])
@@ -11214,8 +11214,8 @@ def webhook():
                                                                         cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
                                                                         connection.commit()
 
-                                                                        query = f"SELECT appid FROM {table_name_apps_pending_approval};"
-                                                                        cursor.execute(query)
+                                                                        query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                                        cursor.execute(query, (int(np.int64(id_user)),))
                                                                         rows = cursor.fetchall()
 
                                                                         df_employees = pd.DataFrame(rows, columns=["id"])
