@@ -4095,8 +4095,8 @@ def webhook():
                                                     business_days = 0
                                                     current_date = startdate
                                                     while current_date <= enddate:
-                                                        if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                            business_days += 1
+                                                        #if current_date.weekday() != 6:  # Weekday: Mon-Fri
+                                                        business_days += 1
                                                         current_date += timedelta(days=1)
 
                                                     # ✅ Ask user to confirm submission
@@ -4991,8 +4991,8 @@ def webhook():
                                                                         current_date = startdate
 
                                                                         while current_date <= enddate:
-                                                                            if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                                business_days += 1
+                                                                            #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                                            business_days += 1
                                                                             current_date += timedelta(days=1)  # Use timedelta directly
 
                                                                         query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
@@ -5621,8 +5621,8 @@ def webhook():
                                                 business_days = 0
                                                 current_date = startdate
                                                 while current_date <= enddate:
-                                                    if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                        business_days += 1
+                                                    #if current_date.weekday() != 6:  # Weekday: Mon-Fri
+                                                    business_days += 1
                                                     current_date += timedelta(days=1)
 
                                                 # ✅ Ask user to confirm submission
@@ -6379,8 +6379,8 @@ def webhook():
                                                                 current_date = startdate
 
                                                                 while current_date <= enddate:
-                                                                    if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                        business_days += 1
+                                                                    #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                                    business_days += 1
                                                                     current_date += timedelta(days=1)  # Use timedelta directly
 
                                                                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
@@ -7565,8 +7565,8 @@ def webhook():
                                                         business_days = 0
                                                         current_date = startdate
                                                         while current_date <= enddate:
-                                                            if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                                business_days += 1
+                                                            #if current_date.weekday() != 6:  # Weekday: Mon-Fri
+                                                            business_days += 1
                                                             current_date += timedelta(days=1)
 
                                                         # ✅ Ask user to confirm submission
@@ -8468,8 +8468,8 @@ def webhook():
                                                                         current_date = startdate
 
                                                                         while current_date <= enddate:
-                                                                            if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                                business_days += 1
+                                                                            #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                                            business_days += 1
                                                                             current_date += timedelta(days=1)  # Use timedelta directly
 
                                                                         query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
@@ -9917,8 +9917,8 @@ def webhook():
                                                     business_days = 0
                                                     current_date = startdate
                                                     while current_date <= enddate:
-                                                        if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                            business_days += 1
+                                                        #if current_date.weekday() != 6:  # Weekday: Mon-Fri
+                                                        business_days += 1
                                                         current_date += timedelta(days=1)
 
                                                     # ✅ Ask user to confirm submission
@@ -11096,8 +11096,8 @@ def webhook():
                                                                     current_date = startdate
 
                                                                     while current_date <= enddate:
-                                                                        if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                            business_days += 1
+                                                                        #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
+                                                                        business_days += 1
                                                                         current_date += timedelta(days=1)  # Use timedelta directly
 
                                                                     query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
@@ -14473,8 +14473,8 @@ if connection.status == psycopg2.extensions.STATUS_READY:
 
                 # Iterate through the range of dates
                 while current_date <= end_date:
-                    if current_date.weekday() != 6:  # Exclude Sundays (6 is Sunday in Python's `weekday()` function)
-                        leave_days += 1
+                    #if current_date.weekday() != 6:  # Exclude Sundays (6 is Sunday in Python's `weekday()` function)
+                    leave_days += 1
                     current_date += timedelta(days=1)
 
                 # Debug: Print the result
