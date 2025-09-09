@@ -2140,39 +2140,77 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
-                                                                "body": {
-                                                                "text": (
-                                                                    "✨ *Additional Routes* ✨\n"
-                                                                    "The following routes are not yet available for online DIY pre-booking. Contact our agents or visit terminals for booking."
+                                                        if language == "english":
 
-                                                                    "📍 Harare - Kariba • $14 • 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM • Mbare Musika Rank\n"
-                                                                    "📍 Harare - Victoria Falls • $25 • 5:15AM, 4:00PM, 6:00PM • Harare Showgrounds\n"
-                                                                    "📍 Chitungwiza - Mutare • $18 • 6:00AM • C-Junction\n"
-                                                                    "📍 Harare - Gokwe Centre • $16 • 4:45AM, 11:00AM, 3:30PM • Mbare Musika Rank\n"
-                                                                    "📍 Harare - Karoi • $12 • 2:00PM • Mbare Musika Rank\n"
-                                                                    "📍 Harare - Magunje • $14 • 6:00AM, 1:00PM • Mbare Musika Rank\n"
-                                                                    "📍 Harare - Sagambe • $20 • 5:15AM, 11:00AM, 4:00PM • Mbare Musika Rank\n"
-                                                                    "📍 Harare - Mutare Direct • $18 • 11:15AM • Mbare Musika Rank\n"
-                                                                    "📍 Harare - Chirundu • $15 • 9:00AM • Westgate\n"
-                                                                    "📍 Harare - Mukumbura • $22 • 7:00AM, 2:00PM • Mbare Musika Rank"
-                                                                )
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
-                                                                        {"type": "reply", "reply": {"id": "routeshararebook", "title": "Harare Bookable Routes"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
+                                                                    "body": {
+                                                                    "text": (
+                                                                        "✨ *Additional Routes* ✨\n"
+                                                                        "The following routes are not yet available for online DIY pre-booking. Contact our agents or visit terminals for booking."
+
+                                                                        "📍 Harare - Kariba • $14 • 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM • Mbare Musika Rank\n"
+                                                                        "📍 Harare - Victoria Falls • $25 • 5:15AM, 4:00PM, 6:00PM • Harare Showgrounds\n"
+                                                                        "📍 Chitungwiza - Mutare • $18 • 6:00AM • C-Junction\n"
+                                                                        "📍 Harare - Gokwe Centre • $16 • 4:45AM, 11:00AM, 3:30PM • Mbare Musika Rank\n"
+                                                                        "📍 Harare - Karoi • $12 • 2:00PM • Mbare Musika Rank\n"
+                                                                        "📍 Harare - Magunje • $14 • 6:00AM, 1:00PM • Mbare Musika Rank\n"
+                                                                        "📍 Harare - Sagambe • $20 • 5:15AM, 11:00AM, 4:00PM • Mbare Musika Rank\n"
+                                                                        "📍 Harare - Mutare Direct • $18 • 11:15AM • Mbare Musika Rank\n"
+                                                                        "📍 Harare - Chirundu • $15 • 9:00AM • Westgate\n"
+                                                                        "📍 Harare - Mukumbura • $22 • 7:00AM, 2:00PM • Mbare Musika Rank"
+                                                                    )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
+                                                                            {"type": "reply", "reply": {"id": "routeshararebook", "title": "Harare Bookable Routes"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "✨ *Ezinye Izindlela* ✨\n"
+                                                                            "Lezi ndlela azikatholakali ku-inthanethi ukuze uzibhukhe wedwa. Xhumana lama-ejenti ethu noma uvakashele eziteshini ukuze ubhukhe.\n\n"
+
+                                                                            "📍 Harare - Kariba • $14 • 7:00AM, 8:30AM, 10:00AM, 12:30PM, 2:30PM, 8:00PM • Mbare Musika Rank\n"
+                                                                            "📍 Harare - Victoria Falls • $25 • 5:15AM, 4:00PM, 6:00PM • Harare Showgrounds\n"
+                                                                            "📍 Chitungwiza - Mutare • $18 • 6:00AM • C-Junction\n"
+                                                                            "📍 Harare - Gokwe Centre • $16 • 4:45AM, 11:00AM, 3:30PM • Mbare Musika Rank\n"
+                                                                            "📍 Harare - Karoi • $12 • 2:00PM • Mbare Musika Rank\n"
+                                                                            "📍 Harare - Magunje • $14 • 6:00AM, 1:00PM • Mbare Musika Rank\n"
+                                                                            "📍 Harare - Sagambe • $20 • 5:15AM, 11:00AM, 4:00PM • Mbare Musika Rank\n"
+                                                                            "📍 Harare - Mutare Direct • $18 • 11:15AM • Mbare Musika Rank\n"
+                                                                            "📍 Harare - Chirundu • $15 • 9:00AM • Westgate\n"
+                                                                            "📍 Harare - Mukumbura • $22 • 7:00AM, 2:00PM • Mbare Musika Rank"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "routes", "title": "Bona Ezinye Izindlela"}},
+                                                                            {"type": "reply", "reply": {"id": "routeshararebook", "title": "Izindlela Ezibhukhekayo"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
