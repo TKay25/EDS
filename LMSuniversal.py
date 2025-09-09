@@ -2303,34 +2303,68 @@ def webhook():
                                                 
                                                         elif city == 'Chegutu':
 
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": sender_id,
-                                                                "type": "interactive",
-                                                                "interactive": {
-                                                                    "type": "button",
-                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS CHEGUTU" },
-                                                                    "body": {
-                                                                    "text": (
-                                                                        "✨ *Pre-Bookable Routes* ✨\n"
-                                                                        "DIY online booking available for the following routes from Chegutu\n\n"
+                                                            if language == "english":
 
-                                                                        "➡️ Chegutu → Harare • *USD 5*\n"
-                                                                        "➡️ Chegutu → Kadoma • *USD 5*\n"
-                                                                        "➡️ Chegutu → Kwekwe • *USD 7*\n"
-                                                                        "➡️ Chegutu → Gweru • *USD 8*\n"
-                                                                        "➡️ Chegutu → Bulawayo • *USD 12*\n\n"
-                                                                    )
-                                                                    },
-                                                                    "action": {
-                                                                        "buttons": [
-                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
-                                                                            {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
-                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                        ]
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS CHEGUTU" },
+                                                                        "body": {
+                                                                        "text": (
+                                                                            "✨ *Pre-Bookable Routes* ✨\n"
+                                                                            "DIY online booking available for the following routes from Chegutu\n\n"
+
+                                                                            "➡️ Chegutu → Harare • *USD 5*\n"
+                                                                            "➡️ Chegutu → Kadoma • *USD 5*\n"
+                                                                            "➡️ Chegutu → Kwekwe • *USD 7*\n"
+                                                                            "➡️ Chegutu → Gweru • *USD 8*\n"
+                                                                            "➡️ Chegutu → Bulawayo • *USD 12*\n\n"
+                                                                        )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                            ]
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
+
+                                                            elif language == "ndebele":
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS CHEGUTU" },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "✨ *Izindlela Ezibhukhekayo* ✨\n"
+                                                                                "Uku-oda ku-inthanethi (DIY) kuyatholakala kulezi ndlela ezisuka eChegutu\n\n"
+
+                                                                                "➡️ Chegutu → Harare • *USD 5*\n"
+                                                                                "➡️ Chegutu → Kadoma • *USD 5*\n"
+                                                                                "➡️ Chegutu → Kwekwe • *USD 7*\n"
+                                                                                "➡️ Chegutu → Gweru • *USD 8*\n"
+                                                                                "➡️ Chegutu → Bulawayo • *USD 12*\n"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Bhukha Ithikithi"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "Ezinye Izindlela"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
+
 
                                                             response = requests.post(url, headers=headers, json=payload)
 
@@ -2339,34 +2373,67 @@ def webhook():
 
                                                         elif city == 'Kadoma':
 
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": sender_id,
-                                                                "type": "interactive",
-                                                                "interactive": {
-                                                                    "type": "button",
-                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS KADOMA" },
-                                                                    "body": {
-                                                                    "text": (
-                                                                        "✨ *Pre-Bookable Routes* ✨\n"
-                                                                        "DIY online booking available for the following routes from Kadoma\n\n"
+                                                            if language == "english":
 
-                                                                        "➡️ Kadoma → Harare • *USD 6*\n"
-                                                                        "➡️ Kadoma → Chegutu • *USD 5*\n"
-                                                                        "➡️ Kadoma → Kwekwe • *USD 5*\n"
-                                                                        "➡️ Kadoma → Gweru • *USD 7*\n"
-                                                                        "➡️ Kadoma → Bulawayo • *USD 10*\n\n"
-                                                                    )
-                                                                    },
-                                                                    "action": {
-                                                                        "buttons": [
-                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
-                                                                            {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
-                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                        ]
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS KADOMA" },
+                                                                        "body": {
+                                                                        "text": (
+                                                                            "✨ *Pre-Bookable Routes* ✨\n"
+                                                                            "DIY online booking available for the following routes from Kadoma\n\n"
+
+                                                                            "➡️ Kadoma → Harare • *USD 6*\n"
+                                                                            "➡️ Kadoma → Chegutu • *USD 5*\n"
+                                                                            "➡️ Kadoma → Kwekwe • *USD 5*\n"
+                                                                            "➡️ Kadoma → Gweru • *USD 7*\n"
+                                                                            "➡️ Kadoma → Bulawayo • *USD 10*\n\n"
+                                                                        )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                            ]
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
+
+                                                            elif language == "ndebele":
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS KADOMA" },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "✨ *Izindlela Ezibhukhekayo* ✨\n"
+                                                                                "Uku-oda ku-inthanethi (DIY) kuyatholakala kulezi ndlela ezisuka eKadoma\n\n"
+
+                                                                                "➡️ Kadoma → Harare • *USD 6*\n"
+                                                                                "➡️ Kadoma → Chegutu • *USD 5*\n"
+                                                                                "➡️ Kadoma → Kwekwe • *USD 5*\n"
+                                                                                "➡️ Kadoma → Gweru • *USD 7*\n"
+                                                                                "➡️ Kadoma → Bulawayo • *USD 10*\n"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Bhukha Ithikithi"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "Ezinye Izindlela"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
 
                                                             response = requests.post(url, headers=headers, json=payload)
 
@@ -2375,34 +2442,67 @@ def webhook():
 
                                                         elif city == 'Kwekwe':
 
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": sender_id,
-                                                                "type": "interactive",
-                                                                "interactive": {
-                                                                    "type": "button",
-                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS KWEKWE" },
-                                                                    "body": {
-                                                                    "text": (
-                                                                        "✨ *Pre-Bookable Routes* ✨\n"
-                                                                        "DIY online booking available for the following routes from Kwekwe\n\n"
+                                                            if language == "english":
 
-                                                                        "➡️ Kwekwe → Harare • *USD 8*\n"
-                                                                        "➡️ Kwekwe → Chegutu • *USD 6*\n"
-                                                                        "➡️ Kwekwe → Kadoma • *USD 5*\n"
-                                                                        "➡️ Kwekwe → Gweru • *USD 5*\n"
-                                                                        "➡️ Kwekwe → Bulawayo • *USD 8*\n\n"
-                                                                    )
-                                                                    },
-                                                                    "action": {
-                                                                        "buttons": [
-                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
-                                                                            {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
-                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                        ]
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS KWEKWE" },
+                                                                        "body": {
+                                                                        "text": (
+                                                                            "✨ *Pre-Bookable Routes* ✨\n"
+                                                                            "DIY online booking available for the following routes from Kwekwe\n\n"
+
+                                                                            "➡️ Kwekwe → Harare • *USD 8*\n"
+                                                                            "➡️ Kwekwe → Chegutu • *USD 6*\n"
+                                                                            "➡️ Kwekwe → Kadoma • *USD 5*\n"
+                                                                            "➡️ Kwekwe → Gweru • *USD 5*\n"
+                                                                            "➡️ Kwekwe → Bulawayo • *USD 8*\n\n"
+                                                                        )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                            ]
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
+
+                                                            elif language == "ndebele":
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS KWEKWE" },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "✨ *Izindlela Ezibhukhekayo* ✨\n"
+                                                                                "Uku-oda ku-inthanethi (DIY) kuyatholakala kulezi ndlela ezisuka eKwekwe\n\n"
+
+                                                                                "➡️ Kwekwe → Harare • *USD 8*\n"
+                                                                                "➡️ Kwekwe → Chegutu • *USD 6*\n"
+                                                                                "➡️ Kwekwe → Kadoma • *USD 5*\n"
+                                                                                "➡️ Kwekwe → Gweru • *USD 5*\n"
+                                                                                "➡️ Kwekwe → Bulawayo • *USD 8*\n"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Bhukha Ithikithi"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "Ezinye Izindlela"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
 
                                                             response = requests.post(url, headers=headers, json=payload)
 
