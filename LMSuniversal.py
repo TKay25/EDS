@@ -1745,10 +1745,19 @@ def webhook():
 
                                                             if result:
 
-                                                                send_whatsapp_messagecc(
-                                                                    sender_id, 
-                                                                    f"We are initiating your ticket for route `{result[2]}` to  `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCash PIN to process your USD {result[7]} bus fare payment."
-                                                                ) 
+                                                                if language == "ndebele":
+                                                                    ussd_text = (
+                                                                        f"Sizokwenza ithikithi lakho lenhlelo yomgwaqo ku-`{result[2]}` uya ku-`{result[3]}` ngololiwe ohamba ngo-{result[5].strftime('%d %B %Y')} ngo-`{result[4]}`.\n\n"
+                                                                        f"Uzothola isikhumbuzo se-USSD ku-`{result[8]}` maduze ukuze unikeze i-EcoCash PIN yakho ukucubungula ukukhokha imali yebhasi engu-USD {result[7]}."
+                                                                    )
+                                                                elif language == "english":
+                                                                    ussd_text = (
+                                                                        f"We are initiating your ticket for route `{result[2]}` to `{result[3]}` on bus departing on {result[5].strftime('%d %B %Y')} at `{result[4]}`.\n\n"
+                                                                        f"You will receive a USSD prompt on `{result[8]}` shortly to provide your EcoCash PIN to process your USD {result[7]} bus fare payment."
+                                                                    )
+
+                                                                send_whatsapp_messagecc(sender_id, ussd_text)
+
 
                                                             else:
                                                                 print("No row found for this sender_id.")
