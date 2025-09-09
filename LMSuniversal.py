@@ -2231,35 +2231,70 @@ def webhook():
 
                                                         if city == 'Harare':
 
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": sender_id,
-                                                                "type": "interactive",
-                                                                "interactive": {
-                                                                    "type": "button",
-                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
-                                                                    "body": {
-                                                                    "text": (
-                                                                        "✨ *Pre-Bookable Routes* ✨\n"
-                                                                        "DIY online booking available for the following routes from Harare\n\n"
+                                                            if language == "english":
 
-                                                                        "➡️ Harare → Chegutu • *USD 5*\n"
-                                                                        "➡️ Harare → Kadoma • *USD 6*\n"
-                                                                        "➡️ Harare → Kwekwe • *USD 8*\n"
-                                                                        "➡️ Harare → Gweru • *USD 10*\n"
-                                                                        "➡️ Harare → Bulawayo • *USD 15*\n\n"
-                                                                        "Departure Times from Harare • 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM"
-                                                                    )
-                                                                    },
-                                                                    "action": {
-                                                                        "buttons": [
-                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
-                                                                            {"type": "reply", "reply": {"id": "more_routes", "title": "Additional Routes"}},
-                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                        ]
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
+                                                                        "body": {
+                                                                        "text": (
+                                                                            "✨ *Pre-Bookable Routes* ✨\n"
+                                                                            "DIY online booking available for the following routes from Harare\n\n"
+
+                                                                            "➡️ Harare → Chegutu • *USD 5*\n"
+                                                                            "➡️ Harare → Kadoma • *USD 6*\n"
+                                                                            "➡️ Harare → Kwekwe • *USD 8*\n"
+                                                                            "➡️ Harare → Gweru • *USD 10*\n"
+                                                                            "➡️ Harare → Bulawayo • *USD 15*\n\n"
+                                                                            "Departure Times from Harare • 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM"
+                                                                        )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
+                                                                                {"type": "reply", "reply": {"id": "more_routes", "title": "Additional Routes"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                            ]
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
+
+                                                            elif language == "ndebele":
+
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS HARARE" },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "✨ *Izindlela Ezibhukhekayo* ✨\n"
+                                                                                "Uku-oda ku-inthanethi (DIY) kuyatholakala kulezi ndlela ezisuka eHarare\n\n"
+
+                                                                                "➡️ Harare → Chegutu • *USD 5*\n"
+                                                                                "➡️ Harare → Kadoma • *USD 6*\n"
+                                                                                "➡️ Harare → Kwekwe • *USD 8*\n"
+                                                                                "➡️ Harare → Gweru • *USD 10*\n"
+                                                                                "➡️ Harare → Bulawayo • *USD 15*\n\n"
+                                                                                "Izikhathi zokuhamba zisuka eHarare • 9:00AM, 11:00AM, 1:00PM, 2:00PM, 2:30PM"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Bhukha Ithikithi"}},
+                                                                                {"type": "reply", "reply": {"id": "more_routes", "title": "Ezinye Izindlela"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
 
                                                             response = requests.post(url, headers=headers, json=payload)
 
