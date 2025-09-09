@@ -3307,98 +3307,196 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "list",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "🚍 CAG TOURS PARCEL DELIVERY"
-                                                                },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "📦 *Package Delivery*\n"
-                                                                        "Send packages and parcels along our routes. Pricing based on size and weight.\n\n"
-                                                                        "🟢 *Small Package*: USD 5 - USD 10\n"
-                                                                        "🔵 *Medium Package*: USD 10 - USD 20\n"
-                                                                        "🟠 *Large Package*: USD 20 - USD 30\n"
-                                                                        "🔴 *Extra Large*: USD 30+"
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "button": "📋 CAG TOURS MENU",
-                                                                    "sections": [
-                                                                        {
-                                                                            "title": "📦 CAG TOURS SERVICES",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "book_ticket",
-                                                                                    "title": "Book a Ticket",
-                                                                                    "description": "Reserve your seat instantly"
-                                                                                },
-                                                                                {
-                                                                                    "id": "routes",
-                                                                                    "title": "View Routes",
-                                                                                    "description": "Get info regarding our travel routes"
-                                                                                },
-                                                                                {
-                                                                                    "id": "private_hire",
-                                                                                    "title": "Private Hire",
-                                                                                    "description": "Book buses for private trips or group travel"
-                                                                                },
-                                                                                {
-                                                                                    "id": "parcel_delivery",
-                                                                                    "title": "Parcel Delivery",
-                                                                                    "description": "Send or collect packages"
-                                                                                },
-                                                                                {
-                                                                                "id": "find_stop",
-                                                                                "title": "Terminals & Agents",
-                                                                                "description": "Locate nearest terminal or agent"
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        {
-                                                                            "title": "🚌 CAG TOURS",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "know_more",
-                                                                                    "title": "Know More",
-                                                                                    "description": "Our story & travel experience"
-                                                                                },
-                                                                                {
-                                                                                    "id": "why_choose",
-                                                                                    "title": "Why Choose Us",
-                                                                                    "description": "Luxury, safety & comfort explained"
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        {
-                                                                            "title": "🛎 CUSTOMER SERVICE",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "faqs",
-                                                                                    "title": "❓ FAQs",
-                                                                                    "description": "Get answers to common questions"
-                                                                                },
-                                                                                {
-                                                                                    "id": "policies",
-                                                                                    "title": "Travel Policies",
-                                                                                    "description": "Baggage rules, safety, refunds"
-                                                                                },
-                                                                                {
-                                                                                    "id": "get_help",
-                                                                                    "title": "Get Help",
-                                                                                    "description": "Talk to a support agent now"
-                                                                                }
-                                                                            ]
-                                                                        }
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 CAG TOURS PARCEL DELIVERY"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "📦 *Package Delivery*\n"
+                                                                            "Send packages and parcels along our routes. Pricing based on size and weight.\n\n"
+                                                                            "🟢 *Small Package*: USD 5 - USD 10\n"
+                                                                            "🔵 *Medium Package*: USD 10 - USD 20\n"
+                                                                            "🟠 *Large Package*: USD 20 - USD 30\n"
+                                                                            "🔴 *Extra Large*: USD 30+"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "📋 CAG TOURS MENU",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "📦 CAG TOURS SERVICES",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "book_ticket",
+                                                                                        "title": "Book a Ticket",
+                                                                                        "description": "Reserve your seat instantly"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "routes",
+                                                                                        "title": "View Routes",
+                                                                                        "description": "Get info regarding our travel routes"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "private_hire",
+                                                                                        "title": "Private Hire",
+                                                                                        "description": "Book buses for private trips or group travel"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "parcel_delivery",
+                                                                                        "title": "Parcel Delivery",
+                                                                                        "description": "Send or collect packages"
+                                                                                    },
+                                                                                    {
+                                                                                    "id": "find_stop",
+                                                                                    "title": "Terminals & Agents",
+                                                                                    "description": "Locate nearest terminal or agent"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🚌 CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "know_more",
+                                                                                        "title": "Know More",
+                                                                                        "description": "Our story & travel experience"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "why_choose",
+                                                                                        "title": "Why Choose Us",
+                                                                                        "description": "Luxury, safety & comfort explained"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🛎 CUSTOMER SERVICE",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "faqs",
+                                                                                        "title": "❓ FAQs",
+                                                                                        "description": "Get answers to common questions"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "policies",
+                                                                                        "title": "Travel Policies",
+                                                                                        "description": "Baggage rules, safety, refunds"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "get_help",
+                                                                                        "title": "Get Help",
+                                                                                        "description": "Talk to a support agent now"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 UKULETHWA KWEPHAKHEJI"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "📦 *Ukulethwa Kwamaphakheji*\n"
+                                                                            "Thumela amaphakheji nezimpahla ezindleleni zethu. Amanani ancike kosayizi nesisindo.\n\n"
+                                                                            "🟢 *Iphakheji Encane*: USD 5 - USD 10\n"
+                                                                            "🔵 *Iphakheji Ephakathi*: USD 10 - USD 20\n"
+                                                                            "🟠 *Iphakheji Elikhulu*: USD 20 - USD 30\n"
+                                                                            "🔴 *Elingaphezulu*: USD 30+"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "📋 MENYU YE-CAG TOURS",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "📦 IZINSIZA ZE-CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "book_ticket",
+                                                                                        "title": "Bhukha Ithikithi",
+                                                                                        "description": "Bhuka isihlalo sakho masisha"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "routes",
+                                                                                        "title": "Buka Izindlela",
+                                                                                        "description": "Thola ulwazi ngezindlela zethu"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "private_hire",
+                                                                                        "title": "Amabhasi Okuqasha",
+                                                                                        "description": "Bhukha amabhasi ohambweni lwakho lwangasese"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "parcel_delivery",
+                                                                                        "title": "Ukulethwa Kwephakheji",
+                                                                                        "description": "Thumela noma uthole amaphakheji"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "find_stop",
+                                                                                        "title": "Amaterminal & Ama-ejenti",
+                                                                                        "description": "Thola i-terminal noma i-ejenti eduze"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🚌 CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "know_more",
+                                                                                        "title": "Funda Okuningi",
+                                                                                        "description": "Indaba yethu & ulwazi lohambo"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "why_choose",
+                                                                                        "title": "Ngani Sikhona",
+                                                                                        "description": "Ubukhazikhazi, ukuphepha & induduzo"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🛎 INSIZA YAMAKHASIMENDE",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "faqs",
+                                                                                        "title": "❓ Imibuzo Evame Ukubuzwa",
+                                                                                        "description": "Thola izimpendulo zemibuzo evamile"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "policies",
+                                                                                        "title": "Imithetho Yohambo",
+                                                                                        "description": "Imithetho yezimpahla, ukuphepha, ukubuyiselwa"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "get_help",
+                                                                                        "title": "Thola Usizo",
+                                                                                        "description": "Xoxa nomphathi wosizo manje"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
+
 
 
                                                         response = requests.post(url, headers=headers, json=payload)
@@ -3414,102 +3512,203 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "list",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "🚍 ABOUT CAG TOURS"
-                                                                },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "CAG Travellers Coaches is your travel company of choice in Zimbabwe. We've grown from humble beginnings to become the leading transportation provider in the country, connecting communities and facilitating commerce across the nation.\n\n"
-                                                                        "✨ *Our Journey* ✨\n\n"
-                                                                        "🚌 1998 – Humble Beginnings\n"
-                                                                        "CAG Travellers Coaches was founded by Gordon Nhanhanga with a single rebuilt 'Blue Face' AVM 615 bus, serving the Mbare–Kuwadzana route.\n\n"
-                                                                        "🌱 2011 – Next Generation\n"
-                                                                        "Gordon's children, Sam and Afra, launched CAG Tours, expanding the family's transport legacy.\n\n"
-                                                                        "🏆 2023 – Award-Winning Service\n"
-                                                                        "CAG received 25 awards for service excellence, becoming Zimbabwe's trusted name in transport.\n\n"
-                                                                        "🚀 2025 – Transport Revolution\n"
-                                                                        "We launched a pre-booking system to formalize the transport industry, offering safer and more organized travel."
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "button": "📋 CAG TOURS MENU",
-                                                                    "sections": [
-                                                                        {
-                                                                            "title": "📦 CAG TOURS SERVICES",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "book_ticket",
-                                                                                    "title": "Book a Ticket",
-                                                                                    "description": "Reserve your seat instantly"
-                                                                                },
-                                                                                {
-                                                                                    "id": "routes",
-                                                                                    "title": "View Routes",
-                                                                                    "description": "Get info regarding our travel routes"
-                                                                                },
-                                                                                {
-                                                                                    "id": "private_hire",
-                                                                                    "title": "Private Hire",
-                                                                                    "description": "Book buses for private trips or group travel"
-                                                                                },
-                                                                                {
-                                                                                    "id": "parcel_delivery",
-                                                                                    "title": "Parcel Delivery",
-                                                                                    "description": "Send or collect packages"
-                                                                                },
-                                                                                {
-                                                                                "id": "find_stop",
-                                                                                "title": "Terminals & Agents",
-                                                                                "description": "Locate nearest terminal or agent"
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        {
-                                                                            "title": "🚌 CAG TOURS",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "know_more",
-                                                                                    "title": "Know More",
-                                                                                    "description": "Our story & travel experience"
-                                                                                },
-                                                                                {
-                                                                                    "id": "why_choose",
-                                                                                    "title": "Why Choose Us",
-                                                                                    "description": "Luxury, safety & comfort explained"
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        {
-                                                                            "title": "🛎 CUSTOMER SERVICE",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "faqs",
-                                                                                    "title": "❓ FAQs",
-                                                                                    "description": "Get answers to common questions"
-                                                                                },
-                                                                                {
-                                                                                    "id": "policies",
-                                                                                    "title": "Travel Policies",
-                                                                                    "description": "Baggage rules, safety, refunds"
-                                                                                },
-                                                                                {
-                                                                                    "id": "get_help",
-                                                                                    "title": "Get Help",
-                                                                                    "description": "Talk to a support agent now"
-                                                                                }
-                                                                            ]
-                                                                        }
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 ABOUT CAG TOURS"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "CAG Travellers Coaches is your travel company of choice in Zimbabwe. We've grown from humble beginnings to become the leading transportation provider in the country, connecting communities and facilitating commerce across the nation.\n\n"
+                                                                            "✨ *Our Journey* ✨\n\n"
+                                                                            "🚌 1998 – Humble Beginnings\n"
+                                                                            "CAG Travellers Coaches was founded by Gordon Nhanhanga with a single rebuilt 'Blue Face' AVM 615 bus, serving the Mbare–Kuwadzana route.\n\n"
+                                                                            "🌱 2011 – Next Generation\n"
+                                                                            "Gordon's children, Sam and Afra, launched CAG Tours, expanding the family's transport legacy.\n\n"
+                                                                            "🏆 2023 – Award-Winning Service\n"
+                                                                            "CAG received 25 awards for service excellence, becoming Zimbabwe's trusted name in transport.\n\n"
+                                                                            "🚀 2025 – Transport Revolution\n"
+                                                                            "We launched a pre-booking system to formalize the transport industry, offering safer and more organized travel."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "📋 CAG TOURS MENU",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "📦 CAG TOURS SERVICES",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "book_ticket",
+                                                                                        "title": "Book a Ticket",
+                                                                                        "description": "Reserve your seat instantly"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "routes",
+                                                                                        "title": "View Routes",
+                                                                                        "description": "Get info regarding our travel routes"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "private_hire",
+                                                                                        "title": "Private Hire",
+                                                                                        "description": "Book buses for private trips or group travel"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "parcel_delivery",
+                                                                                        "title": "Parcel Delivery",
+                                                                                        "description": "Send or collect packages"
+                                                                                    },
+                                                                                    {
+                                                                                    "id": "find_stop",
+                                                                                    "title": "Terminals & Agents",
+                                                                                    "description": "Locate nearest terminal or agent"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🚌 CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "know_more",
+                                                                                        "title": "Know More",
+                                                                                        "description": "Our story & travel experience"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "why_choose",
+                                                                                        "title": "Why Choose Us",
+                                                                                        "description": "Luxury, safety & comfort explained"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🛎 CUSTOMER SERVICE",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "faqs",
+                                                                                        "title": "❓ FAQs",
+                                                                                        "description": "Get answers to common questions"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "policies",
+                                                                                        "title": "Travel Policies",
+                                                                                        "description": "Baggage rules, safety, refunds"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "get_help",
+                                                                                        "title": "Get Help",
+                                                                                        "description": "Talk to a support agent now"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 NGOKUVELE KWE-CAG TOURS"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "I-CAG Travellers Coaches yinkampani yakho yokuhamba eZimbabwe. Siqale sasisincane kodwa manje sesiyinkampani ehamba phambili kwezokuthutha, sixhumanisa imiphakathi futhi sithuthukisa ezokuhweba ezweni lonke.\n\n"
+                                                                            "✨ *Uhambo Lwethu* ✨\n\n"
+                                                                            "🚌 1998 – Ukuqala Okuncane\n"
+                                                                            "I-CAG Travellers Coaches yasungulwa nguGordon Nhanhanga ngebhasi elilodwa elaliphinde lakhiwe 'Blue Face' AVM 615, lisebenzela umgwaqo waseMbare–Kuwadzana.\n\n"
+                                                                            "🌱 2011 – Isizukulwane Esilandelayo\n"
+                                                                            "Abantwana bakaGordon, uSam noAfra, basungula i-CAG Tours, bandisa ifa lomndeni kwezokuthutha.\n\n"
+                                                                            "🏆 2023 – Inkonzo Efinyelele Emazingeni Aphezulu\n"
+                                                                            "I-CAG yathola imiklomelo engama-25 yokusebenza kahle, yaba igama elithembekile eZimbabwe kwezokuthutha.\n\n"
+                                                                            "🚀 2025 – Ushintsho Lokuthutha\n"
+                                                                            "Sasungula uhlelo lokubhuka ngaphambi kwesikhathi ukuze kuhlelwe imboni yokuthutha, sinikeze uhambo oluphephile noluhlelekile."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "📋 MENYU YE-CAG TOURS",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "📦 IZINSIZA ZE-CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "book_ticket",
+                                                                                        "title": "Bhukha Ithikithi",
+                                                                                        "description": "Bhuka isihlalo sakho masisha"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "routes",
+                                                                                        "title": "Buka Izindlela",
+                                                                                        "description": "Thola ulwazi ngezindlela zethu"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "private_hire",
+                                                                                        "title": "Amabhasi Okuqasha",
+                                                                                        "description": "Bhukha amabhasi ohambweni lwakho lwangasese"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "parcel_delivery",
+                                                                                        "title": "Ukulethwa Kwephakheji",
+                                                                                        "description": "Thumela noma uthole amaphakheji"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "find_stop",
+                                                                                        "title": "Amaterminal & Ama-ejenti",
+                                                                                        "description": "Thola i-terminal noma i-ejenti eduze"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🚌 CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "know_more",
+                                                                                        "title": "Funda Okuningi",
+                                                                                        "description": "Indaba yethu & ulwazi lohambo"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "why_choose",
+                                                                                        "title": "Ngani Sikhona",
+                                                                                        "description": "Ubukhazikhazi, ukuphepha & induduzo"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🛎 INSIZA YAMAKHASIMENDE",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "faqs",
+                                                                                        "title": "❓ Imibuzo Evame Ukubuzwa",
+                                                                                        "description": "Thola izimpendulo zemibuzo evamile"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "policies",
+                                                                                        "title": "Imithetho Yohambo",
+                                                                                        "description": "Imithetho yezimpahla, ukuphepha, ukubuyiselwa"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "get_help",
+                                                                                        "title": "Thola Usizo",
+                                                                                        "description": "Xoxa nomphathi wosizo manje"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
 
                                                         response = requests.post(url, headers=headers, json=payload)
@@ -3525,30 +3724,61 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", 
-                                                                "text": "🚌 CAG TOURS AGENTS" },
-                                                                "body": {
-                                                                    "text": ("*John Mukamuri*:\n Harare CBD - Corner Speke & Mbuya Nehanda \n +263771234567 \n john.mukamuri@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: All Routes\n\n"
-                                                                    "*Sarah Chigumba*: \nBulawayo City Centre \n +263772345678 \n sarah.chigumba@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare, Victoria Falls\n\n"
-                                                                    "*David Moyo*: \nMutare Town Centre \n +263773456789 \n david.moyo@cagtours.co.zw \n 8:00 AM - 4:30 PM (Mon-Fri) \n Specializes in: Harare, Chitungwiza\n\n"
-                                                                    "*Grace Sibanda*: \nVictoria Falls Tourism Centre \n +263774567890 \n grace.sibanda@cagtours.co.zw \n 7:00 AM - 6:00 PM Daily \n Specializes in: Harare, Bulawayo\n\n"
-                                                                    "*Peter Ndlovu*: \nKariba Town Centre \n +263775678901 \n peter.ndlovu@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare\n\n"
-                                                                    "*Mary Dube*: \nGweru Central Business District \n +263776789012 \n mary.dube@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: Harare, Bulawayo, Kwekwe")},
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "find_stop", "title": "Terminals"}},
-                                                                        {"type": "reply", "reply": {"id": "book_ticket", "title": "Book Bus Ticket"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", 
+                                                                    "text": "🚌 CAG TOURS AGENTS" },
+                                                                    "body": {
+                                                                        "text": ("*John Mukamuri*:\n Harare CBD - Corner Speke & Mbuya Nehanda \n +263771234567 \n john.mukamuri@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: All Routes\n\n"
+                                                                        "*Sarah Chigumba*: \nBulawayo City Centre \n +263772345678 \n sarah.chigumba@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare, Victoria Falls\n\n"
+                                                                        "*David Moyo*: \nMutare Town Centre \n +263773456789 \n david.moyo@cagtours.co.zw \n 8:00 AM - 4:30 PM (Mon-Fri) \n Specializes in: Harare, Chitungwiza\n\n"
+                                                                        "*Grace Sibanda*: \nVictoria Falls Tourism Centre \n +263774567890 \n grace.sibanda@cagtours.co.zw \n 7:00 AM - 6:00 PM Daily \n Specializes in: Harare, Bulawayo\n\n"
+                                                                        "*Peter Ndlovu*: \nKariba Town Centre \n +263775678901 \n peter.ndlovu@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Sat) \n Specializes in: Harare\n\n"
+                                                                        "*Mary Dube*: \nGweru Central Business District \n +263776789012 \n mary.dube@cagtours.co.zw \n 8:00 AM - 5:00 PM (Mon-Fri) \n Specializes in: Harare, Bulawayo, Kwekwe")},
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "find_stop", "title": "Terminals"}},
+                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Book Bus Ticket"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 AMA-EJENTI E-CAG TOURS" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "*John Mukamuri*:\n Harare CBD - Corner Speke & Mbuya Nehanda \n +263771234567 \n john.mukamuri@cagtours.co.zw \n 8:00 AM - 5:00 PM (Muvhuro–Lwesihlanu) \n Uchwepheshe kuzo zonke izindlela\n\n"
+                                                                            "*Sarah Chigumba*: \nBulawayo City Centre \n +263772345678 \n sarah.chigumba@cagtours.co.zw \n 8:00 AM - 5:00 PM (Muvhuro–Mgqibelo) \n Uchwepheshe: Harare, Victoria Falls\n\n"
+                                                                            "*David Moyo*: \nMutare Town Centre \n +263773456789 \n david.moyo@cagtours.co.zw \n 8:00 AM - 4:30 PM (Muvhuro–Lwesihlanu) \n Uchwepheshe: Harare, Chitungwiza\n\n"
+                                                                            "*Grace Sibanda*: \nVictoria Falls Tourism Centre \n +263774567890 \n grace.sibanda@cagtours.co.zw \n 7:00 AM - 6:00 PM Nsuku zonke \n Uchwepheshe: Harare, Bulawayo\n\n"
+                                                                            "*Peter Ndlovu*: \nKariba Town Centre \n +263775678901 \n peter.ndlovu@cagtours.co.zw \n 8:00 AM - 5:00 PM (Muvhuro–Mgqibelo) \n Uchwepheshe: Harare\n\n"
+                                                                            "*Mary Dube*: \nGweru Central Business District \n +263776789012 \n mary.dube@cagtours.co.zw \n 8:00 AM - 5:00 PM (Muvhuro–Lwesihlanu) \n Uchwepheshe: Harare, Bulawayo, Kwekwe"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "find_stop", "title": "Amaterminal"}},
+                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Bhukha Ithikithi"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
@@ -3563,31 +3793,61 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", 
-                                                                "text": "🚌 CAG TOURS TERMINALS" },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "*Harare Main Terminal*:\n 106 Samora Machel Ave, Harare \n +263786949273 \n 5:00 AM - 10:00 PM \n Routes: Bulawayo, Kariba, Victoria Falls, Mutare\n\n"
-                                                                        "*Mbare Musika Rank*:\n Mbare Musika Bus Terminal \n +263786949273 \n 4:30 AM - 8:30 PM \n Routes: Kariba, Gokwe, Karoi, Mukumbura, Honde Valley\n\n"
-                                                                        "*Harare Showgrounds*:\n Agricultural Showgrounds \n +263786949273 \n 5:00 AM - 7:00 PM \n Routes: Bulawayo, Victoria Falls\n\n"
-                                                                        "*Bulawayo Terminal*:\n City Centre \n +263786949273 \n 6:00 AM - 9:00 PM \n Routes: Harare, Victoria Falls\n\n"
-                                                                        "*Chitungwiza Terminal*:\n C-Junction \n +263786949273 \n 5:30 AM - 7:00 PM \n Routes: Mutare, Sagambe")
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "agents", "title": "Agents"}},
-                                                                        {"type": "reply", "reply": {"id": "book_ticket", "title": "Book Bus Ticket"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", 
+                                                                    "text": "🚌 CAG TOURS TERMINALS" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "*Harare Main Terminal*:\n 106 Samora Machel Ave, Harare \n +263786949273 \n 5:00 AM - 10:00 PM \n Routes: Bulawayo, Kariba, Victoria Falls, Mutare\n\n"
+                                                                            "*Mbare Musika Rank*:\n Mbare Musika Bus Terminal \n +263786949273 \n 4:30 AM - 8:30 PM \n Routes: Kariba, Gokwe, Karoi, Mukumbura, Honde Valley\n\n"
+                                                                            "*Harare Showgrounds*:\n Agricultural Showgrounds \n +263786949273 \n 5:00 AM - 7:00 PM \n Routes: Bulawayo, Victoria Falls\n\n"
+                                                                            "*Bulawayo Terminal*:\n City Centre \n +263786949273 \n 6:00 AM - 9:00 PM \n Routes: Harare, Victoria Falls\n\n"
+                                                                            "*Chitungwiza Terminal*:\n C-Junction \n +263786949273 \n 5:30 AM - 7:00 PM \n Routes: Mutare, Sagambe")
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "agents", "title": "Agents"}},
+                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Book Bus Ticket"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 AMA-TERMINAL E-CAG TOURS" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "*Harare Main Terminal*:\n 106 Samora Machel Ave, Harare \n +263786949273 \n 5:00 AM - 10:00 PM \n Izindlela: Bulawayo, Kariba, Victoria Falls, Mutare\n\n"
+                                                                            "*Mbare Musika Rank*:\n Mbare Musika Bus Terminal \n +263786949273 \n 4:30 AM - 8:30 PM \n Izindlela: Kariba, Gokwe, Karoi, Mukumbura, Honde Valley\n\n"
+                                                                            "*Harare Showgrounds*:\n Agricultural Showgrounds \n +263786949273 \n 5:00 AM - 7:00 PM \n Izindlela: Bulawayo, Victoria Falls\n\n"
+                                                                            "*Bulawayo Terminal*:\n City Centre \n +263786949273 \n 6:00 AM - 9:00 PM \n Izindlela: Harare, Victoria Falls\n\n"
+                                                                            "*Chitungwiza Terminal*:\n C-Junction \n +263786949273 \n 5:30 AM - 7:00 PM \n Izindlela: Mutare, Sagambe"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "agents", "title": "Ama-Ejenti"}},
+                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Bhukha Ithikithi"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
@@ -3648,41 +3908,79 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload_city_conn = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "list",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "🚍 CAG TOURS ROUTES"
-                                                                },
-                                                                "body": {
-                                                                    "text": (
-                                                                        f"Okay. Kindly select a city on the menu below to view available connection routes and pricing. ⬇️"
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "button": "CITY FOR CONNECTIONS",
-                                                                    "sections": [
-                                                                        {
-                                                                            "title": "CITY FOR CONNECTIONS",
-                                                                            "rows": [
-                                                                                {"id": "cityHarare", "title": "Harare"},
-                                                                                {"id": "cityBulawayo", "title": "Bulawayo"},
-                                                                                {"id": "cityChegutu", "title": "Chegutu"},
-                                                                                {"id": "cityKadoma", "title": "Kadoma"},
-                                                                                {"id": "cityKwekwe", "title": "Kwekwe"},
-                                                                                {"id": "cityGweru", "title": "Gweru"},
-                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                            ]
-                                                                        }
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload_city_conn = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 CAG TOURS ROUTES"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            f"Okay. Kindly select a city on the menu below to view available connection routes and pricing. ⬇️"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "CITY FOR CONNECTIONS",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "CITY FOR CONNECTIONS",
+                                                                                "rows": [
+                                                                                    {"id": "cityHarare", "title": "Harare"},
+                                                                                    {"id": "cityBulawayo", "title": "Bulawayo"},
+                                                                                    {"id": "cityChegutu", "title": "Chegutu"},
+                                                                                    {"id": "cityKadoma", "title": "Kadoma"},
+                                                                                    {"id": "cityKwekwe", "title": "Kwekwe"},
+                                                                                    {"id": "cityGweru", "title": "Gweru"},
+                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
 
+                                                        elif language == "ndebele":
+
+                                                            payload_city_conn = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 IZINDLELA ZE-CAG TOURS"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "Kulungile. Sicela ukhethe idolobha kumenyu engezansi ukuze ubone izindlela ezitholakalayo zokuxhuma kanye namanani. ⬇️"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "IZINDLELA ZAMADOLUBHA",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "IKHETHE IDOLUBHA",
+                                                                                "rows": [
+                                                                                    {"id": "cityHarare", "title": "Harare"},
+                                                                                    {"id": "cityBulawayo", "title": "Bulawayo"},
+                                                                                    {"id": "cityChegutu", "title": "Chegutu"},
+                                                                                    {"id": "cityKadoma", "title": "Kadoma"},
+                                                                                    {"id": "cityKwekwe", "title": "Kwekwe"},
+                                                                                    {"id": "cityGweru", "title": "Gweru"},
+                                                                                    {"id": "mainmenu", "title": "Buyela Kumenyu Enkulu"},
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload_city_conn)
 
