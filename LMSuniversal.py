@@ -1900,27 +1900,54 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", "text": "🚌 CAG TOURS" },
-                                                                "body": {
-                                                                "text": (
-                                                                "Absolutely! We’re here 7 days a week, Sundays included! 😊"
-                                                                )
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "BusTypes", "title": "Bus Types"}},
-                                                                        {"type": "reply", "reply": {"id": "Privatehires", "title": "Offer private hires?"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS" },
+                                                                    "body": {
+                                                                    "text": (
+                                                                    "Absolutely! We’re here 7 days a week, Sundays included! 😊"
+                                                                    )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "BusTypes", "title": "Bus Types"}},
+                                                                            {"type": "reply", "reply": {"id": "Privatehires", "title": "Offer private hires?"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "Yebo impela! Sikhona izinsuku ezi-7 ngesonto, kuhlanganisa leSonto! 😊"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "BusTypes", "title": "Izinhlobo Zamabhasi"}},
+                                                                            {"type": "reply", "reply": {"id": "Privatehires", "title": "Amabhasi Okuqasha"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
@@ -1935,40 +1962,79 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", "text": "🚌 CAG TOURS PRIVATE HIRE" },
-                                                                "body": {
-                                                                "text": (
-                                                                "🌟 Yes, we do private hire! 🌟\n\n"
-                                                                "At CAG Tours, we provide tailored private transport solutions for every occasion:\n"
-                                                                "• 🚘 *Corporate Travel* – reliable, professional, WiFi-enabled fleet\n"
-                                                                "• 💍 *Wedding Transport* – elegant decorations, champagne & red-carpet service\n"
-                                                                "• 🏫 *School Trips* – safe, GPS-tracked, first-aid equipped\n"
-                                                                "• 🦁 *Tourism & Safaris* – custom itineraries, knowledgeable guides\n"
-                                                                "• ⚽ *Sports Teams* – extra luggage space, team branding options\n"
-                                                                "• 🎶 *Special Events* – VIP packages, multiple pickup points, late-night service\n\n"
-                                                                "Why choose us?\n"
-                                                                "✅ Reliable & on-time\n"
-                                                                "✅ Modern, comfortable fleet\n"
-                                                                "✅ Experienced professional drivers\n"
-                                                                "✅ Fully customizable to your needs\n\n"
-                                                                "How can we assist with your private hire today? 😊"
-                                                                )
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "BusTypes", "title": "Bus Types"}},
-                                                                        {"type": "reply", "reply": {"id": "Sunday", "title": "You work on Sundays"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS PRIVATE HIRE" },
+                                                                    "body": {
+                                                                    "text": (
+                                                                    "🌟 Yes, we do private hire! 🌟\n\n"
+                                                                    "At CAG Tours, we provide tailored private transport solutions for every occasion:\n"
+                                                                    "• 🚘 *Corporate Travel* – reliable, professional, WiFi-enabled fleet\n"
+                                                                    "• 💍 *Wedding Transport* – elegant decorations, champagne & red-carpet service\n"
+                                                                    "• 🏫 *School Trips* – safe, GPS-tracked, first-aid equipped\n"
+                                                                    "• 🦁 *Tourism & Safaris* – custom itineraries, knowledgeable guides\n"
+                                                                    "• ⚽ *Sports Teams* – extra luggage space, team branding options\n"
+                                                                    "• 🎶 *Special Events* – VIP packages, multiple pickup points, late-night service\n\n"
+                                                                    "Why choose us?\n"
+                                                                    "✅ Reliable & on-time\n"
+                                                                    "✅ Modern, comfortable fleet\n"
+                                                                    "✅ Experienced professional drivers\n"
+                                                                    "✅ Fully customizable to your needs\n\n"
+                                                                    "How can we assist with your private hire today? 😊"
+                                                                    )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "BusTypes", "title": "Bus Types"}},
+                                                                            {"type": "reply", "reply": {"id": "Sunday", "title": "You work on Sundays"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS AMABHASI OKUQASHA" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "🌟 Yebo, senza ukuqasha kwamabhasi! 🌟\n\n"
+                                                                            "Kwa-CAG Tours sinikezela ngezixazululo zokuthutha ezilungiselelwe izikhathi zonke:\n"
+                                                                            "• 🚘 *Uhambo LweBhizimusi* – okuthembekile, okuchwepheshile, amabhasi ane-WiFi\n"
+                                                                            "• 💍 *Ezomshado* – izihlobiso ezinhle, i-champagne & isevisi yebhavu ebomvu\n"
+                                                                            "• 🏫 *Uhambo Lwezikolo* – okuphephile, kuqapha nge-GPS, kuhambisana nohlelo lokuqala kosizo\n"
+                                                                            "• 🦁 *Ukuvakasha & Amasafaris* – izinhlelo ezenziwe ngokwezifiso, abaqondisi abanolwazi\n"
+                                                                            "• ⚽ *Amaqembu Ezokudlala* – indawo enkulu yamathuluzi, inketho yokufaka uphawu lweqembu\n"
+                                                                            "• 🎶 *Imicimbi Ekhethekile* – amaphakheji e-VIP, izindawo eziningi zokukhipha, isevisi yasebusuku\n\n"
+                                                                            "Kungani ukhetha thina?\n"
+                                                                            "✅ Sithembekile futhi sifika ngesikhathi\n"
+                                                                            "✅ Amabhasi esimanje aduduzayo\n"
+                                                                            "✅ Abashayeli abanolwazi abaqeqeshiwe\n"
+                                                                            "✅ Kungahlelwa ngokuphelele ngezidingo zakho\n\n"
+                                                                            "Singakusiza njani ekuqasheni namhlanje? 😊"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "BusTypes", "title": "Izinhlobo Zamabhasi"}},
+                                                                            {"type": "reply", "reply": {"id": "Sunday", "title": "Lisebenza ngeSonto?"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
