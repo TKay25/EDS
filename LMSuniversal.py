@@ -2044,17 +2044,33 @@ def webhook():
                                                     elif selected_option == "faqs":
                                                         button_id_leave_type = str(selected_option)
 
-                                                        sections = [
-                                                            {
-                                                                "title": "FAQs",
-                                                                "rows": [
-                                                                    {"id": "BusTypes", "title": "Bus Types"},
-                                                                    {"id": "Privatehires", "title": "Offer private hires?"},
-                                                                    {"id": "Sunday", "title": "You work on Sundays"},
-                                                                    {"id": "mainmenu", "title": "CAG Tours Main Menu"},
-                                                                ]
-                                                            }
-                                                        ]
+                                                        if language == "english":
+
+                                                            sections = [
+                                                                {
+                                                                    "title": "FAQs",
+                                                                    "rows": [
+                                                                        {"id": "BusTypes", "title": "Bus Types"},
+                                                                        {"id": "Privatehires", "title": "Offer private hires?"},
+                                                                        {"id": "Sunday", "title": "You work on Sundays"},
+                                                                        {"id": "mainmenu", "title": "CAG Tours Main Menu"},
+                                                                    ]
+                                                                }
+                                                            ]
+
+                                                        elif language == "ndebele":
+
+                                                            sections = [
+                                                                {
+                                                                    "title": "Imibuzo Evame Ukubuzwa",
+                                                                    "rows": [
+                                                                        {"id": "BusTypes", "title": "Izinhlobo Zamabhasi"},
+                                                                        {"id": "Privatehires", "title": "Amabhasi Okuqasha"},
+                                                                        {"id": "Sunday", "title": "Lisebenza ngeSonto?"},
+                                                                        {"id": "mainmenu", "title": "Imenyu Enkulu"},
+                                                                    ]
+                                                                }
+                                                            ]
 
                                                         send_whatsapp_list_messagecc(
                                                             sender_id, 
