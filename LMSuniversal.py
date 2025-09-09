@@ -1163,11 +1163,11 @@ def webhook():
                                                                                     },
                                                                                     {
                                                                                         "type": "reply",
-                                                                                        "reply": {"id": "newtick", "title": "Bhuka Ithikithi Elitjha"}
+                                                                                        "reply": {"id": "newtick", "title": "Ithikithi Elitjha"}
                                                                                     },
                                                                                     {
                                                                                         "type": "reply",
-                                                                                        "reply": {"id": "mainmenu", "title": "IMENU ENKULU CAG TOURS"}
+                                                                                        "reply": {"id": "mainmenu", "title": "IMENU ENKULU"}
                                                                                     }
                                                                                 ]
                                                                             }
