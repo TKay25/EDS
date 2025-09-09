@@ -1812,40 +1812,80 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", "text": "🚌 CAG TOURS BUSES" },
-                                                                "body": {
-                                                                "text": (
-                                                                "🚍 ZhongTong (55-Seater)\n"
-                                                                "✅ 55 Reclining Seats\n"
-                                                                "✅ Climate Control\n"
-                                                                "✅ Reading Lights\n\n"
+                                                        if language == "english":
 
-                                                                "🚍 Yutong (49-Seater)\n"
-                                                                "✅ 49 Comfortable Seats\n"
-                                                                "✅ Premium Seating\n"
-                                                                "✅ Air Conditioning\n\n"
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS BUSES" },
+                                                                    "body": {
+                                                                    "text": (
+                                                                    "🚍 ZhongTong (55-Seater)\n"
+                                                                    "✅ 55 Reclining Seats\n"
+                                                                    "✅ Climate Control\n"
+                                                                    "✅ Reading Lights\n\n"
 
-                                                                "🚍 Higer (61-Seater)\n"
-                                                                "✅ 61 Luxury Seats\n"
-                                                                "✅ Advanced Climate Control\n"
-                                                                "✅ Enhanced Safety"
-                                                                )
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "Privatehires", "title": "Offer private hires?"}},
-                                                                        {"type": "reply", "reply": {"id": "Sunday", "title": "You work on Sundays"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                                    "🚍 Yutong (49-Seater)\n"
+                                                                    "✅ 49 Comfortable Seats\n"
+                                                                    "✅ Premium Seating\n"
+                                                                    "✅ Air Conditioning\n\n"
+
+                                                                    "🚍 Higer (61-Seater)\n"
+                                                                    "✅ 61 Luxury Seats\n"
+                                                                    "✅ Advanced Climate Control\n"
+                                                                    "✅ Enhanced Safety"
+                                                                    )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "Privatehires", "title": "Offer private hires?"}},
+                                                                            {"type": "reply", "reply": {"id": "Sunday", "title": "You work on Sundays"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS AMABHASI" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "🚍 ZhongTong (55-Abagibeli)\n"
+                                                                            "✅ Izihlalo ezingama-55 eziduduzayo\n"
+                                                                            "✅ Umoya opholileyo (Aircon)\n"
+                                                                            "✅ Izibane zokufunda\n\n"
+
+                                                                            "🚍 Yutong (49-Abagibeli)\n"
+                                                                            "✅ Izihlalo ezingama-49 eziduduzayo\n"
+                                                                            "✅ Izihlalo ezisezingeni eliphezulu\n"
+                                                                            "✅ Umoya opholileyo\n\n"
+
+                                                                            "🚍 Higer (61-Abagibeli)\n"
+                                                                            "✅ Izihlalo ezingama-61 ezikanokusasa\n"
+                                                                            "✅ Umoya opholileyo osesimeni esiphezulu\n"
+                                                                            "✅ Ukuphepha okuthuthukisiwe"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "Privatehires", "title": "Amabhasi Okuqasha"}},
+                                                                            {"type": "reply", "reply": {"id": "Sunday", "title": "Lisebenza ngeSonto?"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
+
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
