@@ -2511,34 +2511,67 @@ def webhook():
 
                                                         elif city == 'Gweru':
 
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": sender_id,
-                                                                "type": "interactive",
-                                                                "interactive": {
-                                                                    "type": "button",
-                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS GWERU" },
-                                                                    "body": {
-                                                                    "text": (
-                                                                        "✨ *Pre-Bookable Routes* ✨\n"
-                                                                        "DIY online booking available for the following routes from Gweru\n\n"
+                                                            if language == "english":
 
-                                                                        "➡️ Gweru → Harare • *USD 10*\n"
-                                                                        "➡️ Gweru → Chegutu • *USD 7*\n"
-                                                                        "➡️ Gweru → Kadoma • *USD 5*\n"
-                                                                        "➡️ Gweru → Kwekwe • *USD 5*\n"
-                                                                        "➡️ Gweru → Bulawayo • *USD 5*\n\n"
-                                                                    )
-                                                                    },
-                                                                    "action": {
-                                                                        "buttons": [
-                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
-                                                                            {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
-                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                        ]
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS GWERU" },
+                                                                        "body": {
+                                                                        "text": (
+                                                                            "✨ *Pre-Bookable Routes* ✨\n"
+                                                                            "DIY online booking available for the following routes from Gweru\n\n"
+
+                                                                            "➡️ Gweru → Harare • *USD 10*\n"
+                                                                            "➡️ Gweru → Chegutu • *USD 7*\n"
+                                                                            "➡️ Gweru → Kadoma • *USD 5*\n"
+                                                                            "➡️ Gweru → Kwekwe • *USD 5*\n"
+                                                                            "➡️ Gweru → Bulawayo • *USD 5*\n\n"
+                                                                        )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                            ]
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
+
+                                                            elif language == "ndebele":
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS GWERU" },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "✨ *Izindlela Ezibhukhekayo* ✨\n"
+                                                                                "Uku-oda ku-inthanethi (DIY) kuyatholakala kulezi ndlela ezisuka eGweru\n\n"
+
+                                                                                "➡️ Gweru → Harare • *USD 10*\n"
+                                                                                "➡️ Gweru → Chegutu • *USD 7*\n"
+                                                                                "➡️ Gweru → Kadoma • *USD 5*\n"
+                                                                                "➡️ Gweru → Kwekwe • *USD 5*\n"
+                                                                                "➡️ Gweru → Bulawayo • *USD 5*\n"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Bhukha Ithikithi"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "Ezinye Izindlela"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
 
                                                             response = requests.post(url, headers=headers, json=payload)
 
@@ -2547,34 +2580,67 @@ def webhook():
 
                                                         elif city == 'Bulawayo':
 
-                                                            payload = {
-                                                                "messaging_product": "whatsapp",
-                                                                "to": sender_id,
-                                                                "type": "interactive",
-                                                                "interactive": {
-                                                                    "type": "button",
-                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS BULAWAYO" },
-                                                                    "body": {
-                                                                    "text": (
-                                                                        "✨ *Pre-Bookable Routes* ✨\n"
-                                                                        "DIY online booking available for the following routes from Bulawayo\n\n"
+                                                            if language == "english":
 
-                                                                        "➡️ Bulawayo → Harare • *USD 15*\n"
-                                                                        "➡️ Bulawayo → Chegutu • *USD 12*\n"
-                                                                        "➡️ Bulawayo → Kadoma • *USD 10*\n"
-                                                                        "➡️ Bulawayo → Kwekwe • *USD 8*\n"
-                                                                        "➡️ Bulawayo → Gweru • *USD 5*\n\n"
-                                                                    )
-                                                                    },
-                                                                    "action": {
-                                                                        "buttons": [
-                                                                            {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
-                                                                            {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
-                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                        ]
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS BULAWAYO" },
+                                                                        "body": {
+                                                                        "text": (
+                                                                            "✨ *Pre-Bookable Routes* ✨\n"
+                                                                            "DIY online booking available for the following routes from Bulawayo\n\n"
+
+                                                                            "➡️ Bulawayo → Harare • *USD 15*\n"
+                                                                            "➡️ Bulawayo → Chegutu • *USD 12*\n"
+                                                                            "➡️ Bulawayo → Kadoma • *USD 10*\n"
+                                                                            "➡️ Bulawayo → Kwekwe • *USD 8*\n"
+                                                                            "➡️ Bulawayo → Gweru • *USD 5*\n\n"
+                                                                        )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Book a Ticket"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                            ]
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
+
+                                                            elif language == "ndebele":
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "button",
+                                                                        "header": { "type": "text", "text": "🚌 CAG TOURS BULAWAYO" },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "✨ *Izindlela Ezibhukhekayo* ✨\n"
+                                                                                "Uku-oda ku-inthanethi (DIY) kuyatholakala kulezi ndlela ezisuka eBulawayo\n\n"
+
+                                                                                "➡️ Bulawayo → Harare • *USD 15*\n"
+                                                                                "➡️ Bulawayo → Chegutu • *USD 12*\n"
+                                                                                "➡️ Bulawayo → Kadoma • *USD 10*\n"
+                                                                                "➡️ Bulawayo → Kwekwe • *USD 8*\n"
+                                                                                "➡️ Bulawayo → Gweru • *USD 5*\n"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "buttons": [
+                                                                                {"type": "reply", "reply": {"id": "book_ticket", "title": "Bhukha Ithikithi"}},
+                                                                                {"type": "reply", "reply": {"id": "routes", "title": "Ezinye Izindlela"}},
+                                                                                {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
 
                                                             response = requests.post(url, headers=headers, json=payload)
 
@@ -2590,34 +2656,67 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", 
-                                                                "text": "🚌 CAG TOURS PRIVATE HIRE" },
-                                                                "body": {
-                                                                "text": (
-                                                                    "✨ *Private Hire Services* ✨\n\n"
-                                                                    "🚘 *Corporate Travel* — Reliable transport for business events & meetings. Professional drivers, flexible schedules, WiFi fleet.\n\n"
-                                                                    "💍 *Wedding Transport* — Luxury rides with décor, champagne service & red carpet touch.\n\n"
-                                                                    "🎒 *School Trips* — Safe buses with certified drivers, GPS tracking & first aid equipped.\n\n"
-                                                                    "🦁 *Tourism & Safaris* — Custom tours with guides, park permits, comfy viewing vehicles & refreshments.\n\n"
-                                                                    "🏆 *Sports Teams* — Extra luggage space, branding options & multiple vehicles for squads.\n\n"
-                                                                    "🎶 *Special Events* — Concerts, festivals & VIP packages with late-night service & multiple pickups.\n\n"
-                                                                    "Select a Private Hire option below to proceed")
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "quote_hire", "title": "Request Quotation"}},
-                                                                        {"type": "reply", "reply": {"id": "Followup", "title": "Quotation Follow Up"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", 
+                                                                    "text": "🚌 CAG TOURS PRIVATE HIRE" },
+                                                                    "body": {
+                                                                    "text": (
+                                                                        "✨ *Private Hire Services* ✨\n\n"
+                                                                        "🚘 *Corporate Travel* — Reliable transport for business events & meetings. Professional drivers, flexible schedules, WiFi fleet.\n\n"
+                                                                        "💍 *Wedding Transport* — Luxury rides with décor, champagne service & red carpet touch.\n\n"
+                                                                        "🎒 *School Trips* — Safe buses with certified drivers, GPS tracking & first aid equipped.\n\n"
+                                                                        "🦁 *Tourism & Safaris* — Custom tours with guides, park permits, comfy viewing vehicles & refreshments.\n\n"
+                                                                        "🏆 *Sports Teams* — Extra luggage space, branding options & multiple vehicles for squads.\n\n"
+                                                                        "🎶 *Special Events* — Concerts, festivals & VIP packages with late-night service & multiple pickups.\n\n"
+                                                                        "Select a Private Hire option below to proceed")
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "quote_hire", "title": "Request Quotation"}},
+                                                                            {"type": "reply", "reply": {"id": "Followup", "title": "Quotation Follow Up"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS AMABHASI OKUQASHA" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "✨ *Izinsiza Zokuqasha Amabhasi* ✨\n\n"
+                                                                            "🚘 *Uhambo LweBhizimusi* — Izimoto ezithembekile zemicimbi yebhizimusi. Abashayeli abaqeqeshiwe, izikhathi eziguquguqukayo, amabhasi ane-WiFi.\n\n"
+                                                                            "💍 *Ezomshado* — Izimoto ezisezingeni eliphezulu nezihlobiso, isevisi ye-champagne & ibhavu elibomvu.\n\n"
+                                                                            "🎒 *Uhambo Lwezikolo* — Amabhasi aphephile, abashayeli abaqeqeshiwe, kuqapha nge-GPS & kufakwe izinto zokusiza zokuqala.\n\n"
+                                                                            "🦁 *Ukuvakasha & Amasafaris* — Izinhlelo ezenziwe ngokwezifiso, abaqondisi, amalayisense epaki, izimoto ezikhululekile & okuphuzwayo.\n\n"
+                                                                            "🏆 *Amaqembu Ezokudlala* — Indawo engeziwe yezimpahla, ukufakwa kophawu lweqembu & izimoto eziningi zamaqembu.\n\n"
+                                                                            "🎶 *Imicimbi Ekhethekile* — Amakhonsathi, imikhosi & amaphakheji e-VIP, isevisi yasebusuku & izindawo eziningi zokukhipha.\n\n"
+                                                                            "Khetha inketho yokuqasha ukuze uqhubeke"
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "quote_hire", "title": "Cela Isilinganiso"}},
+                                                                            {"type": "reply", "reply": {"id": "Followup", "title": "Landela Isilinganiso"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
@@ -2674,33 +2773,64 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", 
-                                                                "text": "🚌 CAG TOURS TICKETS" },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "🎟 *Ticket Validity*\n\n"
-                                                                        "✅ Tickets apply only to the *named passenger*, *route*, *date*, and *time*.\n"
-                                                                        "📩 Booking confirmation is the passenger's responsibility.\n"
-                                                                        "🪪 Present *ID* and *ticket reference* at check-in.\n"
-                                                                        "✏️ Altered tickets after purchase may be void.\n"
-                                                                        "❌ Lost tickets are non-refundable."
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "cancel_reschedule", "title": "Travel Cancellation"}},
-                                                                        {"type": "reply", "reply": {"id": "depart_checkin", "title": "Departure & Check-In"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", 
+                                                                    "text": "🚌 CAG TOURS TICKETS" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "🎟 *Ticket Validity*\n\n"
+                                                                            "✅ Tickets apply only to the *named passenger*, *route*, *date*, and *time*.\n"
+                                                                            "📩 Booking confirmation is the passenger's responsibility.\n"
+                                                                            "🪪 Present *ID* and *ticket reference* at check-in.\n"
+                                                                            "✏️ Altered tickets after purchase may be void.\n"
+                                                                            "❌ Lost tickets are non-refundable."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "cancel_reschedule", "title": "Travel Cancellation"}},
+                                                                            {"type": "reply", "reply": {"id": "depart_checkin", "title": "Departure & Check-In"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS AMATHIKITHI" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "🎟 *Ukusebenza Kwamathikithi*\n\n"
+                                                                            "✅ Amathikithi asetshenziselwa kuphela *umgibeli ogcwele igama*, *indlela*, *usuku*, kanye *nesikhathi*.\n"
+                                                                            "📩 Ukuqinisekisa ukubhukha kuyisibopho somgibeli.\n"
+                                                                            "🪪 Bonisa *i-ID* kanye *nereferensi yethikithi* ekuhloleni.\n"
+                                                                            "✏️ Amathikithi aguquliwe emva kokuthenga angase abe yize.\n"
+                                                                            "❌ Amathikithi alahlekile awabuyiselwa emuva."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "cancel_reschedule", "title": "Ukukhansela Uhambo"}},
+                                                                            {"type": "reply", "reply": {"id": "depart_checkin", "title": "Ukuphuma & Ukuhlola"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
@@ -2715,31 +2845,60 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", 
-                                                                "text": "🚌 CAG TOURS TRAVEL" },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "❌ *Cancellation & Rescheduling*\n\n"
-                                                                        "⏰ If requested more than *24hrs before departure*, tickets may be refunded or rescheduled with a *50% admin fee*.\n"
-                                                                        "🚫 No refund or rescheduling within *3hrs of departure*.\n"
-                                                                        "📝 Verbal quotes are invalid unless *written confirmation* is provided."
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "ticket_use_validity", "title": "Ticket Validity"}},
-                                                                        {"type": "reply", "reply": {"id": "depart_checkin", "title": "Departure & Check-In"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", 
+                                                                    "text": "🚌 CAG TOURS TRAVEL" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "❌ *Cancellation & Rescheduling*\n\n"
+                                                                            "⏰ If requested more than *24hrs before departure*, tickets may be refunded or rescheduled with a *50% admin fee*.\n"
+                                                                            "🚫 No refund or rescheduling within *3hrs of departure*.\n"
+                                                                            "📝 Verbal quotes are invalid unless *written confirmation* is provided."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "ticket_use_validity", "title": "Ticket Validity"}},
+                                                                            {"type": "reply", "reply": {"id": "depart_checkin", "title": "Departure & Check-In"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS UHAMBO" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "❌ *Ukukhansela & Ukulungisa Uhambo*\n\n"
+                                                                            "⏰ Uma kuceliwe ngaphambi kwe-*24hrs ngaphambi kokuhamba*, amathikithi angabuyiselwa noma alungiswe nge-*50% yemali yokuphatha*.\n"
+                                                                            "🚫 Akukho ukubuyiselwa noma ukulungiswa ngaphakathi kwe-*3hrs ngaphambi kokuhamba*.\n"
+                                                                            "📝 Izilinganiso zomlomo azivumelekile ngaphandle kokuba kunikezwe *ukuqinisekiswa okubhaliwe*."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "ticket_use_validity", "title": "Ukusebenza Kwamathikithi"}},
+                                                                            {"type": "reply", "reply": {"id": "depart_checkin", "title": "Ukuphuma & Ukuhlola"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
@@ -2755,33 +2914,65 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": { "type": "text", 
-                                                                "text": "🚌 CAG TOURS TRAVEL" },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "🕒 *Departure & Check-In*\n\n"
-                                                                        "✅ Check-in must be completed *30 minutes before departure*.\n"
-                                                                        "⚠️ Arriving less than *5 minutes early* may result in losing your seat to stand-by passengers.\n"
-                                                                        "🚫 Latecomers must purchase a *new ticket*.\n"
-                                                                        "⏳ Travel times are *not guaranteed*.\n"
-                                                                        "🚌 CAG Tours is *not liable* for delays or cancellations — no refunds in such cases."
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "ticket_use_validity", "title": "Ticket Validity"}},
-                                                                        {"type": "reply", "reply": {"id": "cancel_reschedule", "title": "Travel Cancellation"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
-                                                                    ]
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", 
+                                                                    "text": "🚌 CAG TOURS TRAVEL" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "🕒 *Departure & Check-In*\n\n"
+                                                                            "✅ Check-in must be completed *30 minutes before departure*.\n"
+                                                                            "⚠️ Arriving less than *5 minutes early* may result in losing your seat to stand-by passengers.\n"
+                                                                            "🚫 Latecomers must purchase a *new ticket*.\n"
+                                                                            "⏳ Travel times are *not guaranteed*.\n"
+                                                                            "🚌 CAG Tours is *not liable* for delays or cancellations — no refunds in such cases."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "ticket_use_validity", "title": "Ticket Validity"}},
+                                                                            {"type": "reply", "reply": {"id": "cancel_reschedule", "title": "Travel Cancellation"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
+
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": { "type": "text", "text": "🚌 CAG TOURS UHAMBO" },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "🕒 *Ukuphuma & Ukuhlola*\n\n"
+                                                                            "✅ Ukuhlola kufanele kuqedwe *imizuzu engu-30 ngaphambi kokuphuma*.\n"
+                                                                            "⚠️ Ukufika ngaphansi kwemizuzu *5 ngaphambi kwesikhathi* kungaholela ekulahlekelweni isihlalo kubagibeli besiqeshana.\n"
+                                                                            "🚫 Abafikayo sebekwe emva kwesikhathi kufanele bathenge *ithikithi elisha*.\n"
+                                                                            "⏳ Izikhathi zohambo *aziqinisekisiwe*.\n"
+                                                                            "🚌 CAG Tours *ayibophezeleki* ekubambezelekeni noma ekukhanseleni — akukho ukubuyiselwa kwemali kulezo zimo."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "ticket_use_validity", "title": "Ukusebenza Kwamathikithi"}},
+                                                                            {"type": "reply", "reply": {"id": "cancel_reschedule", "title": "Ukukhansela Uhambo"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "Imenyu Enkulu"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
+
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
@@ -2796,52 +2987,100 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "list",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "🚍 CAG TOURS POLICIES"
-                                                                },
-                                                                "body": {
-                                                                    "text": (
-                                                                        f"Select an enquiry option below to proceed."
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "button": "📋 CAG TOURS POLICIES",
-                                                                    "sections": [
-                                                                        {
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "ticket_use_validity",
-                                                                                    "title": "Ticket Validity",
-                                                                                    "description": "View ticket validity policies"
-                                                                                },
-                                                                                {
-                                                                                    "id": "cancel_reschedule",
-                                                                                    "title": "Travel Cancellation",
-                                                                                    "description": "View cancellation & rescheduling policies"
-                                                                                },
-                                                                                {
-                                                                                    "id": "depart_checkin",
-                                                                                    "title": "Departure & Check-In",
-                                                                                    "description": "View departure policies"
-                                                                                },
-                                                                                {
-                                                                                    "id": "mainmenu",
-                                                                                    "title": "CAG Main Menu"                                                                            }
-                                                                            ]
-                                                                        }
-                                                                    ]
+                                                        if language == "english":
+
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 CAG TOURS POLICIES"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            f"Select an enquiry option below to proceed."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "📋 CAG TOURS POLICIES",
+                                                                        "sections": [
+                                                                            {
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "ticket_use_validity",
+                                                                                        "title": "Ticket Validity",
+                                                                                        "description": "View ticket validity policies"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "cancel_reschedule",
+                                                                                        "title": "Travel Cancellation",
+                                                                                        "description": "View cancellation & rescheduling policies"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "depart_checkin",
+                                                                                        "title": "Departure & Check-In",
+                                                                                        "description": "View departure policies"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "mainmenu",
+                                                                                        "title": "CAG Main Menu"                                                                            }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
 
+                                                        elif language == "ndebele":
 
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 CAG TOURS POLICIES"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            f"Select an enquiry option below to proceed."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "📋 CAG TOURS POLICIES",
+                                                                        "sections": [
+                                                                            {
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "ticket_use_validity",
+                                                                                        "title": "Ticket Validity",
+                                                                                        "description": "View ticket validity policies"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "cancel_reschedule",
+                                                                                        "title": "Travel Cancellation",
+                                                                                        "description": "View cancellation & rescheduling policies"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "depart_checkin",
+                                                                                        "title": "Departure & Check-In",
+                                                                                        "description": "View departure policies"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "mainmenu",
+                                                                                        "title": "CAG Main Menu"                                                                            }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         # Send the request to WhatsApp
                                                         response = requests.post(url, headers=headers, json=payload)
@@ -2858,103 +3097,202 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
+                                                        if language == "english":
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "list",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "🚍 WHY CHOOSE CAG TOURS"
-                                                                },
-                                                                "body": {
-                                                                    "text": (
-                                                                        "🚗 *Professional Drivers*\n"
-                                                                        "We have experienced drivers trained to the highest standards.\n\n"
-                                                                        "🛡️ *Safety First*\n"
-                                                                        "We have a regular maintenance schedule for all our vehicles ensuring maximum safety.\n\n"
-                                                                        "🤝 *Customer Service*\n"
-                                                                        "Our customer friendly support is available to assist with any travel needs.\n\n"
-                                                                        "🌿 *Eco-Conscious*\n"
-                                                                        "Our Operations are environmentally conscious for a greener future."
-                                                                    )
-                                                                },
-                                                                "action": {
-                                                                    "button": "📋 CAG TOURS MENU",
-                                                                    "sections": [
-                                                                        {
-                                                                            "title": "📦 CAG TOURS SERVICES",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "book_ticket",
-                                                                                    "title": "Book a Ticket",
-                                                                                    "description": "Reserve your seat instantly"
-                                                                                },
-                                                                                {
-                                                                                    "id": "routes",
-                                                                                    "title": "View Routes",
-                                                                                    "description": "Get info regarding our travel routes"
-                                                                                },
-                                                                                {
-                                                                                    "id": "private_hire",
-                                                                                    "title": "Private Hire",
-                                                                                    "description": "Book buses for private trips or group travel"
-                                                                                },
-                                                                                {
-                                                                                    "id": "parcel_delivery",
-                                                                                    "title": "Parcel Delivery",
-                                                                                    "description": "Send or collect packages"
-                                                                                },
-                                                                            
-                                                                                {
-                                                                                "id": "find_stop",
-                                                                                "title": "Terminals & Agents",
-                                                                                "description": "Locate nearest terminal or agent"
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        {
-                                                                            "title": "🚌 CAG TOURS",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "know_more",
-                                                                                    "title": "Know More",
-                                                                                    "description": "Our story & travel experience"
-                                                                                },
-                                                                                {
-                                                                                    "id": "why_choose",
-                                                                                    "title": "Why Choose Us",
-                                                                                    "description": "Luxury, safety & comfort explained"
-                                                                                }
-                                                                            ]
-                                                                        },
-                                                                        {
-                                                                            "title": "🛎 CUSTOMER SERVICE",
-                                                                            "rows": [
-                                                                                {
-                                                                                    "id": "faqs",
-                                                                                    "title": "❓ FAQs",
-                                                                                    "description": "Get answers to common questions"
-                                                                                },
-                                                                                {
-                                                                                    "id": "policies",
-                                                                                    "title": "Travel Policies",
-                                                                                    "description": "Baggage rules, safety, refunds"
-                                                                                },
-                                                                                {
-                                                                                    "id": "get_help",
-                                                                                    "title": "Get Help",
-                                                                                    "description": "Talk to a support agent now"
-                                                                                }
-                                                                            ]
-                                                                        }
-                                                                    ]
+                                                            
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 WHY CHOOSE CAG TOURS"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "🚗 *Professional Drivers*\n"
+                                                                            "We have experienced drivers trained to the highest standards.\n\n"
+                                                                            "🛡️ *Safety First*\n"
+                                                                            "We have a regular maintenance schedule for all our vehicles ensuring maximum safety.\n\n"
+                                                                            "🤝 *Customer Service*\n"
+                                                                            "Our customer friendly support is available to assist with any travel needs.\n\n"
+                                                                            "🌿 *Eco-Conscious*\n"
+                                                                            "Our Operations are environmentally conscious for a greener future."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "📋 CAG TOURS MENU",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "📦 CAG TOURS SERVICES",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "book_ticket",
+                                                                                        "title": "Book a Ticket",
+                                                                                        "description": "Reserve your seat instantly"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "routes",
+                                                                                        "title": "View Routes",
+                                                                                        "description": "Get info regarding our travel routes"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "private_hire",
+                                                                                        "title": "Private Hire",
+                                                                                        "description": "Book buses for private trips or group travel"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "parcel_delivery",
+                                                                                        "title": "Parcel Delivery",
+                                                                                        "description": "Send or collect packages"
+                                                                                    },
+                                                                                
+                                                                                    {
+                                                                                    "id": "find_stop",
+                                                                                    "title": "Terminals & Agents",
+                                                                                    "description": "Locate nearest terminal or agent"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🚌 CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "know_more",
+                                                                                        "title": "Know More",
+                                                                                        "description": "Our story & travel experience"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "why_choose",
+                                                                                        "title": "Why Choose Us",
+                                                                                        "description": "Luxury, safety & comfort explained"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🛎 CUSTOMER SERVICE",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "faqs",
+                                                                                        "title": "❓ FAQs",
+                                                                                        "description": "Get answers to common questions"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "policies",
+                                                                                        "title": "Travel Policies",
+                                                                                        "description": "Baggage rules, safety, refunds"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "get_help",
+                                                                                        "title": "Get Help",
+                                                                                        "description": "Talk to a support agent now"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
 
+                                                        elif language == "ndebele":
+
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "list",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "🚍 NGANI UKHETHE CAG TOURS"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": (
+                                                                            "🚗 *Abashayeli Abaqeqeshiwe*\n"
+                                                                            "Sinabashayeli abanolwazi abaqeqeshiwe ngezinga eliphezulu.\n\n"
+                                                                            "🛡️ *Ukuvikeleka Kuqala*\n"
+                                                                            "Sinohlelo olujwayelekile lokulungisa zonke izimoto zethu ukuqinisekisa ukuphepha okuphezulu.\n\n"
+                                                                            "🤝 *Insizakalo Yamakhasimende*\n"
+                                                                            "Ukusekela kwethu okunenhlonipho kwamakhasimende kuyatholakala ukusiza nganoma yikuphi okudingwa ohambweni.\n\n"
+                                                                            "🌿 *Ukukhathalela Imvelo*\n"
+                                                                            "Imisebenzi yethu ibhekelele imvelo ukuze kube nekusasa eliluhlaza."
+                                                                        )
+                                                                    },
+                                                                    "action": {
+                                                                        "button": "📋 MENYU YE-CAG TOURS",
+                                                                        "sections": [
+                                                                            {
+                                                                                "title": "📦 IZINSIZA ZE-CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "book_ticket",
+                                                                                        "title": "Bhukha Ithikithi",
+                                                                                        "description": "Bhuka isihlalo sakho masisha"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "routes",
+                                                                                        "title": "Buka Izindlela",
+                                                                                        "description": "Thola ulwazi ngezindlela zethu"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "private_hire",
+                                                                                        "title": "Amabhasi Okuqasha",
+                                                                                        "description": "Bhukha amabhasi ohambweni lwakho lwangasese"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "parcel_delivery",
+                                                                                        "title": "Ukulethwa Kwephakheji",
+                                                                                        "description": "Thumela noma uthole amaphakheji"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "find_stop",
+                                                                                        "title": "Amaterminal & Ama-ejenti",
+                                                                                        "description": "Thola i-terminal noma i-ejenti eduze"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🚌 CAG TOURS",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "know_more",
+                                                                                        "title": "Funda Okuningi",
+                                                                                        "description": "Indaba yethu & ulwazi lohambo"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "why_choose",
+                                                                                        "title": "Ngani Sikhona",
+                                                                                        "description": "Ubukhazikhazi, ukuphepha & induduzo"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "title": "🛎 INSIZA YAMAKHASIMENDE",
+                                                                                "rows": [
+                                                                                    {
+                                                                                        "id": "faqs",
+                                                                                        "title": "❓ Imibuzo Evame Ukubuzwa",
+                                                                                        "description": "Thola izimpendulo zemibuzo evamile"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "policies",
+                                                                                        "title": "Imithetho Yohambo",
+                                                                                        "description": "Imithetho yezimpahla, ukuphepha, ukubuyiselwa"
+                                                                                    },
+                                                                                    {
+                                                                                        "id": "get_help",
+                                                                                        "title": "Thola Usizo",
+                                                                                        "description": "Xoxa nomphathi wosizo manje"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         response = requests.post(url, headers=headers, json=payload)
 
