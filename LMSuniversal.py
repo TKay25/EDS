@@ -2067,6 +2067,13 @@ def webhook():
                                                                 }
                                                             ]
 
+                                                            send_whatsapp_list_messagecc(
+                                                                sender_id, 
+                                                                "Ok. Select a FAQ for more info...", 
+                                                                "CAG TOURS FAQs",
+                                                                sections
+                                                            ) 
+
                                                         elif language == "ndebele":
 
                                                             sections = [
@@ -2081,11 +2088,13 @@ def webhook():
                                                                 }
                                                             ]
 
-                                                        send_whatsapp_list_messagecc(
-                                                            sender_id, 
-                                                            "Ok. Select a FAQ for more info...", 
-                                                            "CAG TOURS FAQs",
-                                                            sections) 
+                                                            send_whatsapp_list_messagecc(
+                                                                sender_id,
+                                                                "Kulungile. Khetha i-FAQ ukuze uthole olunye ulwazi...", 
+                                                                "CAG TOURS FAQs",
+                                                                sections
+                                                            )
+
                                                         
                                                     elif selected_option == "Fares":
                                                         button_id_leave_type = str(selected_option)
