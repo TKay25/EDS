@@ -279,6 +279,8 @@ def webhook():
 
                                                 language == ""
 
+                                                print("yadayada")
+
                                                 print(language)
 
                                             if language == "" or language == None or result55 == None:
