@@ -279,6 +279,8 @@ def webhook():
 
                                                 language == ""
 
+                                                print(language)
+
                                             if language == "" or language == None or result55 == None:
 
                                                 if message.get("type") == "interactive":
@@ -560,6 +562,8 @@ def webhook():
                                                             print(response.text)
 
                                                 else:
+
+                                                    print("in here")
 
                                                     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                     headers = {
