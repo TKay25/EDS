@@ -268,7 +268,9 @@ def webhook():
 
                                             result55 = cursor.fetchone()
 
-                                            language = result55[4]  
+                                            if result55:
+                                                
+                                                language = result55[4]  
 
                                             if language == "" or language == None or result55 == None:
 
