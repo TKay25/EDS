@@ -5089,8 +5089,14 @@ def webhook():
                                                             """, (sender_id[-9:],))
 
                                                             result55 = cursor.fetchone()
+
+                                                            if result55:
             
-                                                            language = result55[4]  
+                                                                language = result55[4]  
+
+                                                            else:
+
+                                                                language == ""
 
                                                             if language ==  "english" :                                    
 
