@@ -256,7 +256,6 @@ def webhook():
 
                                         external_database_url = "postgresql://lmsdatabase_8ag3_user:6WD9lOnHkiU7utlUUjT88m4XgEYQMTLb@dpg-ctp9h0aj1k6c739h9di0-a.oregon-postgres.render.com/lmsdatabase_8ag3"
 
-
                                         try:
                                             connection = psycopg2.connect(external_database_url)
                                             cursor = connection.cursor()   
@@ -270,9 +269,13 @@ def webhook():
 
                                             if result55:
 
+                                                print("language is there")
+
                                                 language = result55[4]  
 
                                             else:
+
+                                                print("no language")
 
                                                 language == ""
 
