@@ -277,7 +277,7 @@ def webhook():
 
                                                 print("no language")
 
-                                                language == ""
+                                                language = ""
 
                                                 print("yadayada")
 
@@ -5105,7 +5105,7 @@ def webhook():
 
                                                             else:
 
-                                                                language == ""
+                                                                language = ""
 
                                                             if language ==  "english" :                                    
 
