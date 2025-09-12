@@ -269,7 +269,7 @@ def webhook():
 
                                             if result55:
 
-                                                print("language is there")
+                                                print("user is there")
 
                                                 language = result55[4]  
 
@@ -297,15 +297,20 @@ def webhook():
 
                                                         if button_id.startswith("lang"):
 
-                                                            language = button_id[len("lang"):]  
+                                                            languagenew = button_id[len("lang"):]  
 
-                                                            if language == None:
+                                                            if language == None or language == "":
+
+                                                                print(languagenew)
+                                                                print(sender_id[-9:])
+
+                                                                print("assigning language")
 
                                                                 cursor.execute("""
                                                                     UPDATE cagwatickcustomerdetails 
                                                                     SET language = %s 
                                                                     WHERE wanumber = %s 
-                                                                    """, (language, sender_id[-9:]))
+                                                                    """, (languagenew, sender_id[-9:]))
 
                                                                 connection.commit()
 
@@ -314,11 +319,11 @@ def webhook():
                                                                 cursor.execute("""
                                                                     INSERT INTO cagwatickcustomerdetails (wanumber, language)
                                                                     VALUES (%s, %s)
-                                                                """, (sender_id[-9:], language))
+                                                                """, (sender_id[-9:], languagenew))
 
                                                                 connection.commit()
 
-                                                            if language == "english":
+                                                            if languagenew == "english":
 
                                                                 url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                                 headers = {
@@ -421,7 +426,7 @@ def webhook():
                                                                 print(response.status_code)
                                                                 print(response.text)
 
-                                                            elif language == "ndebele":
+                                                            elif languagenew == "ndebele":
 
                                                                 url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
                                                                 headers = {
