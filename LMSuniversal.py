@@ -115,10 +115,10 @@ connection.commit()
 """)
 connection.commit()'''
 
-'''cursor.execute("""
-    ALTER TABLE cagbushiredatabase ADD COLUMN qoutreqstatus VARCHAR (100)
+cursor.execute("""
+    ALTER TABLE cagbushiredatabase ADD COLUMN qoutreqstatusagent INT
 """)
-connection.commit()'''
+connection.commit()
 
 
 drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
@@ -1506,13 +1506,13 @@ def webhook():
                                                             contactname = form_response.get("screen_0_Contact_Person_Name_0")
                                                             contactphone = form_response.get("screen_0_Contact_Person_Phone_1")[-9:]
                                                             contactemail = form_response.get("screen_0_Contact_Person_Email_2")
-                                                            traveldatehire = form_response.get("Date_of_Travel_556f8e")
-                                                            returndatehire = form_response.get("Date_of_Return_7ac8cf")
-                                                            hirenature = form_response.get("Nature_of_Hire_b73787")
-                                                            buscapacity = form_response.get("Bus_Capacity_c04372")
-                                                            pickupcity = form_response.get("Pickup_City_1fda79")
-                                                            destinationcity = form_response.get("Destination_City_007836")
-                                                            other_req = form_response.get("Other_Requirements_db186e")
+                                                            traveldatehire = form_response.get("screen_1_Date_of_Travel_0")
+                                                            returndatehire = form_response.get("screen_1_Date_of_Return_1")
+                                                            hirenature = form_response.get("screen_1_Nature_of_Hire_2")
+                                                            buscapacity = form_response.get("screen_1_Bus_Capacity_3")
+                                                            pickupcity = form_response.get("screen_1_Pickup_City_4")
+                                                            destinationcity = form_response.get("screen_1_Destination_City_5")
+                                                            other_req = form_response.get("screen_1_Other_Requirements_6")
                                                             datereq = datetime.now().strftime('%d %B %Y')
 
                                                             print(f"✈️ name: {contactname}")
