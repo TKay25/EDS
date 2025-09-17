@@ -76,6 +76,26 @@ CREATE TABLE IF NOT EXISTS cagwatick2 (
 cursor.execute(create_table_query)
 connection.commit()
 
+create_table_bus_hire_query = f"""
+CREATE TABLE IF NOT EXISTS cagbushiredatabase (
+    id SERIAL PRIMARY KEY,
+    idwanumber INT,
+    contactperson VARCHAR (100),
+    contactpersonphone INT,
+    contactpersonemail VARCHAR (100),
+    traveldate date,    
+    returndate date,
+    hirenature VARCHAR (100),
+    buscapacity VARCHAR (100),
+    pickupcity VARCHAR (100),
+    destinationcity VARCHAR (100),
+    otherreq VARCHAR (500),
+    daterequested date 
+);
+"""
+cursor.execute(create_table_bus_hire_query)
+connection.commit()
+
 create_table_query2 = f"""
 CREATE TABLE IF NOT EXISTS cagwatickcustomerdetails (
     id SERIAL PRIMARY KEY,
@@ -5302,16 +5322,27 @@ def webhook():
                                                                                 "text": "⚙️ ADMIN MENU"
                                                                             },
                                                                             "body": {
-                                                                                "text": "Hello CAG Admin. Please choose an option below:"
+                                                                                "text": "Sawubona CAG Admin. Khetha okukufaneleyo ngezansi:"
                                                                             },
                                                                             "action": {
                                                                                 "buttons": [
-                                                                                    {"type": "reply", "reply": {"id": "bus_hire", "title": "🚌 Hire Applications"}},
-                                                                                    {"type": "reply", "reply": {"id": "add_admin_vstats", "title": "➕ Admin Tools"}},
-                                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
+                                                                                    {
+                                                                                        "type": "reply",
+                                                                                        "reply": {"id": "bus_hire", "title": "🚌 Izicelo Zokugaya"}
+                                                                                    },
+                                                                                    {
+                                                                                        "type": "reply",
+                                                                                        "reply": {"id": "add_admin_vstats", "title": "➕ Amathuluzi Admin"}
+                                                                                    },
+                                                                                    {
+                                                                                        "type": "reply",
+                                                                                        "reply": {"id": "mainmenu", "title": "📊 Phuma ku-Admin"}
+                                                                                    }
+                                                                                ]
                                                                             }
                                                                         }
                                                                     }
+
 
 
 
