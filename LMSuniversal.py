@@ -5922,7 +5922,6 @@ def webhook():
                                                             print(numberindepartment)
 
                                                             impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                            impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                             change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                             change.iloc[0] = True  # ensure the first row starts a group
@@ -6690,7 +6689,6 @@ def webhook():
                                                                         print(numberindepartment)
 
                                                                         impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                                        impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                                         change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                                         change.iloc[0] = True  # ensure the first row starts a group
@@ -8078,7 +8076,6 @@ def webhook():
                                                                 print(numberindepartment)
 
                                                                 impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                                impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                                 change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                                 change.iloc[0] = True  # ensure the first row starts a group
@@ -8419,7 +8416,7 @@ def webhook():
                                                         print(numberindepartment)
 
                                                         impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                        impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+                                                        #impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                         change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                         change.iloc[0] = True  # ensure the first row starts a group
@@ -9600,7 +9597,7 @@ def webhook():
                                                                 print(numberindepartment)
 
                                                                 impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                                impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+                                                                #impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                                 change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                                 change.iloc[0] = True  # ensure the first row starts a group
@@ -10167,7 +10164,7 @@ def webhook():
                                                                         print(numberindepartment)
 
                                                                         impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                                        impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+                                                                        #impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                                         change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                                         change.iloc[0] = True  # ensure the first row starts a group
@@ -11036,7 +11033,7 @@ def webhook():
                                                         def expand_leave_days(row):
                                                             dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
                                                             # Exclude Sundays (weekday=6)
-                                                            dates = [d for d in dates if d.weekday() != 6]
+                                                            #dates = [d for d in dates if d.weekday() != 6]
                                                             return dates
 
                                                         # Apply the function and explode the DataFrame
@@ -12221,7 +12218,7 @@ def webhook():
                                                             print(numberindepartment)
 
                                                             impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                            impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+                                                            #impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                             change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                             change.iloc[0] = True  # ensure the first row starts a group
@@ -12795,7 +12792,7 @@ def webhook():
                                                                     print(numberindepartment)
 
                                                                     impact_df["date"] = pd.to_datetime(impact_df["date"], format="%Y-%m-%d")
-                                                                    impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+                                                                    #impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                                                                     change = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1)
                                                                     change.iloc[0] = True  # ensure the first row starts a group
@@ -13665,7 +13662,7 @@ def webhook():
                                                     def expand_leave_days(row):
                                                         dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
                                                         # Exclude Sundays (weekday=6)
-                                                        dates = [d for d in dates if d.weekday() != 6]
+                                                        #dates = [d for d in dates if d.weekday() != 6]
                                                         return dates
 
                                                     # Apply the function and explode the DataFrame
@@ -15142,16 +15139,19 @@ def run1(table_name, empid):
         df_leave_appsmain_approved2["Status Date"] = pd.to_datetime(df_leave_appsmain_approved2["Status Date"])
 
         # Function to count days excluding Sundays
-        def count_days_excluding_sundays(start, end):
-            return sum((start + pd.to_timedelta(i, unit='D')).weekday() != 6  # 6 = Sunday
-                    for i in range((end - start).days))
+        #def count_days_excluding_sundays(start, end):
+        #    return sum((start + pd.to_timedelta(i, unit='D')).weekday() != 6  # 6 = Sunday
+        #            for i in range((end - start).days))
 
-        df_leave_appsmain_approved2["Days (No Sundays)"] = df_leave_appsmain_approved2.apply(
-            lambda row: count_days_excluding_sundays(row["Date Applied"], row["Status Date"]),
+        def count_days_inclusive(start, end):
+            return (end - start).days + 1
+
+        df_leave_appsmain_approved2["Days"] = df_leave_appsmain_approved2.apply(
+            lambda row: count_days_inclusive(row["Date Applied"], row["Status Date"]),
             axis=1
         )
 
-        avg_approval_time = round(df_leave_appsmain_approved2["Days (No Sundays)"].mean(),0)
+        avg_approval_time = round(df_leave_appsmain_approved2["Days"].mean(),0)
         df_leave_appsmain_approved2['Date Applied'] = pd.to_datetime(df_leave_appsmain_approved2['Date Applied'])
 
         df_leave_appsmain_approved2['Month-Year'] = df_leave_appsmain_approved2['Date Applied'].dt.to_period('M')
@@ -16406,7 +16406,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     print(numberindepartment)
 
                     impact_df["date"] = pd.to_datetime(impact_df["date"], dayfirst=True)
-                    impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+                    #impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                     impact_df["group"] = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1).cumsum()
 
@@ -17341,7 +17341,7 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                             print(numberindepartment)
 
                             impact_df["date"] = pd.to_datetime(impact_df["date"], dayfirst=True)
-                            impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
+                            #impact_df = impact_df[impact_df["date"].dt.weekday != 6].copy()
 
                             impact_df["group"] = (impact_df[["on leave", "employees remaining"]] != impact_df[["on leave", "employees remaining"]].shift()).any(axis=1).cumsum()
 
@@ -18209,8 +18209,6 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 # Function to expand dates and exclude Sundays
                 def expand_leave_days(row):
                     dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
-                    # Exclude Sundays (weekday=6)
-                    dates = [d for d in dates if d.weekday() != 6]
                     return dates
 
                 # Apply the function and explode the DataFrame
