@@ -2806,7 +2806,7 @@ def webhook():
                                                                     "action": {
                                                                         "buttons": [
                                                                             {"type": "reply", "reply": {"id": "routes", "title": "View Other Routes"}},
-                                                                            {"type": "reply", "reply": {"id": "routeshararebook", "title": "Harare Bookable Routes"}},
+                                                                            {"type": "reply", "reply": {"id": "routeshararebook", "title": "Harare Book Routes"}},
                                                                             {"type": "reply", "reply": {"id": "mainmenu", "title": "CAG Tours Main Menu"}}
                                                                         ]
                                                                     }
