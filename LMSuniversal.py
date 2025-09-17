@@ -5115,7 +5115,7 @@ def webhook():
                                                             if language ==  "english" :   
 
 
-                                                                if "011235in" in text.lower() and sender_id[-9:] in ["774822568"]:
+                                                                if "011235admin" in text.lower() and sender_id[-9:] in ["774822568","782179911"]:
 
                                                                     text = message.get("text", {}).get("body", "").lower()
                                                                     print(f"📨 Message from {sender_id}: {text}")
