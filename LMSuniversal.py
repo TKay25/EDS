@@ -1494,6 +1494,146 @@ def webhook():
                                                                             json=payload
                                                                         ) 
 
+                                                        
+                                                        elif "screen_0_Contact_Person_Email_2" in form_response:
+
+                                                            # Now safely extract fields
+                                                            contactname = form_response.get("screen_0_Contact_Person_Name_0")
+                                                            contactphone = form_response.get("screen_0_Contact_Person_Phone_1")[-9:]
+                                                            contactemail = form_response.get("screen_0_Contact_Person_Email_2")
+                                                            traveldatehire = form_response.get("Date_of_Travel_556f8e")
+                                                            returndatehire = form_response.get("Date_of_Return_7ac8cf")
+                                                            hirenature = form_response.get("Nature_of_Hire_b73787")
+                                                            buscapacity = form_response.get("Bus_Capacity_c04372")
+                                                            pickupcity = form_response.get("Pickup_City_1fda79")
+                                                            destinationcity = form_response.get("Destination_City_007836")
+                                                            other_req = form_response.get("Other_Requirements_db186e")
+                                                            datereq = datetime.now().strftime('%d %B %Y')
+
+                                                            print(f"✈️ name: {contactname}")
+                                                            print(f"🚍 From: {traveldatehire} → To: {returndatehire}")
+                                                            print(f"🎟 Seats: {buscapacity}")
+
+                                                            cursor.execute("""
+                                                            INSERT INTO cagbushiredatabase (idwanumber, contactperson, contactpersonphone, contactpersonemail, traveldate, returndate, hirenature, buscapacity, pickupcity, destinationcity, otherreq, daterequested)
+                                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                                            """, (sender_id[-9:], contactname, contactphone, contactemail, traveldatehire, returndatehire, hirenature, buscapacity, pickupcity, destinationcity, other_req, datereq))
+
+                                                            connection.commit()
+
+                                                            if language == "english":
+
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "interactive",
+                                                                    "interactive": {
+                                                                        "type": "list",
+                                                                        "header": {
+                                                                            "type": "text",
+                                                                            "text": "🚍 CAG TOURS MAIN MENU"
+                                                                        },
+                                                                        "body": {
+                                                                            "text": (
+                                                                                "Your Private Hire Quotation request has been logged successfully ✅! \n The contact person will be contacted by one of our Private Hire agents shortly. \n\n"
+                                                                                "Welcome aboard! 👋\n\n"
+                                                                                "Explore our available routes, services, and customer support options.\n"
+                                                                                "Tap *OPEN MENU* below to get started. ⬇️"
+                                                                            )
+                                                                        },
+                                                                        "action": {
+                                                                            "button": "📋 CAG TOURS MENU",
+                                                                            "sections": [
+                                                                                {
+                                                                                    "title": "📦 CAG TOURS SERVICES",
+                                                                                    "rows": [
+                                                                                        {
+                                                                                            "id": "book_ticket",
+                                                                                            "title": "Book a Ticket",
+                                                                                            "description": "Reserve your seat instantly"
+                                                                                        },
+                                                                                        {
+                                                                                            "id": "routes",
+                                                                                            "title": "View Routes",
+                                                                                            "description": "Get info regarding our travel routes"
+                                                                                        },
+                                                                                        {
+                                                                                            "id": "private_hire",
+                                                                                            "title": "Private Hire",
+                                                                                            "description": "Book buses for private trips or group travel"
+                                                                                        },
+                                                                                        {
+                                                                                            "id": "parcel_delivery",
+                                                                                            "title": "Parcel Delivery",
+                                                                                            "description": "Send or collect packages"
+                                                                                        },
+                                                                                        {
+                                                                                        "id": "find_stop",
+                                                                                        "title": "Terminals & Agents",
+                                                                                        "description": "Locate nearest terminal or agent"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "title": "🚌 CAG TOURS",
+                                                                                    "rows": [
+                                                                                        {
+                                                                                            "id": "know_more",
+                                                                                            "title": "Know More",
+                                                                                            "description": "Our story & travel experience"
+                                                                                        },
+                                                                                        {
+                                                                                            "id": "why_choose",
+                                                                                            "title": "Why Choose Us",
+                                                                                            "description": "Luxury, safety & comfort explained"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "title": "🛎 CUSTOMER SERVICE",
+                                                                                    "rows": [
+                                                                                        {
+                                                                                            "id": "faqs",
+                                                                                            "title": "❓ FAQs",
+                                                                                            "description": "Get answers to common questions"
+                                                                                        },
+                                                                                        {
+                                                                                            "id": "policies",
+                                                                                            "title": "Travel Policies",
+                                                                                            "description": "Baggage rules, safety, refunds"
+                                                                                        },
+                                                                                        {
+                                                                                            "id": "get_help",
+                                                                                            "title": "Get Help",
+                                                                                            "description": "Talk to a support agent now"
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
+
+
+
+                                                                # Send the request to WhatsApp
+                                                                response = requests.post(url, headers=headers, json=payload)
+
+                                                                # Optional: Print result for debugging
+                                                                print(response.status_code)
+                                                                print(response.text)
+
+
+
+
+
+
+
+
+
+
+
+
 
                                                         else:
                                                             print("personal details")
