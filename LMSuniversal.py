@@ -115,6 +115,11 @@ connection.commit()
 """)
 connection.commit()'''
 
+cursor.execute("""
+    ALTER TABLE cagbushiredatabase ADD COLUMN qoutreqstatus VARCHAR (100)
+""")
+connection.commit()
+
 
 drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
 cursor.execute(drop_table_query)
