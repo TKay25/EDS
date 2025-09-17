@@ -115,10 +115,10 @@ connection.commit()
 """)
 connection.commit()'''
 
-cursor.execute("""
+'''cursor.execute("""
     ALTER TABLE cagbushiredatabase ADD COLUMN qoutreqstatusagent INT
 """)
-connection.commit()
+connection.commit()'''
 
 
 drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
@@ -1541,17 +1541,17 @@ def webhook():
                                                                         "body": {
                                                                             "text": (
                                                                                 "Your Private Hire Quotation request has been logged successfully ✅! \n Your quotation Request details are as follows; \n\n"
-                                                                                f"Contact Person/Organisation Name: {contactname} \n"
-                                                                                f"Contact Person/Organisation Phone: {contactphone} \n"        
-                                                                                f"Contact Person/Organisation Email: {contactemail} \n"        
-                                                                                f"Travel Date: {traveldatehire} \n"        
-                                                                                f"Return Date (Optional): {returndatehire} \n"        
-                                                                                f"Nature of Hire: {hirenature} \n"        
-                                                                                f"Bus Capacity: {buscapacity} \n"        
-                                                                                f"Pick up City: {pickupcity} \n"        
-                                                                                f"Destination City: {destinationcity} \n"        
-                                                                                f"Other Requirements (Optional): {other_req} \n\n"        
-                                                                                f"The contact person/organisation, {contactname}, will be contacted on {contactphone} or on {contactemail} by one of our Private Hire agents shortly. \n\n"
+                                                                                f"Contact Person/Organisation Name: *{contactname}* \n"
+                                                                                f"Contact Person/Organisation Phone: *{contactphone}* \n"        
+                                                                                f"Contact Person/Organisation Email: *{contactemail}* \n"        
+                                                                                f"Travel Date: *{traveldatehire}* \n"        
+                                                                                f"Return Date (Optional): *{returndatehire}* \n"        
+                                                                                f"Nature of Hire: *{hirenature}* \n"        
+                                                                                f"Bus Capacity: *{buscapacity}* \n"        
+                                                                                f"Pick up City: *{pickupcity}* \n"        
+                                                                                f"Destination City: *{destinationcity}* \n"        
+                                                                                f"Other Requirements (Optional): *{other_req}* \n\n"        
+                                                                                f"The contact person/organisation, *{contactname}*, will be contacted on *{contactphone}* or on *{contactemail}* by one of our Private Hire agents shortly. \n\n"
                                                                                 "Welcome aboard! 👋\n\n"
                                                                                 "Explore our available routes, services, and customer support options.\n"
                                                                                 "Tap *OPEN MENU* below to get started. ⬇️"
