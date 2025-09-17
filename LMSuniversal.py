@@ -1508,12 +1508,21 @@ def webhook():
                                                             contactemail = form_response.get("screen_0_Contact_Person_Email_2")
                                                             traveldatehire = form_response.get("screen_1_Date_of_Travel_0")
                                                             returndatehire = form_response.get("screen_1_Date_of_Return_1")
-                                                            hirenature = form_response.get("screen_1_Nature_of_Hire_2")
-                                                            buscapacity = form_response.get("screen_1_Bus_Capacity_3")
-                                                            pickupcity = form_response.get("screen_1_Pickup_City_4")
-                                                            destinationcity = form_response.get("screen_1_Destination_City_5")
+                                                            hirenature = form_response.get("screen_1_Nature_of_Hire_2")[2:]
+                                                            buscapacity = form_response.get("screen_1_Bus_Capacity_3")[2:]
+                                                            pickupcity = form_response.get("screen_1_Pickup_City_4")[2:]
+                                                            destinationcity = form_response.get("screen_1_Destination_City_5")[2:]
                                                             other_req = form_response.get("screen_1_Other_Requirements_6")
                                                             datereq = datetime.now().strftime('%d %B %Y')
+
+                                                            dt_travel_date_hire = datetime.strptime(traveldatehire, "%Y-%m-%d")
+                                                            formatted_date_thire = dt_travel_date_hire.strftime("%d %B %Y")
+                                                            print(formatted_date_thire)  # Output: "20 September 2025" 
+
+                                                            if returndatehire:
+                                                                dt_return_date_hire = datetime.strptime(returndatehire, "%Y-%m-%d")
+                                                                formatted_date_rhire = dt_return_date_hire.strftime("%d %B %Y")
+                                                                print(formatted_date_rhire)  # Output: "20 September 2025"                                                          
 
                                                             print(f"✈️ name: {contactname}")
                                                             print(f"🚍 From: {traveldatehire} → To: {returndatehire}")
@@ -1544,8 +1553,8 @@ def webhook():
                                                                                 f"Contact Person/Organisation Name: *{contactname}* \n"
                                                                                 f"Contact Person/Organisation Phone: *{contactphone}* \n"        
                                                                                 f"Contact Person/Organisation Email: *{contactemail}* \n"        
-                                                                                f"Travel Date: *{traveldatehire}* \n"        
-                                                                                f"Return Date (Optional): *{returndatehire}* \n"        
+                                                                                f"Travel Date: *{formatted_date_thire}* \n"        
+                                                                                f"Return Date (Optional): *{formatted_date_rhire}* \n"        
                                                                                 f"Nature of Hire: *{hirenature}* \n"        
                                                                                 f"Bus Capacity: *{buscapacity}* \n"        
                                                                                 f"Pick up City: *{pickupcity}* \n"        
