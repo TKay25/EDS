@@ -73,6 +73,9 @@
             background: white;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 51, 102, 0.08);
+            table-layout: fixed;   /* ensures cells don't expand unpredictably */
+            word-wrap: break-word; /* prevents overflow inside cells */
+            margin: 0 auto;        /* keeps it centered within page margins */
         }
 
         .data th, .data td {
