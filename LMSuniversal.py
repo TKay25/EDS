@@ -5276,109 +5276,157 @@ def webhook():
 
                                                             elif language == "ndebele":
 
-                                                                url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                                headers = {
-                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                    "Content-Type": "application/json"
-                                                                }
 
-                                                                payload = {
-                                                                    "messaging_product": "whatsapp",
-                                                                    "to": sender_id,
-                                                                    "type": "interactive",
-                                                                    "interactive": {
-                                                                        "type": "list",
-                                                                        "header": {
-                                                                            "type": "text",
-                                                                            "text": "🚍 CAG TOURS IMENU ENKULU"
-                                                                        },
-                                                                        "body": {
-                                                                            "text": (
-                                                                                "Siyalamukela! 👋\n\n"
-                                                                                "Khetha indlela, izinsiza, kumbe ukusekelwa kwabathengi.\n"
-                                                                                "Cofa *IMENU CAG TOURS* ngezansi ⬇️\n\n"
-                                                                                "To translate to everything to English, send a message written `english`"
-                                                                            )
-                                                                        },
-                                                                        "action": {
-                                                                            "button": "📋 IMENU CAG TOURS",
-                                                                            "sections": [
-                                                                                {
-                                                                                    "title": "📦 IZINSIZA ZE CAG TOURS",
-                                                                                    "rows": [
-                                                                                        {
-                                                                                            "id": "book_ticket",
-                                                                                            "title": "Bhuka Ithikithi",
-                                                                                            "description": "Gcina isihlalo sakho masinyane"
-                                                                                        },
-                                                                                        {
-                                                                                            "id": "routes",
-                                                                                            "title": "Bona Izindlela",
-                                                                                            "description": "Thola ulwazi ngezindlela zethu"
-                                                                                        },
-                                                                                        {
-                                                                                            "id": "private_hire",
-                                                                                            "title": "Ukuqasha Imota",
-                                                                                            "description": "Qasha amabhasi okuhamba labanye"
-                                                                                        },
-                                                                                        {
-                                                                                            "id": "parcel_delivery",
-                                                                                            "title": "Ukuthumela Amaphasela",
-                                                                                            "description": "Thumela kumbe amukela iphasela"
-                                                                                        },
-                                                                                        {
-                                                                                            "id": "find_stop",
-                                                                                            "title": "Amastop & Ama-ejenti",
-                                                                                            "description": "Thola i-terminal kumbe i-ejenti eseduzane"
-                                                                                        }
-                                                                                    ]
-                                                                                },
-                                                                                {
-                                                                                    "title": "🚌 NGOHLA CAG TOURS",
-                                                                                    "rows": [
-                                                                                        {
-                                                                                            "id": "know_more",
-                                                                                            "title": "Okunengi Ngathi",
-                                                                                            "description": "Indaba yethu lokuhamba"
-                                                                                        },
-                                                                                        {
-                                                                                            "id": "why_choose",
-                                                                                            "title": "Kungani Usikhetha",
-                                                                                            "description": "Ukuphepha, induduzo, ubukhazikhazi"
-                                                                                        }
-                                                                                    ]
-                                                                                },
-                                                                                {
-                                                                                    "title": "🛎 UKUSEKELWA KWABATHENGI",
-                                                                                    "rows": [
-                                                                                        {
-                                                                                            "id": "faqs",
-                                                                                            "title": "❓ Imibuzo Evame",
-                                                                                            "description": "Phendula imibuzo evamileyo"
-                                                                                        },
-                                                                                        {
-                                                                                            "id": "policies",
-                                                                                            "title": "Inqubomgomo Yethu",
-                                                                                            "description": "Imithetho yokuhamba, impahla, imali"
-                                                                                        },
-                                                                                        {
-                                                                                            "id": "get_help",
-                                                                                            "title": "Thola Usizo",
-                                                                                            "description": "Khuluma lomsebenzi wethu khathesi"
-                                                                                        }
-                                                                                    ]
-                                                                                }
-                                                                            ]
+                                                                if "011235admin" in text.lower() and sender_id[-9:] in ["774822568","782179911"]:
+
+                                                                    text = message.get("text", {}).get("body", "").lower()
+                                                                    print(f"📨 Message from {sender_id}: {text}")
+                                                                    
+                                                                    print("admin yes")
+
+                                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                                    headers = {
+                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                        "Content-Type": "application/json"
+                                                                    }
+
+
+                                                                    payload = {
+                                                                        "messaging_product": "whatsapp",
+                                                                        "to": sender_id,
+                                                                        "type": "interactive",
+                                                                        "interactive": {
+                                                                            "type": "button",
+                                                                            "header": {
+                                                                                "type": "text",
+                                                                                "text": "⚙️ ADMIN MENU"
+                                                                            },
+                                                                            "body": {
+                                                                                "text": "Hello CAG Admin. Please choose an option below:"
+                                                                            },
+                                                                            "action": {
+                                                                                "buttons": [
+                                                                                    {"type": "reply", "reply": {"id": "bus_hire", "title": "🚌 Hire Applications"}},
+                                                                                    {"type": "reply", "reply": {"id": "add_admin_vstats", "title": "➕ Admin Tools"}},
+                                                                                    {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
+                                                                            }
                                                                         }
                                                                     }
-                                                                }
 
-                                                                # Send the request to WhatsApp
-                                                                response = requests.post(url, headers=headers, json=payload)
 
-                                                                # Optional: Print result for debugging
-                                                                print(response.status_code)
-                                                                print(response.text)
+
+                                                                    # Send the request to WhatsApp
+                                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                                    # Optional: Print result for debugging
+                                                                    print(response.status_code)
+                                                                    print(response.text)
+
+                                                                else:
+                                                            
+                                                                    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                                    headers = {
+                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                        "Content-Type": "application/json"
+                                                                    }
+
+                                                                    payload = {
+                                                                        "messaging_product": "whatsapp",
+                                                                        "to": sender_id,
+                                                                        "type": "interactive",
+                                                                        "interactive": {
+                                                                            "type": "list",
+                                                                            "header": {
+                                                                                "type": "text",
+                                                                                "text": "🚍 CAG TOURS IMENU ENKULU"
+                                                                            },
+                                                                            "body": {
+                                                                                "text": (
+                                                                                    "Siyalamukela! 👋\n\n"
+                                                                                    "Khetha indlela, izinsiza, kumbe ukusekelwa kwabathengi.\n"
+                                                                                    "Cofa *IMENU CAG TOURS* ngezansi ⬇️\n\n"
+                                                                                    "To translate to everything to English, send a message written `english`"
+                                                                                )
+                                                                            },
+                                                                            "action": {
+                                                                                "button": "📋 IMENU CAG TOURS",
+                                                                                "sections": [
+                                                                                    {
+                                                                                        "title": "📦 IZINSIZA ZE CAG TOURS",
+                                                                                        "rows": [
+                                                                                            {
+                                                                                                "id": "book_ticket",
+                                                                                                "title": "Bhuka Ithikithi",
+                                                                                                "description": "Gcina isihlalo sakho masinyane"
+                                                                                            },
+                                                                                            {
+                                                                                                "id": "routes",
+                                                                                                "title": "Bona Izindlela",
+                                                                                                "description": "Thola ulwazi ngezindlela zethu"
+                                                                                            },
+                                                                                            {
+                                                                                                "id": "private_hire",
+                                                                                                "title": "Ukuqasha Imota",
+                                                                                                "description": "Qasha amabhasi okuhamba labanye"
+                                                                                            },
+                                                                                            {
+                                                                                                "id": "parcel_delivery",
+                                                                                                "title": "Ukuthumela Amaphasela",
+                                                                                                "description": "Thumela kumbe amukela iphasela"
+                                                                                            },
+                                                                                            {
+                                                                                                "id": "find_stop",
+                                                                                                "title": "Amastop & Ama-ejenti",
+                                                                                                "description": "Thola i-terminal kumbe i-ejenti eseduzane"
+                                                                                            }
+                                                                                        ]
+                                                                                    },
+                                                                                    {
+                                                                                        "title": "🚌 NGOHLA CAG TOURS",
+                                                                                        "rows": [
+                                                                                            {
+                                                                                                "id": "know_more",
+                                                                                                "title": "Okunengi Ngathi",
+                                                                                                "description": "Indaba yethu lokuhamba"
+                                                                                            },
+                                                                                            {
+                                                                                                "id": "why_choose",
+                                                                                                "title": "Kungani Usikhetha",
+                                                                                                "description": "Ukuphepha, induduzo, ubukhazikhazi"
+                                                                                            }
+                                                                                        ]
+                                                                                    },
+                                                                                    {
+                                                                                        "title": "🛎 UKUSEKELWA KWABATHENGI",
+                                                                                        "rows": [
+                                                                                            {
+                                                                                                "id": "faqs",
+                                                                                                "title": "❓ Imibuzo Evame",
+                                                                                                "description": "Phendula imibuzo evamileyo"
+                                                                                            },
+                                                                                            {
+                                                                                                "id": "policies",
+                                                                                                "title": "Inqubomgomo Yethu",
+                                                                                                "description": "Imithetho yokuhamba, impahla, imali"
+                                                                                            },
+                                                                                            {
+                                                                                                "id": "get_help",
+                                                                                                "title": "Thola Usizo",
+                                                                                                "description": "Khuluma lomsebenzi wethu khathesi"
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    # Send the request to WhatsApp
+                                                                    response = requests.post(url, headers=headers, json=payload)
+
+                                                                    # Optional: Print result for debugging
+                                                                    print(response.status_code)
+                                                                    print(response.text)
 
                                                     except Exception as e:
 
