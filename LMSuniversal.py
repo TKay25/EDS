@@ -15386,9 +15386,9 @@ def run1(table_name, empid):
     leaveapproverid = userdf.iat[0,9]
     leaveapproveremail = userdf.iat[0, 10]
 
-    if int(userdf.iat[0,11]):
+    if userdf.iat[0,11]:
         leaveapproverwhatsapp = int(userdf.iat[0,11])
-        
+
     role = userdf.iat[0,7]
     leavedaysbalance = userdf.iat[0,12]
     department = userdf.iat[0,14]
