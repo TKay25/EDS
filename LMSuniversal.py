@@ -805,45 +805,83 @@ def webhook():
 
                                                                 result = cursor.fetchone()
 
-                                                                if result:
+                                                                if (result.iat[0,2] not in [None, ""]) and (result.iat[0,3] not in [None, ""]):
 
                                                                     print("proceed to payment")
 
                                                                     if departure == "Harare":
 
-                                                                        payload = {
-                                                                            "messaging_product": "whatsapp",
-                                                                            "to": sender_id,
-                                                                            "type": "interactive",
-                                                                            "interactive": {
-                                                                                "type": "list",
-                                                                                "header": {
-                                                                                    "type": "text",
-                                                                                    "text": "🚍 DEPARTURE TIME"
-                                                                                },
-                                                                                "body": {
-                                                                                    "text": (
-                                                                                        f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
-                                                                                    )
-                                                                                },
-                                                                                "action": {
-                                                                                    "button": "DEPARTURE TIME",
-                                                                                    "sections": [
-                                                                                        {
-                                                                                            "title": "DEPARTURE TIME",
-                                                                                            "rows": [
-                                                                                                {"id": "txq9am", "title": "9 am"},
-                                                                                                {"id": "txq11am", "title": "11 am"},
-                                                                                                {"id": "txq1pm", "title": "1 pm"},
-                                                                                                {"id": "txq2pm", "title": "2 pm"},
-                                                                                                {"id": "txq2.30pm", "title": "2.30 pm"},
-                                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                            ]
-                                                                                        }
-                                                                                    ]
+                                                                        if language == "english":
+
+                                                                            payload = {
+                                                                                "messaging_product": "whatsapp",
+                                                                                "to": sender_id,
+                                                                                "type": "interactive",
+                                                                                "interactive": {
+                                                                                    "type": "list",
+                                                                                    "header": {
+                                                                                        "type": "text",
+                                                                                        "text": "🚍 DEPARTURE TIME"
+                                                                                    },
+                                                                                    "body": {
+                                                                                        "text": (
+                                                                                            f"Okay. Kindly select the departure time from Harare for which you want to book a ticket on the menu below. ⬇️"
+                                                                                        )
+                                                                                    },
+                                                                                    "action": {
+                                                                                        "button": "DEPARTURE TIME",
+                                                                                        "sections": [
+                                                                                            {
+                                                                                                "title": "DEPARTURE TIME",
+                                                                                                "rows": [
+                                                                                                    {"id": "txq9am", "title": "9 am"},
+                                                                                                    {"id": "txq11am", "title": "11 am"},
+                                                                                                    {"id": "txq1pm", "title": "1 pm"},
+                                                                                                    {"id": "txq2pm", "title": "2 pm"},
+                                                                                                    {"id": "txq2.30pm", "title": "2.30 pm"},
+                                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                                ]
+                                                                                            }
+                                                                                        ]
+                                                                                    }
                                                                                 }
                                                                             }
-                                                                        }
+
+                                                                        elif language == "ndebele":
+
+                                                                            payload = {
+                                                                                "messaging_product": "whatsapp",
+                                                                                "to": sender_id,
+                                                                                "type": "interactive",
+                                                                                "interactive": {
+                                                                                    "type": "list",
+                                                                                    "header": {
+                                                                                        "type": "text",
+                                                                                        "text": "🚍 ISIKHATHI SOKUHAMBA"
+                                                                                    },
+                                                                                    "body": {
+                                                                                        "text": (
+                                                                                            "Kulungile. Sicela ukhethe isikhathi sokuvela eHarare osifuna ukubhuka itikiti kuso kumenyu engezansi. ⬇️"
+                                                                                        )
+                                                                                    },
+                                                                                    "action": {
+                                                                                        "button": "ISIKHATHI SOKUHAMBA",
+                                                                                        "sections": [
+                                                                                            {
+                                                                                                "title": "ISIKHATHI SOKUHAMBA",
+                                                                                                "rows": [
+                                                                                                    {"id": "txq9am", "title": "9 am"},
+                                                                                                    {"id": "txq11am", "title": "11 am"},
+                                                                                                    {"id": "txq1pm", "title": "1 pm"},
+                                                                                                    {"id": "txq2pm", "title": "2 pm"},
+                                                                                                    {"id": "txq2.30pm", "title": "2.30 pm"},
+                                                                                                    {"id": "mainmenu", "title": "Buyela Kumenyu Eyinhloko"},
+                                                                                                ]
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                }
+                                                                            }
 
                                                                         # Send the request to WhatsApp
                                                                         response = requests.post(url, headers=headers, json=payload)
@@ -854,38 +892,79 @@ def webhook():
 
                                                                     elif departure == "Bulawayo":
 
-                                                                        payload = {
-                                                                            "messaging_product": "whatsapp",
-                                                                            "to": sender_id,
-                                                                            "type": "interactive",
-                                                                            "interactive": {
-                                                                                "type": "list",
-                                                                                "header": {
-                                                                                    "type": "text",
-                                                                                    "text": "🚍 DEPARTURE TIME"
-                                                                                },
-                                                                                "body": {
-                                                                                    "text": (
-                                                                                        f"Okay. Kindly select the departure time from Bulawayo for which you want to book a ticket on the menu below. ⬇️"
-                                                                                    )
-                                                                                },
-                                                                                "action": {
-                                                                                    "button": "DEPARTURE TIME",
-                                                                                    "sections": [
-                                                                                        {
-                                                                                            "title": "DEPARTURE TIME",
-                                                                                            "rows": [
-                                                                                                {"id": "txq9am", "title": "9 am"},
-                                                                                                {"id": "txq11am", "title": "11 am"},
-                                                                                                {"id": "txq1230pm", "title": "12.30 pm"},
-                                                                                                {"id": "txq130pm", "title": "1.30 pm"},
-                                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                            ]
-                                                                                        }
-                                                                                    ]
+                                                                        if language == "english":
+
+                                                                            payload = {
+                                                                                "messaging_product": "whatsapp",
+                                                                                "to": sender_id,
+                                                                                "type": "interactive",
+                                                                                "interactive": {
+                                                                                    "type": "list",
+                                                                                    "header": {
+                                                                                        "type": "text",
+                                                                                        "text": "🚍 DEPARTURE TIME"
+                                                                                    },
+                                                                                    "body": {
+                                                                                        "text": (
+                                                                                            f"Okay. Kindly select the departure time from Bulawayo for which you want to book a ticket on the menu below. ⬇️"
+                                                                                        )
+                                                                                    },
+                                                                                    "action": {
+                                                                                        "button": "DEPARTURE TIME",
+                                                                                        "sections": [
+                                                                                            {
+                                                                                                "title": "DEPARTURE TIME",
+                                                                                                "rows": [
+                                                                                                    {"id": "txq9am", "title": "9 am"},
+                                                                                                    {"id": "txq11am", "title": "11 am"},
+                                                                                                    {"id": "txq1230pm", "title": "12.30 pm"},
+                                                                                                    {"id": "txq130pm", "title": "1.30 pm"},
+                                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                                ]
+                                                                                            }
+                                                                                        ]
+                                                                                    }
                                                                                 }
                                                                             }
-                                                                        }
+
+                                                                        elif language == "ndebele":
+
+                                                                            payload = {
+                                                                                "messaging_product": "whatsapp",
+                                                                                "to": sender_id,
+                                                                                "type": "interactive",
+                                                                                "interactive": {
+                                                                                    "type": "list",
+                                                                                    "header": {
+                                                                                        "type": "text",
+                                                                                        "text": "🚍 ISIKHATHI SOKUHAMBA"
+                                                                                    },
+                                                                                    "body": {
+                                                                                        "text": (
+                                                                                            "Kulungile. Sicela ukhethe isikhathi sokuvela eBulawayo osifuna ukubhuka itikiti kuso kumenyu engezansi. ⬇️"
+                                                                                        )
+                                                                                    },
+                                                                                    "action": {
+                                                                                        "button": "ISIKHATHI SOKUHAMBA",
+                                                                                        "sections": [
+                                                                                            {
+                                                                                                "title": "ISIKHATHI SOKUHAMBA",
+                                                                                                "rows": [
+                                                                                                    {"id": "txq9am", "title": "9 am"},
+                                                                                                    {"id": "txq11am", "title": "11 am"},
+                                                                                                    {"id": "txq1pm", "title": "1 pm"},
+                                                                                                    {"id": "txq2pm", "title": "2 pm"},
+                                                                                                    {"id": "txq2.30pm", "title": "2.30 pm"},
+                                                                                                    {"id": "mainmenu", "title": "Buyela Kumenyu Eyinhloko"},
+                                                                                                ]
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                }
+                                                                            }
+
+
+
 
                                                                         # Send the request to WhatsApp
                                                                         response = requests.post(url, headers=headers, json=payload)
@@ -893,42 +972,80 @@ def webhook():
                                                                         # Optional: Print result for debugging
                                                                         print(response.status_code)
                                                                         print(response.text)
-
 
                                                                     elif departure == "Kadoma" and destination == "Chegutu":
 
-                                                                        payload = {
-                                                                            "messaging_product": "whatsapp",
-                                                                            "to": sender_id,
-                                                                            "type": "interactive",
-                                                                            "interactive": {
-                                                                                "type": "list",
-                                                                                "header": {
-                                                                                    "type": "text",
-                                                                                    "text": "🚍 DEPARTURE TIME"
-                                                                                },
-                                                                                "body": {
-                                                                                    "text": (
-                                                                                        f"Okay. Kindly select the departure time from Kadoma for which you want to book a ticket on the menu below. ⬇️"
-                                                                                    )
-                                                                                },
-                                                                                "action": {
-                                                                                    "button": "DEPARTURE TIME",
-                                                                                    "sections": [
-                                                                                        {
-                                                                                            "title": "DEPARTURE TIME",
-                                                                                            "rows": [
-                                                                                                {"id": "txq1.25pm", "title": "1.25 pm"},
-                                                                                                {"id": "txq3.25pm", "title": "3.25 pm"},
-                                                                                                {"id": "txq4.55pm", "title": "4.55 pm"},
-                                                                                                {"id": "txq5.55pm", "title": "5.55 pm"},
-                                                                                                {"id": "mainmenu", "title": "Back to Main Menu"},
-                                                                                            ]
-                                                                                        }
-                                                                                    ]
+                                                                        if language == "english":
+
+                                                                            payload = {
+                                                                                "messaging_product": "whatsapp",
+                                                                                "to": sender_id,
+                                                                                "type": "interactive",
+                                                                                "interactive": {
+                                                                                    "type": "list",
+                                                                                    "header": {
+                                                                                        "type": "text",
+                                                                                        "text": "🚍 DEPARTURE TIME"
+                                                                                    },
+                                                                                    "body": {
+                                                                                        "text": (
+                                                                                            f"Okay. Kindly select the departure time from Kadoma for which you want to book a ticket on the menu below. ⬇️"
+                                                                                        )
+                                                                                    },
+                                                                                    "action": {
+                                                                                        "button": "DEPARTURE TIME",
+                                                                                        "sections": [
+                                                                                            {
+                                                                                                "title": "DEPARTURE TIME",
+                                                                                                "rows": [
+                                                                                                    {"id": "txq1.25pm", "title": "1.25 pm"},
+                                                                                                    {"id": "txq3.25pm", "title": "3.25 pm"},
+                                                                                                    {"id": "txq4.55pm", "title": "4.55 pm"},
+                                                                                                    {"id": "txq5.55pm", "title": "5.55 pm"},
+                                                                                                    {"id": "mainmenu", "title": "Back to Main Menu"},
+                                                                                                ]
+                                                                                            }
+                                                                                        ]
+                                                                                    }
                                                                                 }
                                                                             }
-                                                                        }
+
+
+                                                                        elif language == "ndebele":
+
+                                                                            payload = {
+                                                                                "messaging_product": "whatsapp",
+                                                                                "to": sender_id,
+                                                                                "type": "interactive",
+                                                                                "interactive": {
+                                                                                    "type": "list",
+                                                                                    "header": {
+                                                                                        "type": "text",
+                                                                                        "text": "🚍 ISIKHATHI SOKUHAMBA"
+                                                                                    },
+                                                                                    "body": {
+                                                                                        "text": (
+                                                                                            "Kulungile. Sicela ukhethe isikhathi sokuvela eKadoma osifuna ukubhuka itikiti kuso kumenyu engezansi. ⬇️"
+                                                                                        )
+                                                                                    },
+                                                                                    "action": {
+                                                                                        "button": "ISIKHATHI SOKUHAMBA",
+                                                                                        "sections": [
+                                                                                            {
+                                                                                                "title": "ISIKHATHI SOKUHAMBA",
+                                                                                                "rows": [
+                                                                                                    {"id": "txq9am", "title": "9 am"},
+                                                                                                    {"id": "txq11am", "title": "11 am"},
+                                                                                                    {"id": "txq1pm", "title": "1 pm"},
+                                                                                                    {"id": "txq2pm", "title": "2 pm"},
+                                                                                                    {"id": "txq2.30pm", "title": "2.30 pm"},
+                                                                                                    {"id": "mainmenu", "title": "Buyela Kumenyu Eyinhloko"},
+                                                                                                ]
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                }
+                                                                            }
 
                                                                         # Send the request to WhatsApp
                                                                         response = requests.post(url, headers=headers, json=payload)
@@ -937,44 +1054,82 @@ def webhook():
                                                                         print(response.status_code)
                                                                         print(response.text)
 
+                                                                else:
 
+                                                                    if language == "english":
 
-                                                                else: 
-
-                                                                    payload = {
-                                                                        "messaging_product": "whatsapp",
-                                                                        "to": sender_id,
-                                                                        "type": "template",
-                                                                        "template": {
-                                                                            "name": "ticketcustomerdetails",  # your template name
-                                                                            "language": {"code": "en"},
-                                                                            "components": [
-                                                                                {
-                                                                                    "type": "button",
-                                                                                    "index": "0",
-                                                                                    "sub_type": "flow",
-                                                                                    "parameters": [
-                                                                                        {
-                                                                                            "type": "action",
-                                                                                            "action": {
-                                                                                            "flow_token": "unused"
+                                                                        payload = {
+                                                                            "messaging_product": "whatsapp",
+                                                                            "to": sender_id,
+                                                                            "type": "template",
+                                                                            "template": {
+                                                                                "name": "ticketcustomerdetails",  # your template name
+                                                                                "language": {"code": "en"},
+                                                                                "components": [
+                                                                                    {
+                                                                                        "type": "button",
+                                                                                        "index": "0",
+                                                                                        "sub_type": "flow",
+                                                                                        "parameters": [
+                                                                                            {
+                                                                                                "type": "action",
+                                                                                                "action": {
+                                                                                                "flow_token": "unused"
+                                                                                                }
                                                                                             }
-                                                                                        }
-                                                                                    ]
-                                                                                            # button index in your template
-                                                                                }
-                                                                            ]
+                                                                                        ]
+                                                                                                # button index in your template
+                                                                                    }
+                                                                                ]
+                                                                            }
                                                                         }
-                                                                    }
 
-                                                                    response = requests.post(
-                                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
-                                                                        headers={
-                                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                            "Content-Type": "application/json"
-                                                                        },
-                                                                        json=payload
-                                                                    ) 
+                                                                        response = requests.post(
+                                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                                            headers={
+                                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                                "Content-Type": "application/json"
+                                                                            },
+                                                                            json=payload
+                                                                        ) 
+
+                                                                    elif language == "ndebele":
+
+
+                                                                        payload = {
+                                                                            "messaging_product": "whatsapp",
+                                                                            "to": sender_id,
+                                                                            "type": "template",
+                                                                            "template": {
+                                                                                "name": "ticketcustomerdetailsndebele",  # your template name
+                                                                                "language": {"code": "en"},
+                                                                                "components": [
+                                                                                    {
+                                                                                        "type": "button",
+                                                                                        "index": "0",
+                                                                                        "sub_type": "flow",
+                                                                                        "parameters": [
+                                                                                            {
+                                                                                                "type": "action",
+                                                                                                "action": {
+                                                                                                "flow_token": "unused"
+                                                                                                }
+                                                                                            }
+                                                                                        ]
+                                                                                                # button index in your template
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        }
+
+                                                                        response = requests.post(
+                                                                            f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                                            headers={
+                                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                                "Content-Type": "application/json"
+                                                                            },
+                                                                            json=payload
+                                                                        ) 
 
 
                                                         elif "screen_0_Usuku_Lokuhamba_0" in form_response:
