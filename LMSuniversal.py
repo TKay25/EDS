@@ -5961,6 +5961,26 @@ def webhook():
                                             first_column_value = result[0]
                                             print(f"First column value: {first_column_value}")
 
+                                            if table_name == "brilliant_chemicals_pvt_ltdmain":
+
+                                                if role_foc_8 == "Administrator":
+
+                                                    send_whatsapp_message(
+                                                        sender_id, 
+                                                        "Sorry, your company's profile has been suspended. Kindly contact your Leave Management service provider."
+                                                    )
+
+                                                    return jsonify({"status": "received"}), 200
+
+                                                else:
+
+                                                    send_whatsapp_message(
+                                                        sender_id, 
+                                                        "Error. Kindly get in touch with your leave administrator for assistance."
+                                                    )
+
+                                                    return jsonify({"status": "received"}), 200
+                                    
                                             break  
                                             
                                     if not found:
@@ -15699,14 +15719,6 @@ def run1(table_name, empid):
  
     if not approval_rate:
         approval_rate = ""
-
-
-
-
-
-
-
-
 
     query = f"""SELECT appid, id, leavetype, leaveapprovername, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, approvalstatus, statusdate,leavedaysbalancebf, department FROM {table_name_apps_approved}"""
     cursor.execute(query)
