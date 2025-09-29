@@ -4814,7 +4814,7 @@ def webhook():
                                                                 "action": {
                                                                     "buttons": [
                                                                         {"type": "reply", "reply": {"id": "bushirequotereq", "title": "🚌 Private Hire Reqs"}},
-                                                                        {"type": "reply", "reply": {"id": "add_admin_vstats", "title": "➕ Admin Tools"}},
+                                                                        {"type": "reply", "reply": {"id": "tickets_admin_log", "title": "📜 Tickets Log"}},
                                                                         {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
                                                                 }
                                                             }
@@ -4830,7 +4830,110 @@ def webhook():
                                                         print(response.text)
 
 
+                                                    elif selected_option == "tickets_admin_log" or button_id == "tickets_admin_log":
+                                                        today_date = datetime.now().strftime('%d %B %Y')
 
+                                                        query = f"SELECT id, idwanumber, ecocashnum, dep, time, TO_CHAR(traveldate, 'FMDD Month YYYY') AS traveldate, arr, TO_CHAR(datebought, 'FMDD Month YYYY') AS datebought, seats, fare FROM cagwatick2;"
+                                                        cursor.execute(query)
+                                                        rows = cursor.fetchall()
+                                                        hirequote_reqs = pd.DataFrame(rows, columns=["ticketid", "WhatsApp", "Ecocash", "Departure City", "Departure Time","Travel Date","Arrival City", "Date Purchase","# Seats","Fare (USD)"])
+
+                                                        def generate_leave_hist_pdf():
+                                                            app = {
+                                                                'generated_on': today_date,
+                                                            }
+
+                                                            table_hist_html = hirequote_reqs.to_html(index=False, classes='data', border=0, justify='center',escape=False)
+
+                                                            html_out = render_template("cagwatickets.html", app=app, table_hist_html=table_hist_html)
+                                                            pdf_bytes = HTML(string=html_out).write_pdf()
+                                                            return pdf_bytes
+
+                                                        def upload_pdf_to_whatsapp(pdf_bytes):
+                                                            filename=f"CAG Tours WhatsApp tickets as at {today_date}.pdf"
+                                                        
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/media"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}"
+                                                            }
+
+                                                            files = {
+                                                                "file": (filename, io.BytesIO(pdf_bytes), "application/pdf"),
+                                                                "type": (None, "application/pdf"),
+                                                                "messaging_product": (None, "whatsapp")
+                                                            }
+
+                                                            response = requests.post(url, headers=headers, files=files)
+                                                            print("📥 Full incoming data:", response.text)  # Good for debugging
+                                                            response.raise_for_status()
+                                                            return response.json()["id"]
+
+                                                                                                        
+                                                        def send_whatsapp_pdf_by_media_id(recipient_number, media_id):
+                                                            filename=f"CAG Tours WhatsApp tickets as at {today_date}.pdf"
+                                                            url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            }
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": recipient_number,
+                                                                "type": "document",
+                                                                "document": {
+                                                                    "id": media_id,            # Media ID from upload step
+                                                                    "filename": filename       # Desired file name on recipient's phone
+                                                                }
+                                                            }
+
+                                                            response = requests.post(url, headers=headers, json=payload)
+                                                            response.raise_for_status()
+                                                            return response.json()
+
+
+                                                        pdf_path = generate_leave_hist_pdf()
+                                                        media_id = upload_pdf_to_whatsapp(pdf_path)
+
+                                                        send_whatsapp_pdf_by_media_id(sender_id, media_id)
+
+
+                                                        url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                        headers = {
+                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                            "Content-Type": "application/json"
+                                                        }
+
+
+                                                        payload = {
+                                                            "messaging_product": "whatsapp",
+                                                            "to": sender_id,
+                                                            "type": "interactive",
+                                                            "interactive": {
+                                                                "type": "button",
+                                                                "header": {
+                                                                    "type": "text",
+                                                                    "text": "⚙️ ADMIN MENU"
+                                                                },
+                                                                "body": {
+                                                                    "text": f"Hello CAG Admin, attached is the WhatsApp Bus ticket Purchases file as at {today_date}.\n\n. Please choose an option below:"
+                                                                },
+                                                                "action": {
+                                                                    "buttons": [
+                                                                        {"type": "reply", "reply": {"id": "bushirequotereq", "title": "🚌 Private Hire Reqs"}},
+                                                                        {"type": "reply", "reply": {"id": "tickets_admin_log", "title": "📜 Tickets Log"}},
+                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
+                                                                }
+                                                            }
+                                                        }
+
+
+
+                                                        # Send the request to WhatsApp
+                                                        response = requests.post(url, headers=headers, json=payload)
+
+                                                        # Optional: Print result for debugging
+                                                        print(response.status_code)
+                                                        print(response.text)
 
 
 
@@ -5444,7 +5547,7 @@ def webhook():
                                                                             "action": {
                                                                                 "buttons": [
                                                                                     {"type": "reply", "reply": {"id": "bushirequotereq", "title": "🚌 Private Hire Reqs"}},
-                                                                                    {"type": "reply", "reply": {"id": "add_admin_vstats", "title": "➕ Admin Tools"}},
+                                                                                    {"type": "reply", "reply": {"id": "tickets_admin_log", "title": "📜 Tickets Log"}},
                                                                                     {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
                                                                             }
                                                                         }
