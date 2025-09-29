@@ -15389,6 +15389,10 @@ def run1(table_name, empid):
     if userdf.iat[0,11]:
         leaveapproverwhatsapp = int(userdf.iat[0,11])
 
+    else:
+        leaveapproverwhatsapp = ""
+
+
     role = userdf.iat[0,7]
     leavedaysbalance = userdf.iat[0,12]
     department = userdf.iat[0,14]
@@ -15720,16 +15724,6 @@ def run1(table_name, empid):
 
     df_employees_lineg = pd.DataFrame(rowsxxzz, columns=["id","firstname", "surname", "whatsapp","email", "address", "role","leaveapprovername","leaveapproverid","leaveapproveremail", "leaveapproverwhatsapp", "currentleavedaysbalance","monthlyaccumulation","department"])
    
-
-
-
-
-
-
-
-
-
-
 
     return {
         "table_my_leave_apps_html": table_my_leave_apps_html,
