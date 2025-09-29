@@ -121,7 +121,7 @@ connection.commit()'''
 connection.commit()'''
 
 
-drop_table_query = "DROP TABLE IF EXISTS cagwatick;"
+drop_table_query = "DELETE FROM cagwatickcustomerdetails;"
 cursor.execute(drop_table_query)
 connection.commit()
 
