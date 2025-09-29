@@ -4837,6 +4837,7 @@ def webhook():
                                                         cursor.execute(query)
                                                         rows = cursor.fetchall()
                                                         hirequote_reqs = pd.DataFrame(rows, columns=["ticketid", "WhatsApp", "Ecocash", "Departure City", "Departure Time","Travel Date","Arrival City", "Date Purchase","# Seats","Fare (USD)"])
+                                                        hirequote_reqs = hirequote_reqs.sort_values(by="ticketid", ascending=False).reset_index(drop=True)
 
                                                         def generate_leave_hist_pdf():
                                                             app = {
