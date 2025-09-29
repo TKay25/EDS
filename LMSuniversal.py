@@ -323,8 +323,18 @@ def webhook():
                                                         if button_id.startswith("lang"):
 
                                                             languagenew = button_id[len("lang"):]  
+                                                            print(language)
 
-                                                            if language == None or language == "":
+                                                            if not result55:
+
+                                                                cursor.execute("""
+                                                                    INSERT INTO cagwatickcustomerdetails (wanumber, language)
+                                                                    VALUES (%s, %s)
+                                                                """, (sender_id[-9:], languagenew))
+
+                                                                connection.commit()
+                                                            
+                                                            elif result55:
 
                                                                 print(languagenew)
                                                                 print(sender_id[-9:])
@@ -336,15 +346,6 @@ def webhook():
                                                                     SET language = %s 
                                                                     WHERE wanumber = %s 
                                                                     """, (languagenew, sender_id[-9:]))
-
-                                                                connection.commit()
-
-                                                            elif result55 == None:
-
-                                                                cursor.execute("""
-                                                                    INSERT INTO cagwatickcustomerdetails (wanumber, language)
-                                                                    VALUES (%s, %s)
-                                                                """, (sender_id[-9:], languagenew))
 
                                                                 connection.commit()
 
