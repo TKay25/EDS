@@ -1173,7 +1173,7 @@ def webhook():
 
                                                                 if result:
 
-                                                                    if result.iat[0,2] != "" or result.iat[0,3] != "":
+                                                                    if (result.iat[0,2] not in [None, ""]) and (result.iat[0,3] not in [None, ""]):
 
                                                                         print("proceed to payment")
 
