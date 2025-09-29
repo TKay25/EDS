@@ -800,12 +800,12 @@ def webhook():
 
 
                                                                 cursor.execute("""
-                                                                    SELECT id FROM cagwatickcustomerdetails WHERE wanumber = %s 
+                                                                    SELECT * FROM cagwatickcustomerdetails WHERE wanumber = %s 
                                                                 """, (sender_id[-9:],))
 
                                                                 result = cursor.fetchone()
 
-                                                                if (result.iat[0,2] not in [None, ""]) and (result.iat[0,3] not in [None, ""]):
+                                                                if (result[2] not in [None, ""]) and (result[3] not in [None, ""]):
 
                                                                     print("proceed to payment")
 
@@ -1328,7 +1328,7 @@ def webhook():
 
                                                                 if result:
 
-                                                                    if (result.iat[0,2] not in [None, ""]) and (result.iat[0,3] not in [None, ""]):
+                                                                    if (result[2] not in [None, ""]) and (result[3] not in [None, ""]):
 
                                                                         print("proceed to payment")
 
