@@ -1894,9 +1894,14 @@ def webhook():
                                                                 gender = form_response.get("screen_0_Gender_4")[2:]
 
                                                                 cursor.execute("""
-                                                                INSERT INTO cagwatickcustomerdetails (wanumber, firstname, surname, nationalidno, dob, gender)
-                                                                VALUES (%s, %s, %s, %s, %s, %s)
-                                                                """, (sender_id[-9:], firstname, surname, natid, dobuser, gender))
+                                                                    UPDATE cagwatickcustomerdetails
+                                                                    SET firstname = %s,
+                                                                        surname = %s,
+                                                                        nationalidno = %s,
+                                                                        dob = %s,
+                                                                        gender = %s
+                                                                    WHERE wanumber = %s
+                                                                """, (firstname, surname, natid, dobuser, gender, sender_id[-9:]))
 
                                                                 connection.commit()
 
