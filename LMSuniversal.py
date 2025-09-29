@@ -5022,30 +5022,75 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
+                                                        cursor.execute("""
+                                                            SELECT firstname, surname, wanumber, nationalidno, language FROM cagwatickcustomerdetails
+                                                            WHERE wanumber = %s
+                                                        """, (sender_id[-9:],))
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "⚙️ ADMIN MENU"
-                                                                },
-                                                                "body": {
-                                                                    "text": f"Hello CAG Admin, attached is the Private Hire Quotations Request file as at {today_date}.\n\n. Please choose an option below:"
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "bushirequotereq", "title": "🚌 Private Hire Reqs"}},
-                                                                        {"type": "reply", "reply": {"id": "tickets_admin_log", "title": "📜 Tickets Log"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
+                                                        result55 = cursor.fetchone()
+
+                                                        if result55:
+        
+                                                            language = result55[4]  
+
+
+                                                        if language == "english":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "⚙️ ADMIN MENU"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": f"Hello CAG Admin, attached is the Private Hire Quotations Request file as at {today_date}.\n\n. Please choose an option below:"
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "bushirequotereq", "title": "🚌 Private Hire Reqs"}},
+                                                                            {"type": "reply", "reply": {"id": "tickets_admin_log", "title": "📜 Tickets Log"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
 
+                                                        elif language == "ndebele":
 
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "⚙️ ADMIN MENU"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": "Sawubona CAG Admin. Khetha okukufaneleyo ngezansi:"
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {
+                                                                                "type": "reply",
+                                                                                "reply": {"id": "bus_hire", "title": "🚌 Izicelo Zokugaya"}
+                                                                            },
+                                                                            {
+                                                                                "type": "reply",
+                                                                                "reply": {"id": "tickets_admin_log", "title": "📜 Irejista Yamatikit"},
+                                                                            },
+                                                                            {
+                                                                                "type": "reply",
+                                                                                "reply": {"id": "mainmenu", "title": "📊 Phuma ku-Admin"}
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         # Send the request to WhatsApp
                                                         response = requests.post(url, headers=headers, json=payload)
@@ -5129,30 +5174,76 @@ def webhook():
                                                             "Content-Type": "application/json"
                                                         }
 
+                                                        cursor.execute("""
+                                                            SELECT firstname, surname, wanumber, nationalidno, language FROM cagwatickcustomerdetails
+                                                            WHERE wanumber = %s
+                                                        """, (sender_id[-9:],))
 
-                                                        payload = {
-                                                            "messaging_product": "whatsapp",
-                                                            "to": sender_id,
-                                                            "type": "interactive",
-                                                            "interactive": {
-                                                                "type": "button",
-                                                                "header": {
-                                                                    "type": "text",
-                                                                    "text": "⚙️ ADMIN MENU"
-                                                                },
-                                                                "body": {
-                                                                    "text": f"Hello CAG Admin, attached is the WhatsApp Bus ticket Purchases file as at {today_date}.\n\n. Please choose an option below:"
-                                                                },
-                                                                "action": {
-                                                                    "buttons": [
-                                                                        {"type": "reply", "reply": {"id": "bushirequotereq", "title": "🚌 Private Hire Reqs"}},
-                                                                        {"type": "reply", "reply": {"id": "tickets_admin_log", "title": "📜 Tickets Log"}},
-                                                                        {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
+                                                        result55 = cursor.fetchone()
+
+                                                        if result55:
+        
+                                                            language = result55[4]  
+
+                                                        if language == "english":
+
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "⚙️ ADMIN MENU"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": f"Hello CAG Tours Admin, attached is the WhatsApp Bus ticket Purchases file as at {today_date}.\n\n. Please choose an option below:"
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {"type": "reply", "reply": {"id": "bushirequotereq", "title": "🚌 Private Hire Reqs"}},
+                                                                            {"type": "reply", "reply": {"id": "tickets_admin_log", "title": "📜 Tickets Log"}},
+                                                                            {"type": "reply", "reply": {"id": "mainmenu", "title": "📊 Exit Admin Profile"}}                                                                                ]
+                                                                    }
                                                                 }
                                                             }
-                                                        }
 
 
+                                                        elif language == "ndebele":
+
+                                                            payload = {
+                                                                "messaging_product": "whatsapp",
+                                                                "to": sender_id,
+                                                                "type": "interactive",
+                                                                "interactive": {
+                                                                    "type": "button",
+                                                                    "header": {
+                                                                        "type": "text",
+                                                                        "text": "⚙️ ADMIN MENU"
+                                                                    },
+                                                                    "body": {
+                                                                        "text": f"Sawubona CAG Tours Admin, ifayela elixhunywe ngamatikiti eBhasi athengiwe ngeWhatsApp njengango {today_date}.\n\n. Sicela ukhethe okukhethwayo ngezansi:"
+                                                                    },
+                                                                    "action": {
+                                                                        "buttons": [
+                                                                            {
+                                                                                "type": "reply",
+                                                                                "reply": {"id": "bus_hire", "title": "🚌 Izicelo Zokugaya"}
+                                                                            },
+                                                                            {
+                                                                                "type": "reply",
+                                                                                "reply": {"id": "tickets_admin_log", "title": "📜 Irejista Yamatikit"},
+                                                                            },
+                                                                            {
+                                                                                "type": "reply",
+                                                                                "reply": {"id": "mainmenu", "title": "📊 Phuma ku-Admin"}
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
 
                                                         # Send the request to WhatsApp
                                                         response = requests.post(url, headers=headers, json=payload)
@@ -5160,8 +5251,6 @@ def webhook():
                                                         # Optional: Print result for debugging
                                                         print(response.status_code)
                                                         print(response.text)
-
-
 
 
 
@@ -5940,7 +6029,7 @@ def webhook():
                                                                                     },
                                                                                     {
                                                                                         "type": "reply",
-                                                                                        "reply": {"id": "add_admin_vstats", "title": "➕ Amathuluzi Admin"}
+                                                                                        "reply": {"id": "tickets_admin_log", "title": "📜 Irejista Yamatikit"},
                                                                                     },
                                                                                     {
                                                                                         "type": "reply",
