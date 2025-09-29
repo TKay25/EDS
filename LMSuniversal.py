@@ -5976,7 +5976,7 @@ def webhook():
 
                                                     send_whatsapp_message(
                                                         sender_id, 
-                                                        "Error. Kindly get in touch with your leave administrator for assistance."
+                                                        "Sorry, we encountered an error while processing your prompt. Kindly get in touch with your leave administrator for assistance."
                                                     )
 
                                                     return jsonify({"status": "received"}), 200
