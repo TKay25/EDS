@@ -6379,7 +6379,7 @@ def webhook():
                                             first_column_value = result[0]
                                             print(f"First column value: {first_column_value}")
 
-                                            if table_name == "brilliant_chemicals_pvt_ltdmain":
+                                            if table_name == "brilliant_chemicals_pvt_ltdmainxx":
 
                                                 if role_foc_8 == "Administrator":
 
