@@ -2216,97 +2216,97 @@ def webhook():
 
                                                         try:
 
-                                                                '''url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
-                                                                headers = {
-                                                                    "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                    "Content-Type": "application/json"
-                                                                }'''
+                                                            '''url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_IDcc}/messages"
+                                                            headers = {
+                                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                "Content-Type": "application/json"
+                                                            }'''
 
-                                                                cursor.execute("""
-                                                                    DELETE FROM cagwatick2
-                                                                    WHERE idwanumber = %s
-                                                                    AND (status IS NULL OR TRIM(status) = '')
-                                                                """, (sender_id[-9:],))
-                                                                connection.commit()
+                                                            cursor.execute("""
+                                                                DELETE FROM cagwatick2
+                                                                WHERE idwanumber = %s
+                                                                AND (status IS NULL OR TRIM(status) = '')
+                                                            """, (sender_id[-9:],))
+                                                            connection.commit()
 
-                                                                if language == "english":
+                                                            if language == "english":
 
-                                                                    payload = {
-                                                                        "messaging_product": "whatsapp",
-                                                                        "to": sender_id,
-                                                                        "type": "template",
-                                                                        "template": {
-                                                                            "name": "ticket1",  # your template name
-                                                                            "language": {"code": "en"},
-                                                                            "components": [
-                                                                                {
-                                                                                    "type": "button",
-                                                                                    "index": "0",
-                                                                                    "sub_type": "flow",
-                                                                                    "parameters": [
-                                                                                        {
-                                                                                            "type": "action",
-                                                                                            "action": {
-                                                                                            "flow_token": "unused"
-                                                                                            }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "template",
+                                                                    "template": {
+                                                                        "name": "ticket1",  # your template name
+                                                                        "language": {"code": "en"},
+                                                                        "components": [
+                                                                            {
+                                                                                "type": "button",
+                                                                                "index": "0",
+                                                                                "sub_type": "flow",
+                                                                                "parameters": [
+                                                                                    {
+                                                                                        "type": "action",
+                                                                                        "action": {
+                                                                                        "flow_token": "unused"
                                                                                         }
-                                                                                    ]
-                                                                                            # button index in your template
-                                                                                }
-                                                                            ]
-                                                                        }
+                                                                                    }
+                                                                                ]
+                                                                                        # button index in your template
+                                                                            }
+                                                                        ]
                                                                     }
+                                                                }
 
-                                                                    response = requests.post(
-                                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
-                                                                        headers={
-                                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                            "Content-Type": "application/json"
-                                                                        },
-                                                                        json=payload
-                                                                    )
+                                                                response = requests.post(
+                                                                    f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                                    headers={
+                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                        "Content-Type": "application/json"
+                                                                    },
+                                                                    json=payload
+                                                                )
 
-                                                                elif language == "ndebele":
+                                                            elif language == "ndebele":
 
-                                                                    payload = {
-                                                                        "messaging_product": "whatsapp",
-                                                                        "to": sender_id,
-                                                                        "type": "template",
-                                                                        "template": {
-                                                                            "name": "ticketndebele",  # your template name
-                                                                            "language": {"code": "en"},
-                                                                            "components": [
-                                                                                {
-                                                                                    "type": "button",
-                                                                                    "index": "0",
-                                                                                    "sub_type": "flow",
-                                                                                    "parameters": [
-                                                                                        {
-                                                                                            "type": "action",
-                                                                                            "action": {
-                                                                                            "flow_token": "unused"
-                                                                                            }
+                                                                payload = {
+                                                                    "messaging_product": "whatsapp",
+                                                                    "to": sender_id,
+                                                                    "type": "template",
+                                                                    "template": {
+                                                                        "name": "ticketndebele",  # your template name
+                                                                        "language": {"code": "en"},
+                                                                        "components": [
+                                                                            {
+                                                                                "type": "button",
+                                                                                "index": "0",
+                                                                                "sub_type": "flow",
+                                                                                "parameters": [
+                                                                                    {
+                                                                                        "type": "action",
+                                                                                        "action": {
+                                                                                        "flow_token": "unused"
                                                                                         }
-                                                                                    ]
-                                                                                            # button index in your template
-                                                                                }
-                                                                            ]
-                                                                        }
+                                                                                    }
+                                                                                ]
+                                                                                        # button index in your template
+                                                                            }
+                                                                        ]
                                                                     }
+                                                                }
 
-                                                                    response = requests.post(
-                                                                        f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
-                                                                        headers={
-                                                                            "Authorization": f"Bearer {ACCESS_TOKEN}",
-                                                                            "Content-Type": "application/json"
-                                                                        },
-                                                                        json=payload
-                                                                    )
-                                                                
-                                                                print(response.status_code)
-                                                                print(response.text)
+                                                                response = requests.post(
+                                                                    f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_IDcc}/messages",
+                                                                    headers={
+                                                                        "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                                        "Content-Type": "application/json"
+                                                                    },
+                                                                    json=payload
+                                                                )
+                                                            
+                                                            print(response.status_code)
+                                                            print(response.text)
 
-                                                                print("Template response:", response.status_code, response.json())
+                                                            print("Template response:", response.status_code, response.json())
                                                         
                                                         except Exception as e:
                                                             print(f"error:{e}")
