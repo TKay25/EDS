@@ -859,7 +859,7 @@
             </div>
 
             <!-- Reports -->
-            <div class="accordion-item border rounded-2 mb-2" data-hide="{{ hide_element }}">
+            <div class="accordion-item border rounded-2 mb-2" data-hide="{{ hide_element }}" id="payroll">
                 <h2 class="accordion-header">
                     <div class="accordion-button d-flex justify-content-start align-items-center" style="cursor: pointer;">
                         <span><i class="bi bi-wallet-fill me-2"></i> Payroll</span>
@@ -3290,6 +3290,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const myDiv5 = document.getElementById('payroll');
+
+    if (myDiv5) {
+        const shouldHide5= myDiv5.getAttribute('data-hide');  // Correct attribute
+
+        // Hide if data-hide is "True"
+        if (shouldHide5 === "True") {
+            myDiv5.remove();
+        }
+    }
 
     document.getElementById('formatexcellmsbookexport').addEventListener('click', () => {
             window.location.href = '/export_lms_book_excel';
