@@ -882,6 +882,14 @@
 
 
     <div class="all-payroll-content" id="payroll-content" style="display: none;">
+        <header>
+            <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} ADMINISTRATOR <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
+            <div><span class="current-date" id="currdate">DATE: {{ today_date }}</span></div>
+            <span id="name-down" value="{{firstname}}" style="display: none;"></span>
+            <span id="name-down2" value="{{surname}}" style="display: none;"></span>
+            <button onclick="window.location.href='/logout'" class="btn btn-primary" style="width: max-content;">  Logout<i class="bi bi-door-closed-fill" style="margin-left: 7px;"></i>  </button>
+        </header>
+
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#payroll-summary-tab">
