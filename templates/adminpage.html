@@ -813,7 +813,7 @@
                 <div id="leaveMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
                     <div class="accordion-body p-0">
                         <div class="list-group list-group-flush">
-                            <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
+                            <button class="list-group-item list-group-item-action" id="lmsview">
                                 <i class="bi bi-view-list"></i> View Portal
                             </button>
                             <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
@@ -3907,6 +3907,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const payrollMenuBtn = document.querySelector('#payroll .accordion-button');
     const mainContentx = document.getElementById('main-content');
     const payrollContent = document.getElementById('payroll-content');
+    const viewlmscontent = document.getElementById('lmsview');
 
     if (payrollMenuBtn) {
         payrollMenuBtn.addEventListener('click', (e) => {
@@ -3917,6 +3918,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (viewlmscontent) {
+    viewlmscontent.addEventListener('click', (e) => {
+        e.preventDefault(); // prevent any default Bootstrap accordion behavior
+
+        if(mainContentx) mainContentx.style.display = 'block';
+        if(payrollContent) payrollContent.style.display = 'none';
+    });
+}
 
 
 
