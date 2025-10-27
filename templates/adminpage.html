@@ -762,9 +762,28 @@
     <div class="sidebar">
         <!-- <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="Logo"> -->
         <h5>HR Management System</h5>
-        <button class="btn" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal"><i class="bi bi-file-earmark-medical-fill"></i>    Apply for Leave</button>
-        <button data-bs-toggle="modal" data-bs-target="#editinfoModal" class="btn"><i class="bi bi-pencil-square"></i>    Edit My Info</button>
-        <button id="btn-employee-profiles" class="btn"><i class="bi bi-info-circle-fill"></i>    Log Query</button>
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle w-100" type="button" id="leaveManagementDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-briefcase-fill"></i> Leave Management
+            </button>
+            <ul class="dropdown-menu w-100" aria-labelledby="leaveManagementDropdown">
+                <li>
+                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
+                        <i class="bi bi-file-earmark-medical-fill"></i> Apply for Leave
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editinfoModal">
+                        <i class="bi bi-pencil-square"></i> Edit My Info
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" id="btn-employee-profiles">
+                        <i class="bi bi-info-circle-fill"></i> Log Query
+                    </button>
+                </li>
+            </ul>
+        </div>
     </div>
 
     <main class="main-content">
