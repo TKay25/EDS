@@ -823,7 +823,7 @@
             </div>
 
             <!-- Employee Management -->
-            <div class="accordion-item border rounded-2 mb-2" data-hide="{{ hide_element }}">
+            <div class="accordion-item border rounded-2 mb-2 attendance" data-hide="{{ hide_element }}" id="attendance">
                 <h2 class="accordion-header">
                     <div class="accordion-button d-flex justify-content-start align-items-center" style="cursor: pointer;">
                         <span><i class="bi bi-people-fill me-2"></i> Attendance</span>
@@ -3259,7 +3259,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('selectedProfile');
         }
 
-        const myDiv2 = document.getElementById('approversonly');
+    const myDiv2 = document.getElementById('approversonly');
         const shouldHide2 = myDiv2.getAttribute('data-hide');
 
         // Hide if data-hide is "true"
@@ -3268,7 +3268,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
 
+    const myDiv3 = document.getElementById('attendance');
+        const shouldHide3 = myDiv2.getAttribute('attendance');
 
+        // Hide if data-hide is "true"
+        if (shouldHide2 === "True") {
+            myDiv3.remove();
+        }
 
 
     document.getElementById('formatexcellmsbookexport').addEventListener('click', () => {
