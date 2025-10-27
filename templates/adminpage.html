@@ -862,7 +862,9 @@
             <div class="accordion-item border rounded-2 mb-2" data-hide="{{ hide_element }}" id="payroll">
                 <h2 class="accordion-header">
                     <div class="accordion-button d-flex justify-content-start align-items-center" style="cursor: pointer;">
-                        <span><i class="bi bi-wallet-fill me-2"></i> Payroll</span>
+                        <button>
+                            <span><i class="bi bi-wallet-fill me-2"></i> Payroll</span>
+                        </button>
                     </div>
                 </h2>
             </div>
@@ -3894,22 +3896,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const payrollMenuBtn = document.querySelector('#payroll .accordion-button');
-        const mainContent = document.getElementById('admin-content');
-        const userContent = document.getElementById('user-content');
-        const payrollContent = document.getElementById('payroll-content');
+    const payrollMenuBtn = document.querySelector('#payroll .accordion-button');
+    const mainContentx = document.getElementById('admin-content');
+    const userContent = document.getElementById('user-content');
+    const payrollContent = document.getElementById('payroll-content');
 
-        if (payrollMenuBtn) {
-            payrollMenuBtn.addEventListener('click', (e) => {
-                e.preventDefault(); // prevent any default Bootstrap accordion behavior
+    if (payrollMenuBtn) {
+        payrollMenuBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // prevent any default Bootstrap accordion behavior
 
-                if(mainContent) mainContent.style.display = 'none';
-                if(userContent) mainContent.style.display = 'none';
-                if(payrollContent) payrollContent.style.display = 'block';
-            });
-        }
-    });
+            if(mainContentx) mainContent.style.display = 'none';
+            if(userContent) userContent.style.display = 'none';
+            if(payrollContent) payrollContent.style.display = 'block';
+        });
+    }
+
 
 
 
