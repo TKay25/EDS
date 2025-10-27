@@ -3895,20 +3895,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     document.addEventListener('DOMContentLoaded', () => {
-        const payrollMenu = document.getElementById('payroll');
+        const payrollMenuBtn = document.querySelector('#payroll .accordion-button');
         const mainContent = document.getElementById('main-content');
         const payrollContent = document.getElementById('payroll-content');
 
-        if (payrollMenu) {
-            payrollMenu.addEventListener('click', () => {
-                // Hide main dashboard
-                if(mainContent) mainContent.style.display = 'none';
+        if (payrollMenuBtn) {
+            payrollMenuBtn.addEventListener('click', (e) => {
+                e.preventDefault(); // prevent any default Bootstrap accordion behavior
 
-                // Show payroll dashboard
+                if(mainContent) mainContent.style.display = 'none';
                 if(payrollContent) payrollContent.style.display = 'block';
             });
         }
     });
+
 
 
     // Event listener for "Deselect All" button
