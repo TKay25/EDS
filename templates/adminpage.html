@@ -761,6 +761,11 @@
             transition: transform 0.2s ease;
         }
 
+        /* Remove default Bootstrap accordion arrow for this item */
+        .accordion-item:has(.bi-people-fill) .accordion-button::after, .accordion-item:has(.bi-wallet-fill) .accordion-button::after {
+            display: none;
+        }
+
 
     </style>
 </head>
@@ -824,28 +829,12 @@
             <!-- Employee Management -->
             <div class="accordion-item border rounded-2 mb-2">
                 <h2 class="accordion-header">
-                    <div class="accordion-button collapsed d-flex justify-content-between align-items-center"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#employeeMenu"
-                        aria-expanded="false"
-                        aria-controls="employeeMenu">
+                    <div class="accordion-button d-flex justify-content-start align-items-center" style="cursor: pointer;">
                         <span><i class="bi bi-people-fill me-2"></i> Attendance</span>
                     </div>
                 </h2>
-                <div id="employeeMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
-                    <div class="accordion-body p-0">
-                        <div class="list-group list-group-flush">
-                            <button class="list-group-item list-group-item-action">
-                                <i class="bi bi-person-lines-fill me-2"></i> View Profiles
-                            </button>
-                            <button class="list-group-item list-group-item-action">
-                                <i class="bi bi-person-plus-fill me-2"></i> Add Employee
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
+
 
             <!-- Employee Management -->
             <div class="accordion-item border rounded-2 mb-2">
@@ -856,7 +845,7 @@
                         data-bs-target="#performamceMenu"
                         aria-expanded="false"
                         aria-controls="performamceMenu">
-                        <span><i class="bi bi-people-fill me-2"></i> Performance</span>
+                        <span><i class="bi bi-card-checklist me-2"></i> Performance</span>
                     </div>
                 </h2>
                 <div id="performamceMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
@@ -876,28 +865,12 @@
             <!-- Reports -->
             <div class="accordion-item border rounded-2 mb-2">
                 <h2 class="accordion-header">
-                    <div class="accordion-button collapsed d-flex justify-content-between align-items-center"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#reportsMenu"
-                        aria-expanded="false"
-                        aria-controls="reportsMenu">
-                        <span><i class="bi bi-graph-up-arrow me-2"></i> Payroll</span>
+                    <div class="accordion-button d-flex justify-content-start align-items-center" style="cursor: pointer;">
+                        <span><i class="bi bi-wallet-fill me-2"></i> Payroll</span>
                     </div>
                 </h2>
-                <div id="reportsMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
-                    <div class="accordion-body p-0">
-                        <div class="list-group list-group-flush">
-                            <button class="list-group-item list-group-item-action">
-                                <i class="bi bi-file-earmark-text-fill me-2"></i> Attendance Report
-                            </button>
-                            <button class="list-group-item list-group-item-action">
-                                <i class="bi bi-calendar-week-fill me-2"></i> Leave Summary
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
+
         </div>
     </div>
 
