@@ -759,32 +759,38 @@
         </div>
     </div>
     
-    <div class="sidebar">
-        <!-- <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="Logo"> -->
-        <h5>HR Management System</h5>
-        <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle w-100" type="button" id="leaveManagementDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-briefcase-fill"></i> Leave Management
+    <div class="sidebar p-2">
+        <h5 class="mb-3 text-center">HR Management System</h5>
+
+        <!-- Leave Management Collapsible Section -->
+        <div class="leave-management border rounded-2 mb-2">
+            <button class="btn w-100 d-flex justify-content-between align-items-center" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#leaveManagementCollapse" 
+                    aria-expanded="false" 
+                    aria-controls="leaveManagementCollapse"
+                    style="background-color: #f8f9fa;">
+                <span><i class="bi bi-briefcase-fill me-2"></i> Leave Management</span>
+                <i class="bi bi-plus-lg"></i>
             </button>
-            <ul class="dropdown-menu w-100" aria-labelledby="leaveManagementDropdown">
-                <li>
-                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
-                        <i class="bi bi-file-earmark-medical-fill"></i> Apply for Leave
+
+            <div class="collapse" id="leaveManagementCollapse">
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
+                        <i class="bi bi-file-earmark-medical-fill me-2"></i> Apply for Leave
                     </button>
-                </li>
-                <li>
-                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editinfoModal">
-                        <i class="bi bi-pencil-square"></i> Edit My Info
+                    <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#editinfoModal">
+                        <i class="bi bi-pencil-square me-2"></i> Edit My Info
                     </button>
-                </li>
-                <li>
-                    <button class="dropdown-item" id="btn-employee-profiles">
-                        <i class="bi bi-info-circle-fill"></i> Log Query
+                    <button class="list-group-item list-group-item-action" id="btn-employee-profiles">
+                        <i class="bi bi-info-circle-fill me-2"></i> Log Query
                     </button>
-                </li>
-            </ul>
+                </div>
+            </div>
         </div>
     </div>
+
 
     <main class="main-content">
         <header>
