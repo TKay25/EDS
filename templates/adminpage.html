@@ -735,6 +735,31 @@
             color: #003366;
         }
 
+        .sidebar .accordion-button {
+            background-color: #f8f9fa;
+            border-radius: 0 !important;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .sidebar .accordion-button:hover {
+            background-color: #e9ecef;
+        }
+
+        .sidebar .accordion-item {
+            border-radius: 0 !important;
+        }
+
+        .sidebar .list-group-item {
+            border-radius: 0 !important;
+            border-left: none;
+            border-right: none;
+            font-size: 0.95rem;
+        }
+
+        .toggle-icon {
+            transition: transform 0.2s ease;
+        }
 
 
     </style>
@@ -760,36 +785,123 @@
     </div>
     
     <div class="sidebar p-2">
+        <br>
         <h5 class="mb-3 text-center">HR Management System</h5>
 
-        <!-- Leave Management Collapsible Section -->
-        <div class="leave-management border rounded-2 mb-2">
-            <button class="btn w-100 d-flex justify-content-between align-items-center" 
-                    type="button" 
-                    data-bs-toggle="collapse" 
-                    data-bs-target="#leaveManagementCollapse" 
-                    aria-expanded="false" 
-                    aria-controls="leaveManagementCollapse"
-                    style="background-color: #f8f9fa;">
-                <span><i class="bi bi-briefcase-fill me-2"></i> Leave Management</span>
-                <i class="bi bi-plus-lg"></i>
-            </button>
+        <div class="accordion" id="sidebarAccordion">
+            <!-- Leave Management -->
+            <div class="accordion-item border rounded-2 mb-2">
+                <h2 class="accordion-header">
+                    <div class="accordion-button collapsed d-flex justify-content-between align-items-center" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#leaveMenu" 
+                        aria-expanded="false" 
+                        aria-controls="leaveMenu">
+                        <span><i class="bi bi-briefcase-fill me-2"></i> Leave Management</span>
+                    </div>
+                </h2>
+                <div id="leaveMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+                    <div class="accordion-body p-0">
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
+                                <i class="bi bi-view-list"></i> View Portal
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
+                                <i class="bi bi-file-earmark-medical-fill me-2"></i> Apply for Leave
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#editinfoModal">
+                                <i class="bi bi-pencil-square me-2"></i> Edit My Info
+                            </button>
+                            <button class="list-group-item list-group-item-action" id="btn-employee-profiles">
+                                <i class="bi bi-info-circle-fill me-2"></i> Log Query
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <div class="collapse" id="leaveManagementCollapse">
-                <div class="list-group list-group-flush">
-                    <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
-                        <i class="bi bi-file-earmark-medical-fill me-2"></i> Apply for Leave
-                    </button>
-                    <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#editinfoModal">
-                        <i class="bi bi-pencil-square me-2"></i> Edit My Info
-                    </button>
-                    <button class="list-group-item list-group-item-action" id="btn-employee-profiles">
-                        <i class="bi bi-info-circle-fill me-2"></i> Log Query
-                    </button>
+            <!-- Employee Management -->
+            <div class="accordion-item border rounded-2 mb-2">
+                <h2 class="accordion-header">
+                    <div class="accordion-button collapsed d-flex justify-content-between align-items-center"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#employeeMenu"
+                        aria-expanded="false"
+                        aria-controls="employeeMenu">
+                        <span><i class="bi bi-people-fill me-2"></i> Attendance</span>
+                    </div>
+                </h2>
+                <div id="employeeMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+                    <div class="accordion-body p-0">
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action">
+                                <i class="bi bi-person-lines-fill me-2"></i> View Profiles
+                            </button>
+                            <button class="list-group-item list-group-item-action">
+                                <i class="bi bi-person-plus-fill me-2"></i> Add Employee
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Management -->
+            <div class="accordion-item border rounded-2 mb-2">
+                <h2 class="accordion-header">
+                    <div class="accordion-button collapsed d-flex justify-content-between align-items-center"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#performamceMenu"
+                        aria-expanded="false"
+                        aria-controls="performamceMenu">
+                        <span><i class="bi bi-people-fill me-2"></i> Performance</span>
+                    </div>
+                </h2>
+                <div id="performamceMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+                    <div class="accordion-body p-0">
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action">
+                                <i class="bi bi-person-lines-fill me-2"></i> View Profiles
+                            </button>
+                            <button class="list-group-item list-group-item-action">
+                                <i class="bi bi-person-plus-fill me-2"></i> Add Employee
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports -->
+            <div class="accordion-item border rounded-2 mb-2">
+                <h2 class="accordion-header">
+                    <div class="accordion-button collapsed d-flex justify-content-between align-items-center"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#reportsMenu"
+                        aria-expanded="false"
+                        aria-controls="reportsMenu">
+                        <span><i class="bi bi-graph-up-arrow me-2"></i> Payroll</span>
+                    </div>
+                </h2>
+                <div id="reportsMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+                    <div class="accordion-body p-0">
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action">
+                                <i class="bi bi-file-earmark-text-fill me-2"></i> Attendance Report
+                            </button>
+                            <button class="list-group-item list-group-item-action">
+                                <i class="bi bi-calendar-week-fill me-2"></i> Leave Summary
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+
 
 
     <main class="main-content">
@@ -3040,6 +3152,18 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
 
 
 
+document.querySelectorAll('.accordion-button').forEach(header => {
+    const icon = header.querySelector('.toggle-icon');
+    const target = document.querySelector(header.getAttribute('data-bs-target'));
+
+    target.addEventListener('show.bs.collapse', () => {
+        icon.classList.replace('bi-plus-lg', 'bi-dash-lg');
+    });
+
+    target.addEventListener('hide.bs.collapse', () => {
+        icon.classList.replace('bi-dash-lg', 'bi-plus-lg');
+    });
+});
 
 
 
