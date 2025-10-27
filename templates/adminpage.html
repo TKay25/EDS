@@ -3269,12 +3269,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const myDiv3 = document.getElementById('attendance');
-        const shouldHide3 = myDiv3.getAttribute('attendance');
 
-        // Hide if data-hide is "true"
+    if (myDiv3) {
+        const shouldHide3 = myDiv3.getAttribute('data-hide');  // Correct attribute
+
+        // Hide if data-hide is "True"
         if (shouldHide3 === "True") {
             myDiv3.remove();
         }
+    }
+
 
 
     document.getElementById('formatexcellmsbookexport').addEventListener('click', () => {
