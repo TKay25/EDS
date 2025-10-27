@@ -15832,7 +15832,10 @@ def run1(table_name, empid):
     leaveapproveremail = userdf.iat[0, 10]
 
     if userdf.iat[0,11]:
-        leaveapproverwhatsapp = int(userdf.iat[0,11])
+        if not pd.isna(userdf.iat[0,11]):
+            leaveapproverwhatsapp = int(userdf.iat[0,11])
+        else:
+            leaveapproverwhatsapp = ""   # or None, depending on what you need
 
     else:
         leaveapproverwhatsapp = ""
