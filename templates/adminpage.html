@@ -757,10 +757,6 @@
             font-size: 0.95rem;
         }
 
-        .toggle-icon {
-            transition: transform 0.2s ease;
-        }
-
         /* Remove default Bootstrap accordion arrow for this item */
         .accordion-item:has(.bi-people-fill) .accordion-button::after, .accordion-item:has(.bi-wallet-fill) .accordion-button::after {
             display: none;
@@ -804,8 +800,6 @@
                         aria-expanded="false" 
                         aria-controls="leaveMenu">
                         <span><i class="bi bi-briefcase-fill me-2"></i> Leave Management</span>
-                        <i class="bi bi-plus-lg toggle-icon" style="display: none;"></i>
-
                     </div>
                 </h2>
                 <div id="leaveMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
@@ -3122,21 +3116,6 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
                 alert('Error: ' + serverErrorMsg);
             }
         }
-    });
-});
-
-
-
-document.querySelectorAll('.accordion-button').forEach(header => {
-    const icon = header.querySelector('.toggle-icon');
-    const target = document.querySelector(header.getAttribute('data-bs-target'));
-
-    target.addEventListener('show.bs.collapse', () => {
-        icon.classList.replace('bi-plus-lg', 'bi-dash-lg');
-    });
-
-    target.addEventListener('hide.bs.collapse', () => {
-        icon.classList.replace('bi-dash-lg', 'bi-plus-lg');
     });
 });
 
