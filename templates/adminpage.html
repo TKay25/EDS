@@ -883,7 +883,7 @@
 
     <div class="all-payroll-content" id="payroll-content" style="display: none;">
         <header>
-            <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} ADMINISTRATOR <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
+            <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} SYSTEM ADMINISTRATOR <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
             <div><span class="current-date" id="currdate">DATE: {{ today_date }}</span></div>
             <span id="name-down" value="{{firstname}}" style="display: none;"></span>
             <span id="name-down2" value="{{surname}}" style="display: none;"></span>
@@ -898,7 +898,7 @@
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#payroll-reports-tab">
-                    <i class="bi bi-file-earmark-text-fill"></i> PAYROLL REPORTS
+                    <i class="bi bi-file-earmark-text-fill"></i> EMPLOYEE DETAILS
                 </button>
             </li>
             <li class="nav-item">
@@ -911,6 +911,9 @@
         <div class="tab-content mt-4">
             <!-- Payroll Summary -->
             <div class="tab-pane fade show active" id="payroll-summary-tab">
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportPayrollReportsModal">
+                        <i class="bi bi-file-earmark-zip-fill"></i> Export Payroll Report
+                    </button>
                 <div class="dashboard-summary">
                     <div class="summary-card">
                         <div class="icon"><i class="bi bi-cash-stack fs-3" style="color: #003366;"></i></div>
@@ -939,12 +942,11 @@
             <!-- Payroll Reports -->
             <div class="tab-pane fade" id="payroll-reports-tab">
                 <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportPayrollReportsModal">
-                    <i class="bi bi-file-earmark-zip-fill"></i> Export Payroll Reports (PDFs)
+                    <i class="bi bi-file-earmark-zip-fill"></i> Export Master File
                 </button>
-
                 <div class="container mt-5">
-                    <div class="container2" style="overflow-y: auto;">
-                        {{ payroll_reports_table | safe }}
+                    <div class="container2" style="max-height: 450px; overflow-y: auto;">
+                        {{ table_employees_html|safe }}
                     </div>
                 </div>
             </div>
