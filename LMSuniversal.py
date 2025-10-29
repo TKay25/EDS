@@ -15858,6 +15858,16 @@ def run1(table_name, empid):
 
     table_employees_html = selected_columns.to_html(classes="table table-bordered table-theme", table_id="employeesTable", index=False,  escape=False,)
 
+
+    ## payroll 
+    table_employees_payroll = selected_columns[['ID','EMPLOYEE NAME','ROLE','DEPARTMENT']]
+    table_employees_payroll_html = table_employees_payroll.to_html(classes="table table-bordered table-theme", table_id="employeespayrollTable", index=False,  escape=False,)
+
+
+
+
+
+
     selected_columns['Combined'] = selected_columns.apply(
         lambda row: f"{row['ID']}--{row['EMPLOYEE NAME']}", axis=1
     )

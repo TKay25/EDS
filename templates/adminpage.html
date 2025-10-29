@@ -319,7 +319,8 @@
             white-space: nowrap; /* Prevent text wrapping */
         }
 
-        #employeesTable th, 
+        #employeesTable th,
+        #employeespayrollTable th, 
         #employeespersonalTable th,
         #employeesaccumulatorsTable th, 
         #employeesbulk1Table th, 
@@ -1622,6 +1623,27 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addEmployeeModalLabel"><i class="bi bi-person-fill-add"></i>    ADD EMPLOYEES</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Select an option to add employees:</p>
+                <div class="d-flex justify-content-around">
+                    <button class="btn btn-primary2 mt-3" id="formaddemployees">Add Manually</button>
+                    <button class="btn btn-primary2 mt-3" data-bs-toggle="modal" data-bs-target="#ExcelTempModal">Import from Excel File</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="uploadEmployeedetailsModal" tabindex="-1" aria-labelledby="uploadEmployeedetailsModalLabel" >
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadEmployeedetailsLabel"><i class="bi bi-person-fill-add"></i>    UPLOAD EMPLOYEE PAYROLL DETAILS</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -4786,6 +4808,15 @@ document.addEventListener('DOMContentLoaded', () => {
     $(document).ready(function () {
         // Initialize DataTable for the main employees table
         $('#employeesTable').DataTable({
+            paging: false,    // Enable pagination
+            searching: true, // Enable search
+            ordering: true,  // Enable sorting
+            info: true,      // Show table information
+            pageLength: 8,       // Force max 5 entries per page
+            lengthChange: false, // Disable entries per page dropdown
+        });
+
+        $('#employeespayrollTable').DataTable({
             paging: false,    // Enable pagination
             searching: true, // Enable search
             ordering: true,  // Enable sorting
