@@ -16205,6 +16205,7 @@ def run1(table_name, empid):
         "whatsapp": whatsapp,
         "address": address,
         "table_employees_html": table_employees_html,
+        "table_employees_payroll_html": table_employees_payroll_html,
         "employee_personal_details_html": employee_personal_details_html,
         "today_date": today_date,
         "leaveapprovername": leaveapprovername,
