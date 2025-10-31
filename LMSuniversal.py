@@ -15833,13 +15833,35 @@ def run1(table_name, empid):
     print(empid)
 
     today_date = datetime.now().strftime('%d %B %Y')
-    applied_date = datetime.now().strftime('%Y-%m-%d')    
+    applied_date = datetime.now().strftime('%Y-%m-%d')
+
+    querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, bank FROM {table_name};"
+    cursor.execute(querypayroll)
+    rowspayroll = cursor.fetchall()
+
+    df_employees_payroll = pd.DataFrame(rowspayroll, columns=["ID","firstname", "surname","Manager_Supervisor", "Department", "Designation","Date Joined","Bank"])
+    df_employees_payroll['Action'] = df_employees_payroll.apply(
+        lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['ID']}" data-firstname="{row['firstname']}" data-surname="{row['surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}"  data-bank="{row['Bank']}">Edit Information</button></div>''', axis=1
+    )
+
+
+
+    df_employees_payroll = df_employees_payroll[["ID","Employee Name","Manager/Supervisor", "Department", "Designation","Date Joined","Bank"]]
+       
+
+
+
+
+
 
     query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
     cursor.execute(query)
     rows = cursor.fetchall()
 
     df_employees = pd.DataFrame(rows, columns=["id","firstname", "surname", "whatsapp","Email", "Address", "Role","Leave Approver Name","Leave Approver ID","Leave Approver Email", "Leave Approver WhatsAapp", "Leave Days Balance","Days Accumulated per Month","Department"])
+    
+    
+    
     print(df_employees)
     employee_personal_details = df_employees[["id","firstname", "surname", "whatsapp","Email","Address"]]
 
@@ -15895,8 +15917,7 @@ def run1(table_name, empid):
 
 
     ## payroll 
-    table_employees_payroll = selected_columns[['ID','EMPLOYEE NAME','ROLE','DEPARTMENT']]
-    table_employees_payroll_html = table_employees_payroll.to_html(classes="table table-bordered table-theme", table_id="employeespayrollTable", index=False,  escape=False,)
+    table_employees_payroll_html = df_employees_payroll.to_html(classes="table table-bordered table-theme", table_id="employeespayrollTable", index=False,  escape=False,)
 
 
 
