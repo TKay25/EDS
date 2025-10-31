@@ -115,7 +115,7 @@ connection.commit()
 """)
 connection.commit()'''
 
-cursor.execute("""
+'''cursor.execute("""
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
@@ -147,7 +147,7 @@ for (table_name,) in tables:
             ALTER TABLE {table_name}
             ADD COLUMN IF NOT EXISTS "{col}" {dtype}
         ''')
-        connection.commit()
+        connection.commit()'''
 
 
 '''cursor.execute("""
