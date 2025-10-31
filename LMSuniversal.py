@@ -15841,12 +15841,12 @@ def run1(table_name, empid):
     cursor.execute(querypayroll)
     rowspayroll = cursor.fetchall()
 
-    df_employees_payroll = pd.DataFrame(rowspayroll, columns=["ID","firstname", "surname","Manager_Supervisor", "Department", "Designation","Date Joined","Bank"])
+    df_employees_payroll = pd.DataFrame(rowspayroll, columns=["id","Firstname", "Surname","Manager_Supervisor", "Department", "Designation","Date Joined","Bank"])
     df_employees_payroll['Action'] = df_employees_payroll.apply(
-        lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['ID']}" data-firstname="{row['firstname']}" data-surname="{row['surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}"  data-bank="{row['Bank']}">Edit Information</button></div>''', axis=1
+        lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['id']}" data-firstname="{row['Firstname']}" data-surname="{row['Surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}"  data-bank="{row['Bank']}">Edit Information</button></div>''', axis=1
     )
 
-    df_employees_payroll = df_employees_payroll[["ID","Employee Name","Manager/Supervisor", "Department", "Designation","Date Joined","Bank"]]
+    df_employees_payroll = df_employees_payroll[["id", "Firstname", "Surname","Manager/Supervisor", "Department", "Designation","Date Joined","Bank"]]
 
     table_employees_payroll_html = df_employees_payroll.to_html(classes="table table-bordered table-theme", table_id="employeespayrollTable", index=False,  escape=False,)
 
