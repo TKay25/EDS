@@ -16471,23 +16471,38 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                 try:
 
                     create_table_query = f"""
-                    CREATE TABLE {table_name} (
-                        id SERIAL PRIMARY KEY,
-                        firstname VARCHAR(100),
-                        surname VARCHAR(100),
-                        whatsapp INT,
-                        address VARCHAR(100),
-                        email VARCHAR(255),
-                        password VARCHAR(255),
-                        department VARCHAR(255),
-                        role VARCHAR(255),
-                        leaveapprovername VARCHAR(255),
-                        leaveapproverid INT,
-                        leaveapproveremail VARCHAR(255),
-                        leaveapproverwhatsapp INT,
-                        currentleavedaysbalance NUMERIC(5, 1),
-                        monthlyaccumulation NUMERIC(5, 1)
-                    );
+                        CREATE TABLE {table_name} (
+                            id SERIAL PRIMARY KEY,
+                            firstname VARCHAR(100),
+                            surname VARCHAR(100),
+                            whatsapp INT,
+                            address VARCHAR(100),
+                            email VARCHAR(255),
+                            password VARCHAR(255),
+                            department VARCHAR(255),
+                            role VARCHAR(255),
+                            leaveapprovername VARCHAR(255),
+                            leaveapproverid INT,
+                            leaveapproveremail VARCHAR(255),
+                            leaveapproverwhatsapp INT,
+                            currentleavedaysbalance NUMERIC(5, 1),
+                            monthlyaccumulation NUMERIC(5, 1),
+                            gender VARCHAR(10),
+                            dob date,
+                            maritalstatus VARCHAR(200),
+                            nationality VARCHAR(100),
+                            designation VARCHAR(100),
+                            accholdername VARCHAR(100),
+                            accholdersurname VARCHAR(100),
+                            bank VARCHAR(100),
+                            accnumber VARCHAR(30),
+                            branch VARCHAR(100),
+                            branchcode VARCHAR(20),
+                            datejoined date,
+                            c8 NUMERIC(12,2),
+                            c8type VARCHAR(20),
+                            currency VARCHAR(10)
+                        );
                     """
                     cursor.execute(create_table_query)
                     connection.commit()
