@@ -15835,6 +15835,8 @@ def run1(table_name, empid):
     today_date = datetime.now().strftime('%d %B %Y')
     applied_date = datetime.now().strftime('%Y-%m-%d')
 
+    ######### payroll
+
     querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, bank FROM {table_name};"
     cursor.execute(querypayroll)
     rowspayroll = cursor.fetchall()
@@ -15844,15 +15846,27 @@ def run1(table_name, empid):
         lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['ID']}" data-firstname="{row['firstname']}" data-surname="{row['surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}"  data-bank="{row['Bank']}">Edit Information</button></div>''', axis=1
     )
 
-
-
     df_employees_payroll = df_employees_payroll[["ID","Employee Name","Manager/Supervisor", "Department", "Designation","Date Joined","Bank"]]
-       
+
+    table_employees_payroll_html = df_employees_payroll.to_html(classes="table table-bordered table-theme", table_id="employeespayrollTable", index=False,  escape=False,)
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+    ############################
 
     query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
     cursor.execute(query)
@@ -15914,15 +15928,6 @@ def run1(table_name, empid):
     selected_columns.columns = ['ID','EMPLOYEE NAME','ROLE','DEPARTMENT','APPROVER','DAYS BALANCE','ACTION']
 
     table_employees_html = selected_columns.to_html(classes="table table-bordered table-theme", table_id="employeesTable", index=False,  escape=False,)
-
-
-    ## payroll 
-    table_employees_payroll_html = df_employees_payroll.to_html(classes="table table-bordered table-theme", table_id="employeespayrollTable", index=False,  escape=False,)
-
-
-
-
-
 
     selected_columns['Combined'] = selected_columns.apply(
         lambda row: f"{row['ID']}--{row['EMPLOYEE NAME']}", axis=1
