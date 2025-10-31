@@ -115,7 +115,7 @@ connection.commit()
 """)
 connection.commit()'''
 
-'''cursor.execute("""
+cursor.execute("""
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
@@ -124,10 +124,10 @@ connection.commit()'''
 tables = cursor.fetchall()
 
 columns_to_add = [
-    ('Gender', 'VARCHAR(10)'),
+    ('gender', 'VARCHAR(10)'),
     ('dob', 'DATE'),
     ('maritalstatus', 'VARCHAR(200)'),
-    ('Nationality', 'VARCHAR(100)'),
+    ('nationality', 'VARCHAR(100)'),
     ('designation', 'VARCHAR(100)'),
     ('accholdername', 'VARCHAR(100)'),
     ('accholdersurname', 'VARCHAR(100)'),
@@ -136,8 +136,8 @@ columns_to_add = [
     ('branch', 'VARCHAR(100)'),
     ('branchcode', 'VARCHAR(20)'),
     ('datejoined', 'DATE'),
-    ('Basic', 'NUMERIC(12,2)'),
-    ('saltype', 'VARCHAR(20)'),
+    ('c8', 'NUMERIC(12,2)'),
+    ('c8type', 'VARCHAR(20)'),
     ('currency', 'VARCHAR(10)')
 ]
 
@@ -145,9 +145,9 @@ for (table_name,) in tables:
     for col, dtype in columns_to_add:
         cursor.execute(f"""
             ALTER TABLE {table_name}
-            ADD COLUMN IF NOT EXISTS "{col}" {dtype}
+            ADD COLUMN IF NOT EXISTS {col} {dtype}
         """)
-        connection.commit()'''
+        connection.commit()
 
 
 '''cursor.execute("""
