@@ -16928,8 +16928,9 @@ if connection.status == psycopg2.extensions.STATUS_READY:
                     table_name, rows = results[0]
                     print(f"Table Found: {table_name}")
                     print(rows)
+                    sliced_rows = [row[:15] for row in rows]
 
-                    table_df = pd.DataFrame(rows, columns=['id', 'firstname', 'surname', 'whatsapp', 'address', 'email', 'password', 'department', 'role', 'leaveapprovername', 'leaveapproverid', 'leaveapproveremail','leaveapproverwhatsapp','currentleavedaysbalance', 'monthlyaccumulation'])
+                    table_df = pd.DataFrame(sliced_rows, columns=['id', 'firstname', 'surname', 'whatsapp', 'address', 'email', 'password', 'department', 'role', 'leaveapprovername', 'leaveapproverid', 'leaveapproveremail','leaveapproverwhatsapp','currentleavedaysbalance', 'monthlyaccumulation'])
 
                     if table_df.iat[0, 6] == password:
                         user_uuid = uuid.uuid4()
