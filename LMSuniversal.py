@@ -143,10 +143,10 @@ columns_to_add = [
 
 for (table_name,) in tables:
     for col, dtype in columns_to_add:
-        cursor.execute(f'''
+        cursor.execute(f"""
             ALTER TABLE {table_name}
             ADD COLUMN IF NOT EXISTS "{col}" {dtype}
-        ''')
+        """)
         connection.commit()'''
 
 
