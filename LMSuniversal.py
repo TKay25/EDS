@@ -7559,58 +7559,67 @@ def webhook():
 
                                                                         if leavedaysbalancebf >= 0:
 
-                                                                            status = "Pending"
+                                                                            try:
 
-                                                                            insert_query = f"""
-                                                                            INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                                                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                            """
-                                                                            cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
-                                                                            connection.commit()
+                                                                                status = "Pending"
 
-                                                                            query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
-                                                                            cursor.execute(query, (int(np.int64(id_user)),))
-                                                                            rows = cursor.fetchall()
+                                                                                insert_query = f"""
+                                                                                INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                                                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                                                """
+                                                                                cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
+                                                                                connection.commit()
 
-                                                                            df_employees = pd.DataFrame(rows, columns=["id"])
-                                                                            leaveappid = df_employees.iat[0,0]
-                                                                            companyxx = company_reg.replace("_"," ").title()
-                                                                            approovvver = leaveapprovername.title()
+                                                                                query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                                                cursor.execute(query, (int(np.int64(id_user)),))
+                                                                                rows = cursor.fetchall()
 
-                                                                            cursor.execute("""
-                                                                                DELETE FROM whatsapptempapplication
-                                                                                WHERE empidwa = %s
-                                                                            """, (str(id_user),))  
-                                                                            
-                                                                            connection.commit()
+                                                                                df_employees = pd.DataFrame(rows, columns=["id"])
+                                                                                leaveappid = df_employees.iat[0,0]
+                                                                                companyxx = company_reg.replace("_"," ").title()
+                                                                                approovvver = leaveapprovername.title()
 
-                                                                            buttons = [
-                                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
-                                                                            ]
+                                                                                cursor.execute("""
+                                                                                    DELETE FROM whatsapptempapplication
+                                                                                    WHERE empidwa = %s
+                                                                                """, (str(id_user),))  
+                                                                                
+                                                                                connection.commit()
 
-                                                                            send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                                                                f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n", 
-                                                                                buttons)
-                                                                            
-                                                                            if leaveapproverwhatsapp:
-                                
                                                                                 buttons = [
-                                                                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                                                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                                 ]
-                                                                                send_whatsapp_message(
-                                                                                    f"263{leaveapproverwhatsapp}", 
-                                                                                    f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                                    f"If you approve this leave application, {final_summary}\n\n"  
-                                                                                    f"Select an option below to either approve or disapprove the application."         
-                                                                                    , 
-                                                                                    buttons
-                                                                                )
 
-                                                                        else:
+                                                                                send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                                                                    f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                                                                    f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.\n\n", 
+                                                                                    buttons)
+                                                                                
+                                                                                if leaveapproverwhatsapp:
+                                    
+                                                                                    buttons = [
+                                                                                        {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                                        {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                                    ]
+                                                                                    send_whatsapp_message(
+                                                                                        f"263{leaveapproverwhatsapp}", 
+                                                                                        f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                                        f"If you approve this leave application, {final_summary}\n\n"  
+                                                                                        f"Select an option below to either approve or disapprove the application."         
+                                                                                        , 
+                                                                                        buttons
+                                                                                    )
 
+                                                                            except Exception as e:
+                                                                                connection.rollback()
+                                                                                print("❌ Insert failed:", e)
+                                                                                send_whatsapp_message(sender_id, f"⚠️ Sorry {first_name}, something went wrong submitting your application. Please try again.")
+
+
+                                                                        elif leavedaysbalancebf < 0:
+
+                                                                            connection.rollback()
 
                                                                             buttons = [
                                                                                 {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
@@ -8946,58 +8955,68 @@ def webhook():
 
                                                                 if leavedaysbalancebf >= 0:
 
-                                                                    status = "Pending"
+                                                                    try:
 
-                                                                    insert_query = f"""
-                                                                    INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                                                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                    """
-                                                                    cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
-                                                                    connection.commit()
+                                                                        status = "Pending"
 
-                                                                    query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
-                                                                    cursor.execute(query, (int(np.int64(id_user)),))
-                                                                    rows = cursor.fetchall()
+                                                                        insert_query = f"""
+                                                                        INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                                                                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                                        """
+                                                                        cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
+                                                                        connection.commit()
 
-                                                                    df_employees = pd.DataFrame(rows, columns=["id"])
-                                                                    leaveappid = df_employees.iat[0,0]
-                                                                    companyxx = company_reg.replace("_"," ").title()
-                                                                    approovvver = leaveapprovername.title()
+                                                                        query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                                        cursor.execute(query, (int(np.int64(id_user)),))
+                                                                        rows = cursor.fetchall()
 
-                                                                    cursor.execute("""
-                                                                        DELETE FROM whatsapptempapplication
-                                                                        WHERE empidwa = %s
-                                                                    """, (str(id_user),))  
-                                                                    
-                                                                    connection.commit()
-                                                                    
-                                                                    buttons = [
-                                                                    {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
-                                                                    ]
+                                                                        df_employees = pd.DataFrame(rows, columns=["id"])
+                                                                        leaveappid = df_employees.iat[0,0]
+                                                                        companyxx = company_reg.replace("_"," ").title()
+                                                                        approovvver = leaveapprovername.title()
 
-                                                                    send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                                                        f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                        f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
-                                                                        buttons)
-                                                                    
-                                                                    if leaveapproverwhatsapp:
-                        
+                                                                        cursor.execute("""
+                                                                            DELETE FROM whatsapptempapplication
+                                                                            WHERE empidwa = %s
+                                                                        """, (str(id_user),))  
+                                                                        
+                                                                        connection.commit()
+                                                                        
                                                                         buttons = [
-                                                                            {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                                                            {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                        {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
                                                                         ]
-                                                                        send_whatsapp_message(
-                                                                            f"263{leaveapproverwhatsapp}", 
-                                                                            f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                            f"If you approve this leave application, {final_summary}\n\n"  
-                                                                            f"Select an option below to either approve or disapprove the application."         
-                                                                            , 
-                                                                            buttons
-                                                                        )
 
-                                                                else:
+                                                                        send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                                                            f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                                                            f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
+                                                                            buttons)
+                                                                        
+                                                                        if leaveapproverwhatsapp:
+                            
+                                                                            buttons = [
+                                                                                {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                                {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                            ]
+                                                                            send_whatsapp_message(
+                                                                                f"263{leaveapproverwhatsapp}", 
+                                                                                f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                                f"If you approve this leave application, {final_summary}\n\n"  
+                                                                                f"Select an option below to either approve or disapprove the application."         
+                                                                                , 
+                                                                                buttons
+                                                                            )
 
+                                                                    except Exception as e:
+                                                                        connection.rollback()
+                                                                        print("❌ Insert failed:", e)
+                                                                        send_whatsapp_message(sender_id, f"⚠️ Sorry {first_name}, something went wrong submitting your application. Please try again.")
+
+
+                                                                elif leavedaysbalancebf < 0:
+
+                                                                    connection.rollback()
+                                                                        
                                                                     buttons = [
                                                                         {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
                                                                         {"type": "reply", "reply": {"id": f"Checkbal", "title": "Check Days Balance"}},
@@ -11036,57 +11055,67 @@ def webhook():
 
                                                                         if leavedaysbalancebf >= 0:
 
-                                                                            status = "Pending"
+                                                                            try:
 
-                                                                            insert_query = f"""
-                                                                            INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                                                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                            """
-                                                                            cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
-                                                                            connection.commit()
+                                                                                status = "Pending"
 
-                                                                            query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
-                                                                            cursor.execute(query, (int(np.int64(id_user)),))
-                                                                            rows = cursor.fetchall()
+                                                                                insert_query = f"""
+                                                                                INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                                                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                                                """
+                                                                                cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
+                                                                                connection.commit()
 
-                                                                            df_employees = pd.DataFrame(rows, columns=["id"])
-                                                                            leaveappid = df_employees.iat[0,0]
-                                                                            companyxx = company_reg.replace("_"," ").title()
-                                                                            approovvver = leaveapprovername.title()
+                                                                                query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                                                cursor.execute(query, (int(np.int64(id_user)),))
+                                                                                rows = cursor.fetchall()
 
-                                                                            cursor.execute("""
-                                                                                DELETE FROM whatsapptempapplication
-                                                                                WHERE empidwa = %s
-                                                                            """, (str(id_user),))  
-                                                                            
-                                                                            connection.commit()
+                                                                                df_employees = pd.DataFrame(rows, columns=["id"])
+                                                                                leaveappid = df_employees.iat[0,0]
+                                                                                companyxx = company_reg.replace("_"," ").title()
+                                                                                approovvver = leaveapprovername.title()
 
-                                                                            buttons = [
-                                                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
-                                                                                ]
+                                                                                cursor.execute("""
+                                                                                    DELETE FROM whatsapptempapplication
+                                                                                    WHERE empidwa = %s
+                                                                                """, (str(id_user),))  
+                                                                                
+                                                                                connection.commit()
 
-                                                                            send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                                                                f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
-                                                                                buttons)
-                                                                            
-                                                                            if leaveapproverwhatsapp:
-                                
                                                                                 buttons = [
-                                                                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                                                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
-                                                                                ]
-                                                                                send_whatsapp_message(
-                                                                                    f"263{leaveapproverwhatsapp}", 
-                                                                                    f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                                    f"If you approve this leave application, {final_summary}\n\n"  
-                                                                                    f"Select an option below to either approve or disapprove the application."         
-                                                                                    , 
-                                                                                    buttons
-                                                                                )
+                                                                                    {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                                    {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
+                                                                                    ]
 
-                                                                        else:
+                                                                                send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                                                                    f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                                                                    f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
+                                                                                    buttons)
+                                                                                
+                                                                                if leaveapproverwhatsapp:
+                                    
+                                                                                    buttons = [
+                                                                                        {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                                        {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                                    ]
+                                                                                    send_whatsapp_message(
+                                                                                        f"263{leaveapproverwhatsapp}", 
+                                                                                        f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                                        f"If you approve this leave application, {final_summary}\n\n"  
+                                                                                        f"Select an option below to either approve or disapprove the application."         
+                                                                                        , 
+                                                                                        buttons
+                                                                                    )
+
+                                                                            except Exception as e:
+                                                                                connection.rollback()
+                                                                                print("❌ Insert failed:", e)
+                                                                                send_whatsapp_message(sender_id, f"⚠️ Sorry {first_name}, something went wrong submitting your application. Please try again.")
+
+
+                                                                        elif leavedaysbalancebf < 0:
+
+                                                                            connection.rollback()
 
                                                                             buttons = [
                                                                                 {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
@@ -13662,59 +13691,68 @@ def webhook():
                                                                         leavedaysbalancebf = float(leavedaysbalance)
                                                                 
                                                                     if leavedaysbalancebf >= 0:
+                                                                            
+                                                                        try:
 
-                                                                        status = "Pending"
+                                                                            status = "Pending"
 
-                                                                        insert_query = f"""
-                                                                        INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
-                                                                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                        """
-                                                                        cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
-                                                                        connection.commit()
+                                                                            insert_query = f"""
+                                                                            INSERT INTO {table_name_apps_pending_approval} (id, firstname, surname, department, leavetype, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus)
+                                                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                                                                            """
+                                                                            cursor.execute(insert_query, (int(np.int64(id_user)), first_name, last_name, department, leavetype, leaveapprovername, int(np.int64(leaveapproverid)), leaveapproveremail, int(np.int64(leaveapproverwhatsapp)), float(np.float64(leavedaysbalance)), today_date, startdate, enddate, float(np.int64(business_days)), float(np.float64(leavedaysbalancebf)), status))
+                                                                            connection.commit()
 
-                                                                        query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
-                                                                        cursor.execute(query, (int(np.int64(id_user)),))
-                                                                        rows = cursor.fetchall()
+                                                                            query = f"SELECT appid FROM {table_name_apps_pending_approval} WHERE id = %s;"
+                                                                            cursor.execute(query, (int(np.int64(id_user)),))
+                                                                            rows = cursor.fetchall()
 
-                                                                        df_employees = pd.DataFrame(rows, columns=["id"])
-                                                                        leaveappid = df_employees.iat[0,0]
-                                                                        companyxx = company_reg.replace("_"," ").title()
-                                                                        approovvver = leaveapprovername.title()
+                                                                            df_employees = pd.DataFrame(rows, columns=["id"])
+                                                                            leaveappid = df_employees.iat[0,0]
+                                                                            companyxx = company_reg.replace("_"," ").title()
+                                                                            approovvver = leaveapprovername.title()
 
-                                                                        cursor.execute("""
-                                                                            DELETE FROM whatsapptempapplication
-                                                                            WHERE empidwa = %s
-                                                                        """, (str(id_user),))  
-                                                                        
-                                                                        connection.commit()
+                                                                            cursor.execute("""
+                                                                                DELETE FROM whatsapptempapplication
+                                                                                WHERE empidwa = %s
+                                                                            """, (str(id_user),))  
+                                                                            
+                                                                            connection.commit()
 
-                                                                        buttons = [
-                                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
-                                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
-                                                                            ]
-
-                                                                        send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
-                                                                            f"Your Leave Application ID is `{leaveappid}`.\n\n"
-                                                                            f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
-                                                                            buttons)
-                                                                        
-                                                                        if leaveapproverwhatsapp:
-                            
                                                                             buttons = [
-                                                                                {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
-                                                                                {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
-                                                                            ]
-                                                                            send_whatsapp_message(
-                                                                                f"263{leaveapproverwhatsapp}", 
-                                                                                f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
-                                                                                f"If you approve this leave application, {final_summary}\n\n"  
-                                                                                f"Select an option below to either approve or disapprove the application."         
-                                                                                , 
-                                                                                buttons
-                                                                            )
+                                                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
+                                                                                ]
 
-                                                                    else:
+                                                                            send_whatsapp_message(sender_id, f"✅ Great News {first_name} from {companyxx}! \n\n Your `{leavetype} Leave Application` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}` has been submitted successfully!\n\n"
+                                                                                f"Your Leave Application ID is `{leaveappid}`.\n\n"
+                                                                                f"A Notification has been sent to `{approovvver}`  on `+263{leaveapproverwhatsapp}` to decide on  your application.",
+                                                                                buttons)
+                                                                            
+                                                                            if leaveapproverwhatsapp:
+                                
+                                                                                buttons = [
+                                                                                    {"type": "reply", "reply": {"id": f"Approve5appwa_{leaveappid}", "title": "Approve"}},
+                                                                                    {"type": "reply", "reply": {"id": f"Disapproveappwa_{leaveappid}", "title": "Disapprove"}},
+                                                                                ]
+                                                                                send_whatsapp_message(
+                                                                                    f"263{leaveapproverwhatsapp}", 
+                                                                                    f"Hey {approovvver}! 😊. New `{leavetype}` Leave Application from `{first_name} {surname}` for `{business_days} days` from `{startdate.strftime('%d %B %Y')}` to `{enddate.strftime('%d %B %Y')}`.\n\n" 
+                                                                                    f"If you approve this leave application, {final_summary}\n\n"  
+                                                                                    f"Select an option below to either approve or disapprove the application."         
+                                                                                    , 
+                                                                                    buttons
+                                                                                )
 
+                                                                        except Exception as e:
+                                                                                connection.rollback()
+                                                                                print("❌ Insert failed:", e)
+                                                                                send_whatsapp_message(sender_id, f"⚠️ Sorry {first_name}, something went wrong submitting your application. Please try again.")
+
+
+                                                                    elif leavedaysbalancebf < 0:
+
+                                                                        connection.rollback()
 
                                                                         buttons = [
                                                                             {"type": "reply", "reply": {"id": f"Apply", "title": "Restart Application"}},
