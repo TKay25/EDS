@@ -6307,7 +6307,7 @@ def webhook():
                     print("done trying")
 
                     data = request.get_json()
-                    print("📥 Incoming webhook:", json.dumps(data, indent=2))
+                    print("Webhook received keys:", list(data.keys()))
 
                     try:
                         for entry in data.get("entry", []):
@@ -6399,7 +6399,9 @@ def webhook():
                 return response
 
 
-            print("📥 Full incoming data:", json.dumps(data, indent=2))
+            #print("📥 Full incoming data:", json.dumps(data, indent=2))
+            print("📥 Webhook received keys:", list(data.keys()))
+
 
             def send_template_message_24hr(recipient_id):
                 headers = {
