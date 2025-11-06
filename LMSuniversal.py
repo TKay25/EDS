@@ -6352,7 +6352,7 @@ def webhook():
 
             print("📥 Full incoming data:", json.dumps(data, indent=2))
 
-            '''def send_template_message_24hr(recipient_id):
+            def send_template_message_24hr(recipient_id):
                 headers = {
                     "Authorization": f"Bearer {ACCESS_TOKEN}",
                     "Content-Type": "application/json"
@@ -6397,7 +6397,7 @@ def webhook():
             except Exception as e:
                 print("❌ Error processing webhook:", e)
 
-                return jsonify(success=True), 200  '''   
+                return jsonify(success=True), 200    
 
 
 
