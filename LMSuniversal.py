@@ -6376,24 +6376,25 @@ def webhook():
                     }
                 }
 
-                response = requests.post(API_URL, headers=headers, json=payload)
+                response = requests.post(WHATSAPP_API_URL, headers=headers, json=payload)
                 print("📤 Template sent:", response.status_code, response.text)
                 return response.status_code, response.text
 
             try:
-                    for entry in data.get("entry", []):
-                        for change in entry.get("changes", []):
-                            value = change.get("value", {})
-                            statuses = value.get("statuses", [])
+                for entry in data.get("entry", []):
+                    for change in entry.get("changes", []):
+                        value = change.get("value", {})
+                        statuses = value.get("statuses", [])
 
-                            for status in statuses:
-                                errors = status.get("errors", [])
-                                for err in errors:
-                                    # detect 24-hour re-engagement failure
-                                    if err.get("code") == 131047:
-                                        print("⚠️ Message failed due to 24-hour window.")
-                                        recipient_id = status.get("recipient_id")
-                                        send_template_message_24hr(recipient_id)
+                        for status in statuses:
+                            errors = status.get("errors", [])
+                            for err in errors:
+                                # detect 24-hour re-engagement failure
+                                if err.get("code") == 131047:
+                                    print("⚠️ Message failed due to 24-hour window.")
+                                    recipient_id = status.get("recipient_id")
+                                    send_template_message_24hr(recipient_id)
+
             except Exception as e:
                 print("❌ Error processing webhook:", e)
 
