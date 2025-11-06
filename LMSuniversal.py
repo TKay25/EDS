@@ -6352,6 +6352,57 @@ def webhook():
 
             print("📥 Full incoming data:", json.dumps(data, indent=2))
 
+            def send_template_message_24hr(recipient_id):
+                headers = {
+                    "Authorization": f"Bearer {ACCESS_TOKEN}",
+                    "Content-Type": "application/json"
+                }
+
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": recipient_id,
+                    "type": "template",
+                    "template": {
+                        "name": "reminderapprove",  # ✅ your approved template name
+                        "language": {"code": "en_US"},
+                        "components": [
+                            {
+                                "type": "body",
+                                "parameters": [
+                                    {"type": "text", "text": "Hey there! It’s been a while — tap below to continue our chat."}
+                                ]
+                            }
+                        ]
+                    }
+                }
+
+                response = requests.post(API_URL, headers=headers, json=payload)
+                print("📤 Template sent:", response.status_code, response.text)
+                return response.status_code, response.text
+
+            try:
+                    for entry in data.get("entry", []):
+                        for change in entry.get("changes", []):
+                            value = change.get("value", {})
+                            statuses = value.get("statuses", [])
+
+                            for status in statuses:
+                                errors = status.get("errors", [])
+                                for err in errors:
+                                    # detect 24-hour re-engagement failure
+                                    if err.get("code") == 131047:
+                                        print("⚠️ Message failed due to 24-hour window.")
+                                        recipient_id = status.get("recipient_id")
+                                        send_template_message_24hr(recipient_id)
+            except Exception as e:
+                print("❌ Error processing webhook:", e)
+
+                return jsonify(success=True), 200     
+
+
+
+
+
             if data and "entry" in data:
                 for entry in data["entry"]:
                     for change in entry["changes"]:
