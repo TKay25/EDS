@@ -6352,7 +6352,7 @@ def webhook():
 
             print("📥 Full incoming data:", json.dumps(data, indent=2))
 
-            def send_template_message_24hr(recipient_id):
+            '''def send_template_message_24hr(recipient_id):
                 headers = {
                     "Authorization": f"Bearer {ACCESS_TOKEN}",
                     "Content-Type": "application/json"
@@ -6397,7 +6397,7 @@ def webhook():
             except Exception as e:
                 print("❌ Error processing webhook:", e)
 
-                return jsonify(success=True), 200     
+                return jsonify(success=True), 200  '''   
 
 
 
@@ -19367,4 +19367,4 @@ def explore_lms():
     
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug = True)
+    app.run(host="0.0.0.0", port = 55, debug = True)
