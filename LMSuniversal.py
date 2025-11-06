@@ -27,6 +27,7 @@ import re
 from paynow import Paynow
 import time
 import random
+import threading
 
 
 app = Flask(__name__)
@@ -6305,55 +6306,6 @@ def webhook():
                     print("📝 Response JSON:", response.json())
 
                     print("done trying")
-
-                    data = request.get_json()
-                    print("Webhook received keys:", list(data.keys()))
-
-                    try:
-                        for entry in data.get("entry", []):
-                            for change in entry.get("changes", []):
-                                value = change.get("value", {})
-
-                                # ------------------------------------------------------------
-                                # ✅ 1. Process incoming messages
-                                # ------------------------------------------------------------
-                                messages = value.get("messages", [])
-                                for msg in messages:
-                                    sender = msg.get("from")
-                                    text = msg.get("text", {}).get("body", "")
-                                    print(f"📩 New message from {sender}: {text}")
-
-
-                                statuses = value.get("statuses", [])
-                                for status in statuses:
-                                    recipient = status.get("recipient_id")
-                                    errors = status.get("errors", [])
-
-                                    for err in errors:
-                                        code = err.get("code")
-                                        print("⚠️ WA Error:", code, err.get("title"))
-
-                                        # ✅ Detect 24-hour session error
-                                        if code == 131047:
-                                            print("⚠️ Detected 24-hour session expiration")
-                                            send_template_message_24hr(recipient)
-
-
-                    except Exception as e:
-                        print("❌ Webhook processing error:", e)
-
-                        # ✅ MUST RETURN 200 ALWAYS
-                    return jsonify(success=True), 200
-
-
-
-
-
-
-
-
-
-
                     return response.json()
                 
                 except requests.exceptions.RequestException as e:
@@ -6399,8 +6351,69 @@ def webhook():
                 return response
 
 
-            #print("📥 Full incoming data:", json.dumps(data, indent=2))
-            print("📥 Webhook received keys:", list(data.keys()))
+            print("📥 Full incoming data:", json.dumps(data, indent=2))
+
+
+            def process_webhook_event(data):
+                try:
+                    print("🧵 Background thread running...")
+
+                    for entry in data.get("entry", []):
+                        for change in entry.get("changes", []):
+                            value = change.get("value", {})
+
+                            # ------------------------------------------------------------
+                            # ✅ INCOMING MESSAGES
+                            # ------------------------------------------------------------
+                            messages = value.get("messages", [])
+                            for msg in messages:
+                                sender = msg.get("from")
+                                msg_type = msg.get("type")
+
+                                # ✅ Text message
+                                if msg_type == "text":
+                                    body = msg["text"]["body"]
+                                    print(f"📩 Text from {sender}: {body}")
+
+                                    send_whatsapp_message(
+                                        sender,
+                                        "Thanks! Choose an option:",
+                                        buttons=[
+                                            {"type": "reply", "reply": {"id": "yes", "title": "YES"}},
+                                            {"type": "reply", "reply": {"id": "no", "title": "NO"}}
+                                        ]
+                                    )
+
+                                # ✅ Button reply
+                                if msg_type == "interactive":
+                                    interactive = msg["interactive"]
+                                    reply_id = interactive["button_reply"]["id"]
+                                    print(f"🔘 Button reply from {sender}: {reply_id}")
+
+                                    send_whatsapp_message(sender, f"You selected: {reply_id}")
+
+                            # ------------------------------------------------------------
+                            # ✅ STATUS UPDATES (message deliveries/errors)
+                            # ------------------------------------------------------------
+                            statuses = value.get("statuses", [])
+                            for status in statuses:
+                                recipient = status.get("recipient_id")
+                                errors = status.get("errors", [])
+
+                                for err in errors:
+                                    code = err.get("code")
+                                    print("⚠️ Status error:", code)
+
+                                    # ✅ Session expired → send template
+                                    if code == 131047:
+                                        print("🚫 24-hour session expired → sending template")
+                                        send_template_message_24hr(recipient)
+
+                except Exception as e:
+                    print("❌ Error in background event processor:", e)
+
+            threading.Thread(target=process_webhook_event, args=(data,)).start()
+
 
 
             def send_template_message_24hr(recipient_id):
@@ -6427,10 +6440,11 @@ def webhook():
                     }
                 }
 
-                response = requests.post(WHATSAPP_API_URL, headers=headers, json=payload)
+                response = requests.post(API_URL, headers=headers, json=payload)
                 print("📤 Template sent:", response.status_code, response.text)
                 return response.status_code, response.text
-   
+
+
 
 
 
@@ -7694,7 +7708,6 @@ def webhook():
                                                                                         , 
                                                                                         buttons
                                                                                     )
-                                                                                    
 
                                                                             except Exception as e:
                                                                                 connection.rollback()
