@@ -6305,6 +6305,55 @@ def webhook():
                     print("📝 Response JSON:", response.json())
 
                     print("done trying")
+
+                    data = request.get_json()
+                    print("📥 Incoming webhook:", json.dumps(data, indent=2))
+
+                    try:
+                        for entry in data.get("entry", []):
+                            for change in entry.get("changes", []):
+                                value = change.get("value", {})
+
+                                # ------------------------------------------------------------
+                                # ✅ 1. Process incoming messages
+                                # ------------------------------------------------------------
+                                messages = value.get("messages", [])
+                                for msg in messages:
+                                    sender = msg.get("from")
+                                    text = msg.get("text", {}).get("body", "")
+                                    print(f"📩 New message from {sender}: {text}")
+
+
+                                statuses = value.get("statuses", [])
+                                for status in statuses:
+                                    recipient = status.get("recipient_id")
+                                    errors = status.get("errors", [])
+
+                                    for err in errors:
+                                        code = err.get("code")
+                                        print("⚠️ WA Error:", code, err.get("title"))
+
+                                        # ✅ Detect 24-hour session error
+                                        if code == 131047:
+                                            print("⚠️ Detected 24-hour session expiration")
+                                            send_template_message_24hr(recipient)
+
+
+                    except Exception as e:
+                        print("❌ Webhook processing error:", e)
+
+                        # ✅ MUST RETURN 200 ALWAYS
+                    return jsonify(success=True), 200
+
+
+
+
+
+
+
+
+
+
                     return response.json()
                 
                 except requests.exceptions.RequestException as e:
@@ -6379,26 +6428,7 @@ def webhook():
                 response = requests.post(WHATSAPP_API_URL, headers=headers, json=payload)
                 print("📤 Template sent:", response.status_code, response.text)
                 return response.status_code, response.text
-
-            try:
-                for entry in data.get("entry", []):
-                    for change in entry.get("changes", []):
-                        value = change.get("value", {})
-                        statuses = value.get("statuses", [])
-
-                        for status in statuses:
-                            errors = status.get("errors", [])
-                            for err in errors:
-                                # detect 24-hour re-engagement failure
-                                if err.get("code") == 131047:
-                                    print("⚠️ Message failed due to 24-hour window.")
-                                    recipient_id = status.get("recipient_id")
-                                    send_template_message_24hr(recipient_id)
-
-            except Exception as e:
-                print("❌ Error processing webhook:", e)
-
-                return jsonify(success=True), 200    
+   
 
 
 
@@ -7662,6 +7692,7 @@ def webhook():
                                                                                         , 
                                                                                         buttons
                                                                                     )
+                                                                                    
 
                                                                             except Exception as e:
                                                                                 connection.rollback()
