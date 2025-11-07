@@ -27,7 +27,7 @@ import re
 from paynow import Paynow
 import time
 import random
-import threading
+#import threading
 
 
 app = Flask(__name__)
