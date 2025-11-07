@@ -6354,7 +6354,7 @@ def webhook():
             print("📥 Full incoming data:", json.dumps(data, indent=2))
 
 
-            def process_webhook_event(data):
+            '''def process_webhook_event(data):
                 try:
                     print("🧵 Background thread running...")
 
@@ -6442,7 +6442,7 @@ def webhook():
 
                 response = requests.post(API_URL, headers=headers, json=payload)
                 print("📤 Template sent:", response.status_code, response.text)
-                return response.status_code, response.text
+                return response.status_code, response.text'''
 
 
 
