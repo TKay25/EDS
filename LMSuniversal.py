@@ -27,6 +27,7 @@ import re
 from paynow import Paynow
 import time
 import random
+#import threading
 
 
 app = Flask(__name__)
@@ -6352,7 +6353,70 @@ def webhook():
 
             print("📥 Full incoming data:", json.dumps(data, indent=2))
 
-            '''def send_template_message_24hr(recipient_id):
+
+            '''def process_webhook_event(data):
+                try:
+                    print("🧵 Background thread running...")
+
+                    for entry in data.get("entry", []):
+                        for change in entry.get("changes", []):
+                            value = change.get("value", {})
+
+                            # ------------------------------------------------------------
+                            # ✅ INCOMING MESSAGES
+                            # ------------------------------------------------------------
+                            messages = value.get("messages", [])
+                            for msg in messages:
+                                sender = msg.get("from")
+                                msg_type = msg.get("type")
+
+                                # ✅ Text message
+                                if msg_type == "text":
+                                    body = msg["text"]["body"]
+                                    print(f"📩 Text from {sender}: {body}")
+
+                                    send_whatsapp_message(
+                                        sender,
+                                        "Thanks! Choose an option:",
+                                        buttons=[
+                                            {"type": "reply", "reply": {"id": "yes", "title": "YES"}},
+                                            {"type": "reply", "reply": {"id": "no", "title": "NO"}}
+                                        ]
+                                    )
+
+                                # ✅ Button reply
+                                if msg_type == "interactive":
+                                    interactive = msg["interactive"]
+                                    reply_id = interactive["button_reply"]["id"]
+                                    print(f"🔘 Button reply from {sender}: {reply_id}")
+
+                                    send_whatsapp_message(sender, f"You selected: {reply_id}")
+
+                            # ------------------------------------------------------------
+                            # ✅ STATUS UPDATES (message deliveries/errors)
+                            # ------------------------------------------------------------
+                            statuses = value.get("statuses", [])
+                            for status in statuses:
+                                recipient = status.get("recipient_id")
+                                errors = status.get("errors", [])
+
+                                for err in errors:
+                                    code = err.get("code")
+                                    print("⚠️ Status error:", code)
+
+                                    # ✅ Session expired → send template
+                                    if code == 131047:
+                                        print("🚫 24-hour session expired → sending template")
+                                        send_template_message_24hr(recipient)
+
+                except Exception as e:
+                    print("❌ Error in background event processor:", e)
+
+            threading.Thread(target=process_webhook_event, args=(data,)).start()
+
+
+
+            def send_template_message_24hr(recipient_id):
                 headers = {
                     "Authorization": f"Bearer {ACCESS_TOKEN}",
                     "Content-Type": "application/json"
@@ -6378,26 +6442,9 @@ def webhook():
 
                 response = requests.post(API_URL, headers=headers, json=payload)
                 print("📤 Template sent:", response.status_code, response.text)
-                return response.status_code, response.text
+                return response.status_code, response.text'''
 
-            try:
-                    for entry in data.get("entry", []):
-                        for change in entry.get("changes", []):
-                            value = change.get("value", {})
-                            statuses = value.get("statuses", [])
 
-                            for status in statuses:
-                                errors = status.get("errors", [])
-                                for err in errors:
-                                    # detect 24-hour re-engagement failure
-                                    if err.get("code") == 131047:
-                                        print("⚠️ Message failed due to 24-hour window.")
-                                        recipient_id = status.get("recipient_id")
-                                        send_template_message_24hr(recipient_id)
-            except Exception as e:
-                print("❌ Error processing webhook:", e)
-
-                return jsonify(success=True), 200  '''   
 
 
 

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Leave Management System Dashboard</title>
+        <title>HR Management System Dashboard</title>
         <meta name="mobile-web-app-capable" content="yes">
         <!-- <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}"> -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -5086,29 +5086,6 @@ document.addEventListener("DOMContentLoaded", function () {
         checkbox.addEventListener("change", updateChart);
     });
 });
-</script>
-
-
-<script>
-    window.fbAsyncInit = function() {
-        FB.init({
-        appId      : '{your-app-id}',
-        cookie     : true,
-        xfbml      : true,
-        version    : '{api-version}'
-        });
-        
-        FB.AppEvents.logPageView();   
-        
-    };
-
-    (function(d, s, id){
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) {return;}
-        js = d.createElement(s); js.id = id;
-        js.src = "https://connect.facebook.net/en_US/sdk.js";
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
 </script>
 
 </body>
