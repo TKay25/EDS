@@ -977,13 +977,13 @@
                 </div>
                 <div class="modal-body">
                     <div class="d-flex flex-column align-items-center justify-content-center text-center">
-                        <form id="upload-form" action="/upload-excel-payroll" method="POST" enctype="multipart/form-data">
+                        <form id="upload-form-payroll" action="/upload-excel-payroll" method="POST" enctype="multipart/form-data">
                             <button class="btn upload-template-payroll btn-primary2 mt-3" style="width: max-content;">
                                 Upload Excel Template Containing Employee Payroll Details 
                                 <i class="bi bi-cloud-upload" style="margin-left: 5px;"></i>
                             </button>
                             <!-- Hidden file input -->
-                            <input type="file" id="file-upload" name="file" accept=".xlsx" style="display: none;">
+                            <input type="file-payroll" id="file-upload-payroll" name="file-payroll" accept=".xlsx" style="display: none;">
                         </form>
                         <button class="btn btn-primary2 mt-3" id="download-btn-excel-template-payroll" style="width: max-content;">Download Employee Payroll Details Template <i class="bi bi-file-earmark-arrow-down" style="margin-left: 5px;"></i></button>
                     </div>         
