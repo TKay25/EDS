@@ -17536,7 +17536,7 @@ def update_employee_details_admin_comp():
                 if email and '@' not in email:
                     return jsonify({'error': 'Invalid email format'}), 400
 
-                elif record_exists > 0 :
+                elif record_exists > 1 :
                     return jsonify({'error': 'Someone esle has a similar WhatsApp Number and(or) Email. Kindly provide unique inputs on these fields'}), 400    
 
                 update_query = f"""UPDATE {details_table} SET firstname = %s, surname = %s, whatsapp = %s, email = %s, address = %s WHERE id = %s; """
