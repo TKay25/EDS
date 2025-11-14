@@ -31,6 +31,7 @@ from paynow import Paynow
 import time
 import random
 #import threading
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 app = Flask(__name__)
@@ -171,6 +172,169 @@ def initialize_database_tables():
 # Initialize tables on startup - COMMENTED OUT to prevent blocking Render startup
 # Tables will be created on first request if they don't exist
 # initialize_database_tables()
+##################### BACKGROUND SCHEDULER - Check pending applications every 10 minutes ###################################
+
+def check_and_send_reminders():
+    """
+    Background job: Every 10 minutes, check all tables ending with 'appspendingapproval'
+    and send WhatsApp reminders to approvers who haven't reviewed them yet.
+    """
+    try:
+        print("🔄 [Scheduler] Starting pending applications check...")
+        
+        with get_db() as (cursor, connection):
+            # Step 1: Get all tables ending with "appspendingapproval"
+            cursor.execute("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name LIKE '%appspendingapproval'
+            """)
+            pending_tables = cursor.fetchall()
+            
+            if not pending_tables:
+                print("⚠️ [Scheduler] No pending approval tables found")
+                return
+            
+            reminder_count = 0
+            
+            for table_tuple in pending_tables:
+                table_name_pending = table_tuple[0]
+                # Extract company name from table (e.g., "mycompany_appspendingapproval" -> "mycompany")
+                company_reg = table_name_pending.replace("appspendingapproval", "")
+                
+                try:
+                    
+                    # Step 2: Get all pending applications (WHERE status = 'pending')
+                    cursor.execute(f"""
+                        SELECT appid, leaveapprovername, leaveapproverwhatsapp, 
+                               firstname, leavetype, leavestartdate, leaveenddate, 
+                               dateapplied
+                        FROM {table_name_pending}
+                        WHERE status = %s
+                        ORDER BY dateapplied ASC
+                    """, ('pending',))
+                    
+                    pending_apps = cursor.fetchall()
+                    
+                    if pending_apps:
+                        print(f"📋 [Scheduler]: Found {len(pending_apps)} pending applications")
+                        
+                        for app in pending_apps:
+                            app_id = app[0]
+                            approver_name = app[1]
+                            approver_whatsapp = app[2]
+                            employee_name = app[3]
+                            leave_type = app[4]
+                            start_date = app[5]
+                            end_date = app[6]
+                            date_applied = app[7]
+                            
+                            # Format dates
+                            '''if isinstance(start_date, str):
+                                start_date_str = start_date
+                            else:
+                                start_date_str = start_date.strftime("%d %b %Y") if start_date else "N/A"
+                            
+                            if isinstance(end_date, str):
+                                end_date_str = end_date
+                            else:
+                                end_date_str = end_date.strftime("%d %b %Y") if end_date else "N/A" '''
+                            
+                            # Only send reminder if approver has a WhatsApp number
+                            if approver_whatsapp and len(str(approver_whatsapp).strip()) > 0:
+                                # Clean the WhatsApp number (remove spaces, leading 0)
+                                wa_number = str(approver_whatsapp).strip()
+                                if wa_number.startswith('0'):
+                                    wa_number = wa_number[1:]  # Remove leading 0
+                                wa_number = wa_number.replace(" ", "")
+                                
+                                # Add country code if needed (assuming Zimbabwe +263)
+                                if not wa_number.startswith('+'):
+                                    wa_number = f"263{wa_number}"
+                                
+                                # Prepare reminder message
+                                reminder_msg = (
+                                    f"🔔 *Pending Leave Application Reminder*\n\n"
+                                    f"Hi {approver_name},\n\n"
+                                    f"You have a pending leave application awaiting your approval:\n\n"
+                                    f"👤 *Employee:* {employee_name}\n"
+                                    f"📅 *Leave Type:* {leave_type}\n"
+                                    #f"🗓️ *From:* {start_date_str}\n"
+                                    #f"🗓️ *To:* {end_date_str}\n"
+                                    f"📝 *Applied:* {date_applied}\n\n"
+                                    f"Please review and approve/decline this application."
+                                )
+                                
+                                # Send WhatsApp message
+                                try:
+                                    send_reminder_whatsapp(wa_number, reminder_msg, app_id, company_reg)
+                                    reminder_count += 1
+                                except Exception as e:
+                                    print(f"❌ [Scheduler] Failed to send reminder for app {app_id}: {e}")
+                    
+                except Exception as e:
+                    print(f"⚠️ [Scheduler] Error processing some company: {e}")
+                    continue
+            
+            print(f"✅ [Scheduler] Reminders sent: {reminder_count}")
+    
+    except Exception as e:
+        print(f"❌ [Scheduler] Error in check_and_send_reminders: {e}")
+
+
+def send_reminder_whatsapp(phone_number, message_text, app_id, company_reg):
+    """
+    Send a WhatsApp reminder message to the approver.
+    Uses the first active WhatsApp account configuration.
+    """
+    # Default credentials - you can rotate through multiple accounts if needed
+    ACCESS_TOKEN = "EAATESj1oB5YBPIzFCv7ulvosr2S2ZAiWBJrFp7bti6L0ZCWS2AOz5dUABlJ6q16a4hRwEXdq5vZAP5tp4rGXfOQ2sx0hg1EOwMpL002eqUrygbPc3jkY8FPOzR7c6tMvKJxT3XxXP8Qp9U1n30MIMVcNy9JUCZB8UyIwaAZBAjf2U32TVTwSBJlSeHoNYrGH0dwZDZD"
+    PHONE_NUMBER_ID = "756962384159644"
+    
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": phone_number,
+        "type": "template",
+        "template": {
+            "name": "reminderapprove",
+            "language": {"code": "en"}
+        }
+    }
+
+    try:
+        response = requests.post(
+            f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
+            headers=headers,
+            json=payload,
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            print(f"✅ [Scheduler] Reminder template 'reminderapprove' sent to {phone_number} from {company_reg} for app {app_id}")
+        else:
+            print(f"⚠️ [Scheduler] Failed to send reminder template to {phone_number}: {response.status_code} - {response.text}")
+            print("⚠️ Make sure the template 'reminderapprove' exists and is approved in Meta Business Account for this phone number.")
+
+    except Exception as e:
+        print(f"❌ [Scheduler] Exception sending reminder template: {e}")
+
+
+# Initialize scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=check_and_send_reminders, trigger="interval", minutes=10, id="pending_apps_reminder")
+
+try:
+    scheduler.start()
+    print("✅ Background scheduler started - Pending applications check every 10 minutes")
+except Exception as e:
+    print(f"⚠️ Could not start scheduler: {e}")
+
 
 ##################### client test ####################################################################################################
 
