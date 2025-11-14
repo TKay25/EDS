@@ -326,7 +326,7 @@ def send_reminder_whatsapp(phone_number, message_text, app_id, company_reg):
 
 # Initialize scheduler
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=check_and_send_reminders, trigger="interval", minutes=3, id="pending_apps_reminder")
+scheduler.add_job(func=check_and_send_reminders, trigger="interval", minutes=10, id="pending_apps_reminder")
 
 try:
     scheduler.start()
