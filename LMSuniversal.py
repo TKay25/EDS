@@ -6304,7 +6304,6 @@ def webhook():
                         print("❌ WhatsApp API Error:", e)
                         return {"error": str(e)}
 
-
                 def send_whatsapp_list_message(recipient, text, list_title, sections):
 
                     headers = {
@@ -6342,9 +6341,7 @@ def webhook():
                     print("List message response:", response.json())
                     return response
 
-
                 print("📥 Full incoming data:", json.dumps(data, indent=2))
-
 
                 # Detect status errors (e.g. 131047 -> Re-engagement required) and send a re-engagement template
                 try:
@@ -6391,10 +6388,12 @@ def webhook():
                                                 print("📤 Re-engagement template sent to:", recipient, resp.status_code)
                                             except Exception as e:
                                                 print("❌ Failed to send re-engagement template:", e)
+
                 except Exception as e:
                     print("❌ Error processing statuses for re-engagement templates:", e)
 
 
+                    
 
                 '''def process_webhook_event(data):
                     try:
