@@ -6346,6 +6346,56 @@ def webhook():
                 print("📥 Full incoming data:", json.dumps(data, indent=2))
 
 
+                # Detect status errors (e.g. 131047 -> Re-engagement required) and send a re-engagement template
+                try:
+                    # safe navigation of the webhook structure
+                    entries = data.get("entry", []) if isinstance(data, dict) else []
+                    for entry in entries:
+                        for change in entry.get("changes", []):
+                            value = change.get("value", {})
+                            statuses = value.get("statuses", [])
+                            for status in statuses:
+                                errors = status.get("errors", []) or []
+                                for err in errors:
+                                    try:
+                                        code = int(err.get("code", 0))
+                                    except Exception:
+                                        code = None
+                                    if code == 131047:
+                                        recipient = status.get("recipient_id") or status.get("recipient")
+                                        if recipient:
+                                            headers = {
+                                                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                                                "Content-Type": "application/json"
+                                            }
+                                            # Template payload — change template name/text as needed
+                                            payload = {
+                                                "messaging_product": "whatsapp",
+                                                "to": recipient,
+                                                "type": "template",
+                                                "template": {
+                                                    "name": "reminderapprove",
+                                                    "language": {"code": "en_US"},
+                                                    "components": [
+                                                        {
+                                                            "type": "body",
+                                                            "parameters": [
+                                                                {"type": "text", "text": "Send `Hello` to start."}
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                            try:
+                                                resp = requests.post(f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages", headers=headers, json=payload, timeout=10)
+                                                print("📤 Re-engagement template sent to:", recipient, resp.status_code)
+                                            except Exception as e:
+                                                print("❌ Failed to send re-engagement template:", e)
+                except Exception as e:
+                    print("❌ Error processing statuses for re-engagement templates:", e)
+
+
+
                 '''def process_webhook_event(data):
                     try:
                         print("🧵 Background thread running...")
