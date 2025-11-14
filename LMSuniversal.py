@@ -211,9 +211,8 @@ def check_and_send_reminders():
                                firstname, leavetype, leavestartdate, leaveenddate, 
                                dateapplied
                         FROM {table_name_pending}
-                        WHERE status = %s
-                        ORDER BY dateapplied ASC
-                    """, ('pending',))
+                        WHERE approvalstatus = %s
+                    """, ('Pending',))
                     
                     pending_apps = cursor.fetchall()
                     
@@ -327,7 +326,7 @@ def send_reminder_whatsapp(phone_number, message_text, app_id, company_reg):
 
 # Initialize scheduler
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=check_and_send_reminders, trigger="interval", minutes=10, id="pending_apps_reminder")
+scheduler.add_job(func=check_and_send_reminders, trigger="interval", minutes=3, id="pending_apps_reminder")
 
 try:
     scheduler.start()
