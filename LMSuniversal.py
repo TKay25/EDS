@@ -6379,7 +6379,7 @@ def webhook():
                                                 "type": "template",
                                                 "template": {
                                                     "name": "reminderapprove",  # ⬅️ CHANGE THIS to your approved template name
-                                                    "language": {"code": "en_US"}
+                                                    "language": {"code": "en"}
                                                 }
                                             }
                                             try:
