@@ -6343,7 +6343,7 @@ def webhook():
 
                 print("📥 Full incoming data:", json.dumps(data, indent=2))
 
-                # Detect status errors (e.g. 131047 -> Re-engagement required) and send a re-engagement template
+                    # Detect status errors (e.g. 131047 -> Re-engagement required) and send aand send an approved template
                 try:
                     # safe navigation of the webhook structure
                     entries = data.get("entry", []) if isinstance(data, dict) else []
@@ -6365,35 +6365,38 @@ def webhook():
                                                 "Authorization": f"Bearer {ACCESS_TOKEN}",
                                                 "Content-Type": "application/json"
                                             }
-                                            # Template payload — change template name/text as needed
+                                            # Error 131047 = 24-hour session window expired. MUST use approved template.
+                                            # ⚠️ IMPORTANT: Replace "hello_world" with YOUR actual approved template name from Meta Business Account
+                                            # Steps to create a template:
+                                            # 1. Go to Meta Business Account > Message Templates
+                                            # 2. Create a new template (e.g., "re_engagement_24h")
+                                            # 3. Set category: "MARKETING" or "UTILITY"
+                                            # 4. Wait for approval (usually 1-24 hours)
+                                            # 5. Update the template name below
                                             payload = {
                                                 "messaging_product": "whatsapp",
                                                 "to": recipient,
                                                 "type": "template",
                                                 "template": {
-                                                    "name": "reminderapprove",
-                                                    "language": {"code": "en_US"},
-                                                    "components": [
-                                                        {
-                                                            "type": "body",
-                                                            "parameters": [
-                                                                {"type": "text", "text": "Send `Hello` to start."}
-                                                            ]
-                                                        }
-                                                    ]
+                                                    "name": "reminderapprove",  # ⬅️ CHANGE THIS to your approved template name
+                                                    "language": {"code": "en_US"}
                                                 }
                                             }
                                             try:
                                                 resp = requests.post(f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages", headers=headers, json=payload, timeout=10)
-                                                print("📤 Re-engagement template sent to:", recipient, resp.status_code)
+                                                if resp.status_code == 200:
+                                                    print("📤 Re-engagement template sent to:", recipient, resp.status_code)
+                                                else:
+                                                    print("⚠️ Error 131047 re-engagement failed (status %d) for recipient %s. Response: %s" % (resp.status_code, recipient, resp.text))
+                                                    print("⚠️ Ensure the template name exists and is approved in Meta Business Account")
                                             except Exception as e:
                                                 print("❌ Failed to send re-engagement template:", e)
 
                 except Exception as e:
-                    print("❌ Error processing statuses for re-engagement templates:", e)
+                    print("❌ Error processing statuses for re-engagement:", e)
 
 
-                    
+
 
                 '''def process_webhook_event(data):
                     try:
