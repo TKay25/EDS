@@ -8018,11 +8018,7 @@ def webhook():
                                                                         status = "Cancelled"
                                                                         statusdate = today_date
                                                                     
-                                                                        insert_query = f"""
-                                                                        INSERT INTO {table_name_apps_cancelled} 
-                                                                        (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
-                                                                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                        """
+                                                                        insert_query = f"""INSERT INTO {table_name_apps_cancelled} (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
 
                                                                         cursor.execute(insert_query, (
                                                                             app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
@@ -9428,11 +9424,7 @@ def webhook():
                                                                     status = "Cancelled"
                                                                     statusdate = today_date
                                                                 
-                                                                    insert_query = f"""
-                                                                    INSERT INTO {table_name_apps_cancelled} 
-                                                                    (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
-                                                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                    """
+                                                                    insert_query = f"""INSERT INTO {table_name_apps_cancelled} (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
 
                                                                     cursor.execute(insert_query, (
                                                                         app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
@@ -11805,11 +11797,7 @@ def webhook():
                                                                             status = "Cancelled"
                                                                             statusdate = today_date
                                                                         
-                                                                            insert_query = f"""
-                                                                            INSERT INTO {table_name_apps_cancelled} 
-                                                                            (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
-                                                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                            """
+                                                                            insert_query = f"""INSERT INTO {table_name_apps_cancelled} (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
 
                                                                             cursor.execute(insert_query, (
                                                                                 app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
@@ -14565,11 +14553,7 @@ def webhook():
                                                                         status = "Cancelled"
                                                                         statusdate = today_date
                                                                     
-                                                                        insert_query = f"""
-                                                                        INSERT INTO {table_name_apps_cancelled} 
-                                                                        (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate)
-                                                                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                                                                        """
+                                                                        insert_query = f"""INSERT INTO {table_name_apps_cancelled} (appid, id, firstname, surname, department, leavetype, reasonifother, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, dateapplied, leavestartdate, leaveenddate, leavedaysappliedfor, leavedaysbalancebf, approvalstatus, statusdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
 
                                                                         cursor.execute(insert_query, (
                                                                             app_id, employee_number, first_name, surname, department, leave_type, leave_specify, approver_name, 
