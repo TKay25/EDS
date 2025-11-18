@@ -6506,8 +6506,8 @@ def webhook():
 
                 print("📥 Full incoming data:", json.dumps(data, indent=2))
 
-                    # Detect status errors (e.g. 131047 -> Re-engagement required) and send aand send an approved template
-                try:
+                # Detect status errors (e.g. 131047 -> Re-engagement required) and send aand send an approved template
+                '''try:
                     # safe navigation of the webhook structure
                     entries = data.get("entry", []) if isinstance(data, dict) else []
                     for entry in entries:
@@ -6528,6 +6528,48 @@ def webhook():
                                                 "Authorization": f"Bearer {ACCESS_TOKEN}",
                                                 "Content-Type": "application/json"
                                             }
+
+                                            with get_db() as (cursor, connection):
+                                                # Step 1: Get all tables ending with "appspendingapproval"
+                                                cursor.execute("""
+                                                    SELECT table_name 
+                                                    FROM information_schema.tables 
+                                                    WHERE table_schema = 'public' 
+                                                    AND table_name LIKE '%appspendingapproval'
+                                                """)
+                                                pending_tables = cursor.fetchall()
+                                                
+                                                if not pending_tables:
+                                                    print("⚠️ No pending approval tables found")
+                                                    return
+                                                                                                
+                                                for table_tuple in pending_tables:
+                                                    table_name_pending = table_tuple[0]
+                                                    # Extract company name from table (e.g., "mycompany_appspendingapproval" -> "mycompany")
+                                                    company_reg = table_name_pending.replace("appspendingapproval", "")
+                                                    
+                                                    try:
+                                                        
+                                                        # Step 2: Get all pending applications (WHERE status = 'pending')
+                                                        cursor.execute(f"""
+                                                            SELECT appid, leaveapprovername, leaveapproverwhatsapp, 
+                                                                firstname, leavetype, leavestartdate, leaveenddate, 
+                                                                dateapplied
+                                                            FROM {table_name_pending}
+                                                            WHERE leaveapproverwhatsapp = %s
+                                                        """, (recepient,))
+                                                        
+                                                        pending_apps = cursor.fetchall()
+                                                        
+                                                        if pending_apps:
+
+
+
+
+
+
+
+
                                             # Error 131047 = 24-hour session window expired. MUST use approved template.
                                             # ⚠️ IMPORTANT: Replace "hello_world" with YOUR actual approved template name from Meta Business Account
                                             # Steps to create a template:
@@ -6561,7 +6603,7 @@ def webhook():
 
 
 
-                '''def process_webhook_event(data):
+                def process_webhook_event(data):
                     try:
                         print("🧵 Background thread running...")
 
