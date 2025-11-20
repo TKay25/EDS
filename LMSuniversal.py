@@ -37,7 +37,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  
 app.secret_key = '011235'
-app.permanent_session_lifetime = timedelta(minutes=30)
+app.permanent_session_lifetime = timedelta(minutes=360)
 user_sessions = {}
 
 database = 'lmsdatabase_8ag3'
