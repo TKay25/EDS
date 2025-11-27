@@ -301,7 +301,7 @@ def send_reminder_whatsapp(phone_number, message_text, app_id, company_reg):
         "to": phone_number,
         "type": "template",
         "template": {
-            "name": "reminderapprove",
+            "name": "reminderapprove2",
             "language": {"code": "en"}
         }
     }
