@@ -176,14 +176,14 @@ def initialize_database_tables():
 
 def update_leave_abcv():
     update_query = """
-    UPDATE brilliant_chemicalsappspendingapproval
-    SET leavedaysappliedfor = %s
-    WHERE id = %s;
+    UPDATE brilliant_chemicals_pvt_ltdappspendingapproval
+    SET leavedaysappliedfor = 14
+    WHERE id = 393;
     """
 
     try:
         with get_db() as (cursor, connection):
-            cursor.execute(update_query, (14, 393))
+            cursor.execute(update_query)
             connection.commit()
             print("Rows updated:", cursor.rowcount)
     except Exception as e:
