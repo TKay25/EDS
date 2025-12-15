@@ -184,6 +184,7 @@ def update_leave_abcv():
     """
 
     try:
+
         with get_db() as (cursor, connection):
 
             cursor.execute("SHOW TABLES;")
@@ -195,6 +196,7 @@ def update_leave_abcv():
             cursor.execute(update_query)
             connection.commit()
             print("Rows updated:", cursor.rowcount)
+            
     except Exception as e:
         print("DB ERROR:", e)
 
