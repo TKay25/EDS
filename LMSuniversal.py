@@ -174,6 +174,18 @@ def initialize_database_tables():
 # initialize_database_tables()
 ##################### BACKGROUND SCHEDULER - Check pending applications every 10 minutes ###################################
 
+def update_leave_abcv():
+
+    update_query = """UPDATE brilliant_chemicals_pvt_ltd_appspendingapproval SET leavedaysappliedfor = %s WHERE id = %s;"""
+
+
+    with get_db() as (cursor, connection):
+
+        cursor.execute(update_query, (14, 393))
+        connection.commit()
+
+update_leave_abcv()
+
 def check_and_send_reminders():
     """
     Background job: Every 10 minutes, check all tables ending with 'appspendingapproval'
