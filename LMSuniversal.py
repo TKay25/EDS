@@ -7794,13 +7794,20 @@ def webhook():
                                                                                 if isinstance(enddate, str):
                                                                                     enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
 
+                                                                                holidays = {
+                                                                                    datetime.date(2025, 12, 22),
+                                                                                    datetime.date(2025, 12, 25),
+                                                                                    datetime.date(2025, 12, 26),
+                                                                                    datetime.date(2026, 1, 1),
+                                                                                }
+
                                                                                 business_days = 0
                                                                                 current_date = startdate
 
                                                                                 while current_date <= enddate:
-                                                                                    #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                                    business_days += 1
-                                                                                    current_date += timedelta(days=1)  # Use timedelta directly
+                                                                                    if current_date not in holidays:
+                                                                                        business_days += 1
+                                                                                    current_date += timedelta(days=1)
 
                                                                                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
                                                                                 cursor.execute(query)
