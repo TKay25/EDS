@@ -176,7 +176,7 @@ def initialize_database_tables():
 
 def update_leave_abcv():
     update_query = """
-    UPDATE brilliant_chemicals_pvt_ltdappspendingapproval
+    UPDATE brilliant_chemicalsappspendingapproval
     SET leavedaysappliedfor = %s
     WHERE id = %s;
     """
