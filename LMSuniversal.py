@@ -175,14 +175,20 @@ def initialize_database_tables():
 ##################### BACKGROUND SCHEDULER - Check pending applications every 10 minutes ###################################
 
 def update_leave_abcv():
+    update_query = """
+    UPDATE brilliant_chemicals_pvt_ltdappspendingapproval
+    SET leavedaysappliedfor = %s
+    WHERE id = %s;
+    """
 
-    update_query = """UPDATE brilliant_chemicals_pvt_ltdappspendingapproval SET leavedaysappliedfor = %s WHERE id = %s;"""
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute(update_query, (14, 393))
+            connection.commit()
+            print("Rows updated:", cursor.rowcount)
+    except Exception as e:
+        print("DB ERROR:", e)
 
-
-    with get_db() as (cursor, connection):
-
-        cursor.execute(update_query, (14, 393))
-        connection.commit()
 
 update_leave_abcv()
 
