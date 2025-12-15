@@ -186,17 +186,21 @@ def update_leave_abcv():
     try:
 
         with get_db() as (cursor, connection):
+                        
+            cursor.execute("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public';
+            """)
 
-            cursor.execute("SHOW TABLES;")
-            tables = cursor.fetchall()
-
-            for table in tables:
+            for table in cursor.fetchall():
                 print(table[0])
+
 
             cursor.execute(update_query)
             connection.commit()
             print("Rows updated:", cursor.rowcount)
-            
+
     except Exception as e:
         print("DB ERROR:", e)
 
