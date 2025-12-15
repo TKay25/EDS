@@ -176,13 +176,6 @@ def initialize_database_tables():
 
 def update_leave_abcv():
 
-
-    update_query = """
-    UPDATE brilliant_chemicals_pvt_ltdappspendingapproval
-    SET leavedaysappliedfor = 14
-    WHERE id = 393;
-    """
-
     try:
 
         with get_db() as (cursor, connection):
@@ -196,10 +189,15 @@ def update_leave_abcv():
             for table in cursor.fetchall():
                 print(table[0])
 
-
-            cursor.execute(update_query)
-            connection.commit()
-            print("Rows updated:", cursor.rowcount)
+            cursor.execute("""
+                SELECT id, leavedaysappliedfor
+                FROM brilliant_chemicals_pvt_ltdappspendingapproval
+                WHERE id = 393;
+            """)
+            print(cursor.fetchone())
+            
+            #connection.commit()
+            #print("Rows updated:", cursor.rowcount)
 
     except Exception as e:
         print("DB ERROR:", e)
