@@ -7818,28 +7818,28 @@ def webhook():
                                                                                     if value is None:
                                                                                         raise ValueError("Date value is None")
 
+                                                                                    # datetime → date
                                                                                     if isinstance(value, datetime):
                                                                                         return value.date()
 
+                                                                                    # string → date
                                                                                     if isinstance(value, str):
                                                                                         return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                                    # assume it's already a date object
+                                                                                    # int → date (handles YYYYMMDD and unix timestamps)
+                                                                                    if isinstance(value, int):
+                                                                                        if value > 10_000_000:  # YYYYMMDD
+                                                                                            return datetime.strptime(str(value), "%Y%m%d").date()
+                                                                                        return datetime.fromtimestamp(value).date()
+
+                                                                                    # already a date object
                                                                                     return value
-
-
-
 
                                                                                 appid = result[0]
                                                                                 leavetype = result[2]
                                                                                 startdate = normalize_date(result[3])
                                                                                 enddate = normalize_date(result[4])
                                                                                 table_name = f"{company_reg}main"
-
-                                                                                if isinstance(startdate, str):
-                                                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                                if isinstance(enddate, str):
-                                                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
 
                                                                                 holidays = {
                                                                                     datetime.date(2025, 12, 22),
@@ -8476,27 +8476,27 @@ def webhook():
                                                             if value is None:
                                                                 raise ValueError("Date value is None")
 
+                                                            # datetime → date
                                                             if isinstance(value, datetime):
                                                                 return value.date()
 
+                                                            # string → date
                                                             if isinstance(value, str):
                                                                 return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                            # assume it's already a date object
+                                                            # int → date (handles YYYYMMDD and unix timestamps)
+                                                            if isinstance(value, int):
+                                                                if value > 10_000_000:  # YYYYMMDD
+                                                                    return datetime.strptime(str(value), "%Y%m%d").date()
+                                                                return datetime.fromtimestamp(value).date()
+
+                                                            # already a date object
                                                             return value
-
-
 
                                                         appid = result[0]
                                                         leavetype = result[2]
                                                         startdate = normalize_date(result[3])
                                                         enddate = normalize_date(result[4])
-
-                                                        # ✅ Ensure both dates are datetime.date objects
-                                                        if isinstance(startdate, str):
-                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                        if isinstance(enddate, str):
-                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
                                                         holidays = {
                                                             datetime.date(2025, 12, 22),
@@ -9256,27 +9256,31 @@ def webhook():
                                                                             if value is None:
                                                                                 raise ValueError("Date value is None")
 
+                                                                            # datetime → date
                                                                             if isinstance(value, datetime):
                                                                                 return value.date()
 
+                                                                            # string → date
                                                                             if isinstance(value, str):
                                                                                 return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                            # assume it's already a date object
+                                                                            # int → date (handles YYYYMMDD and unix timestamps)
+                                                                            if isinstance(value, int):
+                                                                                if value > 10_000_000:  # YYYYMMDD
+                                                                                    return datetime.strptime(str(value), "%Y%m%d").date()
+                                                                                return datetime.fromtimestamp(value).date()
+
+                                                                            # already a date object
                                                                             return value
 
 
-                                                                        
+
+                                                        
                                                                         appid = result[0]
                                                                         leavetype = result[2]
                                                                         startdate = normalize_date(result[3])
                                                                         enddate = normalize_date(result[4])
                                                                         table_name = f"{company_reg}main"
-
-                                                                        if isinstance(startdate, str):
-                                                                            startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                        if isinstance(enddate, str):
-                                                                            enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
 
                                                                         holidays = {
                                                                             datetime.date(2025, 12, 22),
@@ -10469,14 +10473,23 @@ def webhook():
                                                                     if value is None:
                                                                         raise ValueError("Date value is None")
 
+                                                                    # datetime → date
                                                                     if isinstance(value, datetime):
                                                                         return value.date()
 
+                                                                    # string → date
                                                                     if isinstance(value, str):
                                                                         return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                    # assume it's already a date object
+                                                                    # int → date (handles YYYYMMDD and unix timestamps)
+                                                                    if isinstance(value, int):
+                                                                        if value > 10_000_000:  # YYYYMMDD
+                                                                            return datetime.strptime(str(value), "%Y%m%d").date()
+                                                                        return datetime.fromtimestamp(value).date()
+
+                                                                    # already a date object
                                                                     return value
+
 
 
                                                                     
@@ -10484,12 +10497,6 @@ def webhook():
                                                                 leavetype = result[2]
                                                                 startdate = normalize_date(result[3])
                                                                 enddate = normalize_date(result[4])
-
-                                                                # ✅ Ensure both dates are datetime.date objects
-                                                                if isinstance(startdate, str):
-                                                                    startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                if isinstance(enddate, str):
-                                                                    enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
                                                                 holidays = {
                                                                     datetime.date(2025, 12, 22),
@@ -11394,14 +11401,23 @@ def webhook():
                                                                                     if value is None:
                                                                                         raise ValueError("Date value is None")
 
+                                                                                    # datetime → date
                                                                                     if isinstance(value, datetime):
                                                                                         return value.date()
 
+                                                                                    # string → date
                                                                                     if isinstance(value, str):
                                                                                         return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                                    # assume it's already a date object
+                                                                                    # int → date (handles YYYYMMDD and unix timestamps)
+                                                                                    if isinstance(value, int):
+                                                                                        if value > 10_000_000:  # YYYYMMDD
+                                                                                            return datetime.strptime(str(value), "%Y%m%d").date()
+                                                                                        return datetime.fromtimestamp(value).date()
+
+                                                                                    # already a date object
                                                                                     return value
+
 
 
                                                                                 
@@ -11410,11 +11426,6 @@ def webhook():
                                                                                 startdate = normalize_date(result[3])
                                                                                 enddate = normalize_date(result[4])
                                                                                 table_name = f"{company_reg}main"
-
-                                                                                if isinstance(startdate, str):
-                                                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                                if isinstance(enddate, str):
-                                                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
 
                                                                                 holidays = {
                                                                                     datetime.date(2025, 12, 22),
@@ -12875,14 +12886,23 @@ def webhook():
                                                                 if value is None:
                                                                     raise ValueError("Date value is None")
 
+                                                                # datetime → date
                                                                 if isinstance(value, datetime):
                                                                     return value.date()
 
+                                                                # string → date
                                                                 if isinstance(value, str):
                                                                     return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                # assume it's already a date object
+                                                                # int → date (handles YYYYMMDD and unix timestamps)
+                                                                if isinstance(value, int):
+                                                                    if value > 10_000_000:  # YYYYMMDD
+                                                                        return datetime.strptime(str(value), "%Y%m%d").date()
+                                                                    return datetime.fromtimestamp(value).date()
+
+                                                                # already a date object
                                                                 return value
+
 
 
                                                                 
@@ -12890,12 +12910,6 @@ def webhook():
                                                             leavetype = result[2]
                                                             startdate = normalize_date(result[3])
                                                             enddate = normalize_date(result[4])
-
-                                                            # ✅ Ensure both dates are datetime.date objects
-                                                            if isinstance(startdate, str):
-                                                                startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                            if isinstance(enddate, str):
-                                                                enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
                                                             # ✅ Calculate business days
                                                             holidays = {
@@ -14081,14 +14095,23 @@ def webhook():
                                                                                 if value is None:
                                                                                     raise ValueError("Date value is None")
 
+                                                                                # datetime → date
                                                                                 if isinstance(value, datetime):
                                                                                     return value.date()
 
+                                                                                # string → date
                                                                                 if isinstance(value, str):
                                                                                     return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                                # assume it's already a date object
+                                                                                # int → date (handles YYYYMMDD and unix timestamps)
+                                                                                if isinstance(value, int):
+                                                                                    if value > 10_000_000:  # YYYYMMDD
+                                                                                        return datetime.strptime(str(value), "%Y%m%d").date()
+                                                                                    return datetime.fromtimestamp(value).date()
+
+                                                                                # already a date object
                                                                                 return value
+
 
 
                                                                             
@@ -14098,10 +14121,6 @@ def webhook():
                                                                             enddate = normalize_date(result[4])
                                                                             table_name = f"{company_reg}main"
 
-                                                                            if isinstance(startdate, str):
-                                                                                startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                            if isinstance(enddate, str):
-                                                                                enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
 
                                                                             holidays = {
                                                                                 datetime.date(2025, 12, 22),
