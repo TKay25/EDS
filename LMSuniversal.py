@@ -48,6 +48,26 @@ database = 'lmsdatabase_8ag3'
 #VERIFY_TOKEN = "521035180620700"
 #WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
+holidays = {
+    datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+    datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+    datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+    datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
+    datetime.strptime("2026-02-21", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-03", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-04", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-05", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-06", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-18", "%Y-%m-%d").date(),
+    datetime.strptime("2026-05-01", "%Y-%m-%d").date(),
+    datetime.strptime("2026-05-25", "%Y-%m-%d").date(),
+    datetime.strptime("2026-08-10", "%Y-%m-%d").date(),
+    datetime.strptime("2026-08-11", "%Y-%m-%d").date(),
+    datetime.strptime("2026-12-22", "%Y-%m-%d").date(),
+    datetime.strptime("2026-12-25", "%Y-%m-%d").date(),
+    datetime.strptime("2026-12-26", "%Y-%m-%d").date(),
+}
+
 def initialize_database_tables():
     """Initialize all required database tables on startup"""
     try:
@@ -7825,13 +7845,6 @@ def webhook():
                                                                                 enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
                                                                                 # HOLIDAYS — SAME FORMAT, NO datetime.date
-                                                                                holidays = {
-                                                                                    datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
-                                                                                    datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
-                                                                                    datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
-                                                                                    datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
-                                                                                }
-
                                                                                 business_days = 0
                                                                                 current_date = startdate
 
@@ -8467,12 +8480,6 @@ def webhook():
                                                         enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
                                                         # HOLIDAYS — SAME FORMAT, NO datetime.date
-                                                        holidays = {
-                                                            datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
-                                                            datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
-                                                            datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
-                                                            datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
-                                                        }
 
                                                         business_days = 0
                                                         current_date = startdate
@@ -9231,12 +9238,6 @@ def webhook():
                                                                         enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
                                                                         # HOLIDAYS — SAME FORMAT, NO datetime.date
-                                                                        holidays = {
-                                                                            datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
-                                                                            datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
-                                                                            datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
-                                                                            datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
-                                                                        }
 
                                                                         business_days = 0
                                                                         current_date = startdate
@@ -10431,13 +10432,6 @@ def webhook():
                                                                 enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
                                                                 # HOLIDAYS — SAME FORMAT, NO datetime.date
-                                                                holidays = {
-                                                                    datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
-                                                                    datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
-                                                                    datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
-                                                                    datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
-                                                                }
-
                                                                 business_days = 0
                                                                 current_date = startdate
 
@@ -11343,12 +11337,6 @@ def webhook():
                                                                                 enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
                                                                                 # HOLIDAYS — SAME FORMAT, NO datetime.date
-                                                                                holidays = {
-                                                                                    datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
-                                                                                    datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
-                                                                                    datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
-                                                                                    datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
-                                                                                }
 
                                                                                 business_days = 0
                                                                                 current_date = startdate
@@ -12809,12 +12797,6 @@ def webhook():
                                                             enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
                                                             # HOLIDAYS — SAME FORMAT, NO datetime.date
-                                                            holidays = {
-                                                                datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
-                                                                datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
-                                                                datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
-                                                                datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
-                                                            }
 
                                                             business_days = 0
                                                             current_date = startdate
@@ -13999,12 +13981,6 @@ def webhook():
                                                                             enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
                                                                             # HOLIDAYS — SAME FORMAT, NO datetime.date
-                                                                            holidays = {
-                                                                                datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
-                                                                                datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
-                                                                                datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
-                                                                                datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
-                                                                            }
 
                                                                             business_days = 0
                                                                             current_date = startdate
