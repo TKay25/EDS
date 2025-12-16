@@ -7848,6 +7848,10 @@ def webhook():
                                                                                     datetime.date(2026, 1, 1),
                                                                                 }
 
+                                                                                print(startdate, type(startdate))
+                                                                                print(enddate, type(enddate))
+                                                                                print(holidays)
+
                                                                                 business_days = 0
                                                                                 current_date = startdate
 
@@ -8504,6 +8508,10 @@ def webhook():
                                                             datetime.date(2025, 12, 26),
                                                             datetime.date(2026, 1, 1),
                                                         }
+
+                                                        print(startdate, type(startdate))
+                                                        print(enddate, type(enddate))
+                                                        print(holidays)
 
                                                         business_days = 0
                                                         current_date = startdate
@@ -9288,6 +9296,10 @@ def webhook():
                                                                             datetime.date(2025, 12, 26),
                                                                             datetime.date(2026, 1, 1),
                                                                         }
+
+                                                                        print(startdate, type(startdate))
+                                                                        print(enddate, type(enddate))
+                                                                        print(holidays)
 
                                                                         business_days = 0
                                                                         current_date = startdate
@@ -10505,6 +10517,10 @@ def webhook():
                                                                     datetime.date(2026, 1, 1),
                                                                 }
 
+                                                                print(startdate, type(startdate))
+                                                                print(enddate, type(enddate))
+                                                                print(holidays)
+
                                                                 business_days = 0
                                                                 current_date = startdate
 
@@ -11433,6 +11449,10 @@ def webhook():
                                                                                     datetime.date(2025, 12, 26),
                                                                                     datetime.date(2026, 1, 1),
                                                                                 }
+
+                                                                                print(startdate, type(startdate))
+                                                                                print(enddate, type(enddate))
+                                                                                print(holidays)
 
                                                                                 business_days = 0
                                                                                 current_date = startdate
@@ -12919,6 +12939,10 @@ def webhook():
                                                                 datetime.date(2026, 1, 1),
                                                             }
 
+                                                            print(startdate, type(startdate))
+                                                            print(enddate, type(enddate))
+                                                            print(holidays)
+
                                                             business_days = 0
                                                             current_date = startdate
 
@@ -14128,6 +14152,10 @@ def webhook():
                                                                                 datetime.date(2025, 12, 26),
                                                                                 datetime.date(2026, 1, 1),
                                                                             }
+
+                                                                            print(startdate, type(startdate))
+                                                                            print(enddate, type(enddate))
+                                                                            print(holidays)
 
                                                                             business_days = 0
                                                                             current_date = startdate
