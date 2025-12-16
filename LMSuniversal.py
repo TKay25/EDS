@@ -7814,43 +7814,23 @@ def webhook():
 
                                                                                 print("select successful")
 
-                                                                                def normalize_date(value):
-                                                                                    if value is None:
-                                                                                        raise ValueError("Date value is None")
 
-                                                                                    # datetime → date
-                                                                                    if isinstance(value, datetime):
-                                                                                        return value.date()
-
-                                                                                    # string → date
-                                                                                    if isinstance(value, str):
-                                                                                        return datetime.strptime(value.strip(), "%Y-%m-%d").date()
-
-                                                                                    # int → date (handles YYYYMMDD and unix timestamps)
-                                                                                    if isinstance(value, int):
-                                                                                        if value > 10_000_000:  # YYYYMMDD
-                                                                                            return datetime.strptime(str(value), "%Y%m%d").date()
-                                                                                        return datetime.fromtimestamp(value).date()
-
-                                                                                    # already a date object
-                                                                                    return value
 
                                                                                 appid = result[0]
                                                                                 leavetype = result[2]
-                                                                                startdate = normalize_date(result[3])
-                                                                                enddate = normalize_date(result[4])
                                                                                 table_name = f"{company_reg}main"
 
-                                                                                holidays = {
-                                                                                    datetime.date(2025, 12, 22),
-                                                                                    datetime.date(2025, 12, 25),
-                                                                                    datetime.date(2025, 12, 26),
-                                                                                    datetime.date(2026, 1, 1),
-                                                                                }
+                                                                                # FORCE strings → dates, no guessing
+                                                                                startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                                enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
-                                                                                print(startdate, type(startdate))
-                                                                                print(enddate, type(enddate))
-                                                                                print(holidays)
+                                                                                # HOLIDAYS — SAME FORMAT, NO datetime.date
+                                                                                holidays = {
+                                                                                    datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+                                                                                    datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+                                                                                    datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+                                                                                    datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
+                                                                                }
 
                                                                                 business_days = 0
                                                                                 current_date = startdate
@@ -8476,42 +8456,23 @@ def webhook():
                                                         if not result:
                                                             raise Exception("No leave record found.")
 
-                                                        def normalize_date(value):
-                                                            if value is None:
-                                                                raise ValueError("Date value is None")
 
-                                                            # datetime → date
-                                                            if isinstance(value, datetime):
-                                                                return value.date()
-
-                                                            # string → date
-                                                            if isinstance(value, str):
-                                                                return datetime.strptime(value.strip(), "%Y-%m-%d").date()
-
-                                                            # int → date (handles YYYYMMDD and unix timestamps)
-                                                            if isinstance(value, int):
-                                                                if value > 10_000_000:  # YYYYMMDD
-                                                                    return datetime.strptime(str(value), "%Y%m%d").date()
-                                                                return datetime.fromtimestamp(value).date()
-
-                                                            # already a date object
-                                                            return value
 
                                                         appid = result[0]
                                                         leavetype = result[2]
-                                                        startdate = normalize_date(result[3])
-                                                        enddate = normalize_date(result[4])
 
+
+                                                        # FORCE strings → dates, no guessing
+                                                        startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                        enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
+
+                                                        # HOLIDAYS — SAME FORMAT, NO datetime.date
                                                         holidays = {
-                                                            datetime.date(2025, 12, 22),
-                                                            datetime.date(2025, 12, 25),
-                                                            datetime.date(2025, 12, 26),
-                                                            datetime.date(2026, 1, 1),
+                                                            datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+                                                            datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+                                                            datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+                                                            datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
                                                         }
-
-                                                        print(startdate, type(startdate))
-                                                        print(enddate, type(enddate))
-                                                        print(holidays)
 
                                                         business_days = 0
                                                         current_date = startdate
@@ -9260,46 +9221,22 @@ def webhook():
                                                                 
                                                                         result = cursor.fetchone()
 
-                                                                        def normalize_date(value):
-                                                                            if value is None:
-                                                                                raise ValueError("Date value is None")
-
-                                                                            # datetime → date
-                                                                            if isinstance(value, datetime):
-                                                                                return value.date()
-
-                                                                            # string → date
-                                                                            if isinstance(value, str):
-                                                                                return datetime.strptime(value.strip(), "%Y-%m-%d").date()
-
-                                                                            # int → date (handles YYYYMMDD and unix timestamps)
-                                                                            if isinstance(value, int):
-                                                                                if value > 10_000_000:  # YYYYMMDD
-                                                                                    return datetime.strptime(str(value), "%Y%m%d").date()
-                                                                                return datetime.fromtimestamp(value).date()
-
-                                                                            # already a date object
-                                                                            return value
-
-
-
                                                         
                                                                         appid = result[0]
                                                                         leavetype = result[2]
-                                                                        startdate = normalize_date(result[3])
-                                                                        enddate = normalize_date(result[4])
                                                                         table_name = f"{company_reg}main"
 
-                                                                        holidays = {
-                                                                            datetime.date(2025, 12, 22),
-                                                                            datetime.date(2025, 12, 25),
-                                                                            datetime.date(2025, 12, 26),
-                                                                            datetime.date(2026, 1, 1),
-                                                                        }
+                                                                        # FORCE strings → dates, no guessing
+                                                                        startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                        enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
-                                                                        print(startdate, type(startdate))
-                                                                        print(enddate, type(enddate))
-                                                                        print(holidays)
+                                                                        # HOLIDAYS — SAME FORMAT, NO datetime.date
+                                                                        holidays = {
+                                                                            datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+                                                                            datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+                                                                            datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+                                                                            datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
+                                                                        }
 
                                                                         business_days = 0
                                                                         current_date = startdate
@@ -10481,45 +10418,25 @@ def webhook():
                                                                 if not result:
                                                                     raise Exception("No leave record found.")
 
-                                                                def normalize_date(value):
-                                                                    if value is None:
-                                                                        raise ValueError("Date value is None")
-
-                                                                    # datetime → date
-                                                                    if isinstance(value, datetime):
-                                                                        return value.date()
-
-                                                                    # string → date
-                                                                    if isinstance(value, str):
-                                                                        return datetime.strptime(value.strip(), "%Y-%m-%d").date()
-
-                                                                    # int → date (handles YYYYMMDD and unix timestamps)
-                                                                    if isinstance(value, int):
-                                                                        if value > 10_000_000:  # YYYYMMDD
-                                                                            return datetime.strptime(str(value), "%Y%m%d").date()
-                                                                        return datetime.fromtimestamp(value).date()
-
-                                                                    # already a date object
-                                                                    return value
 
 
 
                                                                     
                                                                 appid = result[0]
                                                                 leavetype = result[2]
-                                                                startdate = normalize_date(result[3])
-                                                                enddate = normalize_date(result[4])
 
+
+                                                                # FORCE strings → dates, no guessing
+                                                                startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
+
+                                                                # HOLIDAYS — SAME FORMAT, NO datetime.date
                                                                 holidays = {
-                                                                    datetime.date(2025, 12, 22),
-                                                                    datetime.date(2025, 12, 25),
-                                                                    datetime.date(2025, 12, 26),
-                                                                    datetime.date(2026, 1, 1),
+                                                                    datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+                                                                    datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+                                                                    datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+                                                                    datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
                                                                 }
-
-                                                                print(startdate, type(startdate))
-                                                                print(enddate, type(enddate))
-                                                                print(holidays)
 
                                                                 business_days = 0
                                                                 current_date = startdate
@@ -11413,46 +11330,25 @@ def webhook():
                                                                         
                                                                                 result = cursor.fetchone()
 
-                                                                                def normalize_date(value):
-                                                                                    if value is None:
-                                                                                        raise ValueError("Date value is None")
-
-                                                                                    # datetime → date
-                                                                                    if isinstance(value, datetime):
-                                                                                        return value.date()
-
-                                                                                    # string → date
-                                                                                    if isinstance(value, str):
-                                                                                        return datetime.strptime(value.strip(), "%Y-%m-%d").date()
-
-                                                                                    # int → date (handles YYYYMMDD and unix timestamps)
-                                                                                    if isinstance(value, int):
-                                                                                        if value > 10_000_000:  # YYYYMMDD
-                                                                                            return datetime.strptime(str(value), "%Y%m%d").date()
-                                                                                        return datetime.fromtimestamp(value).date()
-
-                                                                                    # already a date object
-                                                                                    return value
 
 
 
                                                                                 
                                                                                 appid = result[0]
                                                                                 leavetype = result[2]
-                                                                                startdate = normalize_date(result[3])
-                                                                                enddate = normalize_date(result[4])
                                                                                 table_name = f"{company_reg}main"
 
-                                                                                holidays = {
-                                                                                    datetime.date(2025, 12, 22),
-                                                                                    datetime.date(2025, 12, 25),
-                                                                                    datetime.date(2025, 12, 26),
-                                                                                    datetime.date(2026, 1, 1),
-                                                                                }
+                                                                                # FORCE strings → dates, no guessing
+                                                                                startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                                enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
-                                                                                print(startdate, type(startdate))
-                                                                                print(enddate, type(enddate))
-                                                                                print(holidays)
+                                                                                # HOLIDAYS — SAME FORMAT, NO datetime.date
+                                                                                holidays = {
+                                                                                    datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+                                                                                    datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+                                                                                    datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+                                                                                    datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
+                                                                                }
 
                                                                                 business_days = 0
                                                                                 current_date = startdate
@@ -12902,46 +12798,23 @@ def webhook():
                                                             if not result:
                                                                 raise Exception("No leave record found.")
 
-                                                            def normalize_date(value):
-                                                                if value is None:
-                                                                    raise ValueError("Date value is None")
-
-                                                                # datetime → date
-                                                                if isinstance(value, datetime):
-                                                                    return value.date()
-
-                                                                # string → date
-                                                                if isinstance(value, str):
-                                                                    return datetime.strptime(value.strip(), "%Y-%m-%d").date()
-
-                                                                # int → date (handles YYYYMMDD and unix timestamps)
-                                                                if isinstance(value, int):
-                                                                    if value > 10_000_000:  # YYYYMMDD
-                                                                        return datetime.strptime(str(value), "%Y%m%d").date()
-                                                                    return datetime.fromtimestamp(value).date()
-
-                                                                # already a date object
-                                                                return value
-
 
 
                                                                 
                                                             appid = result[0]
                                                             leavetype = result[2]
-                                                            startdate = normalize_date(result[3])
-                                                            enddate = normalize_date(result[4])
 
-                                                            # ✅ Calculate business days
+                                                            # FORCE strings → dates, no guessing
+                                                            startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                            enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
+
+                                                            # HOLIDAYS — SAME FORMAT, NO datetime.date
                                                             holidays = {
-                                                                datetime.date(2025, 12, 22),
-                                                                datetime.date(2025, 12, 25),
-                                                                datetime.date(2025, 12, 26),
-                                                                datetime.date(2026, 1, 1),
+                                                                datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+                                                                datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+                                                                datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+                                                                datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
                                                             }
-
-                                                            print(startdate, type(startdate))
-                                                            print(enddate, type(enddate))
-                                                            print(holidays)
 
                                                             business_days = 0
                                                             current_date = startdate
@@ -14115,47 +13988,23 @@ def webhook():
                                                                     
                                                                             result = cursor.fetchone()
 
-                                                                            def normalize_date(value):
-                                                                                if value is None:
-                                                                                    raise ValueError("Date value is None")
-
-                                                                                # datetime → date
-                                                                                if isinstance(value, datetime):
-                                                                                    return value.date()
-
-                                                                                # string → date
-                                                                                if isinstance(value, str):
-                                                                                    return datetime.strptime(value.strip(), "%Y-%m-%d").date()
-
-                                                                                # int → date (handles YYYYMMDD and unix timestamps)
-                                                                                if isinstance(value, int):
-                                                                                    if value > 10_000_000:  # YYYYMMDD
-                                                                                        return datetime.strptime(str(value), "%Y%m%d").date()
-                                                                                    return datetime.fromtimestamp(value).date()
-
-                                                                                # already a date object
-                                                                                return value
-
-
-
                                                                             
                                                                             appid = result[0]
                                                                             leavetype = result[2]
-                                                                            startdate = normalize_date(result[3])
-                                                                            enddate = normalize_date(result[4])
                                                                             table_name = f"{company_reg}main"
 
 
-                                                                            holidays = {
-                                                                                datetime.date(2025, 12, 22),
-                                                                                datetime.date(2025, 12, 25),
-                                                                                datetime.date(2025, 12, 26),
-                                                                                datetime.date(2026, 1, 1),
-                                                                            }
+                                                                            # FORCE strings → dates, no guessing
+                                                                            startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                            enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
-                                                                            print(startdate, type(startdate))
-                                                                            print(enddate, type(enddate))
-                                                                            print(holidays)
+                                                                            # HOLIDAYS — SAME FORMAT, NO datetime.date
+                                                                            holidays = {
+                                                                                datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+                                                                                datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+                                                                                datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+                                                                                datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
+                                                                            }
 
                                                                             business_days = 0
                                                                             current_date = startdate
