@@ -8,7 +8,7 @@ from db_helper import get_db, execute_query
 import numpy as np
 from mysql.connector import Error
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for, send_file,flash, make_response, after_this_request
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import pandas as pd
 from xhtml2pdf import pisa
 from email.mime.text import MIMEText
@@ -7818,16 +7818,15 @@ def webhook():
                                                                                     if value is None:
                                                                                         raise ValueError("Date value is None")
 
-                                                                                    if isinstance(value, date):
-                                                                                        return value  # covers both date and datetime.date
-
                                                                                     if isinstance(value, datetime):
                                                                                         return value.date()
 
                                                                                     if isinstance(value, str):
                                                                                         return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                                    raise TypeError(f"Invalid date type received: {type(value)}")
+                                                                                    # assume it's already a date object
+                                                                                    return value
+
 
 
 
@@ -8477,16 +8476,15 @@ def webhook():
                                                             if value is None:
                                                                 raise ValueError("Date value is None")
 
-                                                            if isinstance(value, date):
-                                                                return value  # covers both date and datetime.date
-
                                                             if isinstance(value, datetime):
                                                                 return value.date()
 
                                                             if isinstance(value, str):
                                                                 return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                            raise TypeError(f"Invalid date type received: {type(value)}")
+                                                            # assume it's already a date object
+                                                            return value
+
 
 
                                                         appid = result[0]
@@ -9258,16 +9256,15 @@ def webhook():
                                                                             if value is None:
                                                                                 raise ValueError("Date value is None")
 
-                                                                            if isinstance(value, date):
-                                                                                return value  # covers both date and datetime.date
-
                                                                             if isinstance(value, datetime):
                                                                                 return value.date()
 
                                                                             if isinstance(value, str):
                                                                                 return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                            raise TypeError(f"Invalid date type received: {type(value)}")
+                                                                            # assume it's already a date object
+                                                                            return value
+
 
                                                                         
                                                                         appid = result[0]
@@ -10472,16 +10469,15 @@ def webhook():
                                                                     if value is None:
                                                                         raise ValueError("Date value is None")
 
-                                                                    if isinstance(value, date):
-                                                                        return value  # covers both date and datetime.date
-
                                                                     if isinstance(value, datetime):
                                                                         return value.date()
 
                                                                     if isinstance(value, str):
                                                                         return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                    raise TypeError(f"Invalid date type received: {type(value)}")
+                                                                    # assume it's already a date object
+                                                                    return value
+
 
                                                                     
                                                                 appid = result[0]
@@ -11398,16 +11394,15 @@ def webhook():
                                                                                     if value is None:
                                                                                         raise ValueError("Date value is None")
 
-                                                                                    if isinstance(value, date):
-                                                                                        return value  # covers both date and datetime.date
-
                                                                                     if isinstance(value, datetime):
                                                                                         return value.date()
 
                                                                                     if isinstance(value, str):
                                                                                         return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                                    raise TypeError(f"Invalid date type received: {type(value)}")
+                                                                                    # assume it's already a date object
+                                                                                    return value
+
 
                                                                                 
                                                                                 appid = result[0]
@@ -12880,16 +12875,15 @@ def webhook():
                                                                 if value is None:
                                                                     raise ValueError("Date value is None")
 
-                                                                if isinstance(value, date):
-                                                                    return value  # covers both date and datetime.date
-
                                                                 if isinstance(value, datetime):
                                                                     return value.date()
 
                                                                 if isinstance(value, str):
                                                                     return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                raise TypeError(f"Invalid date type received: {type(value)}")
+                                                                # assume it's already a date object
+                                                                return value
+
 
                                                                 
                                                             appid = result[0]
@@ -14087,16 +14081,15 @@ def webhook():
                                                                                 if value is None:
                                                                                     raise ValueError("Date value is None")
 
-                                                                                if isinstance(value, date):
-                                                                                    return value  # covers both date and datetime.date
-
                                                                                 if isinstance(value, datetime):
                                                                                     return value.date()
 
                                                                                 if isinstance(value, str):
                                                                                     return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
-                                                                                raise TypeError(f"Invalid date type received: {type(value)}")
+                                                                                # assume it's already a date object
+                                                                                return value
+
 
                                                                             
                                                                             appid = result[0]
