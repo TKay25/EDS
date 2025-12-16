@@ -7836,7 +7836,7 @@ def webhook():
                                                                                 current_date = startdate
 
                                                                                 while current_date <= enddate:
-                                                                                    if current_date.date() not in holidays:
+                                                                                    if current_date not in holidays:
                                                                                         business_days += 1
                                                                                     current_date += timedelta(days=1)
 
@@ -8478,7 +8478,7 @@ def webhook():
                                                         current_date = startdate
 
                                                         while current_date <= enddate:
-                                                            if current_date.date() not in holidays:
+                                                            if current_date not in holidays:
                                                                 business_days += 1
                                                             current_date += timedelta(days=1)
 
@@ -9243,7 +9243,7 @@ def webhook():
                                                                         current_date = startdate
 
                                                                         while current_date <= enddate:
-                                                                            if current_date.date() not in holidays:
+                                                                            if current_date not in holidays:
                                                                                 business_days += 1
                                                                             current_date += timedelta(days=1)
 
@@ -10441,7 +10441,7 @@ def webhook():
                                                                 current_date = startdate
 
                                                                 while current_date <= enddate:
-                                                                    if current_date.date() not in holidays:
+                                                                    if current_date not in holidays:
                                                                         business_days += 1
                                                                     current_date += timedelta(days=1)
 
@@ -11351,7 +11351,7 @@ def webhook():
                                                                                 current_date = startdate
 
                                                                                 while current_date <= enddate:
-                                                                                    if current_date.date() not in holidays:
+                                                                                    if current_date not in holidays:
                                                                                         business_days += 1
                                                                                     current_date += timedelta(days=1)
 
@@ -12818,7 +12818,7 @@ def webhook():
                                                             current_date = startdate
 
                                                             while current_date <= enddate:
-                                                                if current_date.date() not in holidays:
+                                                                if current_date not in holidays:
                                                                     business_days += 1
                                                                 current_date += timedelta(days=1)
 
@@ -14008,7 +14008,7 @@ def webhook():
                                                                             current_date = startdate
 
                                                                             while current_date <= enddate:
-                                                                                if current_date.date() not in holidays:
+                                                                                if current_date not in holidays:
                                                                                     business_days += 1
                                                                                 current_date += timedelta(days=1)
 
