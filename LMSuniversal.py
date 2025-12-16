@@ -7836,9 +7836,10 @@ def webhook():
                                                                                 current_date = startdate
 
                                                                                 while current_date <= enddate:
-                                                                                    if current_date not in holidays:
+                                                                                    if current_date.date() not in holidays:
                                                                                         business_days += 1
                                                                                     current_date += timedelta(days=1)
+
 
                                                                                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
                                                                                 cursor.execute(query)
