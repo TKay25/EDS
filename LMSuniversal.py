@@ -8,7 +8,7 @@ from db_helper import get_db, execute_query
 import numpy as np
 from mysql.connector import Error
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for, send_file,flash, make_response, after_this_request
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 import pandas as pd
 from xhtml2pdf import pisa
 from email.mime.text import MIMEText
@@ -7814,26 +7814,27 @@ def webhook():
 
                                                                                 print("select successful")
 
-                                                                                def to_date(value):
-                                                                                    if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-                                                                                        return value
-                                                                                    if isinstance(value, datetime.datetime):
+                                                                                def normalize_date(value):
+                                                                                    if value is None:
+                                                                                        raise ValueError("Date value is None")
+
+                                                                                    if isinstance(value, date):
+                                                                                        return value  # covers both date and datetime.date
+
+                                                                                    if isinstance(value, datetime):
                                                                                         return value.date()
+
                                                                                     if isinstance(value, str):
-                                                                                        return datetime.datetime.strptime(value, "%Y-%m-%d").date()
-                                                                                    if isinstance(value, int):
-                                                                                        # If DB stores YYYYMMDD
-                                                                                        if value > 10_000_000:
-                                                                                            return datetime.datetime.strptime(str(value), "%Y%m%d").date()
-                                                                                        # If UNIX timestamp
-                                                                                        return datetime.datetime.fromtimestamp(value).date()
-                                                                                    raise TypeError(f"Unsupported date type: {type(value)}")
+                                                                                        return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+
+                                                                                    raise TypeError(f"Invalid date type received: {type(value)}")
+
 
 
                                                                                 appid = result[0]
                                                                                 leavetype = result[2]
-                                                                                startdate = to_date(result[3])
-                                                                                enddate = to_date(result[4])
+                                                                                startdate = normalize_date(result[3])
+                                                                                enddate = normalize_date(result[4])
                                                                                 table_name = f"{company_reg}main"
 
                                                                                 if isinstance(startdate, str):
@@ -8472,25 +8473,26 @@ def webhook():
                                                         if not result:
                                                             raise Exception("No leave record found.")
 
-                                                        def to_date(value):
-                                                            if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-                                                                return value
-                                                            if isinstance(value, datetime.datetime):
+                                                        def normalize_date(value):
+                                                            if value is None:
+                                                                raise ValueError("Date value is None")
+
+                                                            if isinstance(value, date):
+                                                                return value  # covers both date and datetime.date
+
+                                                            if isinstance(value, datetime):
                                                                 return value.date()
+
                                                             if isinstance(value, str):
-                                                                return datetime.datetime.strptime(value, "%Y-%m-%d").date()
-                                                            if isinstance(value, int):
-                                                                # If DB stores YYYYMMDD
-                                                                if value > 10_000_000:
-                                                                    return datetime.datetime.strptime(str(value), "%Y%m%d").date()
-                                                                # If UNIX timestamp
-                                                                return datetime.datetime.fromtimestamp(value).date()
-                                                            raise TypeError(f"Unsupported date type: {type(value)}")
+                                                                return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+
+                                                            raise TypeError(f"Invalid date type received: {type(value)}")
+
 
                                                         appid = result[0]
                                                         leavetype = result[2]
-                                                        startdate = to_date(result[3])
-                                                        enddate = to_date(result[4])
+                                                        startdate = normalize_date(result[3])
+                                                        enddate = normalize_date(result[4])
 
                                                         # ✅ Ensure both dates are datetime.date objects
                                                         if isinstance(startdate, str):
@@ -9252,25 +9254,26 @@ def webhook():
                                                                 
                                                                         result = cursor.fetchone()
 
-                                                                        def to_date(value):
-                                                                            if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-                                                                                return value
-                                                                            if isinstance(value, datetime.datetime):
+                                                                        def normalize_date(value):
+                                                                            if value is None:
+                                                                                raise ValueError("Date value is None")
+
+                                                                            if isinstance(value, date):
+                                                                                return value  # covers both date and datetime.date
+
+                                                                            if isinstance(value, datetime):
                                                                                 return value.date()
+
                                                                             if isinstance(value, str):
-                                                                                return datetime.datetime.strptime(value, "%Y-%m-%d").date()
-                                                                            if isinstance(value, int):
-                                                                                # If DB stores YYYYMMDD
-                                                                                if value > 10_000_000:
-                                                                                    return datetime.datetime.strptime(str(value), "%Y%m%d").date()
-                                                                                # If UNIX timestamp
-                                                                                return datetime.datetime.fromtimestamp(value).date()
-                                                                            raise TypeError(f"Unsupported date type: {type(value)}")
+                                                                                return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+
+                                                                            raise TypeError(f"Invalid date type received: {type(value)}")
+
                                                                         
                                                                         appid = result[0]
                                                                         leavetype = result[2]
-                                                                        startdate = to_date(result[3])
-                                                                        enddate = to_date(result[4])
+                                                                        startdate = normalize_date(result[3])
+                                                                        enddate = normalize_date(result[4])
                                                                         table_name = f"{company_reg}main"
 
                                                                         if isinstance(startdate, str):
@@ -10465,25 +10468,26 @@ def webhook():
                                                                 if not result:
                                                                     raise Exception("No leave record found.")
 
-                                                                def to_date(value):
-                                                                    if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-                                                                        return value
-                                                                    if isinstance(value, datetime.datetime):
+                                                                def normalize_date(value):
+                                                                    if value is None:
+                                                                        raise ValueError("Date value is None")
+
+                                                                    if isinstance(value, date):
+                                                                        return value  # covers both date and datetime.date
+
+                                                                    if isinstance(value, datetime):
                                                                         return value.date()
+
                                                                     if isinstance(value, str):
-                                                                        return datetime.datetime.strptime(value, "%Y-%m-%d").date()
-                                                                    if isinstance(value, int):
-                                                                        # If DB stores YYYYMMDD
-                                                                        if value > 10_000_000:
-                                                                            return datetime.datetime.strptime(str(value), "%Y%m%d").date()
-                                                                        # If UNIX timestamp
-                                                                        return datetime.datetime.fromtimestamp(value).date()
-                                                                    raise TypeError(f"Unsupported date type: {type(value)}")
+                                                                        return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+
+                                                                    raise TypeError(f"Invalid date type received: {type(value)}")
+
                                                                     
                                                                 appid = result[0]
                                                                 leavetype = result[2]
-                                                                startdate = to_date(result[3])
-                                                                enddate = to_date(result[4])
+                                                                startdate = normalize_date(result[3])
+                                                                enddate = normalize_date(result[4])
 
                                                                 # ✅ Ensure both dates are datetime.date objects
                                                                 if isinstance(startdate, str):
@@ -11390,25 +11394,26 @@ def webhook():
                                                                         
                                                                                 result = cursor.fetchone()
 
-                                                                                def to_date(value):
-                                                                                    if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-                                                                                        return value
-                                                                                    if isinstance(value, datetime.datetime):
+                                                                                def normalize_date(value):
+                                                                                    if value is None:
+                                                                                        raise ValueError("Date value is None")
+
+                                                                                    if isinstance(value, date):
+                                                                                        return value  # covers both date and datetime.date
+
+                                                                                    if isinstance(value, datetime):
                                                                                         return value.date()
+
                                                                                     if isinstance(value, str):
-                                                                                        return datetime.datetime.strptime(value, "%Y-%m-%d").date()
-                                                                                    if isinstance(value, int):
-                                                                                        # If DB stores YYYYMMDD
-                                                                                        if value > 10_000_000:
-                                                                                            return datetime.datetime.strptime(str(value), "%Y%m%d").date()
-                                                                                        # If UNIX timestamp
-                                                                                        return datetime.datetime.fromtimestamp(value).date()
-                                                                                    raise TypeError(f"Unsupported date type: {type(value)}")
+                                                                                        return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+
+                                                                                    raise TypeError(f"Invalid date type received: {type(value)}")
+
                                                                                 
                                                                                 appid = result[0]
                                                                                 leavetype = result[2]
-                                                                                startdate = to_date(result[3])
-                                                                                enddate = to_date(result[4])
+                                                                                startdate = normalize_date(result[3])
+                                                                                enddate = normalize_date(result[4])
                                                                                 table_name = f"{company_reg}main"
 
                                                                                 if isinstance(startdate, str):
@@ -12871,25 +12876,26 @@ def webhook():
                                                             if not result:
                                                                 raise Exception("No leave record found.")
 
-                                                            def to_date(value):
-                                                                if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-                                                                    return value
-                                                                if isinstance(value, datetime.datetime):
+                                                            def normalize_date(value):
+                                                                if value is None:
+                                                                    raise ValueError("Date value is None")
+
+                                                                if isinstance(value, date):
+                                                                    return value  # covers both date and datetime.date
+
+                                                                if isinstance(value, datetime):
                                                                     return value.date()
+
                                                                 if isinstance(value, str):
-                                                                    return datetime.datetime.strptime(value, "%Y-%m-%d").date()
-                                                                if isinstance(value, int):
-                                                                    # If DB stores YYYYMMDD
-                                                                    if value > 10_000_000:
-                                                                        return datetime.datetime.strptime(str(value), "%Y%m%d").date()
-                                                                    # If UNIX timestamp
-                                                                    return datetime.datetime.fromtimestamp(value).date()
-                                                                raise TypeError(f"Unsupported date type: {type(value)}")
+                                                                    return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+
+                                                                raise TypeError(f"Invalid date type received: {type(value)}")
+
                                                                 
                                                             appid = result[0]
                                                             leavetype = result[2]
-                                                            startdate = to_date(result[3])
-                                                            enddate = to_date(result[4])
+                                                            startdate = normalize_date(result[3])
+                                                            enddate = normalize_date(result[4])
 
                                                             # ✅ Ensure both dates are datetime.date objects
                                                             if isinstance(startdate, str):
@@ -14077,25 +14083,26 @@ def webhook():
                                                                     
                                                                             result = cursor.fetchone()
 
-                                                                            def to_date(value):
-                                                                                if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-                                                                                    return value
-                                                                                if isinstance(value, datetime.datetime):
+                                                                            def normalize_date(value):
+                                                                                if value is None:
+                                                                                    raise ValueError("Date value is None")
+
+                                                                                if isinstance(value, date):
+                                                                                    return value  # covers both date and datetime.date
+
+                                                                                if isinstance(value, datetime):
                                                                                     return value.date()
+
                                                                                 if isinstance(value, str):
-                                                                                    return datetime.datetime.strptime(value, "%Y-%m-%d").date()
-                                                                                if isinstance(value, int):
-                                                                                    # If DB stores YYYYMMDD
-                                                                                    if value > 10_000_000:
-                                                                                        return datetime.datetime.strptime(str(value), "%Y%m%d").date()
-                                                                                    # If UNIX timestamp
-                                                                                    return datetime.datetime.fromtimestamp(value).date()
-                                                                                raise TypeError(f"Unsupported date type: {type(value)}")
+                                                                                    return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+
+                                                                                raise TypeError(f"Invalid date type received: {type(value)}")
+
                                                                             
                                                                             appid = result[0]
                                                                             leavetype = result[2]
-                                                                            startdate = to_date(result[3])
-                                                                            enddate = to_date(result[4])
+                                                                            startdate = normalize_date(result[3])
+                                                                            enddate = normalize_date(result[4])
                                                                             table_name = f"{company_reg}main"
 
                                                                             if isinstance(startdate, str):
