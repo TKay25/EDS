@@ -7337,8 +7337,12 @@ def webhook():
                                                                 rows = cursor.fetchall()
                                                                 df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])
                                         
-                                                                all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
+                                                                # Combine all three in one operation
+                                                                all_approved_declined_cancelled = pd.concat([
+                                                                    df_employeesappsapprovedcheck,
+                                                                    df_employeesappsdeclinedcheck,
+                                                                    df_employeesappscancelledcheck
+                                                                ], ignore_index=True)
 
                                                                 all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
 
@@ -7556,10 +7560,13 @@ def webhook():
                                                                 df_employeesappspenpendingcheck = pd.DataFrame(rows, columns=["appid", "id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate" ,"approvalstatus"])
                                                                 df_employeesappspenpendingcheck["statusdate"] = ""
 
-
-                                                                all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                                all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
+                                                                # Combine all in one operation
+                                                                all_approved_declined_cancelled_pending = pd.concat([
+                                                                    df_employeesappsapprovedcheck,      # Approved
+                                                                    df_employeesappsdeclinedcheck,      # Declined
+                                                                    df_employeesappscancelledcheck,     # Cancelled
+                                                                    df_employeesappspenpendingcheck     # Pending
+                                                                ], ignore_index=True)
 
                                                                 all_approved_declined_cancelled_pending["dateapplied"] = pd.to_datetime(all_approved_declined_cancelled_pending["dateapplied"], errors='coerce')
 
@@ -8746,9 +8753,13 @@ def webhook():
                                                             df_employeesappspenpendingcheck["statusdate"] = ""
 
 
-                                                            all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                            all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                            all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
+                                                            # Do it all in one step:
+                                                            all_approved_declined_cancelled_pending = pd.concat([
+                                                                df_employeesappsapprovedcheck,      # Approved
+                                                                df_employeesappsdeclinedcheck,      # Declined  
+                                                                df_employeesappscancelledcheck,     # Cancelled
+                                                                df_employeesappspenpendingcheck     # Pending
+                                                            ], ignore_index=True)
 
                                                             all_approved_declined_cancelled_pending["dateapplied"] = pd.to_datetime(all_approved_declined_cancelled_pending["dateapplied"], errors='coerce')
 
@@ -8940,8 +8951,13 @@ def webhook():
                                                             rows = cursor.fetchall()
                                                             df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])
                                     
-                                                            all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                            all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
+                                                            # Combine all three at once:
+                                                            all_approved_declined_cancelled = pd.concat([
+                                                                df_employeesappsapprovedcheck,
+                                                                df_employeesappsdeclinedcheck,
+                                                                df_employeesappscancelledcheck
+                                                            ], ignore_index=True)
+
                                                             all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False) 
 
                                                             if len(all_approved_declined_cancelled) > 0:
@@ -10540,8 +10556,13 @@ def webhook():
                                                                     rows = cursor.fetchall()
                                                                     df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "currentleavedaysbalance"])
                                             
-                                                                    all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                    all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
+                                                                    all_approved_declined = pd.concat([df_employeesappsapprovedcheck, df_employeesappsdeclinedcheck], ignore_index=True)
+                                                                    print("✓ First concat worked!")
+                                                                    
+                                                                    all_approved_declined_cancelled = pd.concat([all_approved_declined, df_employeesappscancelledcheck], ignore_index=True)
+                                                                    print("✓ Second concat worked!")
+                                                                    print(f"✓ Combined {len(all_approved_declined_cancelled)} records successfully!")
+
                                                                     all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)
 
                                                                     if len(all_approved_declined_cancelled) > 0:
@@ -16555,9 +16576,9 @@ def run1(table_name, empid):
         df_filtered_for_bar_chart_type = df_leave_appsmain_analysis[['Leave Type', 'Approval Status', 'Leave Start Date']]
 
 
-        df_leave_appsmain1 = df_leave_appsmain_pending_approvalcomb._append(df_leave_appsmain_approvedcomb)
-        df_leave_appsmain3 = df_leave_appsmain1._append(df_leave_appsmain_declinedcomb)
-        df_leave_appsmain = df_leave_appsmain3._append(df_leave_appsmain_cancelledcomb)
+        # Combine all 4 dataframes in one operation (more efficient)
+        df_leave_appsmain = pd.concat([df_leave_appsmain_pending_approvalcomb,df_leave_appsmain_approvedcomb,df_leave_appsmain_declinedcomb,df_leave_appsmain_cancelledcomb], ignore_index=True)
+        
         df_leave_appsmain['Employee Name'] = df_leave_appsmain['First Name'] + ' ' + df_leave_appsmain['Surname']
         df_leave_appsmain = df_leave_appsmain[["App ID","Employee Name", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status","ACTION"]].fillna('')
 
@@ -16589,8 +16610,13 @@ def run1(table_name, empid):
         df_leave_apps_declined_by_me['Approval Status'] = '<p style="color: #E30022; border: 3px solid #E30022;border-radius: 9px;display: inline-block; margin: 0;padding: 0px 8px;">Declined</p>'
         df_leave_apps_declined_by_me = df_leave_apps_declined_by_me[["App ID","First Name", "Surname", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days", "Approval Status","ACTION"]]
 
-        df_leave_apps_approved_declined_by_me = df_leave_apps_approved_by_me._append(df_leave_apps_declined_by_me)
-        df_leave_apps_approved_declined_pending_by_me = df_leave_apps_approved_declined_by_me._append(df_leave_apps_pending_my_approval_fin).fillna('')   
+# Combine all three dataframes in one operation
+        df_leave_apps_approved_declined_pending_by_me = pd.concat([
+            df_leave_apps_approved_by_me,
+            df_leave_apps_declined_by_me,
+            df_leave_apps_pending_my_approval_fin
+        ], ignore_index=True).fillna('')
+
         df_leave_apps_approved_declined_pending_by_me['Employee Name'] = df_leave_apps_approved_declined_pending_by_me['First Name'] + ' ' + df_leave_apps_approved_declined_pending_by_me['Surname']
         df_leave_apps_approved_declined_pending_by_me = df_leave_apps_approved_declined_pending_by_me[["App ID","Employee Name", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days", "Approval Status","ACTION"]]
 
@@ -16628,14 +16654,20 @@ def run1(table_name, empid):
         df_my_leave_apps_cancelled['ACTION'] =  df_my_leave_apps_cancelled['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 reapply-app-btn" data-bs-toggle="modal" data-bs-target="#reapplyappModal" data-name="{x}" data-ID="{x}">Re-Apply</button>''') 
         df_my_leave_apps_cancelled_fin =  df_my_leave_apps_cancelled[["App ID", "Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Approval Status","Leave Approver","ACTION"]]
 
-        df_my_leave_apps_approved_declined_fin1 = df_my_leave_apps_approved_approved_fin._append(df_my_leave_apps_declined_fin_declined)
-        df_my_leave_apps_approved_declined_fin = df_my_leave_apps_approved_declined_fin1._append(df_my_leave_apps_cancelled_fin)
+        # Combine all three dataframes in one operation
+        df_my_leave_apps_approved_declined_fin = pd.concat([
+            df_my_leave_apps_approved_approved_fin,
+            df_my_leave_apps_declined_fin_declined,
+            df_my_leave_apps_cancelled_fin
+        ], ignore_index=True)
 
         userleaveapppending = df_leave_appsmain_pending_approval[df_leave_appsmain_pending_approval['ID'] == empid].reset_index()
         userleaveapppending['ACTION'] = userleaveapppending['App ID'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"> <button class="btn btn-primary3 edit-priv-btn" data-bs-toggle="modal" data-bs-target="#remindapproverModal" data-name="{x}" data-ID="{x}">Remind Approver</button> <button class="btn btn-primary3 cancel-app-btn" data-bs-toggle="modal" data-bs-target="#cancelappModal" data-name="{x}" data-ID="{x}">Cancel Application</button> </div>''') 
         userleaveapppending = userleaveapppending[["App ID","Leave Type","Date Applied", "Leave Start Date", "Leave End Date", "Leave Days","Leave Approver","Approval Status", "ACTION"]]
-        df_my_leave_apps_approved_declined_pending_fin = df_my_leave_apps_approved_declined_fin._append(userleaveapppending)
-
+        df_my_leave_apps_approved_declined_pending_fin = pd.concat(
+            [df_my_leave_apps_approved_declined_fin, userleaveapppending], 
+            ignore_index=True
+        )
         table_my_leave_apps_html = df_my_leave_apps_approved_declined_pending_fin.to_html(classes="table table-bordered table-theme", table_id="myleaveappsTable", index=False,  escape=False,)
 
         def generate_leave_status_chart():
