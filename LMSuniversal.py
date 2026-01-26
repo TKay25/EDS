@@ -11031,10 +11031,7 @@ def webhook():
                                                                     df_employeesappspenpendingcheck["statusdate"] = ""
 
 
-                                                                    all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                    all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                                    all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
-
+                                                                    all_approved_declined_cancelled_pending = pd.concat([df_employeesappsapprovedcheck, df_employeesappsdeclinedcheck, df_employeesappscancelledcheck, df_employeesappspenpendingcheck], ignore_index=True)
                                                                     all_approved_declined_cancelled_pending["dateapplied"] = pd.to_datetime(all_approved_declined_cancelled_pending["dateapplied"], errors='coerce')
 
                                                                     all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="dateapplied", ascending=False)
@@ -13213,11 +13210,9 @@ def webhook():
                                                                 cursor.execute(query)
                                                                 rows = cursor.fetchall()
                                                                 df_employeesappscancelledcheck = pd.DataFrame(rows, columns=["appid","id", "leavetype", "leaveapprovername", "dateapplied", "leavestartdate", "leaveenddate", "leavedaysappliedfor","approvalstatus","statusdate", "leavedaysbalancebf", "department", "currentleavedaysbalance"])
-                                        
-                                                                all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined_cancelled.sort_values(by="appid", ascending=False)  
 
+                                                                all_approved_declined_cancelled_pending = pd.concat([df_employeesappsapprovedcheck, df_employeesappsdeclinedcheck, df_employeesappscancelledcheck, df_employeesappspendingcheck], ignore_index=True)
+                                                                all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="appid", ascending=False)  
 
                                                                 if len(all_approved_declined_cancelled) > 0:
 
@@ -13625,10 +13620,7 @@ def webhook():
                                                                 df_employeesappspenpendingcheck["statusdate"] = ""
 
 
-                                                                all_approved_declined = df_employeesappsapprovedcheck._append(df_employeesappsdeclinedcheck)
-                                                                all_approved_declined_cancelled = all_approved_declined._append(df_employeesappscancelledcheck)
-                                                                all_approved_declined_cancelled_pending = all_approved_declined_cancelled._append(df_employeesappspenpendingcheck)
-
+                                                                all_approved_declined_cancelled_pending = pd.concat([df_employeesappsapprovedcheck, df_employeesappsdeclinedcheck, df_employeesappscancelledcheck, df_employeesappspenpendingcheck], ignore_index=True)
                                                                 all_approved_declined_cancelled_pending["dateapplied"] = pd.to_datetime(all_approved_declined_cancelled_pending["dateapplied"], errors='coerce')
 
                                                                 all_approved_declined_cancelled_pending = all_approved_declined_cancelled_pending.sort_values(by="dateapplied", ascending=False)
