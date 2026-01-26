@@ -974,7 +974,7 @@
                                     <!-- Step 1: Base Currency Selection -->
                                     <div class="mb-4">
                                         <label class="form-label fw-bold">Step 1: Select Base Currency</label>
-                                        <select class="form-select" id="baseCurrency">
+                                        <select class="form-select" id="baseCurrency" onchange="updateSplitOptionAvailability()">
                                             <option value="USD">USD (United States Dollar)</option>
                                             <option value="ZWG">ZWG (Zimbabwe Gold)</option>
                                         </select>
@@ -984,7 +984,7 @@
                                     </div>
 
                                     <!-- Step 2: Currency Split Option -->
-                                    <div class="mb-4">
+                                    <div class="mb-4" id="splitOptionContainer">
                                         <label class="form-label fw-bold">Step 2: Split Salary into Multiple Currencies?</label>
                                         <select class="form-select" id="splitOption" onchange="toggleSplitOptions()">
                                             <option value="1">No - Pay entire salary in base currency</option>
@@ -993,6 +993,14 @@
                                         <small class="text-muted">
                                             Choose whether to split payroll between multiple currencies
                                         </small>
+                                    </div>
+
+                                    <!-- Info Message when base is ZWG -->
+                                    <div id="zwgBaseMessage" class="alert alert-info" style="display: none;">
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Note:</strong> Base currency is already ZWG. Split option is not available.
+                                        <br>
+                                        <small>All payments will be made in ZWG currency.</small>
                                     </div>
 
                                     <!-- Split Configuration (Only shown when split is selected) -->
@@ -1101,7 +1109,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -2521,14 +2528,48 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 // JavaScript functions
+function updateSplitOptionAvailability() {
+    const baseCurrency = document.getElementById('baseCurrency').value;
+    const splitOption = document.getElementById('splitOption');
+    const splitOptionContainer = document.getElementById('splitOptionContainer');
+    const zwgBaseMessage = document.getElementById('zwgBaseMessage');
+    const splitConfigSection = document.getElementById('splitConfigSection');
+    
+    // Update labels
+    document.getElementById('baseCurrencyLabel').textContent = baseCurrency;
+    document.getElementById('currentBaseCurrency').textContent = baseCurrency;
+    
+    if (baseCurrency === 'ZWG') {
+        // Hide split option when base is ZWG
+        splitOptionContainer.style.display = 'none';
+        zwgBaseMessage.style.display = 'block';
+        splitConfigSection.style.display = 'none';
+        splitOption.value = '1'; // Force to "No split"
+    } else {
+        // Show split option for other currencies
+        splitOptionContainer.style.display = 'block';
+        zwgBaseMessage.style.display = 'none';
+        
+        // Check if split was previously selected
+        if (splitOption.value === '2') {
+            splitConfigSection.style.display = 'block';
+            calculateZWGSplit();
+        }
+    }
+    
+    updatePreview();
+}
+
 function toggleSplitOptions() {
     const splitOption = document.getElementById('splitOption').value;
     const splitConfigSection = document.getElementById('splitConfigSection');
     const baseCurrency = document.getElementById('baseCurrency').value;
     
-    // Update base currency label in split section
-    document.getElementById('baseCurrencyLabel').textContent = baseCurrency;
-    document.getElementById('currentBaseCurrency').textContent = baseCurrency;
+    if (baseCurrency === 'ZWG') {
+        // Never show split if base is ZWG
+        splitConfigSection.style.display = 'none';
+        return;
+    }
     
     if (splitOption === '2') {
         splitConfigSection.style.display = 'block';
@@ -2572,10 +2613,24 @@ function updatePreview() {
     const splitOption = document.getElementById('splitOption').value;
     const previewDiv = document.getElementById('settingsPreview');
     
-    if (splitOption === '1') {
+    if (baseCurrency === 'ZWG') {
+        // Base is ZWG - no split option
+        previewDiv.innerHTML = `
+            <h6><i class="bi bi-currency-gold"></i> ZWG Base Currency</h6>
+            <p><strong>Base Currency:</strong> ZWG</p>
+            <p><strong>Split:</strong> Not available</p>
+            <p><strong>Payment:</strong> 100% in ZWG</p>
+            <div class="alert alert-success mt-3">
+                <i class="bi bi-check-circle"></i> All payments will be made in ZWG currency
+            </div>
+            <small class="text-muted">
+                <i class="bi bi-lightbulb"></i> Tip: To split between USD and ZWG, select a different base currency.
+            </small>
+        `;
+    } else if (splitOption === '1') {
         // No split - use base currency only
         previewDiv.innerHTML = `
-            <h6><i class="bi bi-currency-${baseCurrency === 'USD' ? 'dollar' : 'gold'}"></i> Single Currency Mode</h6>
+            <h6><i class="bi bi-currency-${getCurrencyIcon(baseCurrency)}"></i> Single Currency Mode</h6>
             <p><strong>Base Currency:</strong> ${baseCurrency}</p>
             <p><strong>Split:</strong> No split</p>
             <p><strong>Payment:</strong> 100% in ${baseCurrency}</p>
@@ -2603,13 +2658,27 @@ function updatePreview() {
             <p>For a salary of 1,000 ${baseCurrency}:</p>
             <ul class="small">
                 <li>USD Portion: ${(1000 * usdPercent/100).toFixed(2)} USD</li>
-                <li>ZWG Portion: ${(1000 * zwgPercent/100).toFixed(2)} ${baseCurrency} = ${(1000 * zwgPercent/100 * exchangeRate).toLocaleString()} ZWG</li>
+                <li>Base to ZWG: ${(1000 * zwgPercent/100).toFixed(2)} ${baseCurrency}</li>
+                <li>ZWG Portion: ${(1000 * zwgPercent/100 * exchangeRate).toLocaleString()} ZWG</li>
             </ul>
             <div class="alert alert-info mt-2">
-                <i class="bi bi-info-circle"></i> Total: ${(1000 * usdPercent/100).toFixed(2)} USD + ${(1000 * zwgPercent/100 * exchangeRate).toLocaleString()} ZWG
+                <i class="bi bi-info-circle"></i> Total Payment:<br>
+                • ${(1000 * usdPercent/100).toFixed(2)} USD<br>
+                • ${(1000 * zwgPercent/100 * exchangeRate).toLocaleString()} ZWG
             </div>
         `;
     }
+}
+
+function getCurrencyIcon(currency) {
+    const icons = {
+        'USD': 'dollar',
+        'EUR': 'euro',
+        'ZAR': 'currency-exchange',
+        'ZWG': 'gold',
+        'ZWL': 'currency-exchange'
+    };
+    return icons[currency] || 'currency-exchange';
 }
 
 function saveCurrencySettings() {
@@ -2618,7 +2687,7 @@ function saveCurrencySettings() {
     
     let settings = {
         baseCurrency: baseCurrency,
-        splitEnabled: splitOption === '2'
+        splitEnabled: (baseCurrency !== 'ZWG' && splitOption === '2')
     };
     
     if (settings.splitEnabled) {
@@ -2647,7 +2716,7 @@ function resetCurrencySettings() {
     document.getElementById('usdSplitPercent').value = '60';
     document.getElementById('exchangeRateToZWG').value = '1200';
     
-    toggleSplitOptions();
+    updateSplitOptionAvailability();
     showAlert('info', 'Settings reset to default values');
 }
 
@@ -2671,22 +2740,15 @@ function showAlert(type, message) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Update base currency when changed
-    document.getElementById('baseCurrency').addEventListener('change', function() {
-        document.getElementById('baseCurrencyLabel').textContent = this.value;
-        document.getElementById('currentBaseCurrency').textContent = this.value;
-        updatePreview();
-    });
-    
     // Add event listeners for live updates
-    document.getElementById('splitOption').addEventListener('change', toggleSplitOptions);
     document.getElementById('usdSplitPercent').addEventListener('input', updatePreview);
     document.getElementById('exchangeRateToZWG').addEventListener('input', updatePreview);
     
     // Initial setup
-    toggleSplitOptions();
+    updateSplitOptionAvailability();
 });
 </script>
+
 <script>
     const rawRemainingData = JSON.parse('{{ empsremainingbydpt | tojson | safe }}');
     const allDates = rawRemainingData[Object.keys(rawRemainingData)[0]].map(item => item.date);
