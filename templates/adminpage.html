@@ -961,7 +961,7 @@
                 </div>
             </div>
 
-                        <!-- Payroll Settings -->
+            <!-- Payroll Settings -->
             <div class="tab-pane fade" id="payroll-settings-tab">
                 <div class="container mt-4">
                     <div class="row">
@@ -971,101 +971,116 @@
                                     <h5 class="mb-0"><i class="bi bi-currency-exchange"></i> Currency Configuration</h5>
                                 </div>
                                 <div class="card-body">
-                                    <!-- Currency Type Selection -->
+                                    <!-- Step 1: Base Currency Selection -->
                                     <div class="mb-4">
-                                        <label class="form-label fw-bold">Currency Type</label>
-                                        <select class="form-select" id="currencyType" onchange="toggleCurrencyOptions()">
-                                            <option value="1">Option 1: Fixed Exchange Rate</option>
-                                            <option value="2">Option 2: Percentage Split</option>
+                                        <label class="form-label fw-bold">Step 1: Select Base Currency</label>
+                                        <select class="form-select" id="baseCurrency">
+                                            <option value="USD">USD (United States Dollar)</option>
+                                            <option value="ZWG">ZWG (Zimbabwe Gold)</option>
+                                            <option value="ZWL">ZWL (Zimbabwe Dollar)</option>
+                                            <option value="ZAR">ZAR (South African Rand)</option>
                                         </select>
                                         <small class="text-muted">
-                                            Select how you want to handle multiple currencies in payroll
+                                            This is the currency in which employee salaries are originally defined
                                         </small>
                                     </div>
 
-                                    <!-- Option 1: Fixed Exchange Rate -->
-                                    <div id="option1Section" class="currency-option">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Select Base Currency</label>
-                                            <select class="form-select" id="fixedCurrency">
-                                                <option value="USD">USD (United States Dollar)</option>
-                                                <option value="ZWG">ZWG (Zimbabwe Gold)</option>
-                                            </select>
-                                        </div>
-                                        <div class="alert alert-info">
-                                            <i class="bi bi-info-circle"></i>
-                                            <strong>Fixed Exchange Rate:</strong> All payroll will be processed in the selected currency using current exchange rates.
-                                        </div>
+                                    <!-- Step 2: Currency Split Option -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Step 2: Split Salary into Multiple Currencies?</label>
+                                        <select class="form-select" id="splitOption" onchange="toggleSplitOptions()">
+                                            <option value="1">No - Pay entire salary in base currency</option>
+                                            <option value="2">Yes - Split salary between USD and ZWG</option>
+                                        </select>
+                                        <small class="text-muted">
+                                            Choose whether to split payroll between multiple currencies
+                                        </small>
                                     </div>
 
-                                    <!-- Option 2: Percentage Split -->
-                                    <div id="option2Section" class="currency-option" style="display: none;">
-                                        <div class="row">
-                                            <div class="col-md-6">
+                                    <!-- Split Configuration (Only shown when split is selected) -->
+                                    <div id="splitConfigSection" style="display: none;">
+                                        <div class="card border-primary mb-4">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0"><i class="bi bi-percent"></i> Currency Split Configuration</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <!-- Current Base Currency Display -->
+                                                <div class="alert alert-info mb-3">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    <strong>Base Currency:</strong> <span id="currentBaseCurrency">USD</span>
+                                                    <br>
+                                                    <small>Salaries will be split from the base currency into USD and ZWG</small>
+                                                </div>
+
+                                                <!-- Percentage Split -->
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">USD Percentage (%)</label>
+                                                        <div class="input-group">
+                                                            <input type="number" 
+                                                                class="form-control" 
+                                                                id="usdSplitPercent" 
+                                                                min="0" 
+                                                                max="100" 
+                                                                step="0.01"
+                                                                value="60"
+                                                                oninput="calculateZWGSplit()">
+                                                            <span class="input-group-text">%</span>
+                                                        </div>
+                                                        <small class="text-muted">Percentage to pay in USD</small>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">ZWG Percentage (%)</label>
+                                                        <div class="input-group">
+                                                            <input type="number" 
+                                                                class="form-control" 
+                                                                id="zwgSplitPercent" 
+                                                                min="0" 
+                                                                max="100" 
+                                                                step="0.01"
+                                                                value="40"
+                                                                readonly
+                                                                style="background-color: #f8f9fa;">
+                                                            <span class="input-group-text">%</span>
+                                                        </div>
+                                                        <small class="text-muted">Automatically calculated</small>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Exchange Rate -->
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-bold">USD Percentage (%)</label>
+                                                    <label class="form-label fw-bold">Exchange Rate (Base Currency to ZWG)</label>
                                                     <div class="input-group">
+                                                        <span class="input-group-text">1 <span id="baseCurrencyLabel">USD</span> =</span>
                                                         <input type="number" 
                                                             class="form-control" 
-                                                            id="usdPercentage" 
+                                                            id="exchangeRateToZWG" 
                                                             min="0" 
-                                                            max="100" 
                                                             step="0.01"
-                                                            value="60"
-                                                            oninput="calculateZWGPercentage()">
-                                                        <span class="input-group-text">%</span>
+                                                            value="1200">
+                                                        <span class="input-group-text">ZWG</span>
                                                     </div>
-                                                    <small class="text-muted">Enter percentage of payroll to be paid in USD</small>
+                                                    <small class="text-muted">
+                                                        Current exchange rate from base currency to ZWG
+                                                    </small>
+                                                </div>
+
+                                                <!-- Validation Message -->
+                                                <div id="splitValidation" class="alert alert-warning" style="display: none;">
+                                                    <i class="bi bi-exclamation-triangle"></i>
+                                                    <span id="validationMessage"></span>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">ZWG Percentage (%)</label>
-                                                    <div class="input-group">
-                                                        <input type="number" 
-                                                            class="form-control" 
-                                                            id="zwgPercentage" 
-                                                            min="0" 
-                                                            max="100" 
-                                                            step="0.01"
-                                                            value="40"
-                                                            readonly
-                                                            style="background-color: #f8f9fa;">
-                                                        <span class="input-group-text">%</span>
-                                                    </div>
-                                                    <small class="text-muted">Automatically calculated</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="alert alert-warning">
-                                            <i class="bi bi-exclamation-triangle"></i>
-                                            <strong>Note:</strong> Total must equal 100%. ZWG percentage is calculated as (100% - USD%).
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Current Exchange Rate</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">1 USD =</span>
-                                                <input type="number" 
-                                                    class="form-control" 
-                                                    id="exchangeRate" 
-                                                    min="0" 
-                                                    step="0.01"
-                                                    value="1200">
-                                                <span class="input-group-text">ZWG</span>
-                                            </div>
-                                            <small class="text-muted">Current USD to ZWG exchange rate</small>
                                         </div>
                                     </div>
 
                                     <!-- Save Button -->
                                     <div class="mt-4">
                                         <button class="btn btn-success" onclick="saveCurrencySettings()">
-                                            <i class="bi bi-check-circle"></i> Save Currency Settings
+                                            <i class="bi bi-check-circle"></i> Save Configuration
                                         </button>
                                         <button class="btn btn-secondary ms-2" onclick="resetCurrencySettings()">
-                                            <i class="bi bi-arrow-clockwise"></i> Reset to Default
+                                            <i class="bi bi-arrow-clockwise"></i> Reset
                                         </button>
                                     </div>
                                 </div>
@@ -1076,11 +1091,11 @@
                         <div class="col-md-4">
                             <div class="card">
                                 <div class="card-header bg-info text-white">
-                                    <h5 class="mb-0"><i class="bi bi-eye"></i> Settings Preview</h5>
+                                    <h5 class="mb-0"><i class="bi bi-eye"></i> Configuration Preview</h5>
                                 </div>
                                 <div class="card-body">
                                     <div id="settingsPreview">
-                                        <p class="text-muted">Select options above to see preview</p>
+                                        <p class="text-muted">Configure settings to see preview</p>
                                     </div>
                                 </div>
                             </div>
@@ -1088,6 +1103,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -2506,110 +2522,148 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-// JavaScript functions for currency configuration
-function toggleCurrencyOptions() {
-    const currencyType = document.getElementById('currencyType').value;
-    const option1Section = document.getElementById('option1Section');
-    const option2Section = document.getElementById('option2Section');
+// JavaScript functions
+function toggleSplitOptions() {
+    const splitOption = document.getElementById('splitOption').value;
+    const splitConfigSection = document.getElementById('splitConfigSection');
+    const baseCurrency = document.getElementById('baseCurrency').value;
     
-    if (currencyType === '1') {
-        option1Section.style.display = 'block';
-        option2Section.style.display = 'none';
-        updatePreview();
+    // Update base currency label in split section
+    document.getElementById('baseCurrencyLabel').textContent = baseCurrency;
+    document.getElementById('currentBaseCurrency').textContent = baseCurrency;
+    
+    if (splitOption === '2') {
+        splitConfigSection.style.display = 'block';
+        calculateZWGSplit(); // Calculate initial values
     } else {
-        option1Section.style.display = 'none';
-        option2Section.style.display = 'block';
-        calculateZWGPercentage();
-        updatePreview();
+        splitConfigSection.style.display = 'none';
     }
+    
+    updatePreview();
 }
 
-function calculateZWGPercentage() {
-    const usdPercentage = parseFloat(document.getElementById('usdPercentage').value) || 0;
-    const zwgPercentage = 100 - usdPercentage;
+function calculateZWGSplit() {
+    const usdPercent = parseFloat(document.getElementById('usdSplitPercent').value) || 0;
+    const zwgPercent = 100 - usdPercent;
     
-    document.getElementById('zwgPercentage').value = zwgPercentage.toFixed(2);
+    document.getElementById('zwgSplitPercent').value = zwgPercent.toFixed(2);
     
-    // Validate range
-    if (usdPercentage < 0 || usdPercentage > 100) {
-        document.getElementById('usdPercentage').classList.add('is-invalid');
-        document.getElementById('zwgPercentage').value = '';
+    // Validate
+    const validationDiv = document.getElementById('splitValidation');
+    const validationMessage = document.getElementById('validationMessage');
+    
+    if (usdPercent < 0 || usdPercent > 100) {
+        validationDiv.className = 'alert alert-danger';
+        validationMessage.textContent = 'USD percentage must be between 0% and 100%';
+        validationDiv.style.display = 'block';
+        return false;
+    } else if (usdPercent + zwgPercent !== 100) {
+        validationDiv.className = 'alert alert-warning';
+        validationMessage.textContent = 'Total must equal 100%';
+        validationDiv.style.display = 'block';
+        return false;
     } else {
-        document.getElementById('usdPercentage').classList.remove('is-invalid');
+        validationDiv.style.display = 'none';
         updatePreview();
+        return true;
     }
 }
 
 function updatePreview() {
-    const currencyType = document.getElementById('currencyType').value;
+    const baseCurrency = document.getElementById('baseCurrency').value;
+    const splitOption = document.getElementById('splitOption').value;
     const previewDiv = document.getElementById('settingsPreview');
     
-    if (currencyType === '1') {
-        const selectedCurrency = document.getElementById('fixedCurrency').value;
+    if (splitOption === '1') {
+        // No split - use base currency only
         previewDiv.innerHTML = `
-            <h6><i class="bi bi-currency-${selectedCurrency === 'USD' ? 'dollar' : 'gold'}"></i> Fixed Currency Configuration</h6>
-            <p><strong>Mode:</strong> Fixed Exchange Rate</p>
-            <p><strong>Base Currency:</strong> ${selectedCurrency}</p>
-            <p><strong>Description:</strong> All payroll will be processed in ${selectedCurrency}</p>
+            <h6><i class="bi bi-currency-${baseCurrency === 'USD' ? 'dollar' : 'gold'}"></i> Single Currency Mode</h6>
+            <p><strong>Base Currency:</strong> ${baseCurrency}</p>
+            <p><strong>Split:</strong> No split</p>
+            <p><strong>Payment:</strong> 100% in ${baseCurrency}</p>
+            <div class="alert alert-success mt-3">
+                <i class="bi bi-check-circle"></i> All payments will be made in ${baseCurrency}
+            </div>
         `;
     } else {
-        const usdPercentage = document.getElementById('usdPercentage').value;
-        const zwgPercentage = document.getElementById('zwgPercentage').value;
-        const exchangeRate = document.getElementById('exchangeRate').value;
+        // Split mode
+        const usdPercent = document.getElementById('usdSplitPercent').value;
+        const zwgPercent = document.getElementById('zwgSplitPercent').value;
+        const exchangeRate = document.getElementById('exchangeRateToZWG').value;
         
         previewDiv.innerHTML = `
-            <h6><i class="bi bi-percent"></i> Percentage Split Configuration</h6>
-            <p><strong>Mode:</strong> Percentage Split</p>
-            <p><strong>USD Allocation:</strong> ${usdPercentage}%</p>
-            <p><strong>ZWG Allocation:</strong> ${zwgPercentage}%</p>
-            <p><strong>Exchange Rate:</strong> 1 USD = ${exchangeRate} ZWG</p>
-            <hr>
-            <p><strong>Example for $1,000 payroll:</strong></p>
-            <ul class="small">
-                <li>USD Payment: $${(1000 * usdPercentage/100).toFixed(2)}</li>
-                <li>ZWG Payment: ${(1000 * zwgPercentage/100 * exchangeRate).toLocaleString()} ZWG</li>
+            <h6><i class="bi bi-percent"></i> Split Currency Mode</h6>
+            <p><strong>Base Currency:</strong> ${baseCurrency}</p>
+            <p><strong>Split Configuration:</strong></p>
+            <ul>
+                <li>USD: ${usdPercent}%</li>
+                <li>ZWG: ${zwgPercent}%</li>
             </ul>
+            <p><strong>Exchange Rate:</strong> 1 ${baseCurrency} = ${exchangeRate} ZWG</p>
+            <hr>
+            <h6>Example Calculation:</h6>
+            <p>For a salary of 1,000 ${baseCurrency}:</p>
+            <ul class="small">
+                <li>USD Portion: ${(1000 * usdPercent/100).toFixed(2)} USD</li>
+                <li>ZWG Portion: ${(1000 * zwgPercent/100).toFixed(2)} ${baseCurrency} = ${(1000 * zwgPercent/100 * exchangeRate).toLocaleString()} ZWG</li>
+            </ul>
+            <div class="alert alert-info mt-2">
+                <i class="bi bi-info-circle"></i> Total: ${(1000 * usdPercent/100).toFixed(2)} USD + ${(1000 * zwgPercent/100 * exchangeRate).toLocaleString()} ZWG
+            </div>
         `;
     }
 }
 
 function saveCurrencySettings() {
-    const currencyType = document.getElementById('currencyType').value;
-    let settings = {};
+    const baseCurrency = document.getElementById('baseCurrency').value;
+    const splitOption = document.getElementById('splitOption').value;
     
-    if (currencyType === '1') {
-        settings = {
-            type: 'fixed',
-            currency: document.getElementById('fixedCurrency').value
-        };
-    } else {
-        settings = {
-            type: 'percentage',
-            usdPercentage: parseFloat(document.getElementById('usdPercentage').value),
-            zwgPercentage: parseFloat(document.getElementById('zwgPercentage').value),
-            exchangeRate: parseFloat(document.getElementById('exchangeRate').value)
-        };
-        
-        // Validate total is 100%
-        if (settings.usdPercentage + settings.zwgPercentage !== 100) {
-            alert('Error: USD and ZWG percentages must total 100%');
+    let settings = {
+        baseCurrency: baseCurrency,
+        splitEnabled: splitOption === '2'
+    };
+    
+    if (settings.splitEnabled) {
+        if (!calculateZWGSplit()) {
+            alert('Please fix validation errors before saving');
             return;
         }
+        
+        settings.splitConfig = {
+            usdPercent: parseFloat(document.getElementById('usdSplitPercent').value),
+            zwgPercent: parseFloat(document.getElementById('zwgSplitPercent').value),
+            exchangeRate: parseFloat(document.getElementById('exchangeRateToZWG').value)
+        };
     }
     
-    // Here you would typically send to server via AJAX
+    // Send to server (example)
     console.log('Saving currency settings:', settings);
     
     // Show success message
+    showAlert('success', 'Currency configuration saved successfully!');
+}
+
+function resetCurrencySettings() {
+    document.getElementById('baseCurrency').value = 'USD';
+    document.getElementById('splitOption').value = '1';
+    document.getElementById('usdSplitPercent').value = '60';
+    document.getElementById('exchangeRateToZWG').value = '1200';
+    
+    toggleSplitOptions();
+    showAlert('info', 'Settings reset to default values');
+}
+
+function showAlert(type, message) {
     const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
     alertDiv.innerHTML = `
-        <i class="bi bi-check-circle"></i> Currency settings saved successfully!
+        <i class="bi bi-${type === 'success' ? 'check-circle' : 'info-circle'}"></i> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    document.querySelector('#payroll-settings-tab .card-body').appendChild(alertDiv);
     
-    // Auto-remove alert after 5 seconds
+    const cardBody = document.querySelector('#payroll-settings-tab .card-body');
+    cardBody.appendChild(alertDiv);
+    
     setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.remove();
@@ -2617,39 +2671,22 @@ function saveCurrencySettings() {
     }, 5000);
 }
 
-function resetCurrencySettings() {
-    document.getElementById('currencyType').value = '1';
-    document.getElementById('fixedCurrency').value = 'USD';
-    document.getElementById('usdPercentage').value = '60';
-    document.getElementById('exchangeRate').value = '1200';
-    
-    toggleCurrencyOptions(); // This will trigger calculateZWGPercentage
-    updatePreview();
-    
-    // Show reset message
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-info alert-dismissible fade show mt-3';
-    alertDiv.innerHTML = `
-        <i class="bi bi-info-circle"></i> Settings reset to default values
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.querySelector('#payroll-settings-tab .card-body').appendChild(alertDiv);
-    
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 3000);
-}
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    toggleCurrencyOptions();
+    // Update base currency when changed
+    document.getElementById('baseCurrency').addEventListener('change', function() {
+        document.getElementById('baseCurrencyLabel').textContent = this.value;
+        document.getElementById('currentBaseCurrency').textContent = this.value;
+        updatePreview();
+    });
     
     // Add event listeners for live updates
-    document.getElementById('fixedCurrency').addEventListener('change', updatePreview);
-    document.getElementById('usdPercentage').addEventListener('input', updatePreview);
-    document.getElementById('exchangeRate').addEventListener('input', updatePreview);
+    document.getElementById('splitOption').addEventListener('change', toggleSplitOptions);
+    document.getElementById('usdSplitPercent').addEventListener('input', updatePreview);
+    document.getElementById('exchangeRateToZWG').addEventListener('input', updatePreview);
+    
+    // Initial setup
+    toggleSplitOptions();
 });
 </script>
 <script>
