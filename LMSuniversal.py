@@ -16296,7 +16296,7 @@ def run1(table_name, empid):
         applied_date = datetime.now().strftime('%Y-%m-%d')
 
         ######### payroll
-        querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, accnumber, bank, c8,  FROM {table_name};"
+        querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, accnumber, bank, c8 FROM {table_name};"
         cursor.execute(querypayroll)
         rowspayroll = cursor.fetchall()
 
