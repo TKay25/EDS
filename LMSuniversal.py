@@ -16835,7 +16835,7 @@ def upload_excel():
 
 
 @app.route('/upload-excel-payroll', methods=['POST'])
-def upload_excel-payroll():
+def upload_excel_payroll():
 
     with get_db() as (cursor, connection):
 
