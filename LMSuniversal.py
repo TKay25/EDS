@@ -16305,7 +16305,7 @@ def run1(table_name, empid):
             lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['id']}" data-firstname="{row['Firstname']}" data-surname="{row['Surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}"  data-bank="{row['Bank']}">Edit Information</button></div>''', axis=1
         )
 
-        df_employees_payroll = df_employees_payroll[["id", "Firstname", "Surname","Manager_Supervisor", "Department", "Designation","Date Joined","Bank", "Action"]]
+        df_employees_payroll = df_employees_payroll[["id", "Firstname", "Surname", "Department", "Designation","Bank", "Action"]]
 
         table_employees_payroll_html = df_employees_payroll.to_html(classes="table table-bordered table-theme", table_id="employeespayrollTable", index=False,  escape=False,)
 
@@ -16964,11 +16964,15 @@ def download_excel_template_payroll_employees():
             # Determine which columns exist in the table
             existing_columns = []
             headers = []
-            for col_tuple in columns_result:
-                col_name = col_tuple[0]
-                if col_name in desired_columns:
-                    existing_columns.append(col_name)
-                    headers.append(column_headers.get(col_name, col_name))
+            for col in desired_columns:
+                # Check if this column exists in the database
+                column_exists = any(col_tuple[0] == col for col_tuple in columns_result)
+                
+                if column_exists:
+                    existing_columns.append(col)
+                    headers.append(column_headers.get(col, col))
+
+
             
             if not existing_columns:
                 return "No relevant columns found in the table", 400
