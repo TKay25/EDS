@@ -16957,8 +16957,8 @@ def download_excel_template_payroll_employees():
                 'accnumber': 'Account Number',
                 'branch': 'Branch',
                 'branchcode': 'Branch Code',
-                'c8': 'Additional Info (C8)',
-                'currency': 'Currency'
+                'c8': 'Basic Salary in Base Currency',
+                'currency': 'Base Currency'
             }
             
             # Determine which columns exist in the table
