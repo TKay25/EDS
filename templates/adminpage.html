@@ -1278,7 +1278,7 @@
 
 <!-- Edit Employee Details Modal -->
 <div class="modal fade" id="editEmployeePayrollModal" tabindex="-1" aria-labelledby="editEmployeePayrollModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl"> <!-- Changed from modal-lg to modal-xl for more width -->
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="editEmployeePayrollModalLabel">
@@ -1291,16 +1291,16 @@
                 <div class="modal-body">
                     <input type="hidden" id="editEmployeeId" name="employee_id">
                     
-                    <div class="row g-4"> <!-- Increased gap from g-3 to g-4 for more space -->
+                    <div class="row g-4">
                         
                         <!-- Column 1: Personal Information -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card h-100">
                                 <div class="card-header bg-light">
                                     <h6 class="mb-0"><i class="bi bi-person-badge"></i> Personal Information</h6>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-4"> <!-- Increased margin -->
+                                    <div class="mb-4">
                                         <label for="editFirstName" class="form-label">First Name *</label>
                                         <input type="text" class="form-control" id="editFirstName" name="firstname" required>
                                     </div>
@@ -1317,7 +1317,7 @@
                         </div>
                         
                         <!-- Column 2: Employment Details -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card h-100">
                                 <div class="card-header bg-light">
                                     <h6 class="mb-0"><i class="bi bi-briefcase"></i> Employment Details</h6>
@@ -1335,15 +1335,19 @@
                                         <label for="editManager" class="form-label">Manager/Supervisor</label>
                                         <input type="text" class="form-control" id="editManager" name="manager">
                                     </div>
+                                    <div class="mb-4">
+                                        <label for="editBranch" class="form-label">Branch</label>
+                                        <input type="text" class="form-control" id="editBranch" name="branch">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Column 3: Salary & Banking -->
-                        <div class="col-md-4">
+                        <!-- Column 3: Salary Information -->
+                        <div class="col-md-3">
                             <div class="card h-100">
                                 <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="bi bi-cash-stack"></i> Salary & Banking</h6>
+                                    <h6 class="mb-0"><i class="bi bi-cash-stack"></i> Salary Information</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-4">
@@ -1353,6 +1357,17 @@
                                             <input type="number" class="form-control" id="editBasicSalary" name="basic_salary" step="0.01" min="0" required>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Column 4: Banking Details -->
+                        <div class="col-md-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-bank"></i> Banking Details</h6>
+                                </div>
+                                <div class="card-body">
                                     <div class="mb-4">
                                         <label for="editBank" class="form-label">Bank Name</label>
                                         <input type="text" class="form-control" id="editBank" name="bank">
@@ -1361,26 +1376,15 @@
                                         <label for="editAccNumber" class="form-label">Account Number *</label>
                                         <input type="text" class="form-control" id="editAccNumber" name="account_number" required>
                                     </div>
+                                    <div class="mb-4">
+                                        <label for="editBranchCode" class="form-label">Branch Code</label>
+                                        <input type="text" class="form-control" id="editBranchCode" name="branch_code">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
                     </div> <!-- End row -->
-                    
-                    <!-- Status Indicator (Optional) -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="alert alert-info p-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-info-circle-fill me-3 fs-5"></i>
-                                    <div>
-                                        <small class="d-block mb-1">Fields marked with * are required</small>
-                                        <small class="d-block text-muted">Changes will take effect immediately after saving</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     
                 </div> <!-- End modal-body -->
                 
@@ -1403,7 +1407,6 @@
         </div>
     </div>
 </div>
-
     <!-- Floating Alert Container -->
     <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
