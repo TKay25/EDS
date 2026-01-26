@@ -16546,10 +16546,9 @@ def run1(table_name, empid):
 
 
 
-        df_leave_appsmain_analysis1 = df_leave_appsmain_declinedxx._append(df_leave_appsmain_approvedxx)
-        df_leave_appsmain_analysis2 = df_leave_appsmain_analysis1._append(df_leave_appsmain_pendingxx)
-        df_leave_appsmain_analysis = df_leave_appsmain_analysis2._append(df_leave_appsmain_cancelledxx)
-
+        df_leave_appsmain_analysis1 = pd.concat([df_leave_appsmain_declinedxx, df_leave_appsmain_approvedxx], ignore_index=True)        
+        df_leave_appsmain_analysis2 = pd.concat([df_leave_appsmain_analysis1, df_leave_appsmain_pendingxx], ignore_index=True)
+        df_leave_appsmain_analysis = pd.concat([df_leave_appsmain_analysis2, df_leave_appsmain_cancelledxx], ignore_index=True)
 
         df_filtered_for_bar_chart = df_leave_appsmain_analysis[['Department', 'Approval Status', 'Leave Start Date']]
 
