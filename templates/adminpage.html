@@ -3670,6 +3670,9 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = "/download-excel-template-add-employees";  // Triggers the Flask route to download the file
     });
 
+    document.getElementById('download-btn-excel-template-payroll').addEventListener('click', function() {
+        window.location.href = "/download-excel-template-payroll-employees";  // Triggers the Flask route to download the file
+    });
 
     const bulkApproverAssignButton = document.getElementById('bulkapproverassign');
     const approverDropdown = document.getElementById('leaveapplicationsapprover-emp-bulk');

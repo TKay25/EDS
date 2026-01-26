@@ -16835,6 +16835,123 @@ def download_excel_template_add_employees():
             return redirect(url_for('Dashboard'))
 
 
+@app.route('/download-excel-template-payroll-employees')
+def download_excel_template_payroll_employees():
+    with get_db() as (cursor, connection):
+        user_uuid = session.get('user_uuid')
+        if not user_uuid:
+            return redirect(url_for('landingpage'))
+        
+        try:
+            table_name = session.get('table_name')
+            company_name = table_name.replace("main", "")
+            
+            # Fetch column names from the table
+            cursor.execute(f"""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = '{table_name}'
+            """)
+            
+            columns_result = cursor.fetchall()
+            
+            # Filter for specific columns you want
+            desired_columns = [
+                'id', 'firstname', 'surname', 'accholdername', 
+                'accholdersurname', 'bank', 'accnumber', 'branch', 
+                'branchcode', 'c8', 'currency'
+            ]
+            
+            # Create a mapping for user-friendly headers
+            column_headers = {
+                'id': 'Employee ID',
+                'firstname': 'First Name',
+                'surname': 'Surname',
+                'accholdername': 'Account Holder First Name',
+                'accholdersurname': 'Account Holder Surname',
+                'bank': 'Bank Name',
+                'accnumber': 'Account Number',
+                'branch': 'Branch',
+                'branchcode': 'Branch Code',
+                'c8': 'Additional Info (C8)',
+                'currency': 'Currency'
+            }
+            
+            # Determine which columns exist in the table
+            existing_columns = []
+            headers = []
+            for col_tuple in columns_result:
+                col_name = col_tuple[0]
+                if col_name in desired_columns:
+                    existing_columns.append(col_name)
+                    headers.append(column_headers.get(col_name, col_name))
+            
+            if not existing_columns:
+                return "No relevant columns found in the table", 400
+            
+            # Build query with only existing columns
+            columns_str = ", ".join([f'"{col}"' for col in existing_columns])
+            query = f'SELECT {columns_str} FROM "{table_name}"'
+            
+            cursor.execute(query)
+            employees = cursor.fetchall()
+            
+            # Create Excel workbook
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Employee Payroll Data"
+            
+            # Add headers
+            ws.append(headers)
+            
+            # Style headers
+            dark_blue = "003366"
+            white = "FFFFFF"
+            for col in range(1, len(headers) + 1):
+                cell = ws.cell(row=1, column=col)
+                cell.fill = PatternFill(start_color=dark_blue, end_color=dark_blue, fill_type="solid")
+                cell.font = Font(color=white, bold=True)
+            
+            # Add data rows
+            for employee in employees:
+                ws.append(employee)
+            
+            # Auto-adjust column widths
+            for column in ws.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)
+                ws.column_dimensions[column_letter].width = adjusted_width
+            
+            # Add freeze pane for headers
+            ws.freeze_panes = "A2"
+            
+            # Save to memory stream
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            filename = f"{company_name.strip()}_Employee_Payroll_Data.xlsx"
+            return send_file(
+                output, 
+                download_name=filename, 
+                as_attachment=True,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+        
+        except Error as e:
+            print(f"Database error: {e}")
+            return redirect(url_for('Dashboard'))
+        except Exception as e:
+            print(f"General error: {e}")
+            return redirect(url_for('Dashboard'))
+
 
 @app.route('/admin_sign_up', methods=['POST'])
 def submit_form():
