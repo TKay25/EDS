@@ -48,6 +48,26 @@ database = 'lmsdatabase_8ag3'
 #VERIFY_TOKEN = "521035180620700"
 #WHATSAPP_API_URL = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
+holidays = {
+    datetime.strptime("2025-12-22", "%Y-%m-%d").date(),
+    datetime.strptime("2025-12-25", "%Y-%m-%d").date(),
+    datetime.strptime("2025-12-26", "%Y-%m-%d").date(),
+    datetime.strptime("2026-01-01", "%Y-%m-%d").date(),
+    datetime.strptime("2026-02-21", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-03", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-04", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-05", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-06", "%Y-%m-%d").date(),
+    datetime.strptime("2026-04-18", "%Y-%m-%d").date(),
+    datetime.strptime("2026-05-01", "%Y-%m-%d").date(),
+    datetime.strptime("2026-05-25", "%Y-%m-%d").date(),
+    datetime.strptime("2026-08-10", "%Y-%m-%d").date(),
+    datetime.strptime("2026-08-11", "%Y-%m-%d").date(),
+    datetime.strptime("2026-12-22", "%Y-%m-%d").date(),
+    datetime.strptime("2026-12-25", "%Y-%m-%d").date(),
+    datetime.strptime("2026-12-26", "%Y-%m-%d").date(),
+}
+
 def initialize_database_tables():
     """Initialize all required database tables on startup"""
     try:
@@ -173,6 +193,37 @@ def initialize_database_tables():
 # Tables will be created on first request if they don't exist
 # initialize_database_tables()
 ##################### BACKGROUND SCHEDULER - Check pending applications every 10 minutes ###################################
+
+def update_leave_abcv():
+
+    try:
+
+        with get_db() as (cursor, connection):
+                        
+            cursor.execute("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public';
+            """)
+
+            for table in cursor.fetchall():
+                print(table[0])
+
+            cursor.execute("""
+                SELECT id, leavedaysappliedfor
+                FROM brilliant_chemicals_pvt_ltdappspendingapproval
+                WHERE id = 393;
+            """)
+            print(cursor.fetchone())
+            
+            #connection.commit()
+            #print("Rows updated:", cursor.rowcount)
+
+    except Exception as e:
+        print("DB ERROR:", e)
+
+
+update_leave_abcv()
 
 def check_and_send_reminders():
     """
@@ -6902,9 +6953,10 @@ def webhook():
                                                             # ✅ Calculate business days
                                                             business_days = 0
                                                             current_date = startdate
+
                                                             while current_date <= enddate:
-                                                                #if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                                business_days += 1
+                                                                if current_date not in holidays:
+                                                                    business_days += 1
                                                                 current_date += timedelta(days=1)
 
                                                             # ✅ Ask user to confirm submission
@@ -7783,24 +7835,25 @@ def webhook():
 
                                                                                 print("select successful")
 
+
+
                                                                                 appid = result[0]
                                                                                 leavetype = result[2]
-                                                                                startdate = result[3]
-                                                                                enddate = result[4]
                                                                                 table_name = f"{company_reg}main"
 
-                                                                                if isinstance(startdate, str):
-                                                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                                if isinstance(enddate, str):
-                                                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                                                # FORCE strings → dates, no guessing
+                                                                                startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                                enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
+                                                                                # HOLIDAYS — SAME FORMAT, NO datetime.date
                                                                                 business_days = 0
                                                                                 current_date = startdate
 
                                                                                 while current_date <= enddate:
-                                                                                    #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                                    business_days += 1
-                                                                                    current_date += timedelta(days=1)  # Use timedelta directly
+                                                                                    if current_date not in holidays:
+                                                                                        business_days += 1
+                                                                                    current_date += timedelta(days=1)
+
 
                                                                                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
                                                                                 cursor.execute(query)
@@ -8417,23 +8470,24 @@ def webhook():
                                                         if not result:
                                                             raise Exception("No leave record found.")
 
+
+
                                                         appid = result[0]
                                                         leavetype = result[2]
-                                                        startdate = result[3]
-                                                        enddate = result[4]
 
-                                                        # ✅ Ensure both dates are datetime.date objects
-                                                        if isinstance(startdate, str):
-                                                            startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                        if isinstance(enddate, str):
-                                                            enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
-                                                        # ✅ Calculate business days
+                                                        # FORCE strings → dates, no guessing
+                                                        startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                        enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
+
+                                                        # HOLIDAYS — SAME FORMAT, NO datetime.date
+
                                                         business_days = 0
                                                         current_date = startdate
+
                                                         while current_date <= enddate:
-                                                            #if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                            business_days += 1
+                                                            if current_date not in holidays:
+                                                                business_days += 1
                                                             current_date += timedelta(days=1)
 
                                                         # ✅ Ask user to confirm submission
@@ -9175,24 +9229,24 @@ def webhook():
                                                                 
                                                                         result = cursor.fetchone()
 
+                                                        
                                                                         appid = result[0]
                                                                         leavetype = result[2]
-                                                                        startdate = result[3]
-                                                                        enddate = result[4]
                                                                         table_name = f"{company_reg}main"
 
-                                                                        if isinstance(startdate, str):
-                                                                            startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                        if isinstance(enddate, str):
-                                                                            enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                                        # FORCE strings → dates, no guessing
+                                                                        startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                        enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
+
+                                                                        # HOLIDAYS — SAME FORMAT, NO datetime.date
 
                                                                         business_days = 0
                                                                         current_date = startdate
 
                                                                         while current_date <= enddate:
-                                                                            #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                            business_days += 1
-                                                                            current_date += timedelta(days=1)  # Use timedelta directly
+                                                                            if current_date not in holidays:
+                                                                                business_days += 1
+                                                                            current_date += timedelta(days=1)
 
                                                                         query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
                                                                         cursor.execute(query)
@@ -10366,23 +10420,25 @@ def webhook():
                                                                 if not result:
                                                                     raise Exception("No leave record found.")
 
+
+
+
+                                                                    
                                                                 appid = result[0]
                                                                 leavetype = result[2]
-                                                                startdate = result[3]
-                                                                enddate = result[4]
 
-                                                                # ✅ Ensure both dates are datetime.date objects
-                                                                if isinstance(startdate, str):
-                                                                    startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                if isinstance(enddate, str):
-                                                                    enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
 
-                                                                # ✅ Calculate business days
+                                                                # FORCE strings → dates, no guessing
+                                                                startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
+
+                                                                # HOLIDAYS — SAME FORMAT, NO datetime.date
                                                                 business_days = 0
                                                                 current_date = startdate
+
                                                                 while current_date <= enddate:
-                                                                    #if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                                    business_days += 1
+                                                                    if current_date not in holidays:
+                                                                        business_days += 1
                                                                     current_date += timedelta(days=1)
 
                                                                 # ✅ Ask user to confirm submission
@@ -11269,24 +11325,27 @@ def webhook():
                                                                         
                                                                                 result = cursor.fetchone()
 
+
+
+
+                                                                                
                                                                                 appid = result[0]
                                                                                 leavetype = result[2]
-                                                                                startdate = result[3]
-                                                                                enddate = result[4]
                                                                                 table_name = f"{company_reg}main"
 
-                                                                                if isinstance(startdate, str):
-                                                                                    startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                                if isinstance(enddate, str):
-                                                                                    enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                                                # FORCE strings → dates, no guessing
+                                                                                startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                                enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
+
+                                                                                # HOLIDAYS — SAME FORMAT, NO datetime.date
 
                                                                                 business_days = 0
                                                                                 current_date = startdate
 
                                                                                 while current_date <= enddate:
-                                                                                    #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                                    business_days += 1
-                                                                                    current_date += timedelta(days=1)  # Use timedelta directly
+                                                                                    if current_date not in holidays:
+                                                                                        business_days += 1
+                                                                                    current_date += timedelta(days=1)
 
                                                                                 query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
                                                                                 cursor.execute(query)
@@ -12728,23 +12787,24 @@ def webhook():
                                                             if not result:
                                                                 raise Exception("No leave record found.")
 
+
+
+                                                                
                                                             appid = result[0]
                                                             leavetype = result[2]
-                                                            startdate = result[3]
-                                                            enddate = result[4]
 
-                                                            # ✅ Ensure both dates are datetime.date objects
-                                                            if isinstance(startdate, str):
-                                                                startdate = datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                            if isinstance(enddate, str):
-                                                                enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
+                                                            # FORCE strings → dates, no guessing
+                                                            startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                            enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
 
-                                                            # ✅ Calculate business days
+                                                            # HOLIDAYS — SAME FORMAT, NO datetime.date
+
                                                             business_days = 0
                                                             current_date = startdate
+
                                                             while current_date <= enddate:
-                                                                #if current_date.weekday() != 6:  # Weekday: Mon-Fri
-                                                                business_days += 1
+                                                                if current_date not in holidays:
+                                                                    business_days += 1
                                                                 current_date += timedelta(days=1)
 
                                                             # ✅ Ask user to confirm submission
@@ -13911,24 +13971,25 @@ def webhook():
                                                                     
                                                                             result = cursor.fetchone()
 
+                                                                            
                                                                             appid = result[0]
                                                                             leavetype = result[2]
-                                                                            startdate = result[3]
-                                                                            enddate = result[4]
                                                                             table_name = f"{company_reg}main"
 
-                                                                            if isinstance(startdate, str):
-                                                                                startdate = datetime.datetime.strptime(startdate, "%Y-%m-%d").date()
-                                                                            if isinstance(enddate, str):
-                                                                                enddate = datetime.datetime.strptime(enddate, "%Y-%m-%d").date()
+
+                                                                            # FORCE strings → dates, no guessing
+                                                                            startdate = datetime.strptime(str(result[3]), "%Y-%m-%d").date()
+                                                                            enddate   = datetime.strptime(str(result[4]), "%Y-%m-%d").date()
+
+                                                                            # HOLIDAYS — SAME FORMAT, NO datetime.date
 
                                                                             business_days = 0
                                                                             current_date = startdate
 
                                                                             while current_date <= enddate:
-                                                                                #if current_date.weekday() != 6:  # 0=Mon, 1=Tue, ..., 4=Fri
-                                                                                business_days += 1
-                                                                                current_date += timedelta(days=1)  # Use timedelta directly
+                                                                                if current_date not in holidays:
+                                                                                    business_days += 1
+                                                                                current_date += timedelta(days=1)
 
                                                                             query = f"SELECT id, firstname, surname, whatsapp, email, address, role, leaveapprovername, leaveapproverid, leaveapproveremail, leaveapproverwhatsapp, currentleavedaysbalance, monthlyaccumulation, department FROM {table_name};"
                                                                             cursor.execute(query)
