@@ -16296,13 +16296,13 @@ def run1(table_name, empid):
         applied_date = datetime.now().strftime('%Y-%m-%d')
 
         ######### payroll
-        querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, bank FROM {table_name};"
+        querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, accnumber, bank, c8,  FROM {table_name};"
         cursor.execute(querypayroll)
         rowspayroll = cursor.fetchall()
 
-        df_employees_payroll = pd.DataFrame(rowspayroll, columns=["id","Firstname", "Surname","Manager_Supervisor", "Department", "Designation","Date Joined","Bank"])
+        df_employees_payroll = pd.DataFrame(rowspayroll, columns=["id","Firstname", "Surname","Manager_Supervisor", "Department", "Designation","Date Joined","accnumber","Bank","basicsalary"])
         df_employees_payroll['Action'] = df_employees_payroll.apply(
-            lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['id']}" data-firstname="{row['Firstname']}" data-surname="{row['Surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}"  data-bank="{row['Bank']}">Edit Information</button></div>''', axis=1
+            lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['id']}" data-firstname="{row['Firstname']}" data-surname="{row['Surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}" data-accnumber="{row['accnumber']}"  data-bank="{row['Bank']}"  data-basicsalary="{row['basicsalary']}">Edit Information</button></div>''', axis=1
         )
 
         df_employees_payroll = df_employees_payroll[["id", "Firstname", "Surname", "Department", "Designation","Bank", "Action"]]
@@ -16834,6 +16834,64 @@ def upload_excel():
             return redirect(url_for('landingpage')) 
 
 
+@app.route('/upload-excel-payroll', methods=['POST'])
+def upload_excel():
+
+    with get_db() as (cursor, connection):
+
+        user_uuid = session.get('user_uuid')
+        if user_uuid:
+
+            table_name = session.get('table_name')
+            empid = session.get('empid')
+
+            if 'file' not in request.files:
+                return jsonify({"status": "error", "message": "No file part"}), 400
+            
+            file = request.files['file']
+            
+            if file.filename == '':
+                return jsonify({"status": "error", "message": "No selected file"}), 400
+            
+            if file and allowed_file(file.filename):
+
+                df = pd.read_excel(file, usecols=range(8))
+                df = check_existing_data(df, table_name)
+                df = df.dropna(subset=['FirstName'])
+
+                print(df)
+
+                if len(df) > 0:
+
+                    for index, row in df.iterrows():
+                        first_name = row['FirstName']
+                        surname = row['Surname']
+
+                        if pd.notna(row['WhatsApp']):
+                            whatsapp_raw = str(int(float(row['WhatsApp']))).replace(" ", "")
+                        else:
+                            print("NaN skipped")
+
+                        whatsapp = whatsapp_raw[-9:] if len(whatsapp_raw) >= 9 else whatsapp_raw
+                        email = row['Email']
+                        role = row['Role']
+                        department = row['Department']
+                        current_leave_days_balance = row['Current Leave Days Balance']
+                        monthly_accumulation = row['Monthly Leave Days Accumulation']
+
+                        cursor.execute(f"""
+                            INSERT INTO {table_name} (firstname, surname, whatsapp, email, role, department, currentleavedaysbalance, monthlyaccumulation)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        """, (first_name, surname, whatsapp, email, role, department, current_leave_days_balance, monthly_accumulation))
+                    
+                    connection.commit()
+
+                return redirect(url_for('Dashboard'))
+
+        else:
+            return redirect(url_for('landingpage')) 
+
+
 
 @app.route('/download-excel-template-add-employees')
 def download_excel_template_add_employees():
@@ -16941,18 +16999,15 @@ def download_excel_template_payroll_employees():
             
             # Filter for specific columns you want
             desired_columns = [
-                'id', 'firstname', 'surname', 'accholdername', 
-                'accholdersurname', 'bank', 'accnumber', 'branch', 
+                'id', 'firstname', 'surname', 'bank', 'accnumber', 'branch', 
                 'branchcode', 'c8', 'currency'
             ]
             
             # Create a mapping for user-friendly headers
             column_headers = {
                 'id': 'Employee ID',
-                'firstname': 'First Name',
-                'surname': 'Surname',
-                'accholdername': 'Account Holder First Name',
-                'accholdersurname': 'Account Holder Surname',
+                'firstname': 'Account Holder First Name',
+                'surname': 'Account Holder Surname',
                 'bank': 'Bank Name',
                 'accnumber': 'Account Number',
                 'branch': 'Branch',
