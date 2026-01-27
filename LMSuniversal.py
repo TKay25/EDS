@@ -154,7 +154,9 @@ def initialize_database_tables():
                 ('datejoined', 'DATE'),
                 ('c8', 'NUMERIC(12,2)'),
                 ('c8type', 'VARCHAR(20)'),
-                ('currency', 'VARCHAR(10)')
+                ('currency', 'VARCHAR(10)'),
+                ('updated', 'TIMESTAMP'),
+                ('updatedby', 'VARCHAR(100)')
             ]
             
             for (table_name,) in tables:
