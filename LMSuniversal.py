@@ -17493,7 +17493,7 @@ def run_som_company_tables():
                     "to": to_number,
                     "type": "template",
                     "template": {
-                        "name": "depreceipt",
+                        "name": "newmonthbalance",
                         "language": {"code": "en"},
                         "components": [
                             # Button component with project_id in payload
