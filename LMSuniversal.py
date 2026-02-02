@@ -519,6 +519,7 @@ def webhook():
                                             conversation_id = str(uuid.uuid4())
                                             session['conversation_id'] = conversation_id
                                         
+                                            message_type = message.get("type")
 
                                             sender_id = message["from"]
                                             sender_number = sender_id[-9:]
@@ -6761,7 +6762,7 @@ def webhook():
                                     conversation_id = str(uuid.uuid4())
                                     session['conversation_id'] = conversation_id
                                 
-
+                                    message_type = message.get("type")
                                     sender_id = message["from"]
                                     sender_number = sender_id[-9:]
                                     print(f"📱 Conversation {conversation_id}: Sender's WhatsApp number: {sender_number}")
@@ -8187,7 +8188,30 @@ def webhook():
                                                             "User Options",
                                                             sections)
 
+                                                    elif message_type == "button":
+                                                        
+                                                        button = message.get("button", {})
+                                                        button_text = button.get("text", "")
+                                                        payload = button.get("payload", "")
+                                                        
+                                                        print(f"🔘 Template button clicked: {button_text}")
+                                                        print(f"📦 Button payload: {payload}")
+                                                        
+                                                        # Handle deposit receipt button
+                                                        if payload and payload.startswith('check_bal_'):
+                                                            
+                                                            buttons = [
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
+                                                            ]
 
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )
                                                     else:
 
                                                         text = message.get("text", {}).get("body", "").lower()
@@ -10139,6 +10163,31 @@ def webhook():
                                                             f"Leave Application not submitted. \n\n Hello {first_name} {last_name} from {companyxx}!\n\n {bot} LMS Bot Here 😎. How can I assist you?", 
                                                         "User Options",
                                                         sections)
+
+                                                elif message_type == "button":
+                                                    
+                                                    button = message.get("button", {})
+                                                    button_text = button.get("text", "")
+                                                    payload = button.get("payload", "")
+                                                    
+                                                    print(f"🔘 Template button clicked: {button_text}")
+                                                    print(f"📦 Button payload: {payload}")
+                                                    
+                                                    # Handle deposit receipt button
+                                                    if payload and payload.startswith('check_bal_'):
+                                                        
+                                                        buttons = [
+                                                        {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                        {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                        {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
+                                                        ]
+
+                                                        send_whatsapp_message(
+                                                            sender_id, 
+                                                            f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
+                                                            "Select an option below to continue 👇",
+                                                            buttons
+                                                        )
 
                                                 else:
 
@@ -12482,7 +12531,30 @@ def webhook():
                                                                 "Administrator Options",
                                                                 sections)
 
+                                                        elif message_type == "button":
+                                                            
+                                                            button = message.get("button", {})
+                                                            button_text = button.get("text", "")
+                                                            payload = button.get("payload", "")
+                                                            
+                                                            print(f"🔘 Template button clicked: {button_text}")
+                                                            print(f"📦 Button payload: {payload}")
+                                                            
+                                                            # Handle deposit receipt button
+                                                            if payload and payload.startswith('check_bal_'):
+                                                                
+                                                                buttons = [
+                                                                {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                                {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                                {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
+                                                                ]
 
+                                                                send_whatsapp_message(
+                                                                    sender_id, 
+                                                                    f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
+                                                                    "Select an option below to continue 👇",
+                                                                    buttons
+                                                                )
         
                                                         elif message.get("type") == "text":
                                                             text = message.get("text", {}).get("body", "").lower()
@@ -15227,6 +15299,30 @@ def webhook():
                                                             "Admin/Approver Options",
                                                             sections)
 
+                                                    elif message_type == "button":
+                                                        
+                                                        button = message.get("button", {})
+                                                        button_text = button.get("text", "")
+                                                        payload = button.get("payload", "")
+                                                        
+                                                        print(f"🔘 Template button clicked: {button_text}")
+                                                        print(f"📦 Button payload: {payload}")
+                                                        
+                                                        # Handle deposit receipt button
+                                                        if payload and payload.startswith('check_bal_'):
+                                                            
+                                                            buttons = [
+                                                            {"type": "reply", "reply": {"id": "Apply", "title": "Apply for Leave"}},
+                                                            {"type": "reply", "reply": {"id": "Track", "title": "Track Application"}},
+                                                            {"type": "reply", "reply": {"id": "Menu", "title": "Main Menu"}},
+                                                            ]
+
+                                                            send_whatsapp_message(
+                                                                sender_id, 
+                                                                f"Hey {first_name}, your current available leave days balance is `{days_days_balance} days`.\n\n"
+                                                                "Select an option below to continue 👇",
+                                                                buttons
+                                                            )
 
                                                     elif message.get("type") == "text":
 
