@@ -17576,7 +17576,7 @@ def run_som_company_tables():
 
 
             def send_template_with_button(to_number):
-                """Send template with button containing project_id in payload"""
+                """Send template with button containing check_bal_ in payload"""
                 
                 url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                 headers = {
