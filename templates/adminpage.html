@@ -1252,7 +1252,7 @@ header {
                     <input type="hidden" id="editEmployeeId" name="employee_id">
                     
                     <div class="row g-4">
-                        
+
                         <!-- Column 1: Personal Information -->
                         <div class="col-md-3">
                             <div class="card h-100">
@@ -1261,12 +1261,12 @@ header {
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-4">
-                                        <label for="editFirstName" class="form-label">First Name *</label>
-                                        <input type="text" class="form-control" id="editFirstName" name="firstname" required>
+                                        <label for="firstname-editinfo-4-comp" class="form-label">First Name *</label>
+                                        <input type="text" class="form-control" id="firstname-editinfo-4-comp" name="firstname" required>
                                     </div>
                                     <div class="mb-4">
-                                        <label for="editSurname" class="form-label">Surname *</label>
-                                        <input type="text" class="form-control" id="editSurname" name="surname" required>
+                                        <label for="surname-editinfo-4-comp" class="form-label">Surname *</label>
+                                        <input type="text" class="form-control" id="surname-editinfo-4-comp" name="surname" required>
                                     </div>
                                     <div class="mb-4">
                                         <label for="editDateJoined" class="form-label">Date Joined</label>
@@ -1284,16 +1284,16 @@ header {
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-4">
-                                        <label for="editDepartment" class="form-label">Department</label>
-                                        <input type="text" class="form-control" id="editDepartment" name="department">
+                                        <label for="department-editinfo-4-comp" class="form-label">Department</label>
+                                        <input type="text" class="form-control" id="department-editinfo-4-comp" name="department">
                                     </div>
                                     <div class="mb-4">
-                                        <label for="editDesignation" class="form-label">Designation</label>
-                                        <input type="text" class="form-control" id="editDesignation" name="designation">
+                                        <label for="designation-editinfo-4-comp" class="form-label">Designation</label>
+                                        <input type="text" class="form-control" id="designation-editinfo-4-comp" name="designation">
                                     </div>
                                     <div class="mb-4">
-                                        <label for="editManager" class="form-label">Manager/Supervisor</label>
-                                        <input type="text" class="form-control" id="editManager" name="manager">
+                                        <label for="manager-editinfo-4-comp" class="form-label">Manager/Supervisor</label>
+                                        <input type="text" class="form-control" id="manager-editinfo-4-comp" name="manager">
                                     </div>
 
                                 </div>
@@ -3677,6 +3677,34 @@ let currentIdchangeapprover = null;
 let currentIdeditbalance = null;
 
 let currentFirstName = null; 
+
+
+
+
+
+$(document).on('click', '.edit-emp-details-comp-btn-payroll', function () {
+    const id = $(this).data('id');
+    const firstname = $(this).data('Firstname');
+    const surname = $(this).data('Surname');
+    const manager = $(this).data('Manager_Supervisor');
+    const department = $(this).data('Department');
+    const designation = $(this).data('Designation');
+
+    $('#emp-id').text('ID: ' + id);
+    $('#emp-name-title').text(`${firstname} ${surname}`);
+
+    $('#firstname-editinfo-4-comp').val('').attr('placeholder', firstname);
+    $('#surname-editinfo-4-comp').val('').attr('placeholder', surname);
+    $('#manager-editinfo-4-comp').val('').attr('placeholder', manager);
+    $('#department-editinfo-4-comp').val('').attr('placeholder', department);
+    $('#designation-editinfo-4-comp').val('').attr('placeholder', designation);
+
+    $('#emp-id-hidden-comp').val(id);
+
+    $('#editEmployeePayrollModal').modal('show');
+
+
+});
 
 
 
