@@ -17436,7 +17436,6 @@ def submit_form():
                             usd_percent DECIMAL(5,2),
                             zwg_percent DECIMAL(5,2),
                             exchange_rate NUMERIC(12,4),
-                            currency VARCHAR(10),
                             updated TIMESTAMP,
                             updatedby VARCHAR(100)
                         );
