@@ -20218,8 +20218,8 @@ def export_excel():
                     pivot.reset_index(inplace=True)
 
                 else: 
-                    df_apps_to_excel = []
-                    pivot = []
+                    df_apps_to_excel = pd.DataFrame()  # Empty DataFrame
+                    pivot = pd.DataFrame()  # Empty DataFrame
  
                 # Create an in-memory Excel file
                 output = io.BytesIO()
