@@ -1087,6 +1087,9 @@ header {
 
             <!-- Payroll Settings -->
             <div class="tab-pane fade" id="payroll-settings-tab">
+                <!-- ADD THIS HIDDEN DIV RIGHT HERE - AT THE VERY TOP OF THE TAB -->
+                <div id="currency-settings-data" data-settings='{{ currency_settings_json }}' style="display: none;"></div>
+                
                 <div class="container mt-4">
                     <div class="row">
                         <div class="col-md-8">
@@ -1191,7 +1194,7 @@ header {
                                                         <span class="input-group-text">ZWG</span>
                                                     </div>
                                                     <small class="text-muted">
-                                                        Current exchange rate from  USD to ZWG
+                                                        Current exchange rate from USD to ZWG
                                                     </small>
                                                 </div>
 
@@ -2787,6 +2790,81 @@ header {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get settings from data attribute
+        const settingsElement = document.getElementById('currency-settings-data');
+        if (settingsElement) {
+            const settingsJson = settingsElement.dataset.settings;
+            try {
+                const currencySettings = JSON.parse(settingsJson);
+                
+                if (currencySettings) {
+                    console.log('Loading currency settings:', currencySettings);
+                    
+                    // Set base currency
+                    const baseCurrencySelect = document.getElementById('baseCurrency');
+                    if (baseCurrencySelect && currencySettings.baseCurrency) {
+                        baseCurrencySelect.value = currencySettings.baseCurrency;
+                    }
+                    
+                    // Set split option
+                    const splitOptionSelect = document.getElementById('splitOption');
+                    if (splitOptionSelect) {
+                        splitOptionSelect.value = currencySettings.splitEnabled ? '2' : '1';
+                    }
+                    
+                    // Trigger the toggle function to show/hide split config
+                    if (typeof toggleSplitOptions === 'function') {
+                        toggleSplitOptions();
+                    }
+                    
+                    // Set split configuration values if split is enabled
+                    if (currencySettings.splitEnabled && currencySettings.splitConfig) {
+                        const usdSplitPercent = document.getElementById('usdSplitPercent');
+                        const zwgSplitPercent = document.getElementById('zwgSplitPercent');
+                        const exchangeRate = document.getElementById('exchangeRateToZWG');
+                        const baseCurrencyLabel = document.getElementById('baseCurrencyLabel');
+                        const currentBaseCurrency = document.getElementById('currentBaseCurrency');
+                        
+                        if (usdSplitPercent) {
+                            usdSplitPercent.value = currencySettings.splitConfig.usdPercent || 60;
+                        }
+                        if (zwgSplitPercent) {
+                            zwgSplitPercent.value = currencySettings.splitConfig.zwgPercent || 40;
+                        }
+                        if (exchangeRate) {
+                            exchangeRate.value = currencySettings.splitConfig.exchangeRate || 0;
+                        }
+                        if (baseCurrencyLabel) {
+                            baseCurrencyLabel.textContent = currencySettings.baseCurrency || 'USD';
+                        }
+                        if (currentBaseCurrency) {
+                            currentBaseCurrency.textContent = currencySettings.baseCurrency || 'USD';
+                        }
+                        
+                        // Trigger calculation
+                        if (typeof calculateZWGSplit === 'function') {
+                            calculateZWGSplit();
+                        }
+                    }
+                    
+                    // Update split option availability based on base currency
+                    if (typeof updateSplitOptionAvailability === 'function') {
+                        updateSplitOptionAvailability();
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing currency settings:', e);
+            }
+        } else {
+            console.log('No currency settings element found');
+        }
+    });
+</script>
+
+
 <script>
 
 // Employee Edit Modal JavaScript

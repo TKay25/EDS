@@ -16397,7 +16397,7 @@ def run1(table_name, empid):
         applied_date = datetime.now().strftime('%Y-%m-%d')
 
         ######### payroll
-        querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, accnumber, bank, c8 FROM {table_name};"
+        querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, accnumber, bank, c8, c8type, zwg_percent, usd_percent FROM {table_name};"
         cursor.execute(querypayroll)
         rowspayroll = cursor.fetchall()
 
@@ -16411,15 +16411,31 @@ def run1(table_name, empid):
 
         table_employees_payroll_html = df_employees_payroll.to_html(classes="table table-bordered table-theme", table_id="employeespayrollTable", index=False,  escape=False,)
 
+        currency_settings = {
+            'baseCurrency': 'USD',
+            'splitEnabled': False,
+            'splitConfig': None
+        }
+        
+        try:
+            cursor.execute(f"SELECT base_currency, usd_percent, zwg_percent, exchange_rate FROM {table_name} ORDER BY id DESC")
+            settings = cursor.fetchone()
+            
+            if settings:
+                currency_settings = {
+                    'baseCurrency': settings[0],
+                    'splitConfig': {
+                        'usdPercent': float(settings[2]) if settings[2] is not None else 60,
+                        'zwgPercent': float(settings[3]) if settings[3] is not None else 40,
+                        'exchangeRate': float(settings[4]) if settings[4] is not None else 0
+                    } if settings[1] else None
+                }
+        except Exception as e:
+            print(f"Error fetching currency settings: {e}")
+            # Table might not exist yet, use defaults
+            pass
 
-
-
-
-
-
-
-
-
+        currency_settings_json = json.dumps(currency_settings)
 
 
 
@@ -16848,6 +16864,7 @@ def run1(table_name, empid):
             "leave_by_type_data": generate_leave_by_type_data(df_filtered_for_bar_chart_type),
             "empsremainingbydpt": generate_employees_remaining_chart(df_employees_lineg, df_apps_approved_lineg),
             "empsremainingbydptbar": generate_employees_remaining_bar_chart(df_employees_lineg, df_apps_approved_lineg),
+            "currency_settings_json": currency_settings_json, 
         }
 
 
