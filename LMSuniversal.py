@@ -154,6 +154,8 @@ def initialize_database_tables():
                 ('datejoined', 'DATE'),
                 ('c8', 'NUMERIC(12,2)'),
                 ('c8type', 'VARCHAR(20)'),
+                ('usd_percent', 'DECIMAL(5,2)'),
+                ('zwg_percent', 'DECIMAL(5,2)'),
                 ('currency', 'VARCHAR(10)'),
                 ('updated', 'TIMESTAMP'),
                 ('updatedby', 'VARCHAR(100)')
@@ -16933,17 +16935,15 @@ def upload_excel():
             return redirect(url_for('landingpage')) 
 
 
-@app.route('/upload-excel-payroll', methods=['POST'])
-def upload_excel_payroll():
 
+@app.route('/upload-payroll', methods=['POST'])
+def upload_payroll():
     with get_db() as (cursor, connection):
-
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
             table_name = session.get('table_name')
-            empid = session.get('empid')
-
+            
             if 'file' not in request.files:
                 return jsonify({"status": "error", "message": "No file part"}), 400
             
@@ -16953,44 +16953,76 @@ def upload_excel_payroll():
                 return jsonify({"status": "error", "message": "No selected file"}), 400
             
             if file and allowed_file(file.filename):
-
-                df = pd.read_excel(file, usecols=range(8))
-                df = check_existing_data(df, table_name)
-                df = df.dropna(subset=['FirstName'])
-
-                print(df)
-
-                if len(df) > 0:
-
-                    for index, row in df.iterrows():
-                        first_name = row['FirstName']
-                        surname = row['Surname']
-
-                        if pd.notna(row['WhatsApp']):
-                            whatsapp_raw = str(int(float(row['WhatsApp']))).replace(" ", "")
-                        else:
-                            print("NaN skipped")
-
-                        whatsapp = whatsapp_raw[-9:] if len(whatsapp_raw) >= 9 else whatsapp_raw
-                        email = row['Email']
-                        role = row['Role']
-                        department = row['Department']
-                        current_leave_days_balance = row['Current Leave Days Balance']
-                        monthly_accumulation = row['Monthly Leave Days Accumulation']
-
+                
+                df = pd.read_excel(file)
+                
+                # Ensure required columns exist
+                required_columns = ['Employee ID', 'Account Holder First Name', 'Account Holder Surname', 
+                                  'Bank Name', 'Account Number', 'Branch', 'Branch Code', 
+                                  'Basic Salary in Base Currency', 'Base Currency']
+                
+                if not all(col in df.columns for col in required_columns):
+                    return jsonify({"status": "error", "message": "Missing required columns"}), 400
+                
+                success_count = 0
+                error_count = 0
+                
+                for index, row in df.iterrows():
+                    try:
+                        employee_id = row['Employee ID']
+                        
+                        # Skip if Employee ID is missing
+                        if pd.isna(employee_id):
+                            error_count += 1
+                            continue
+                        
+                        # Convert Employee ID to int
+                        employee_id = int(float(employee_id))
+                        
+                        # Check if employee exists
+                        cursor.execute(f"SELECT id FROM {table_name} WHERE id = %s", (employee_id,))
+                        if not cursor.fetchone():
+                            print(f"Employee ID {employee_id} not found")
+                            error_count += 1
+                            continue
+                        
+                        # Update employee payroll details with all columns
                         cursor.execute(f"""
-                            INSERT INTO {table_name} (firstname, surname, whatsapp, email, role, department, currentleavedaysbalance, monthlyaccumulation)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        """, (first_name, surname, whatsapp, email, role, department, current_leave_days_balance, monthly_accumulation))
-                    
-                    connection.commit()
-
-                return redirect(url_for('Dashboard'))
-
+                            UPDATE {table_name} 
+                            SET 
+                                bank = %s,
+                                accnumber = %s,
+                                branch = %s,
+                                branch_code = %s,
+                                basicsalary = %s,
+                                base_currency = %s
+                            WHERE id = %s
+                        """, (
+                            row['Bank Name'] if pd.notna(row['Bank Name']) else None,
+                            str(row['Account Number']) if pd.notna(row['Account Number']) else None,
+                            row['Branch'] if pd.notna(row['Branch']) else None,
+                            str(row['Branch Code']) if pd.notna(row['Branch Code']) else None,
+                            row['Basic Salary in Base Currency'] if pd.notna(row['Basic Salary in Base Currency']) else None,
+                            row['Base Currency'] if pd.notna(row['Base Currency']) else None,
+                            employee_id
+                        ))
+                        
+                        success_count += 1
+                        
+                    except Exception as e:
+                        print(f"Error processing row {index}: {str(e)}")
+                        error_count += 1
+                        continue
+                
+                connection.commit()
+                
+                return jsonify({
+                    "status": "success", 
+                    "message": f"Payroll upload complete. Success: {success_count}, Errors: {error_count}"
+                }), 200
+        
         else:
-            return redirect(url_for('landingpage')) 
-
-
+            return jsonify({"status": "error", "message": "Not authorized"}), 401
 
 @app.route('/download-excel-template-add-employees')
 def download_excel_template_add_employees():
