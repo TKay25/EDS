@@ -156,6 +156,7 @@ def initialize_database_tables():
                 ('c8type', 'VARCHAR(20)'),
                 ('usd_percent', 'DECIMAL(5,2)'),
                 ('zwg_percent', 'DECIMAL(5,2)'),
+                ('exchange_rate', 'NUMERIC(12,4)'),
                 ('currency', 'VARCHAR(10)'),
                 ('updated', 'TIMESTAMP'),
                 ('updatedby', 'VARCHAR(100)')
@@ -16876,6 +16877,117 @@ app.config['ALLOWED_EXTENSIONS'] = {'xlsx'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
+
+@app.route('/save-currency-settings', methods=['POST'])
+def save_currency_settings():
+    with get_db() as (cursor, connection):
+        try:
+            user_uuid = session.get('user_uuid')
+            table_name = session.get('table_name')
+            empid = session.get('empid')
+
+            if not user_uuid:
+                return jsonify({"success": False, "message": "Not authorized"}), 401
+            
+            table_name = session.get('table_name')
+            data = request.get_json()
+            
+            # Extract settings
+            base_currency = data.get('baseCurrency')
+            split_enabled = data.get('splitEnabled', False)
+            
+            # Extract split config if enabled
+            usd_percent = None
+            zwg_percent = None
+            exchange_rate = None
+            
+            if split_enabled and data.get('splitConfig'):
+                split_config = data.get('splitConfig')
+                usd_percent = split_config.get('usdPercent')
+                zwg_percent = split_config.get('zwgPercent')
+                exchange_rate = split_config.get('exchangeRate')
+            
+            # Update EVERY ROW in the employee table with the new currency settings
+            cursor.execute(f"""
+                UPDATE {table_name} 
+                SET base_currency = %s,
+                    usd_split_percent = %s,
+                    zwg_split_percent = %s,
+                    exchange_rate = %s
+            """, (
+                base_currency,
+                usd_percent if split_enabled else None,
+                zwg_percent if split_enabled else None,
+                exchange_rate if split_enabled else None
+            ))
+            
+            connection.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Currency configuration saved successfully!'
+            })
+            
+        except Exception as e:
+            connection.rollback()
+            print(f"Error saving currency settings: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': str(e)
+            }), 500
+
+@app.route('/get-currency-settings', methods=['GET'])
+def get_currency_settings():
+    with get_db() as (cursor, connection):
+        try:
+
+            user_uuid = session.get('user_uuid')
+            table_name = session.get('table_name')
+            empid = session.get('empid')
+
+            if not user_uuid:
+                return jsonify({"success": False, "message": "Not authorized"}), 401
+            
+            # Get settings for this user
+            cursor.execute(f"""
+                SELECT base_currency, usd_percent, zwg_percent, exchange_rate 
+                FROM {table_name} 
+                WHERE user_uuid = %s 
+                ORDER BY id DESC
+            """, (user_uuid,))
+            
+            settings = cursor.fetchone()
+            
+            if settings:
+                return jsonify({
+                    'success': True,
+                    'data': {
+                        'baseCurrency': settings[0],
+                        'splitEnabled': settings[1],
+                        'splitConfig': {
+                            'usdPercent': float(settings[2]) if settings[2] is not None else 0,
+                            'zwgPercent': float(settings[3]) if settings[3] is not None else 0,
+                            'exchangeRate': float(settings[4]) if settings[4] is not None else 0
+                        } if settings[1] else None
+                    }
+                })
+            else:
+                # Return default settings if none exist
+                return jsonify({
+                    'success': True,
+                    'data': {
+                        'baseCurrency': 'USD',
+                        'splitEnabled': False,
+                        'splitConfig': None
+                    }
+                })
+                
+        except Exception as e:
+            print(f"Error getting currency settings: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': str(e)
+            }), 500
 
 @app.route('/upload-excel', methods=['POST'])
 def upload_excel():
