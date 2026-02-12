@@ -20161,60 +20161,66 @@ def export_excel():
                 cursor.execute(query)
                 rows2 = cursor.fetchall()
                 df_apps = pd.DataFrame(rows2, columns=["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"])
-                df_apps = df_apps.sort_values(by="AppID", ascending=False)
+                
+                if len (df_apps) > 0:
+                    df_apps = df_apps.sort_values(by="AppID", ascending=False)
 
-                df_apps_to_excel = df_apps[["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"]]
+                    df_apps_to_excel = df_apps[["AppID","Emp ID", "First Name", "Surname", "Leave Type","Leave Approver Name", "Date Applied", "Leave Start Date", "Leave End Date","Date Approved", "Initial Days Balance", "Leave Days Applied for", "Leave Days Balance"]]
 
-                df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
-                df_apps['Leave End Date'] = pd.to_datetime(df_apps['Leave End Date'])
+                    df_apps['Leave Start Date'] = pd.to_datetime(df_apps['Leave Start Date'])
+                    df_apps['Leave End Date'] = pd.to_datetime(df_apps['Leave End Date'])
 
-                # Function to expand dates and exclude Sundays
-                def expand_leave_days(row):
-                    dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
-                    return dates
+                    # Function to expand dates and exclude Sundays
+                    def expand_leave_days(row):
+                        dates = pd.date_range(row['Leave Start Date'], row['Leave End Date'], freq='D')
+                        return dates
 
-                # Apply the function and explode the DataFrame
-                df_apps['Leave Dates'] = df_apps.apply(expand_leave_days, axis=1)
-                df_exploded = df_apps.explode('Leave Dates')
+                    # Apply the function and explode the DataFrame
+                    df_apps['Leave Dates'] = df_apps.apply(expand_leave_days, axis=1)
+                    df_exploded = df_apps.explode('Leave Dates')
 
-                # Extract month and year for grouping
-                df_exploded['Month'] = df_exploded['Leave Dates'].dt.to_period('M')
+                    # Extract month and year for grouping
+                    df_exploded['Month'] = df_exploded['Leave Dates'].dt.to_period('M')
 
-                # Group by Employee and Month
-                result = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month']).size().reset_index(name='Leave Days Taken')
+                    # Group by Employee and Month
+                    result = df_exploded.groupby(['Emp ID', 'First Name', 'Surname', 'Month']).size().reset_index(name='Leave Days Taken')
 
-                # Pivot to MoM format (months as columns)
-                mom_leave = result.pivot_table(
-                    index=['Emp ID', 'First Name', 'Surname'],
-                    columns='Month',
-                    values='Leave Days Taken',
-                    fill_value=0
-                ).reset_index()
+                    # Pivot to MoM format (months as columns)
+                    mom_leave = result.pivot_table(
+                        index=['Emp ID', 'First Name', 'Surname'],
+                        columns='Month',
+                        values='Leave Days Taken',
+                        fill_value=0
+                    ).reset_index()
 
-                # Rename columns for clarity
-                mom_leave.columns.name = None
-                mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"{col.strftime('%b-%Y')}" for col in mom_leave.columns[3:]]
+                    # Rename columns for clarity
+                    mom_leave.columns.name = None
+                    mom_leave.columns = ['Emp ID', 'First Name', 'Surname'] + [f"{col.strftime('%b-%Y')}" for col in mom_leave.columns[3:]]
 
-                print(mom_leave)
+                    print(mom_leave)
 
-                grouped = df_exploded.groupby(
-                    ['Emp ID', 'First Name', 'Surname', 'Month', 'Leave Type']
-                ).size().reset_index(name='Leave Days')
+                    grouped = df_exploded.groupby(
+                        ['Emp ID', 'First Name', 'Surname', 'Month', 'Leave Type']
+                    ).size().reset_index(name='Leave Days')
 
-                # Pivot to create MultiIndex columns: (Month, Leave Type)
-                pivot = grouped.pivot_table(
-                    index=['Emp ID', 'First Name', 'Surname'],
-                    columns=['Month', 'Leave Type'],
-                    values='Leave Days',
-                    fill_value=0
-                )
+                    # Pivot to create MultiIndex columns: (Month, Leave Type)
+                    pivot = grouped.pivot_table(
+                        index=['Emp ID', 'First Name', 'Surname'],
+                        columns=['Month', 'Leave Type'],
+                        values='Leave Days',
+                        fill_value=0
+                    )
 
-                # Sort columns by Month and Leave Type
-                pivot = pivot.sort_index(axis=1, level=[0, 1])
+                    # Sort columns by Month and Leave Type
+                    pivot = pivot.sort_index(axis=1, level=[0, 1])
 
-                # Reset index to make it a normal DataFrame (columns stay MultiIndex)
-                pivot.reset_index(inplace=True)
+                    # Reset index to make it a normal DataFrame (columns stay MultiIndex)
+                    pivot.reset_index(inplace=True)
 
+                else: 
+                    df_apps_to_excel = []
+                    pivot = []
+ 
                 # Create an in-memory Excel file
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
