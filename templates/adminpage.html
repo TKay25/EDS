@@ -4463,7 +4463,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+    document.getElementById('upload-form-payroll').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission (since we're using AJAX)
 
+        // Send the form data using AJAX
+        fetch('/upload-excel-payroll', {
+            method: 'POST',
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); // Debug the response
+            
+            if (data.status === 'success') {
+                alert('Employee Payroll Details Successfully Added!'); // Show success alert
+                $('#edsLoader').hide(); // Hide the loading overlay
+
+            } else {
+                alert('Something went wrong. Please try again.'); // Handle error response
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error); // Debug error
+            $('#edsLoader').hide(); // Hide loading overlay in case of error
+            alert('An error occurred while uploading the file.'); // Show error alert
+        });
+    });
 
 
 
