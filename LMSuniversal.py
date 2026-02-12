@@ -16918,8 +16918,7 @@ def save_currency_settings():
             zwg_percent = None
             exchange_rate = None
             
-            if split_enabled and data.get('splitConfig'):
-                split_config = data.get('splitConfig')
+            if split_enabled:
                 usd_percent = split_config.get('usdPercent')
                 zwg_percent = split_config.get('zwgPercent')
                 exchange_rate = split_config.get('exchangeRate')
