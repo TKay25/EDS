@@ -196,7 +196,7 @@ def initialize_database_tables():
 
 # Initialize tables on startup - COMMENTED OUT to prevent blocking Render startup
 # Tables will be created on first request if they don't exist
-initialize_database_tables()
+# initialize_database_tables()
 ##################### BACKGROUND SCHEDULER - Check pending applications every 10 minutes ###################################
 
 def update_leave_abcv():
@@ -16418,7 +16418,7 @@ def run1(table_name, empid):
         }
         
         try:
-            cursor.execute(f"SELECT base_currency, usd_percent, zwg_percent, exchange_rate FROM {table_name} ORDER BY id DESC")
+            cursor.execute(f"SELECT currency, usd_percent, zwg_percent, exchange_rate FROM {table_name} ORDER BY id DESC")
             settings = cursor.fetchone()
             
             if settings:
@@ -16927,7 +16927,7 @@ def save_currency_settings():
             # Update EVERY ROW in the employee table with the new currency settings
             cursor.execute(f"""
                 UPDATE {table_name} 
-                SET base_currency = %s,
+                SET currency = %s,
                     usd_split_percent = %s,
                     zwg_split_percent = %s,
                     exchange_rate = %s
@@ -16967,7 +16967,7 @@ def get_currency_settings():
             
             # Get settings for this user
             cursor.execute(f"""
-                SELECT base_currency, usd_percent, zwg_percent, exchange_rate 
+                SELECT currency, usd_percent, zwg_percent, exchange_rate 
                 FROM {table_name} 
                 WHERE user_uuid = %s 
                 ORDER BY id DESC
@@ -17122,9 +17122,9 @@ def upload_payroll():
                                 bank = %s,
                                 accnumber = %s,
                                 branch = %s,
-                                branch_code = %s,
-                                basicsalary = %s,
-                                base_currency = %s
+                                branchcode = %s,
+                                c8 = %s,
+                                currency = %s
                             WHERE id = %s
                         """, (
                             row['Bank Name'] if pd.notna(row['Bank Name']) else None,
