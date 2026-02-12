@@ -17432,7 +17432,13 @@ def submit_form():
                             datejoined date,
                             c8 NUMERIC(12,2),
                             c8type VARCHAR(20),
-                            currency VARCHAR(10)
+                            currency VARCHAR(10),
+                            usd_percent DECIMAL(5,2),
+                            zwg_percent DECIMAL(5,2),
+                            exchange_rate NUMERIC(12,4),
+                            currency VARCHAR(10),
+                            updated TIMESTAMP,
+                            updatedby VARCHAR(100)
                         );
                     """
                     cursor.execute(create_table_query)
