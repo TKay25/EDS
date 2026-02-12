@@ -17073,10 +17073,10 @@ def upload_payroll():
 
             table_name = session.get('table_name')
             
-            if 'file' not in request.files:
+            if 'file-payroll' not in request.files:
                 return jsonify({"status": "error", "message": "No file part"}), 400
             
-            file = request.files['file']
+            file = request.files['file-payroll']
             
             if file.filename == '':
                 return jsonify({"status": "error", "message": "No selected file"}), 400
