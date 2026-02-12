@@ -16401,7 +16401,7 @@ def run1(table_name, empid):
         cursor.execute(querypayroll)
         rowspayroll = cursor.fetchall()
 
-        df_employees_payroll = pd.DataFrame(rowspayroll, columns=["id","Firstname", "Surname","Manager_Supervisor", "Department", "Designation","Date Joined","accnumber","Bank","basicsalary"])
+        df_employees_payroll = pd.DataFrame(rowspayroll, columns=["id","Firstname", "Surname","Manager_Supervisor", "Department", "Designation","Date Joined","accnumber","Bank","basicsalary","type", "ZWG %", "USD %"])
         df_employees_payroll['Action'] = df_employees_payroll.apply(
             lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['id']}" data-firstname="{row['Firstname']}" data-surname="{row['Surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}" data-accnumber="{row['accnumber']}"  data-bank="{row['Bank']}"  data-basicsalary="{row['basicsalary']}">Edit Information</button></div>''', axis=1
         )
