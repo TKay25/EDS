@@ -1388,7 +1388,7 @@ header {
                                 <i class="bi bi-cloud-upload" style="margin-left: 5px;"></i>
                             </button>
                             <!-- Hidden file input -->
-                            <input type="file-payroll" id="file-upload-payroll" name="file-payroll" accept=".xlsx" style="display: none;">
+                            <input type="file" id="file-upload-payroll" name="file-payroll" accept=".xlsx" style="display: none;">
                         </form>
                         <button class="btn btn-primary2 mt-3" id="download-btn-excel-template-payroll" style="width: max-content;">Download Employee Payroll Details Template <i class="bi bi-file-earmark-arrow-down" style="margin-left: 5px;"></i></button>
                     </div>         
@@ -3267,11 +3267,26 @@ function saveCurrencySettings() {
         };
     }
     
-    // Send to server (example)
-    console.log('Saving currency settings:', settings);
-    
-    // Show success message
-    showAlert('success', 'Currency configuration saved successfully!');
+    // Send to Flask backend
+    fetch('/save-currency-settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', 'Currency configuration saved successfully!');
+        } else {
+            showAlert('error', 'Error saving configuration: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', 'Failed to save currency settings');
+    });
 }
 
 function resetCurrencySettings() {
@@ -4617,7 +4632,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-
+    // Submit form after a file is selected
+    document.getElementById('file-upload-payroll').addEventListener('change', function() {
+        if (this.files.length > 0) {
+            // Prevent form submission for now
+            document.getElementById('upload-form-payroll').submit();  
+            $('#edsLoader').show(); // Show loading overlay
+        }
+    });
 
 
 
