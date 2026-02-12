@@ -196,7 +196,7 @@ def initialize_database_tables():
 
 # Initialize tables on startup - COMMENTED OUT to prevent blocking Render startup
 # Tables will be created on first request if they don't exist
-# initialize_database_tables()
+initialize_database_tables()
 ##################### BACKGROUND SCHEDULER - Check pending applications every 10 minutes ###################################
 
 def update_leave_abcv():
@@ -16918,7 +16918,8 @@ def save_currency_settings():
             zwg_percent = None
             exchange_rate = None
             
-            if split_enabled:
+            if split_enabled and data.get('splitConfig'):
+                split_config = data.get('splitConfig')
                 usd_percent = split_config.get('usdPercent')
                 zwg_percent = split_config.get('zwgPercent')
                 exchange_rate = split_config.get('exchangeRate')
