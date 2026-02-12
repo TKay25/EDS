@@ -16928,8 +16928,8 @@ def save_currency_settings():
             cursor.execute(f"""
                 UPDATE {table_name} 
                 SET currency = %s,
-                    usd_split_percent = %s,
-                    zwg_split_percent = %s,
+                    usd_percent = %s,
+                    zwg_percent = %s,
                     exchange_rate = %s
             """, (
                 base_currency,
