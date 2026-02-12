@@ -17065,7 +17065,7 @@ def upload_excel():
 
 
 
-@app.route('/upload-payroll', methods=['POST'])
+@app.route('/upload-excel-payroll', methods=['POST'])
 def upload_payroll():
     with get_db() as (cursor, connection):
         user_uuid = session.get('user_uuid')
