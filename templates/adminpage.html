@@ -4579,6 +4579,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('file-upload').click(); // This will open file manager
     });
 
+    document.querySelector('.upload-template-payroll').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent any accidental form submission
+        document.getElementById('file-upload-payroll').click(); // This will open file manager
+    });
     // Submit form after a file is selected
     document.getElementById('file-upload').addEventListener('change', function() {
         if (this.files.length > 0) {
