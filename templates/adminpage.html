@@ -3827,26 +3827,26 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
 
 
 $(document).on('click', '.edit-priv-btn', function() {
-    currentIdchangeapprover = $(this).data('id'); 
-    $('#emp-id').text('ID: ' + currentIdchangeapprover);
+    currentIdeditrole = $(this).data('id'); 
+    $('#emp-id').text('ID: ' + currentIdeditrole);
 
     var row = $(this).closest('tr'); 
 
     currentFirstName = row.find('td').eq(1).text(); 
 
-    var message = `Select New Role for <strong>${currentFirstName} -- ID: ${currentIdchangeapprover}</strong>`;
+    var message = `Select New Role for <strong>${currentFirstName} -- ID: ${currentIdeditrole}</strong>`;
     $('#content-edit-priv').html(message);
 });
 
 $(document).on('click', '.edit-department-btn', function() {
-    currentIdchangeapprover = $(this).data('id'); 
-    $('#emp-id').text('ID: ' + currentIdchangeapprover);
+    let currentIdeditdepartment = $(this).data('id'); 
+    $('#emp-id').text('ID: ' + currentIdeditdepartment);
 
     var row = $(this).closest('tr'); 
 
     currentFirstName = row.find('td').eq(1).text(); 
 
-    var message = `Select New Department for <strong>${currentFirstName} -- ID: ${currentIdchangeapprover}</strong>`;
+    var message = `Select New Department for <strong>${currentFirstName} -- ID: ${currentIdeditdepartment}</strong>`;
     $('#content-edit-department').html(message);
 });
 
