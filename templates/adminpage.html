@@ -6050,20 +6050,37 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 $(document).ready(function() {
-    // Check if table exists and initialize
-    if ($('#employeesbulk1Table').length > 0) {
-        try {
-            $('#employeesbulk1Table').DataTable({
+    // For Bulk Role Modal
+    $('#BulkRoleModal').on('shown.bs.modal', function() {
+        initializeBulkTable('#employeesbulk1Table');
+    });
+    
+    // For Bulk Approver Modal  
+    $('#BulkApproverModal').on('shown.bs.modal', function() {
+        initializeBulkTable('#employeesbulk1Table');
+    });
+    
+    function initializeBulkTable(tableId) {
+        if ($(tableId).length > 0) {
+            // Check if already initialized
+            if ($.fn.DataTable.isDataTable(tableId)) {
+                $(tableId).DataTable().destroy(); // Destroy and recreate
+            }
+            
+            $(tableId).DataTable({
                 paging: false,
                 searching: true,
                 ordering: true,
                 info: true,
                 pageLength: 8,
                 lengthChange: false,
-                retrieve: true // Gets existing instance or creates new one
+                retrieve: false,
+                destroy: true
             });
-        } catch(e) {
-            console.log("Table initialization failed, will retry on modal show");
+            
+            console.log("Table initialized:", tableId);
+        } else {
+            console.log("Table not found:", tableId);
         }
     }
 });
