@@ -18787,13 +18787,18 @@ def update_approver():
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
+            table_name = session.get('table_name')
+
+
+            
+
             today_date = datetime.now().strftime('%d %B %Y')
             applied_date = datetime.now().strftime('%Y-%m-%d')
 
             approver = request.form.get('approver')
             current_id = request.form.get('currentIdapprover')
-            company_name_w_space = request.form.get('companyname')
-            company_name = company_name_w_space.replace(' ', '_')
+            company_name1 = table_name.replace(' ', '_')
+            company_name = company_name1.replace("main", "")
 
             split_result = approver.split('--')
 
@@ -18803,7 +18808,6 @@ def update_approver():
             print(approver)
             print(current_id)
             print(company_name)
-            table_name = company_name + 'main'
 
             query = f"SELECT id, whatsapp, email FROM {table_name};"
             cursor.execute(query)
