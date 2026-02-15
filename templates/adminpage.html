@@ -2548,7 +2548,7 @@ header {
                 <div class="container mt-5">
 
                     <div class="container2" style="max-height: 400px; overflow-y: auto;">
-                        {{ table_rememployees_bulk1_html |safe }}
+                        {{ table_rememployees_bulk2_html |safe }}
                     </div>
                 </div>   
 
@@ -6052,7 +6052,7 @@ document.addEventListener('DOMContentLoaded', () => {
 $(document).ready(function() {
     // For Bulk Role Modal
     $('#BulkRoleModal').on('shown.bs.modal', function() {
-        initializeBulkTable('#employeesbulk1Table');
+        initializeBulkTable('#employeesbulk2Table');
     });
     
     // For Bulk Approver Modal  

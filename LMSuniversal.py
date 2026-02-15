@@ -16538,6 +16538,7 @@ def run1(table_name, empid):
             axis=1
         )
         table_rememployees_bulk1_html = rememployees1.to_html(classes="table table-bordered table-theme", table_id="employeesbulk1Table", index=False,  escape=False,)
+        table_rememployees_bulk2_html = rememployees1.to_html(classes="table table-bordered table-theme", table_id="employeesbulk2Table", index=False,  escape=False,)
 
         rememployees2 = selected_columns_accumulators[['ID','EMPLOYEE NAME']]
         rememployees2.loc[:, 'SELECTION'] = rememployees2.apply(
@@ -16831,6 +16832,7 @@ def run1(table_name, empid):
             "table_rememployees_bulk_accumulators_html":  table_rememployees_bulk_accumulators_html,
             "table_rememployees_html": table_rememployees_html,
             "table_rememployees_bulk1_html": table_rememployees_bulk1_html,
+            "table_rememployees_bulk2_html": table_rememployees_bulk2_html,
             "employees_list": employees_list,
             "role": role,
             "total_employees": total_employees,
