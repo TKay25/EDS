@@ -6024,15 +6024,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ordering: true,  // Enable sorting
             info: true,      // Show table information
         });
-
-        $('#employeesbulk1Table').DataTable({
-            paging: false,    // Enable pagination
-            searching: true, // Enable search
-            ordering: true,  // Enable sorting
-            info: true,      // Show table information
-            pageLength: 8,       // Force max 5 entries per page
-            lengthChange: false, // Disable entries per page dropdown
-        });
         
         $('#employeesbulkbalancesTable').DataTable({
             paging: false,    // Enable pagination
@@ -6057,8 +6048,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 </script>
-
-
+<script>
+$(document).ready(function() {
+    // Check if table exists and initialize
+    if ($('#employeesbulk1Table').length > 0) {
+        try {
+            $('#employeesbulk1Table').DataTable({
+                paging: false,
+                searching: true,
+                ordering: true,
+                info: true,
+                pageLength: 8,
+                lengthChange: false,
+                retrieve: true // Gets existing instance or creates new one
+            });
+        } catch(e) {
+            console.log("Table initialization failed, will retry on modal show");
+        }
+    }
+});
+</script>
 <script>
     // Function to filter employees based on search input
     function searchEmployees() {
