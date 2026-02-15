@@ -5797,7 +5797,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputValue = balanceDays.value;
 
         // Check if a valid number is entered (non-empty and positive number)
-        if (inputValue && !isNaN(inputValue) && parseFloat(inputValue) > 0) {
+        if (inputValue && !isNaN(inputValue) && parseFloat(inputValue) >= 0) {
             // Update the confirmation message with the entered number
             document.getElementById('confirmationMessagebalance').innerHTML =
                 `Proceed to update <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${inputValue}</strong> <br><br> as the new Leave Days Balance for <br> <strong><span style="margin-top:8px;">${currentFirstName}</span></strong>?`;
@@ -5825,7 +5825,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputValue = balanceDays.value;
 
         // Check if a valid number is entered (non-empty and positive number)
-        if (inputValue && !isNaN(inputValue) && parseFloat(inputValue) > 0) {
+        if (inputValue && !isNaN(inputValue) && parseFloat(inputValue) >= 0) {
             // Update the confirmation message with the entered number
             document.getElementById('confirmationMessagebalance').innerHTML =
                 `Proceed to update <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${inputValue}</strong> <br><br> as the new Leave Days Balance for <br> <strong><span style="margin-top:8px;">${currentFirstName}</span></strong>?`;
