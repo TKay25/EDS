@@ -3839,6 +3839,10 @@ $(document).on('click', '.edit-priv-btn', function() {
 });
 
 $(document).on('click', '.edit-department-btn', function() {
+    console.log('Button clicked:', this);
+    console.log('data-id:', $(this).data('id'));
+    console.log('data-ID:', $(this).data('ID'));
+    console.log('all data:', $(this).data());
     currentIdeditdepartment = $(this).data('id'); 
     
     // Use a different element for department modal
