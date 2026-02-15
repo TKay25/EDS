@@ -3839,7 +3839,10 @@ $(document).on('click', '.edit-priv-btn', function() {
 });
 
 $(document).on('click', '.edit-department-btn', function() {
-    currentIdeditdepartment = $(this).attr('data-id'); 
+    console.log('data-ID:', $(this).attr('data-ID'));
+    console.log('data-id:', $(this).attr('data-id'));
+    console.log('outerHTML:', $(this).prop('outerHTML'));
+    currentIdeditdepartment = $(this).attr('data-ID'); 
     
     // Use a different element for department modal
     $('#dept-emp-id').text('ID: ' + currentIdeditdepartment);
