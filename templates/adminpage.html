@@ -3827,7 +3827,7 @@ $(document).on('click', '.edit-emp-details-comp-btn', function () {
 
 
 $(document).on('click', '.edit-priv-btn', function() {
-    currentIdeditrole = $(this).attr('data-id'); 
+    currentIdeditrole = $(this).data('id');
     $('#emp-id').text('ID: ' + currentIdeditrole);
 
     var row = $(this).closest('tr'); 
@@ -3842,7 +3842,7 @@ $(document).on('click', '.edit-department-btn', function() {
     console.log('data-ID:', $(this).attr('data-ID'));
     console.log('data-id:', $(this).attr('data-id'));
     console.log('outerHTML:', $(this).prop('outerHTML'));
-    currentIdeditdepartment = $(this).attr('data-ID'); 
+    currentIdeditdepartment = $(this).data('id'); 
     
     // Use a different element for department modal
     $('#dept-emp-id').text('ID: ' + currentIdeditdepartment);
