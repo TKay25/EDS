@@ -3855,6 +3855,9 @@ $(document).on('click', '.edit-department-btn', function() {
 });
 
 $(document).on('click', '.change-approver-btn', function() {
+    console.log('data-ID:', $(this).attr('data-ID'));
+    console.log('data-id:', $(this).attr('data-id'));
+    console.log('outerHTML:', $(this).prop('outerHTML'));
     currentIdchangeapprover = $(this).data('id'); 
     $('#emp-id').text('ID: ' + currentIdchangeapprover);
 
