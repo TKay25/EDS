@@ -18787,16 +18787,12 @@ def update_approver():
         user_uuid = session.get('user_uuid')
         if user_uuid:
 
-            table_name = session.get('table_name')
-
-
-            
-
             today_date = datetime.now().strftime('%d %B %Y')
             applied_date = datetime.now().strftime('%Y-%m-%d')
 
             approver = request.form.get('approver')
             current_id = request.form.get('currentIdapprover')
+            table_name = session.get('table_name')
             company_name1 = table_name.replace(' ', '_')
             company_name = company_name1.replace("main", "")
 
@@ -18858,13 +18854,13 @@ def update_balance():
 
             balance = request.form.get('balance')
             current_id = request.form.get('currentIdbalance')
-            company_name_w_space = request.form.get('companyname')
-            company_name = company_name_w_space.replace(' ', '_')
+            table_name = session.get('table_name')
+            company_name1 = table_name.replace(' ', '_')
+            company_name = company_name1.replace("main", "")
 
             print(balance)
             print(current_id)
             print(company_name)
-            table_name = company_name + 'main'
 
             update_query = f"""
             UPDATE {table_name}

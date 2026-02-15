@@ -4151,10 +4151,9 @@ $('#changeapproverconfirm').on('click', function() {
 
 $('#editbalanceconfirm').on('click', function() {
     var newbalance = $('#leavedaysbalance-emp').val().trim();  // Get the selected leave days balance
-    var companyname = $('#company_name').val().trim();  // Get the company name from the hidden input
 
     // Check if the necessary fields have values
-    if (!newbalance || !companyname) {
+    if (!newbalance) {
         alert("Please fill in all required fields.");
         return;  // Prevent further execution if fields are empty
     }
@@ -4167,8 +4166,7 @@ $('#editbalanceconfirm').on('click', function() {
         method: 'POST',
         data: {
             balance: newbalance,
-            currentIdbalance: currentIdeditbalance,  // Include the currentId in the request
-            companyname: companyname  // Include the company_name in the request
+            currentIdbalance: currentIdeditbalance  // Include the currentId in the request
         },
         success: function(response) {
             // Hide the modals immediately
