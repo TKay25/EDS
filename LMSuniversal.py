@@ -381,14 +381,14 @@ def send_reminder_whatsapp(phone_number, message_text, app_id, company_reg):
 
 
 # Initialize scheduler
-scheduler = BackgroundScheduler()
+'''scheduler = BackgroundScheduler()
 scheduler.add_job(func=check_and_send_reminders, trigger="interval", minutes=360, id="pending_apps_reminder")
 
 try:
     scheduler.start()
     print("✅ Background scheduler started - Pending applications check every 10 minutes")
 except Exception as e:
-    print(f"⚠️ Could not start scheduler: {e}")
+    print(f"⚠️ Could not start scheduler: {e}")'''
 
 
 ##################### client test ####################################################################################################
@@ -16436,10 +16436,6 @@ def run1(table_name, empid):
             pass
 
         currency_settings_json = json.dumps(currency_settings)
-
-
-
-
 
         ############################
 
