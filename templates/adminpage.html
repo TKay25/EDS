@@ -4010,9 +4010,8 @@ $('#savedepartmentconfirm').on('click', function() {
 
 $('#saveroleconfirm').on('click', function() {
     var newrole = $('#role-emp').val();  // Get the selected role
-    var companyname = $('#company_name').val();  // Get the company name from the hidden input
 
-    if (!newrole || !companyname) {
+    if (!newrole) {
         alert("Please fill in all required fields.");
         return;  // Prevent further execution if fields are empty
     }
@@ -4027,8 +4026,7 @@ $('#saveroleconfirm').on('click', function() {
             method: 'POST',
             data: {
                 role: newrole,
-                currentId: currentIdeditrole,  // Include the currentId in the request
-                companyname: companyname  // Include the company_name in the request
+                currentId: currentIdeditrole  // Include the currentId in the request
             },
             success: function(response) {
                 // Handle the response from Flask (e.g., show success message or refresh data)

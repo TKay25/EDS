@@ -18699,20 +18699,19 @@ def update_role():
 
         user_uuid = session.get('user_uuid')
         if user_uuid:
+            table_name = session.get('table_name')
             empid = session.get('empid')
-
             today_date = datetime.now().strftime('%d %B %Y')
             applied_date = datetime.now().strftime('%Y-%m-%d')
 
             role = request.form.get('role')
             current_id = request.form.get('currentId')
-            company_name_w_space = request.form.get('companyname')
-            company_name = company_name_w_space.replace(' ', '_')
+            company_name1 = table_name.replace(' ', '_')
+            company_name = company_name1.replace("main", "")
 
             print(role)
             print(current_id)
             print(company_name)
-            table_name = company_name + 'main'
 
             update_query = f"""
             UPDATE {table_name}
