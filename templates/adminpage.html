@@ -823,19 +823,29 @@ header {
     top: 15px;
     left: 15px;
     z-index: 1001;
-    background: var(--primary-blue);
+    background: #003366;
     color: white;
     border: none;
-    border-radius: var(--border-radius-md);
+    border-radius: 8px;
     padding: 10px 15px;
     cursor: pointer;
-    box-shadow: var(--shadow-medium);
-    transition: all var(--transition-fast);
+    box-shadow: 0 4px 12px rgba(0, 51, 102, 0.2);
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .mobile-menu-toggle:hover {
     background: #002244;
-    transform: scale(1.05);
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(0, 51, 102, 0.3);
+}
+
+.mobile-menu-toggle i {
+    margin-right: 5px;
+    font-size: 18px;
+    vertical-align: middle;
 }
 
 /* Overlay for mobile menu */
@@ -849,34 +859,58 @@ header {
     background: rgba(0, 0, 0, 0.5);
     z-index: 999;
     opacity: 0;
-    transition: opacity var(--transition-normal);
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
 }
 
 .sidebar-overlay.active {
-    display: block;
+    display: block !important;
     opacity: 1;
 }
 
 /* Responsive adjustments */
 @media (max-width: 992px) {
     .mobile-menu-toggle {
-        display: block;
+        display: block !important;
     }
     
     .sidebar {
+        position: fixed !important;
         transform: translateX(-100%);
-        transition: transform 0.3s ease;
+        transition: transform 0.3s ease !important;
         z-index: 1000;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 280px !important;
+        background: linear-gradient(to bottom, #002244, #003366) !important;
+        overflow-y: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
     
     .sidebar.active {
-        transform: translateX(0);
+        transform: translateX(0) !important;
     }
     
     .main-content, .all-payroll-content {
-        margin-left: 0;
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding-top: 70px !important; /* Space for mobile menu button */
+    }
+    
+    /* Adjust header for mobile */
+    header {
+        margin-top: 0;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .profile-dropdown {
         width: 100%;
-        padding-top: 70px; /* Add space for mobile menu button */
+    }
+    
+    .form-select {
+        width: 100%;
     }
 }
 
@@ -889,8 +923,12 @@ header {
     }
     
     .sidebar {
-        width: 85%;
+        width: 85% !important;
         max-width: 300px;
+    }
+    
+    .main-content, .all-payroll-content {
+        padding: 60px 10px 10px 10px !important;
     }
 }
 
@@ -962,6 +1000,8 @@ header {
     <button class="mobile-menu-toggle" id="mobileMenuToggle">
         <i class="bi bi-list"></i> Menu
     </button>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" style="display: none;"></div>
 
     <div class="sidebar p-2">
         <br>
@@ -2837,69 +2877,132 @@ header {
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 
-// Mobile Menu Toggle
+// Mobile Menu Toggle - Complete Working Version
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - initializing mobile menu');
+    
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     
-    if (mobileMenuToggle && sidebar && sidebarOverlay) {
-        // Toggle menu
-        mobileMenuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-            
-            // Change icon based on menu state
-            const icon = mobileMenuToggle.querySelector('i');
-            if (sidebar.classList.contains('active')) {
-                icon.classList.remove('bi-list');
-                icon.classList.add('bi-x');
-                mobileMenuToggle.innerHTML = '<i class="bi bi-x"></i> Close';
-            } else {
-                icon.classList.remove('bi-x');
-                icon.classList.add('bi-list');
-                mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
-            }
-        });
-        
-        // Close menu when clicking overlay
-        sidebarOverlay.addEventListener('click', function() {
+    // Check if elements exist
+    if (!mobileMenuToggle) {
+        console.error('Mobile menu toggle button not found!');
+        return;
+    }
+    
+    if (!sidebar) {
+        console.error('Sidebar not found!');
+        return;
+    }
+    
+    if (!sidebarOverlay) {
+        console.error('Sidebar overlay not found!');
+        return;
+    }
+    
+    console.log('Mobile menu elements found');
+    
+    // Initially hide sidebar on mobile
+    if (window.innerWidth <= 992) {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+    }
+    
+    // Toggle menu function
+    function toggleMenu(show) {
+        if (show) {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            mobileMenuToggle.innerHTML = '<i class="bi bi-x"></i> Close';
+            console.log('Menu opened');
+        } else {
             sidebar.classList.remove('active');
             sidebarOverlay.classList.remove('active');
             mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
-        });
-        
-        // Close menu when clicking a menu item (optional)
-        const menuItems = sidebar.querySelectorAll('.list-group-item, .accordion-button');
-        menuItems.forEach(item => {
-            item.addEventListener('click', function() {
-                if (window.innerWidth <= 992) {
-                    sidebar.classList.remove('active');
-                    sidebarOverlay.classList.remove('active');
-                    mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
-                }
-            });
-        });
+            console.log('Menu closed');
+        }
     }
+    
+    // Click event for toggle button
+    mobileMenuToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Menu toggle clicked');
+        
+        const isActive = sidebar.classList.contains('active');
+        toggleMenu(!isActive);
+    });
+    
+    // Click event for overlay
+    sidebarOverlay.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Overlay clicked');
+        toggleMenu(false);
+    });
+    
+    // Close menu when clicking on a menu item (for better UX)
+    const menuItems = sidebar.querySelectorAll('.list-group-item, .accordion-button');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function() {
+            if (window.innerWidth <= 992) {
+                console.log('Menu item clicked - closing menu');
+                toggleMenu(false);
+            }
+        });
+    });
     
     // Handle window resize
     window.addEventListener('resize', function() {
         if (window.innerWidth > 992) {
-            // Reset mobile menu styles on desktop
-            if (sidebar) {
-                sidebar.classList.remove('active');
-            }
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.remove('active');
-            }
-            if (mobileMenuToggle) {
-                mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
-            }
+            // Desktop view - reset mobile styles
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
+            mobileMenuToggle.style.display = 'none';
+        } else {
+            // Mobile view - show toggle button
+            mobileMenuToggle.style.display = 'block';
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
         }
     });
+    
+    // Trigger resize event on load to set initial state
+    window.dispatchEvent(new Event('resize'));
 });
 
-
+// Additional fallback for jQuery users (if jQuery is loaded)
+$(document).ready(function() {
+    console.log('jQuery ready - mobile menu check');
+    
+    // Ensure mobile menu toggle works with jQuery as well
+    $(document).on('click', '#mobileMenuToggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('jQuery: Menu toggle clicked');
+        
+        $('.sidebar').toggleClass('active');
+        $('#sidebarOverlay').toggleClass('active');
+        
+        if ($('.sidebar').hasClass('active')) {
+            $(this).html('<i class="bi bi-x"></i> Close');
+        } else {
+            $(this).html('<i class="bi bi-list"></i> Menu');
+        }
+    });
+    
+    $(document).on('click', '#sidebarOverlay', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('jQuery: Overlay clicked');
+        
+        $('.sidebar').removeClass('active');
+        $(this).removeClass('active');
+        $('#mobileMenuToggle').html('<i class="bi bi-list"></i> Menu');
+    });
+});
 </script>
 
 
