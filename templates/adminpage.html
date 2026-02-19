@@ -797,6 +797,8 @@ header {
     animation: fadeInUp 0.4s ease;
 }
 
+
+
 /* ===== RESPONSIVE DESIGN IMPROVEMENTS ===== */
 @media (max-width: 1200px) {
     .sidebar {
@@ -814,10 +816,57 @@ header {
     }
 }
 
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1001;
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 10px 15px;
+    cursor: pointer;
+    box-shadow: var(--shadow-medium);
+    transition: all var(--transition-fast);
+}
+
+.mobile-menu-toggle:hover {
+    background: #002244;
+    transform: scale(1.05);
+}
+
+/* Overlay for mobile menu */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Responsive adjustments */
 @media (max-width: 992px) {
+    .mobile-menu-toggle {
+        display: block;
+    }
+    
     .sidebar {
         transform: translateX(-100%);
-        width: 280px;
+        transition: transform 0.3s ease;
+        z-index: 1000;
     }
     
     .sidebar.active {
@@ -827,14 +876,21 @@ header {
     .main-content, .all-payroll-content {
         margin-left: 0;
         width: 100%;
+        padding-top: 70px; /* Add space for mobile menu button */
+    }
+}
+
+@media (max-width: 576px) {
+    .mobile-menu-toggle {
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        font-size: 14px;
     }
     
-    .dashboard-summary {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-    
-    .dashboard-graphs {
-        grid-template-columns: 1fr;
+    .sidebar {
+        width: 85%;
+        max-width: 300px;
     }
 }
 
@@ -864,25 +920,10 @@ header {
     }
 }
 
-@media (max-width: 576px) {
-    .card {
-        padding: 15px;
-    }
-    
-    .modal-dialog {
-        margin: 10px;
-    }
-    
-    .btn-primary, .btn-primary2, .btn-primary9 {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-}
-
 /* ===== PRINT STYLES ===== */
 @media print {
     .sidebar, header, .nav-tabs, .btn {
-        display: none !important;
+        display: block !important;
     }
     
     .main-content, .all-payroll-content {
@@ -918,6 +959,10 @@ header {
         </div>
     </div>
     
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <i class="bi bi-list"></i> Menu
+    </button>
+
     <div class="sidebar p-2">
         <br>
         <h5 class="mb-3 text-center">HR Management System</h5>
@@ -2790,6 +2835,73 @@ header {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+
+// Mobile Menu Toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (mobileMenuToggle && sidebar && sidebarOverlay) {
+        // Toggle menu
+        mobileMenuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            
+            // Change icon based on menu state
+            const icon = mobileMenuToggle.querySelector('i');
+            if (sidebar.classList.contains('active')) {
+                icon.classList.remove('bi-list');
+                icon.classList.add('bi-x');
+                mobileMenuToggle.innerHTML = '<i class="bi bi-x"></i> Close';
+            } else {
+                icon.classList.remove('bi-x');
+                icon.classList.add('bi-list');
+                mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
+            }
+        });
+        
+        // Close menu when clicking overlay
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
+        });
+        
+        // Close menu when clicking a menu item (optional)
+        const menuItems = sidebar.querySelectorAll('.list-group-item, .accordion-button');
+        menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
+                }
+            });
+        });
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 992) {
+            // Reset mobile menu styles on desktop
+            if (sidebar) {
+                sidebar.classList.remove('active');
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.remove('active');
+            }
+            if (mobileMenuToggle) {
+                mobileMenuToggle.innerHTML = '<i class="bi bi-list"></i> Menu';
+            }
+        }
+    });
+});
+
+
+</script>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
