@@ -1349,12 +1349,12 @@ header {
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-4">
-                                        <label for="firstname-editinfo-4-comp" class="form-label">First Name *</label>
-                                        <input type="text" class="form-control" id="firstname-editinfo-4-comp" name="firstname" required>
+                                        <label for="firstname-editinfo-4-comp-payroll" class="form-label">First Name *</label>
+                                        <input type="text" class="form-control" id="firstname-editinfo-4-comp-payroll" name="firstname" required>
                                     </div>
                                     <div class="mb-4">
-                                        <label for="surname-editinfo-4-comp" class="form-label">Surname *</label>
-                                        <input type="text" class="form-control" id="surname-editinfo-4-comp" name="surname" required>
+                                        <label for="surname-editinfo-4-comp-payroll" class="form-label">Surname *</label>
+                                        <input type="text" class="form-control" id="surname-editinfo-4-comp-payroll" name="surname" required>
                                     </div>
                                     <div class="mb-4">
                                         <label for="editDateJoined" class="form-label">Date Joined</label>
@@ -1373,15 +1373,15 @@ header {
                                 <div class="card-body">
                                     <div class="mb-4">
                                         <label for="department-editinfo-4-comp" class="form-label">Department</label>
-                                        <input type="text" class="form-control" id="department-editinfo-4-comp" name="department">
+                                        <input type="text" class="form-control" id="department-editinfo-4-comp-payroll" name="department">
                                     </div>
                                     <div class="mb-4">
                                         <label for="designation-editinfo-4-comp" class="form-label">Designation</label>
-                                        <input type="text" class="form-control" id="designation-editinfo-4-comp" name="designation">
+                                        <input type="text" class="form-control" id="designation-editinfo-4-comp-payroll" name="designation">
                                     </div>
                                     <div class="mb-4">
                                         <label for="manager-editinfo-4-comp" class="form-label">Manager/Supervisor</label>
-                                        <input type="text" class="form-control" id="manager-editinfo-4-comp" name="manager">
+                                        <input type="text" class="form-control" id="manager-editinfo-4-comp-payroll" name="manager">
                                     </div>
 
                                 </div>
@@ -1444,7 +1444,7 @@ header {
                             <small class="text-muted">Last updated: <span id="lastUpdatedTime">--</span></small>
                         </div>
                         <div>
-                            <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">
+                            <button type="button" class="btn btn-danger me-2" data-bs-dismiss="modal">
                                 <i class="bi bi-x-circle"></i> Cancel
                             </button>
                             <button type="submit" class="btn btn-success" id="saveEmployeeBtn">
@@ -3998,15 +3998,15 @@ $(document).on('click', '.edit-emp-details-comp-btn-payroll', function () {
     const designation = $(this).data('Designation');
 
     $('#emp-id').text('ID: ' + id);
-    $('#emp-name-title').text(`${firstname} ${surname}`);
+    $('#emp-name-title-payroll').text(`${firstname} ${surname}`);
 
-    $('#firstname-editinfo-4-comp').val('').attr('placeholder', firstname);
-    $('#surname-editinfo-4-comp').val('').attr('placeholder', surname);
-    $('#manager-editinfo-4-comp').val('').attr('placeholder', manager);
-    $('#department-editinfo-4-comp').val('').attr('placeholder', department);
-    $('#designation-editinfo-4-comp').val('').attr('placeholder', designation);
+    $('#firstname-editinfo-4-comp-payroll').val('').attr('placeholder', firstname);
+    $('#surname-editinfo-4-comp-payroll').val('').attr('placeholder', surname);
+    $('#manager-editinfo-4-comp-payroll').val('').attr('placeholder', manager);
+    $('#department-editinfo-4-comp-payroll').val('').attr('placeholder', department);
+    $('#designation-editinfo-4-comp-payroll').val('').attr('placeholder', designation);
 
-    $('#emp-id-hidden-comp').val(id);
+    $('#emp-id-hidden-comp-payroll').val(id);
 
     $('#editEmployeePayrollModal').modal('show');
 
