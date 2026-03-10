@@ -1335,7 +1335,7 @@ header {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
-            <form id="editEmployeePayrollForm" action="/update-employee-payroll" method="POST">
+            <form id="editEmployeePayrollForm">
                 <div class="modal-body">
                     <input type="hidden" id="editEmployeeId-payroll" name="employee_id">
                     
@@ -1447,7 +1447,7 @@ header {
                             <button type="button" class="btn btn-danger me-2" data-bs-dismiss="modal">
                                 <i class="bi bi-x-circle"></i> Cancel
                             </button>
-                            <button type="submit" class="btn btn-success" id="saveEmployeeBtn">
+                            <button type="button" class="btn btn-success" id="saveemployeepayrollBtn">
                                 <i class="bi bi-check-circle"></i> Save Changes
                             </button>
                         </div>
@@ -4262,12 +4262,60 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
 
 
 
-
 document.getElementById('savenewinfo').addEventListener('click', function() {
     const whatsappInput = document.getElementById('whatsapp-editinfo-4');
     const emailInput = document.getElementById('email-editinfo-4');
     const addressInput = document.getElementById('address-editinfo-4');
 
+
+    // If field is empty, use placeholder value
+    const formData = {
+        whatsapp: whatsappInput.value.trim() || whatsappInput.placeholder,
+        email: emailInput.value.trim() || emailInput.placeholder,
+        address: addressInput.value.trim() || addressInput.placeholder
+    };
+
+    // Show loading overlay
+    $('#edsLoader').show();
+
+    // Send data using jQuery AJAX
+    $.ajax({
+        url: '/update_employee_details_payroll',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            // Hide modals and loading overlay
+            $('#editinfoModal').modal('hide');
+            $('#edsLoader').hide();
+            
+            // Show success message with slight delay
+            setTimeout(function() {
+                alert('Employee payroll details updated successfully');
+                location.reload();
+            }, 100);
+        },
+        error: function(xhr, status, error) {
+            // Hide loading overlay
+            $('#edsLoader').hide();
+
+            // Handle different error cases
+            if (xhr.status === 400) {
+                alert('Bad Request: Please check your input data.');
+            } else if (xhr.status === 500) {
+                alert('Server Error: Something went wrong on the server side.');
+            } else {
+                alert('Error: ' + error);
+            }
+        }
+    });
+});
+
+
+document.getElementById('saveemployeepayrollBtn').addEventListener('click', function() {
+    const whatsappInput = document.getElementById('whatsapp-editinfo-4');
+    const emailInput = document.getElementById('email-editinfo-4');
+    const addressInput = document.getElementById('address-editinfo-4');
 
     // If field is empty, use placeholder value
     const formData = {
