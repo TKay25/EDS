@@ -18484,7 +18484,6 @@ def update_employee_details_admin_comp():
                 return jsonify({'error': str(e)}), 500
 
 
-
 @app.route('/update_employee_details_payroll', methods=['POST'])
 def update_employee_details():
         
@@ -18514,45 +18513,30 @@ def update_employee_details():
                 payrollidemp = data.get('payroll_id')
                 
                 details_table = company_name + 'main'
-                update_query = f"""UPDATE {details_table} SET whatsapp = %s, email = %s, address = %s WHERE id = %s; """
-                cursor.execute(update_query, (whatsapp, email, address, empid))
+                update_query = f"""UPDATE {details_table} SET datejoined = %s, department = %s, designation = %s, manager = %s, basecurrency = %s, basicsalary = %s, bank = %s, branch = %s WHERE id = %s; """
+                cursor.execute(update_query, (datejoined, department, designation, manager, basecurrency, basicsalary, bank, branch, payrollidemp))
                 connection.commit()
-                update_query = f"""UPDATE {details_table} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                update_query = f"""UPDATE {details_table} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE id = %s; """
                 cursor.execute(update_query, (whatsapp, email, empid))
                 connection.commit()
 
                 table_name_apps_pending_approval = company_name + 'appspendingapproval'
-                update_query = f"""UPDATE {table_name_apps_pending_approval} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
-                cursor.execute(update_query, (whatsapp, email, empid))
-                connection.commit()
-
-                table_name_apps_cancelled = f"{company_name}appscancelled"
-                update_query = f"""UPDATE {table_name_apps_cancelled} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
-                cursor.execute(update_query, (whatsapp, email, empid))
-                connection.commit()
-
-                table_name_apps_approved = f"{company_name}appsapproved"
-                update_query = f"""UPDATE {table_name_apps_approved} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
-                cursor.execute(update_query, (whatsapp, email, empid))
-                connection.commit()
-
-                table_name_apps_declined = f"{company_name}appsdeclined"
-                update_query = f"""UPDATE {table_name_apps_declined} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
-                cursor.execute(update_query, (whatsapp, email, empid))
-                connection.commit()
-
-                table_name_apps_revoked = f"{company_name}appsrevoked"
-                update_query = f"""UPDATE {table_name_apps_revoked} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
-                cursor.execute(update_query, (whatsapp, email, empid))
-                connection.commit() 
+                #update_query = f"""UPDATE {table_name_apps_pending_approval} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                #cursor.execute(update_query, (whatsapp, email, empid))
+                #connection.commit()
 
                 return jsonify({
                     'success': True,
-                    'message': 'Employee details updated successfully',
+                    'message': 'Employee payroll details updated successfully',
                     'data': {
-                        'whatsapp': whatsapp,
-                        'email': email,
-                        'address': address
+                        'datejoined': datejoined,
+                        'department': department,
+                        'designation': designation,
+                        'manager': manager,
+                        'basecurrency': basecurrency,
+                        'basicsalary': basicsalary,
+                        'bank': bank,
+                        'branch': branch
                     }
                 }), 200
             
