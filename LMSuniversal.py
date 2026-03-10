@@ -18484,6 +18484,84 @@ def update_employee_details_admin_comp():
                 return jsonify({'error': str(e)}), 500
 
 
+
+@app.route('/update_employee_details_payroll', methods=['POST'])
+def update_employee_details():
+        
+    with get_db() as (cursor, connection):
+
+        user_uuid = session.get('user_uuid')
+        table_name = session.get('table_name')
+        empid = session.get('empid')
+
+        if not user_uuid or not table_name or not empid:
+            return "Session data is missing", 400
+
+        company_name = table_name.replace("main", "")
+
+        if request.method == 'POST':
+            try:
+                data = request.get_json()
+
+                datejoined = data.get('datejoined', '')
+                department = data.get('department', '')
+                designation = data.get('designation', '')
+                manager = data.get('manager', '')
+                basecurrency = data.get('basecurrency', '')
+                basicsalary = data.get('basicsalaryy', '')
+                bank = data.get('bank', '')
+                branch = data.get('branch', '')
+                payrollidemp = data.get('payroll_id')
+                
+                details_table = company_name + 'main'
+                update_query = f"""UPDATE {details_table} SET whatsapp = %s, email = %s, address = %s WHERE id = %s; """
+                cursor.execute(update_query, (whatsapp, email, address, empid))
+                connection.commit()
+                update_query = f"""UPDATE {details_table} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                cursor.execute(update_query, (whatsapp, email, empid))
+                connection.commit()
+
+                table_name_apps_pending_approval = company_name + 'appspendingapproval'
+                update_query = f"""UPDATE {table_name_apps_pending_approval} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                cursor.execute(update_query, (whatsapp, email, empid))
+                connection.commit()
+
+                table_name_apps_cancelled = f"{company_name}appscancelled"
+                update_query = f"""UPDATE {table_name_apps_cancelled} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                cursor.execute(update_query, (whatsapp, email, empid))
+                connection.commit()
+
+                table_name_apps_approved = f"{company_name}appsapproved"
+                update_query = f"""UPDATE {table_name_apps_approved} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                cursor.execute(update_query, (whatsapp, email, empid))
+                connection.commit()
+
+                table_name_apps_declined = f"{company_name}appsdeclined"
+                update_query = f"""UPDATE {table_name_apps_declined} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                cursor.execute(update_query, (whatsapp, email, empid))
+                connection.commit()
+
+                table_name_apps_revoked = f"{company_name}appsrevoked"
+                update_query = f"""UPDATE {table_name_apps_revoked} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
+                cursor.execute(update_query, (whatsapp, email, empid))
+                connection.commit() 
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Employee details updated successfully',
+                    'data': {
+                        'whatsapp': whatsapp,
+                        'email': email,
+                        'address': address
+                    }
+                }), 200
+            
+
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+
+
+
 @app.route('/update_employee_details', methods=['POST'])
 def update_employee_details():
         

@@ -1337,7 +1337,7 @@ header {
             
             <form id="editEmployeePayrollForm">
                 <div class="modal-body">
-                    <input type="hidden" id="editEmployeeId-payroll" name="employee_id">
+                    <input type="hidden" id="emp-id-hidden-comp-payroll" name="employee_id_payroll">
                     
                     <div class="row g-4">
 
@@ -4282,7 +4282,7 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
 
     // Send data using jQuery AJAX
     $.ajax({
-        url: '/update_employee_details_payroll',
+        url: '/update_employee_details',
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(formData),
@@ -4293,7 +4293,7 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
             
             // Show success message with slight delay
             setTimeout(function() {
-                alert('Employee payroll details updated successfully');
+                alert('Employee details updated successfully');
                 location.reload();
             }, 100);
         },
@@ -4325,7 +4325,7 @@ document.getElementById('saveemployeepayrollBtn').addEventListener('click', func
     const basicsalaryInput = document.getElementById('basicsalary-editinfo-4-comp-payroll');
     const bankInput = document.getElementById('bank-editinfo-4-comp-payroll');
     const branchInput = document.getElementById('bank-editinfo-4-comp-payroll');
-
+    const payrollidemp = document.getElementById('emp-id-hidden-comp-payroll')
 
     // If field is empty, use placeholder value
     const formData = {
@@ -4336,7 +4336,10 @@ document.getElementById('saveemployeepayrollBtn').addEventListener('click', func
         designation: designationInput.value.trim() || designationInput.placeholder,
         manager: managerInput.value.trim() || managerInput.placeholder,
         basecurrency: basecurrencyInput.value.trim() || basecurrencyInput.placeholder,
-        basicsalary: basicsalaryInput.value.trim() || basicsalaryInput.placeholder
+        basicsalary: basicsalaryInput.value.trim() || basicsalaryInput.placeholder,
+        bank: bankInput.value.trim() || bankInput.placeholder,
+        branch: branchInput.value.trim() || branchInput.placeholder,
+        payroll_id: payrollidemp.value.trim() || payrollidemp.placeholder
     };
 
     // Show loading overlay
@@ -4344,18 +4347,18 @@ document.getElementById('saveemployeepayrollBtn').addEventListener('click', func
 
     // Send data using jQuery AJAX
     $.ajax({
-        url: '/update_employee_details',
+        url: '/update_employee_details_payroll',
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function(response) {
             // Hide modals and loading overlay
-            $('#editinfoModal').modal('hide');
+            $('#editEmployeePayrollModal').modal('hide');
             $('#edsLoader').hide();
             
             // Show success message with slight delay
             setTimeout(function() {
-                alert('Employee details updated successfully');
+                alert('Employee payroll details updated successfully');
                 location.reload();
             }, 100);
         },
