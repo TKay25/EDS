@@ -1357,8 +1357,8 @@ header {
                                         <input type="text" class="form-control" id="surname-editinfo-4-comp-payroll" required>
                                     </div>
                                     <div class="mb-4">
-                                        <label for="editDateJoined" class="form-label">Date Joined</label>
-                                        <input type="date" class="form-control" id="editDateJoined">
+                                        <label for="datejoined-editinfo-4-comp-payroll" class="form-label">Date Joined</label>
+                                        <input type="date" class="form-control" id="datejoined-editinfo-4-comp-payroll">
                                     </div>
                                 </div>
                             </div>
@@ -1395,15 +1395,15 @@ header {
                                     <h6 class="mb-0"><i class="bi bi-cash-stack"></i> Salary Information</h6>
                                 </div>
                                 <div class="mb-4">
-                                    <label for="editBranch" class="form-label">Base Currency</label>
-                                    <input type="text" class="form-control" id="editBranch" name="branch">
+                                    <label for="base-currency-editinfo-4-comp-payroll" class="form-label">Base Currency</label>
+                                    <input type="text" class="form-control" id="base-currency-editinfo-4-comp-payroll" name="branch">
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-4">
-                                        <label for="editBasicSalary" class="form-label">Basic Salary</label>
+                                        <label for="basicsalary-editinfo-4-comp-payroll" class="form-label">Basic Salary</label>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="editBasicSalary" name="basic_salary" step="0.01" min="0" required>
+                                            <input type="number" class="form-control" id="basicsalary-editinfo-4-comp-payroll" step="0.01" min="0" required>
                                         </div>
                                     </div>
                                 </div>
@@ -1418,16 +1418,16 @@ header {
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-4">
-                                        <label for="editBank" class="form-label">Bank Name</label>
-                                        <input type="text" class="form-control" id="editBank" name="bank">
+                                        <label for="bank-editinfo-4-comp-payroll" class="form-label">Bank Name</label>
+                                        <input type="text" class="form-control" id="bank-editinfo-4-comp-payroll" name="bank">
                                     </div>
                                     <div class="mb-4">
-                                        <label for="editBranchCode" class="form-label">Branch Code</label>
-                                        <input type="text" class="form-control" id="editBranchCode" name="branch_code">
+                                        <label for="branchcode-editinfo-4-comp-payroll" class="form-label">Branch Code</label>
+                                        <input type="text" class="form-control" id="branchcode-editinfo-4-comp-payroll" name="branch_code">
                                     </div>
                                     <div class="mb-4">
-                                        <label for="editAccNumber" class="form-label">Account Number</label>
-                                        <input type="text" class="form-control" id="editAccNumber" name="account_number" required>
+                                        <label for="accnumber-editinfo-4-comp-payroll" class="form-label">Account Number</label>
+                                        <input type="text" class="form-control" id="accnumber-editinfo-4-comp-payroll" name="account_number" required>
                                     </div>
 
                                 </div>
@@ -3693,6 +3693,10 @@ $(document).on('click', '.edit-emp-details-comp-btn-payroll', function () {
     const manager = $(this).data('manager');
     const department = $(this).data('department');
     const designation = $(this).data('designation');
+    const datejoined = $(this).data('datejoined');
+    const accnumber = $(this).data('accnumber');
+    const bank = $(this).data('bank');
+    const basicsalary = $(this).data('basicsalary');
 
     $('#emp-id').text('ID: ' + id);
     $('#emp-name-title-payroll').text(`${firstname} ${surname}`);
@@ -3702,6 +3706,10 @@ $(document).on('click', '.edit-emp-details-comp-btn-payroll', function () {
     $('#manager-editinfo-4-comp-payroll').val('').attr('placeholder', manager);
     $('#department-editinfo-4-comp-payroll').val('').attr('placeholder', department);
     $('#designation-editinfo-4-comp-payroll').val('').attr('placeholder', designation);
+    $('#datejoined-editinfo-4-comp-payroll').val('').attr('placeholder', datejoined);
+    $('#accnumber-editinfo-4-comp-payroll').val('').attr('placeholder', accnumber);
+    $('#bank-editinfo-4-comp-payroll').val('').attr('placeholder', bank);
+    $('#basicsalary-editinfo-4-comp-payroll').val('').attr('placeholder', basicsalary);
 
     $('#emp-id-hidden-comp-payroll').val(id);
 
