@@ -3688,11 +3688,11 @@ let currentFirstName = null;
 
 $(document).on('click', '.edit-emp-details-comp-btn-payroll', function () {
     const id = $(this).data('id');
-    const firstname = $(this).data('Firstname');
-    const surname = $(this).data('Surname');
-    const manager = $(this).data('Manager_Supervisor');
-    const department = $(this).data('Department');
-    const designation = $(this).data('Designation');
+    const firstname = $(this).data('firstname');
+    const surname = $(this).data('surname');
+    const manager = $(this).data('manager');
+    const department = $(this).data('department');
+    const designation = $(this).data('designation');
 
     $('#emp-id').text('ID: ' + id);
     $('#emp-name-title-payroll').text(`${firstname} ${surname}`);
