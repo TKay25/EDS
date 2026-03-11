@@ -18485,7 +18485,7 @@ def update_employee_details_admin_comp():
 
 
 @app.route('/update_employee_details_payroll', methods=['POST'])
-def update_employee_details():
+def update_employee_details_payroll():
         
     with get_db() as (cursor, connection):
 
