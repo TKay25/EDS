@@ -17731,7 +17731,7 @@ def run_som_company_tables():
             connection.commit()
 
 
-
+            """
             ACCESS_TOKEN = "EAATESj1oB5YBPIzFCv7ulvosr2S2ZAiWBJrFp7bti6L0ZCWS2AOz5dUABlJ6q16a4hRwEXdq5vZAP5tp4rGXfOQ2sx0hg1EOwMpL002eqUrygbPc3jkY8FPOzR7c6tMvKJxT3XxXP8Qp9U1n30MIMVcNy9JUCZB8UyIwaAZBAjf2U32TVTwSBJlSeHoNYrGH0dwZDZD"
             PHONE_NUMBER_ID = "756962384159644"
             VERIFY_TOKEN = "2644686099068373"
@@ -17741,7 +17741,6 @@ def run_som_company_tables():
 
 
             def send_template_with_button(to_number):
-                """Send template with button containing check_bal_ in payload"""
                 
                 url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
                 headers = {
@@ -17823,6 +17822,8 @@ def run_som_company_tables():
                 else:
                     print(f"Skipping invalid phone number: {phone_number}")
                     fail_count += 1
+                
+            """
 
             return jsonify({'message': f'Successfully updated leave balances for "{company_name}".'}), 200
 
