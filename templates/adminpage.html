@@ -8,1509 +8,332 @@
         <!-- <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}"> -->
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
         <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
         <style>
-        /* Main Styling */
-/* ===== IMPROVED STYLING - MAINTAINING BLUE THEME ===== */
-
-/* ===== BASE & GLOBAL STYLES ===== */
-:root {
-    --primary-blue: #003366;
-    --secondary-blue: #6699CC;
-    --light-blue: #e9f1fb;
-    --background-gradient: linear-gradient(135deg, #f0f2f5 0%, #e9f1fb 100%);
-    --white: #ffffff;
-    --dark-text: #003366;
-    --light-text: #6c757d;
-    --success-green: #198754;
-    --warning-orange: #ffc107;
-    --danger-red: #E30022;
-    --shadow-light: 0 4px 12px rgba(0, 51, 102, 0.08);
-    --shadow-medium: 0 6px 20px rgba(0, 51, 102, 0.12);
-    --shadow-heavy: 0 10px 30px rgba(0, 51, 102, 0.15);
-    --border-radius-sm: 8px;
-    --border-radius-md: 12px;
-    --border-radius-lg: 16px;
-    --transition-fast: 0.2s ease;
-    --transition-normal: 0.3s ease;
-    --transition-slow: 0.5s ease;
-}
-
-/* Reset and base */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Roboto', sans-serif;
-    background: var(--background-gradient);
-    color: var(--dark-text);
-    line-height: 1.6;
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-/* ===== TYPOGRAPHY ENHANCEMENTS ===== */
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    color: var(--primary-blue);
-    margin-bottom: 1rem;
-}
-
-.employeetag {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--primary-blue);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.uppercase-text {
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-/* ===== SIDEBAR ENHANCEMENTS ===== */
-.sidebar {
-    width: 260px;
-    background: linear-gradient(to bottom, #002244, #003366);
-    color: var(--white);
-    padding-top: 30px;
-    position: fixed;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: var(--shadow-heavy);
-    z-index: 1000;
-    transition: all var(--transition-normal);
-    overflow-y: auto;
-}
-
-.sidebar:hover {
-    width: 280px;
-    box-shadow: 0 8px 32px rgba(0, 51, 102, 0.2);
-}
-
-.sidebar h5 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-bottom: 30px;
-    text-align: center;
-    padding: 0 20px;
-    color: var(--white);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.sidebar img {
-    max-width: 160px;
-    margin-bottom: 25px;
-    filter: brightness(0) invert(1);
-    opacity: 0.9;
-}
-
-/* Sidebar buttons */
-.sidebar .btn {
-    background: var(--white);
-    color: var(--primary-blue);
-    border: 2px solid transparent;
-    border-radius: var(--border-radius-md);
-    padding: 10px 20px;
-    margin: 8px 0;
-    width: 180px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: all var(--transition-fast);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.sidebar .btn:hover {
-    background: transparent;
-    color: var(--white);
-    border-color: var(--white);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-light);
-}
-
-.sidebar .btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.sidebar .btn:hover::before {
-    left: 100%;
-}
-
-/* Sidebar accordion improvements */
-.sidebar .accordion-item {
-    background: transparent;
-    border: none;
-    margin-bottom: 8px;
-    border-radius: var(--border-radius-sm);
-    overflow: hidden;
-}
-
-.sidebar .accordion-button {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--white);
-    border: none;
-    padding: 12px 15px;
-    font-weight: 500;
-    transition: all var(--transition-fast);
-}
-
-.sidebar .accordion-button:not(.collapsed) {
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--white);
-    box-shadow: none;
-}
-
-.sidebar .accordion-button:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateX(5px);
-}
-
-.sidebar .accordion-body {
-    background: rgba(0, 0, 0, 0.2);
-    padding: 0;
-}
-
-.sidebar .list-group-item {
-    background: transparent;
-    color: rgba(255, 255, 255, 0.9);
-    border: none;
-    padding: 10px 20px;
-    font-size: 0.9rem;
-    transition: all var(--transition-fast);
-    cursor: pointer;
-}
-
-.sidebar .list-group-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--white);
-    padding-left: 25px;
-}
-
-/* ===== MAIN CONTENT AREA ===== */
-.main-content, .all-payroll-content {
-    margin-left: 280px;
-    padding: 30px;
-    width: calc(100% - 280px);
-    min-height: 100vh;
-    transition: all var(--transition-normal);
-}
-
-/* Header improvements */
-header {
-    background: var(--light-blue);
-    backdrop-filter: blur(10px);
-    border-radius: var(--border-radius-lg);
-    padding: 15px 25px;
-    margin-bottom: 25px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: var(--shadow-light);
-    border: 1px solid rgba(0, 51, 102, 0.1);
-}
-
-.current-date {
-    color: var(--primary-blue);
-    font-weight: 600;
-    font-size: 1rem;
-    background: rgba(255, 255, 255, 0.8);
-    padding: 8px 15px;
-    border-radius: var(--border-radius-md);
-    border: 1px solid rgba(0, 51, 102, 0.1);
-}
-
-/* Profile dropdown enhancements */
-.profile-dropdown {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.profile-label {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--primary-blue);
-    white-space: nowrap;
-}
-
-.form-select {
-    min-width: 180px;
-    border: 2px solid var(--primary-blue);
-    border-radius: var(--border-radius-md);
-    padding: 8px 15px;
-    font-weight: 600;
-    color: var(--primary-blue);
-    background: var(--white);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: var(--shadow-light);
-}
-
-.form-select:focus {
-    border-color: var(--secondary-blue);
-    box-shadow: 0 0 0 3px rgba(102, 153, 204, 0.2);
-    outline: none;
-}
-
-/* ===== CARD & CONTAINER IMPROVEMENTS ===== */
-.card {
-    background: var(--white);
-    border-radius: var(--border-radius-lg);
-    border: none;
-    box-shadow: var(--shadow-light);
-    padding: 25px;
-    margin-top: 20px;
-    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-medium);
-}
-
-/* Tab improvements */
-.nav-tabs {
-    border-bottom: 2px solid var(--light-blue);
-    margin-bottom: 25px;
-}
-
-.nav-tabs .nav-link {
-    color: var(--primary-blue);
-    font-weight: 600;
-    padding: 12px 25px;
-    margin-right: 5px;
-    border: 2px solid transparent;
-    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-    background: var(--light-blue);
-    transition: all var(--transition-fast);
-}
-
-.nav-tabs .nav-link:hover {
-    color: var(--primary-blue);
-    background: rgba(102, 153, 204, 0.1);
-    border-color: var(--secondary-blue);
-}
-
-.nav-tabs .nav-link.active {
-    background: var(--primary-blue);
-    color: var(--white);
-    border-color: var(--primary-blue);
-    position: relative;
-}
-
-.nav-tabs .nav-link.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: var(--primary-blue);
-}
-
-/* ===== BUTTON ENHANCEMENTS ===== */
-.btn-primary {
-    background: var(--primary-blue);
-    color: var(--white);
-    border: 2px solid var(--primary-blue);
-    border-radius: var(--border-radius-md);
-    padding: 10px 20px;
-    font-weight: 600;
-    transition: all var(--transition-fast);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.btn-primary:hover {
-    background: transparent;
-    color: var(--primary-blue);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-.btn-primary2 {
-    background: var(--primary-blue);
-    color: var(--white);
-    border: 2px solid var(--primary-blue);
-    border-radius: var(--border-radius-md);
-    padding: 8px 20px;
-    font-weight: 600;
-    transition: all var(--transition-fast);
-}
-
-.btn-primary2:hover {
-    background: var(--white);
-    color: var(--primary-blue);
-    box-shadow: var(--shadow-light);
-}
-
-.btn-primary3 {
-    background: var(--primary-blue);
-    color: var(--white);
-    border: 2px solid var(--primary-blue);
-    border-radius: var(--border-radius-sm);
-    padding: 6px 15px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all var(--transition-fast);
-}
-
-.btn-primary3:hover {
-    background: var(--white);
-    color: var(--primary-blue);
-}
-
-.btn-primary9 {
-    background: var(--primary-blue);
-    color: var(--white);
-    border: 2px solid var(--primary-blue);
-    border-radius: var(--border-radius-md);
-    padding: 8px 20px;
-    font-weight: 600;
-    transition: all var(--transition-fast);
-}
-
-.btn-primary9:hover {
-    background: var(--white);
-    color: var(--primary-blue);
-    transform: translateY(-1px);
-}
-
-.btn-primary10 {
-    background: var(--white);
-    color: var(--primary-blue);
-    border: 2px solid var(--primary-blue);
-    border-radius: var(--border-radius-md);
-    padding: 8px 20px;
-    font-weight: 600;
-    transition: all var(--transition-fast);
-}
-
-.btn-primary10:hover {
-    background: var(--light-blue);
-    color: var(--primary-blue);
-    box-shadow: var(--shadow-light);
-}
-
-/* ===== TABLE ENHANCEMENTS ===== */
-.table-theme {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background: var(--white);
-    border-radius: var(--border-radius-md);
-    overflow: hidden;
-    box-shadow: var(--shadow-light);
-}
-
-.table-theme th {
-    background: linear-gradient(to right, #002244, var(--primary-blue));
-    color: var(--white);
-    font-weight: 600;
-    padding: 12px 15px;
-    text-align: center;
-    border: none;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.table-theme td {
-    padding: 12px 15px;
-    color: var(--dark-text);
-    border-bottom: 1px solid rgba(0, 51, 102, 0.1);
-    text-align: center;
-    vertical-align: middle;
-}
-
-.table-theme tr:hover td {
-    background: rgba(233, 241, 251, 0.3);
-}
-
-.table-theme tr:last-child td {
-    border-bottom: none;
-}
-
-/* Container scroll improvements */
-.container2 {
-    max-height: 500px;
-    overflow-y: auto;
-    padding-right: 5px;
-}
-
-.container2::-webkit-scrollbar {
-    width: 8px;
-}
-
-.container2::-webkit-scrollbar-track {
-    background: var(--light-blue);
-    border-radius: 4px;
-}
-
-.container2::-webkit-scrollbar-thumb {
-    background: var(--primary-blue);
-    border-radius: 4px;
-    border: 2px solid var(--light-blue);
-}
-
-.container2::-webkit-scrollbar-thumb:hover {
-    background: #002244;
-}
-
-/* ===== FORM ENHANCEMENTS ===== */
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-control, .form-select {
-    border: 2px solid rgba(0, 51, 102, 0.2);
-    border-radius: var(--border-radius-md);
-    padding: 10px 15px;
-    font-size: 0.95rem;
-    transition: all var(--transition-fast);
-    background: var(--white);
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: var(--secondary-blue);
-    box-shadow: 0 0 0 3px rgba(102, 153, 204, 0.2);
-    outline: none;
-}
-
-.form-control-blue {
-    background: rgba(233, 241, 251, 0.5);
-    border-color: rgba(0, 51, 102, 0.3);
-}
-
-.form-control-blue:focus {
-    background: var(--white);
-    border-color: var(--primary-blue);
-}
-
-.form-label {
-    font-weight: 600;
-    color: var(--primary-blue);
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-/* ===== MODAL ENHANCEMENTS ===== */
-.modal-content {
-    border: none;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-heavy);
-    overflow: hidden;
-}
-
-.modal-header {
-    background: linear-gradient(to right, #002244, var(--primary-blue));
-    color: var(--white);
-    padding: 20px 25px;
-    border-bottom: none;
-}
-
-.modal-header .modal-title {
-    font-weight: 700;
-    font-size: 1.2rem;
-    color: var(--white);
-}
-
-.modal-header .btn-close {
-    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
-    opacity: 0.8;
-    transition: opacity var(--transition-fast);
-}
-
-.modal-header .btn-close:hover {
-    opacity: 1;
-}
-
-.modal-body {
-    padding: 25px;
-    color: var(--dark-text);
-}
-
-.modal-footer {
-    padding: 20px 25px;
-    background: var(--light-blue);
-    border-top: 1px solid rgba(0, 51, 102, 0.1);
-    gap: 10px;
-}
-
-/* ===== DASHBOARD SUMMARY CARDS ===== */
-.dashboard-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 25px;
-}
-
-.summary-card {
-    background: linear-gradient(135deg, var(--white), var(--light-blue));
-    border-radius: var(--border-radius-lg);
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: var(--shadow-light);
-    border: 1px solid rgba(0, 51, 102, 0.1);
-    transition: all var(--transition-normal);
-}
-
-.summary-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-medium);
-}
-
-.summary-card .icon {
-    font-size: 2.5rem;
-    color: var(--primary-blue);
-    opacity: 0.9;
-}
-
-.summary-card .details h5 {
-    margin: 0 0 5px 0;
-    font-size: 0.9rem;
-    color: var(--dark-text);
-    opacity: 0.8;
-    font-weight: 600;
-}
-
-.summary-card .details p {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary-blue);
-}
-
-/* ===== DASHBOARD GRAPHS ===== */
-.dashboard-graphs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 25px;
-    margin-top: 30px;
-}
-
-.graph-card {
-    background: var(--white);
-    border-radius: var(--border-radius-lg);
-    padding: 20px;
-    box-shadow: var(--shadow-light);
-    border: 1px solid rgba(0, 51, 102, 0.1);
-}
-
-.graph-card h6 {
-    color: var(--primary-blue);
-    font-weight: 700;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--light-blue);
-}
-
-/* ===== ALERT & NOTIFICATION STYLES ===== */
-.custom-alert {
-    background: var(--white);
-    border-left: 4px solid var(--primary-blue);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-medium);
-    padding: 15px 20px;
-    margin-bottom: 15px;
-    animation: slideInRight 0.3s ease;
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* ===== LOADING OVERLAY ENHANCEMENTS ===== */
-.eds-loader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 20, 40, 0.95);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.loader-bar {
-    width: 300px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    overflow: hidden;
-    position: relative;
-}
-
-.loader-progress {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #ffffff, var(--secondary-blue));
-    animation: load 2s ease-in-out infinite;
-}
-
-@keyframes load {
-    0% { width: 0%; left: 0; }
-    50% { width: 100%; left: 0; }
-    100% { width: 0%; left: 100%; }
-}
-
-/* ===== DROPDOWN FILTER ENHANCEMENTS ===== */
-.dropdownfilter {
-    position: relative;
-    display: inline-block;
-}
-
-.dropdownfilter-toggle {
-    background: var(--primary-blue);
-    color: var(--white);
-    border: none;
-    padding: 8px 20px;
-    border-radius: var(--border-radius-md);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.dropdownfilter-toggle:hover {
-    background: #002244;
-    transform: translateY(-1px);
-}
-
-.dropdownfilter-content {
-    display: none;
-    position: absolute;
-    background: var(--white);
-    box-shadow: var(--shadow-medium);
-    border-radius: var(--border-radius-md);
-    padding: 15px;
-    z-index: 1000;
-    min-width: 200px;
-}
-
-.dropdownfilter:hover .dropdownfilter-content {
-    display: block;
-    animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* ===== CHART CONTAINER IMPROVEMENTS ===== */
-#chartContainer {
-    background: var(--white);
-    border-radius: var(--border-radius-lg);
-    padding: 20px;
-    margin-top: 20px;
-    box-shadow: var(--shadow-light);
-    border: 1px solid rgba(0, 51, 102, 0.1);
-}
-
-/* ===== EDIT EMPLOYEE MODAL SPECIFIC STYLES ===== */
-#editEmployeePayrollModal .card {
-    border: 1px solid rgba(0, 51, 102, 0.1);
-    border-radius: var(--border-radius-md);
-    transition: all var(--transition-fast);
-    height: 100%;
-}
-
-#editEmployeePayrollModal .card:hover {
-    border-color: var(--secondary-blue);
-    box-shadow: var(--shadow-light);
-}
-
-#editEmployeePayrollModal .card-header {
-    background: linear-gradient(to right, rgba(233, 241, 251, 0.8), rgba(102, 153, 204, 0.1));
-    border-bottom: 2px solid var(--primary-blue);
-    padding: 15px;
-    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-}
-
-#editEmployeePayrollModal .card-header h6 {
-    color: var(--primary-blue);
-    font-weight: 700;
-    margin: 0;
-    font-size: 0.95rem;
-}
-
-/* ===== REQUIRED FIELD INDICATOR ===== */
-.required-field::after {
-    content: ' *';
-    color: var(--danger-red);
-    font-weight: bold;
-}
-
-/* ===== ANIMATIONS & TRANSITIONS ===== */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.fade-in {
-    animation: fadeInUp 0.4s ease;
-}
-
-
-
-/* ===== RESPONSIVE DESIGN IMPROVEMENTS ===== */
-@media (max-width: 1200px) {
-    .sidebar {
-        width: 220px;
-    }
-    
-    .sidebar:hover {
-        width: 240px;
-    }
-    
-    .main-content, .all-payroll-content {
-        margin-left: 240px;
-        width: calc(100% - 240px);
-        padding: 20px;
-    }
-}
-
-/* Mobile Menu Toggle Button */
-.mobile-menu-toggle {
-    display: none;
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 1001;
-    background: #003366;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 15px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 51, 102, 0.2);
-    font-weight: 600;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.mobile-menu-toggle:hover {
-    background: #002244;
-    transform: scale(1.02);
-    box-shadow: 0 6px 16px rgba(0, 51, 102, 0.3);
-}
-
-.mobile-menu-toggle i {
-    margin-right: 5px;
-    font-size: 18px;
-    vertical-align: middle;
-}
-
-/* Overlay for mobile menu */
-.sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    backdrop-filter: blur(2px);
-}
-
-.sidebar-overlay.active {
-    display: block !important;
-    opacity: 1;
-}
-
-/* Responsive adjustments */
-@media (max-width: 992px) {
-    .mobile-menu-toggle {
-        display: block !important;
-    }
-    
-    .sidebar {
-        position: fixed !important;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease !important;
-        z-index: 1000;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        width: 280px !important;
-        background: linear-gradient(to bottom, #002244, #003366) !important;
-        overflow-y: auto;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-    
-    .sidebar.active {
-        transform: translateX(0) !important;
-    }
-    
-    .main-content, .all-payroll-content {
-        margin-left: 0 !important;
-        width: 100% !important;
-        padding-top: 70px !important; /* Space for mobile menu button */
-    }
-    
-    /* Adjust header for mobile */
-    header {
-        margin-top: 0;
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .profile-dropdown {
-        width: 100%;
-    }
-    
-    .form-select {
-        width: 100%;
-    }
-}
-
-@media (max-width: 576px) {
-    .mobile-menu-toggle {
-        top: 10px;
-        left: 10px;
-        padding: 8px 12px;
-        font-size: 14px;
-    }
-    
-    .sidebar {
-        width: 85% !important;
-        max-width: 300px;
-    }
-    
-    .main-content, .all-payroll-content {
-        padding: 60px 10px 10px 10px !important;
-    }
-}
-
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-    
-    .employeetag {
-        font-size: 1rem;
-    }
-    
-    .profile-dropdown {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .nav-tabs .nav-link {
-        padding: 10px 15px;
-        font-size: 0.9rem;
-    }
-    
-    .dashboard-summary {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ===== PRINT STYLES ===== */
-@media print {
-    .sidebar, header, .nav-tabs, .btn {
-        display: block !important;
-    }
-    
-    .main-content, .all-payroll-content {
-        margin-left: 0;
-        width: 100%;
-        padding: 0;
-    }
-    
-    .card {
-        box-shadow: none;
-        border: 1px solid #ddd;
-    }
-}
+        /* ===== Admin Page Specific Styles ===== */
+        
+        .dashboard-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .summary-card {
+            background: var(--eds-white);
+            border-radius: var(--eds-radius-lg);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--eds-shadow-sm);
+            border: 1px solid var(--eds-border-light);
+            transition: all var(--eds-transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(220,20,60,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--eds-shadow-md);
+            border-color: rgba(220, 20, 60, 0.15);
+        }
+
+        .summary-card .icon {
+            font-size: 2rem;
+            color: var(--eds-accent);
+            opacity: 0.9;
+        }
+
+        .summary-card .details h5 {
+            margin: 0 0 4px 0;
+            font-size: 0.78rem;
+            color: var(--eds-text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .summary-card .details p {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--eds-primary);
+        }
+
+        .dashboard-graphs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .graph-card {
+            background: var(--eds-white);
+            border-radius: var(--eds-radius-lg);
+            padding: 20px;
+            box-shadow: var(--eds-shadow-sm);
+            border: 1px solid var(--eds-border-light);
+            transition: all var(--eds-transition-fast);
+        }
+
+        .graph-card:hover {
+            box-shadow: var(--eds-shadow-md);
+        }
+
+        .graph-card h6 {
+            color: var(--eds-primary);
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--eds-border-light);
+        }
+
+        .dropdownfilter {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdownfilter-toggle {
+            background: var(--eds-accent);
+            color: var(--eds-white);
+            border: none;
+            padding: 8px 20px;
+            border-radius: var(--eds-radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--eds-transition-fast);
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.25);
+        }
+
+        .dropdownfilter-toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--eds-shadow-accent);
+        }
+
+        .dropdownfilter-content {
+            display: none;
+            position: absolute;
+            background: var(--eds-white);
+            box-shadow: var(--eds-shadow-lg);
+            border-radius: var(--eds-radius-md);
+            padding: 15px;
+            z-index: 1000;
+            min-width: 200px;
+            border: 1px solid var(--eds-border-light);
+        }
+
+        .dropdownfilter:hover .dropdownfilter-content {
+            display: block;
+            animation: edsFadeIn 0.2s ease;
+        }
+
+        #chartContainer {
+            background: var(--eds-white);
+            border-radius: var(--eds-radius-lg);
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: var(--eds-shadow-sm);
+            border: 1px solid var(--eds-border-light);
+        }
+
+        .employeetag {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--eds-primary);
+        }
+
+        .container2 {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .btn-primary2 {
+            background: var(--eds-accent-gradient) !important;
+            color: var(--eds-white) !important;
+            border: 2px solid var(--eds-accent) !important;
+            border-radius: var(--eds-radius-md) !important;
+            padding: 8px 20px !important;
+            font-weight: 600 !important;
+            transition: all var(--eds-transition-fast) !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary2:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: var(--eds-shadow-accent) !important;
+        }
+
+        .btn-primary3 {
+            background: var(--eds-white) !important;
+            color: var(--eds-accent) !important;
+            border: 2px solid var(--eds-accent) !important;
+            border-radius: var(--eds-radius-md) !important;
+            padding: 6px 15px !important;
+            font-size: 0.82rem !important;
+            font-weight: 600 !important;
+            transition: all var(--eds-transition-fast) !important;
+            width: 100% !important;
+        }
+
+        .btn-primary3:hover {
+            background: var(--eds-accent) !important;
+            color: var(--eds-white) !important;
+        }
+
+        .btn-primary9 {
+            background: var(--eds-accent-gradient) !important;
+            color: var(--eds-white) !important;
+            border: 2px solid var(--eds-accent) !important;
+            border-radius: var(--eds-radius-md) !important;
+            padding: 10px 24px !important;
+            font-weight: 700 !important;
+            transition: all var(--eds-transition-fast) !important;
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.25);
+        }
+
+        .btn-primary9:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: var(--eds-shadow-accent) !important;
+        }
+
+        .btn-primary10 {
+            background: var(--eds-white) !important;
+            color: var(--eds-primary) !important;
+            border: 2px solid var(--eds-border) !important;
+            border-radius: var(--eds-radius-md) !important;
+            padding: 8px 20px !important;
+            font-weight: 600 !important;
+            transition: all var(--eds-transition-fast) !important;
+        }
+
+        .btn-primary10:hover {
+            background: var(--eds-blue-bg) !important;
+            border-color: var(--eds-primary-light) !important;
+        }
+
+        #editEmployeePayrollModal .card {
+            border: 1px solid var(--eds-border-light);
+            border-radius: var(--eds-radius-md);
+            transition: all var(--eds-transition-fast);
+            height: 100%;
+            box-shadow: none;
+        }
+
+        #editEmployeePayrollModal .card-header {
+            background: var(--eds-blue-bg);
+            border-bottom: 2px solid var(--eds-accent);
+            padding: 15px;
+            border-radius: var(--eds-radius-md) var(--eds-radius-md) 0 0;
+        }
+
+        #editEmployeePayrollModal .card-header h6 {
+            color: var(--eds-primary);
+            font-weight: 700;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .profile-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--eds-text-light);
+        }
     </style>
 </head>
 
 <body>
     <div class="eds-loader" id="edsLoader" style="display: none;">
-        <!-- <div class="eds-logo"><img src="{{ url_for('static', filename='images/EDS LOGO.png') }}"  alt="Logo" class="logo" style="width: 200px;"></div> -->
-
         <br><br>
-        <p style="font-weight: 700;color: white;font-size: 1.2rem;">We Are Commiting Your Changes {{firstname}}, Please Wait...</p>
-
-        <div class="loader-bar">
-            <div class="loader-progress"></div>
+        <p style="font-weight: 700;color: white;font-size: 1.2rem;">We Are Committing Your Changes {{firstname}}, Please Wait...</p>
+        <div class="eds-loader-bar">
+            <div class="eds-loader-progress"></div>
         </div>
-        
-        <div class="eds-grid">
-            <div class="grid-item"></div>
-            <div class="grid-item"></div>
-            <div class="grid-item"></div>
-            <div class="grid-item"></div>
-        </div>
-    </div>
-    
-    <button class="mobile-menu-toggle" id="mobileMenuToggle">
-        <i class="bi bi-list"></i> Menu
-    </button>
-
-    <div class="sidebar-overlay" id="sidebarOverlay" style="display: none;"></div>
-
-    <div class="sidebar p-2">
-        <br>
-        <h5 class="mb-3 text-center">HR Management System</h5>
-
-        <div class="accordion" id="sidebarAccordion">
-            <!-- Leave Management -->
-            <div class="accordion-item border rounded-2 mb-2">
-                <h2 class="accordion-header">
-                    <div class="accordion-button collapsed d-flex justify-content-between align-items-center" 
-                        type="button" 
-                        data-bs-toggle="collapse" 
-                        data-bs-target="#leaveMenu" 
-                        aria-expanded="false" 
-                        aria-controls="leaveMenu">
-                        <span><i class="bi bi-briefcase-fill me-2"></i> Leave Management</span>
-                    </div>
-                </h2>
-                <div id="leaveMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
-                    <div class="accordion-body p-0">
-                        <div class="list-group list-group-flush">
-                            <button class="list-group-item list-group-item-action" id="lmsview">
-                                <i class="bi bi-view-list"></i> View Portal
-                            </button>
-                            <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
-                                <i class="bi bi-file-earmark-medical-fill me-2"></i> Apply for Leave
-                            </button>
-                            <button class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#editinfoModal">
-                                <i class="bi bi-pencil-square me-2"></i> Edit My Info
-                            </button>
-                            <button class="list-group-item list-group-item-action" id="btn-employee-profiles">
-                                <i class="bi bi-info-circle-fill me-2"></i> Log Query
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Employee Management -->
-            <div class="accordion-item border rounded-2 mb-2 attendance" data-hide="{{ hide_element }}" id="attendance">
-                <h2 class="accordion-header">
-                    <div class="accordion-button d-flex justify-content-start align-items-center" style="cursor: pointer;">
-                        <span><i class="bi bi-people-fill me-2"></i> Attendance</span>
-                    </div>
-                </h2>
-            </div>
-
-
-            <!-- Employee Management -->
-            <div class="accordion-item border rounded-2 mb-2" data-hide="{{ hide_element }}" id="performance">
-                <h2 class="accordion-header">
-                    <div class="accordion-button collapsed d-flex justify-content-between align-items-center"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#performamceMenu"
-                        aria-expanded="false"
-                        aria-controls="performamceMenu">
-                        <span><i class="bi bi-card-checklist me-2"></i> Performance</span>
-                    </div>
-                </h2>
-                <div id="performamceMenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
-                    <div class="accordion-body p-0">
-                        <div class="list-group list-group-flush">
-                            <button class="list-group-item list-group-item-action">
-                                <i class="bi bi-person-lines-fill me-2"></i> View Profiles
-                            </button>
-                            <button class="list-group-item list-group-item-action">
-                                <i class="bi bi-person-plus-fill me-2"></i> Add Employee
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reports -->
-            <div class="accordion-item border rounded-2 mb-2" data-hide="{{ hide_element }}" id="payroll">
-                <h2 class="accordion-header">
-                    <div class="accordion-button d-flex justify-content-start align-items-center" style="cursor: pointer;">
-                            <span><i class="bi bi-wallet-fill me-2"></i> Payroll</span>
-                    </div>
-                </h2>
-            </div>
-
-            <div class="accordion-item border rounded-2 mb-2" data-hide="{{ hide_element }}" id="equipmentassets">
-                <h2 class="accordion-header">
-                    <div class="accordion-button d-flex justify-content-start align-items-center" style="cursor: pointer;">
-                            <span><i class="bi bi-wallet-fill me-2"></i> Equipment & Assets</span>
-                    </div>
-                </h2>
-            </div>
-
+        <div class="eds-loader-grid">
+            <div class="eds-loader-grid-item"></div>
+            <div class="eds-loader-grid-item"></div>
+            <div class="eds-loader-grid-item"></div>
+            <div class="eds-loader-grid-item"></div>
         </div>
     </div>
 
+    <!-- ===== Top Navbar ===== -->
+    {% include 'components/eds_sidebar.html' %}
 
-    <div class="all-payroll-content" id="payroll-content" style="display: none;">
-        <header>
-            <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} SYSTEM ADMINISTRATOR <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
-            <div><span class="current-date" id="currdate">DATE: {{ today_date }}</span></div>
-            <span id="name-down" value="{{firstname}}" style="display: none;"></span>
-            <span id="name-down2" value="{{surname}}" style="display: none;"></span>
-            <button onclick="window.location.href='/logout'" class="btn btn-primary" style="width: max-content;">  Logout<i class="bi bi-door-closed-fill" style="margin-left: 7px;"></i>  </button>
-        </header>
+    <!-- ===== Main Content ===== -->
+    <div class="eds-app-shell">
+        <div class="eds-page-content">
 
-        <ul class="nav nav-tabs">
-            <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#payroll-summary-tab">
-                    <i class="bi bi-wallet-fill"></i> PAYROLL DASHBOARD
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#payroll-reports-tab">
-                    <i class="bi bi-file-earmark-text-fill"></i> EMPLOYEE DETAILS
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#payroll-settings-tab">
-                    <i class="bi bi-gear-fill"></i> SETTINGS
-                </button>
-            </li>
-        </ul>
+            {% include 'components/eds_header.html' %}
 
-        <div class="tab-content mt-4">
-            <!-- Payroll Summary -->
-            <div class="tab-pane fade show active" id="payroll-summary-tab">
-                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exportPayrollReportsModal">
-                        <i class="bi bi-file-earmark-zip-fill"></i> Export Payroll Report
-                    </button>
-                <div class="dashboard-summary">
-                    <div class="summary-card">
-                        <div class="icon"><i class="bi bi-cash-stack fs-3" style="color: #003366;"></i></div>
-                        <div class="details">
-                            <h5 style="font-weight: bolder;">Total Payroll Amount</h5>
-                            <p>{{ total_payroll }}</p>
-                        </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="icon"><i class="bi bi-calendar2-check-fill fs-3" style="color: #003366;"></i></div>
-                        <div class="details">
-                            <h5 style="font-weight: bolder;">Processed Employees</h5>
-                            <p>{{ employees_processed }}</p>
-                        </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="icon"><i class="bi bi-hourglass-split fs-3" style="color: #003366;"></i></div>
-                        <div class="details">
-                            <h5 style="font-weight: bolder;">Pending Approvals</h5>
-                            <p>{{ payroll_pending }}</p>
-                        </div>
-                    </div>
+            <!-- ===== Quick Action Buttons ===== -->
+            <div class="eds-quick-actions">
+                <div class="eds-quick-action" onclick="switchProfile('user')">
+                    <div class="eds-quick-action-icon"><i class="bi bi-person-circle"></i></div>
+                    <div class="eds-quick-action-label">My Dashboard</div>
+                </div>
+                <div class="eds-quick-action" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
+                    <div class="eds-quick-action-icon"><i class="bi bi-file-earmark-medical"></i></div>
+                    <div class="eds-quick-action-label">Apply for Leave</div>
+                </div>
+                <div class="eds-quick-action" data-bs-toggle="modal" data-bs-target="#editinfoModal">
+                    <div class="eds-quick-action-icon"><i class="bi bi-pencil-square"></i></div>
+                    <div class="eds-quick-action-label">Edit My Info</div>
+                    <span class="eds-quick-action-badge">1</span>
+                </div>
+                <div class="eds-quick-action" id="lmsview">
+                    <div class="eds-quick-action-icon"><i class="bi bi-view-list"></i></div>
+                    <div class="eds-quick-action-label">Leave Portal</div>
+                </div>
+                <div class="eds-quick-action" id="btn-employee-profiles">
+                    <div class="eds-quick-action-icon"><i class="bi bi-chat-dots"></i></div>
+                    <div class="eds-quick-action-label">Log Query</div>
+                </div>
+                <div class="eds-quick-action" data-hide="{{ hide_element }}" id="attendance">
+                    <div class="eds-quick-action-icon"><i class="bi bi-clock-history"></i></div>
+                    <div class="eds-quick-action-label">Attendance</div>
+                </div>
+                <div class="eds-quick-action" data-hide="{{ hide_element }}" id="payroll">
+                    <div class="eds-quick-action-icon"><i class="bi bi-wallet2"></i></div>
+                    <div class="eds-quick-action-label">Payroll</div>
+                </div>
+                <div class="eds-quick-action" data-hide="{{ hide_element }}" id="equipmentassets">
+                    <div class="eds-quick-action-icon"><i class="bi bi-tools"></i></div>
+                    <div class="eds-quick-action-label">Equipment</div>
+                </div>
+                <div class="eds-quick-action" data-hide="{{ hide_element }}" id="performance">
+                    <div class="eds-quick-action-icon"><i class="bi bi-bar-chart"></i></div>
+                    <div class="eds-quick-action-label">Performance</div>
                 </div>
             </div>
 
-            <!-- Payroll Reports -->
-            <div class="tab-pane fade" id="payroll-reports-tab">
-                <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#uploadPayrolldetailsModal">
-                    <i class="bi bi-file-earmark-zip-fill"></i> Upload Payroll Details
-                </button>
-                <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#exportPayrollReportsModal">
-                    <i class="bi bi-file-earmark-zip-fill"></i> Run Payroll
-                </button>
-                <div class="container mt-5">
-                    <div class="container2" style="max-height: 450px; overflow-y: auto;">
-                        {{ table_employees_payroll_html|safe }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payroll Settings -->
-            <div class="tab-pane fade" id="payroll-settings-tab">
-                <!-- ADD THIS HIDDEN DIV RIGHT HERE - AT THE VERY TOP OF THE TAB -->
-                <div id="currency-settings-data" data-settings='{{ currency_settings_json }}' style="display: none;"></div>
-                
-                <div class="container mt-4">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="card">
-                                <div class="modal-header" style="padding: 4px;">
-                                    <h5 class="mb-0"><i class="bi bi-currency-exchange"></i> Currency Configuration</h5>
-                                </div>
-                                <div class="card-body">
-                                    <!-- Step 1: Base Currency Selection -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-bold">Step 1: Select Base Currency</label>
-                                        <select class="form-select" id="baseCurrency" onchange="updateSplitOptionAvailability()">
-                                            <option value="USD">USD (United States Dollar)</option>
-                                            <option value="ZWG">ZWG (Zimbabwe Gold)</option>
-                                        </select>
-                                        <small class="text-muted">
-                                            This is the currency in which employee salaries are originally defined
-                                        </small>
-                                    </div>
-
-                                    <!-- Step 2: Currency Split Option -->
-                                    <div class="mb-4" id="splitOptionContainer">
-                                        <label class="form-label fw-bold">Step 2: Split Salary into Multiple Currencies?</label>
-                                        <select class="form-select" id="splitOption" onchange="toggleSplitOptions()">
-                                            <option value="1">No - Pay entire salary in base currency</option>
-                                            <option value="2">Yes - Split salary between USD and ZWG</option>
-                                        </select>
-                                        <small class="text-muted">
-                                            Choose whether to split payroll between multiple currencies
-                                        </small>
-                                    </div>
-
-                                    <!-- Info Message when base is ZWG -->
-                                    <div id="zwgBaseMessage" class="alert alert-info" style="display: none;">
-                                        <i class="bi bi-info-circle"></i>
-                                        <strong>Note:</strong> Base currency is already ZWG. Split option is not available.
-                                        <br>
-                                        <small>All payments will be made in ZWG currency.</small>
-                                    </div>
-
-                                    <!-- Split Configuration (Only shown when split is selected) -->
-                                    <div id="splitConfigSection" style="display: none;">
-                                        <div class="card mb-4" style="border: 2px solid #003366;">
-                                            <div class="card-header bg-light">
-                                                <h6 class="mb-0"><i class="bi bi-percent"></i> Currency Split Configuration</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <!-- Current Base Currency Display -->
-                                                <div class="alert alert-info mb-3">
-                                                    <i class="bi bi-info-circle"></i>
-                                                    <strong>Base Currency:</strong> <span id="currentBaseCurrency">USD</span>
-                                                    <br>
-                                                    <small>Salaries will be split from the base currency into USD and ZWG</small>
-                                                </div>
-
-                                                <!-- Percentage Split -->
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-bold">USD Percentage (%)</label>
-                                                        <div class="input-group">
-                                                            <input type="number" 
-                                                                class="form-control" 
-                                                                id="usdSplitPercent" 
-                                                                min="0" 
-                                                                max="100" 
-                                                                step="0.01"
-                                                                value="60"
-                                                                oninput="calculateZWGSplit()">
-                                                            <span class="input-group-text">%</span>
-                                                        </div>
-                                                        <small class="text-muted">Percentage to pay in USD</small>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-bold">ZWG Percentage (%)</label>
-                                                        <div class="input-group">
-                                                            <input type="number" 
-                                                                class="form-control" 
-                                                                id="zwgSplitPercent" 
-                                                                min="0" 
-                                                                max="100" 
-                                                                step="0.01"
-                                                                value="40"
-                                                                readonly
-                                                                style="background-color: #f8f9fa;">
-                                                            <span class="input-group-text">%</span>
-                                                        </div>
-                                                        <small class="text-muted">Automatically calculated</small>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Exchange Rate -->
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">Exchange Rate (USD to ZWG)</label>
-                                                    <div class="input-group">
-                                                        <span class="input-group-text">1 <span id="baseCurrencyLabel">USD</span> =</span>
-                                                        <input type="number" 
-                                                            class="form-control" 
-                                                            id="exchangeRateToZWG" 
-                                                            min="0" 
-                                                            step="0.01"
-                                                            value="0">
-                                                        <span class="input-group-text">ZWG</span>
-                                                    </div>
-                                                    <small class="text-muted">
-                                                        Current exchange rate from USD to ZWG
-                                                    </small>
-                                                </div>
-
-                                                <!-- Validation Message -->
-                                                <div id="splitValidation" class="alert alert-warning" style="display: none;">
-                                                    <i class="bi bi-exclamation-triangle"></i>
-                                                    <span id="validationMessage"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Save Button -->
-                                    <div class="mt-4">
-                                        <button class="btn btn-success" onclick="saveCurrencySettings()">
-                                            <i class="bi bi-check-circle"></i> Save Configuration
-                                        </button>
-                                        <button class="btn btn-secondary ms-2" onclick="resetCurrencySettings()">
-                                            <i class="bi bi-arrow-clockwise"></i> Reset
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Preview Panel -->
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="modal-header" style="padding: 4px;">
-                                    <h5 class="mb-0"><i class="bi bi-eye"></i> Configuration Preview</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="settingsPreview">
-                                        <p class="text-muted">Configure settings to see preview</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-<!-- Edit Employee Details Modal -->
-<div class="modal fade" id="editEmployeePayrollModal" tabindex="-1" aria-labelledby="editEmployeePayrollModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editEmployeePayrollModalLabel">
-                    <i class="bi bi-person-gear"></i> Edit Employee Payroll Details
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <form id="editEmployeePayrollForm">
-                <div class="modal-body">
-                    <input type="hidden" id="emp-id-hidden-comp-payroll" name="employee_id_payroll">
-                    
-                    <div class="row g-4">
-
-                        <!-- Column 1: Personal Information -->
-                        <div class="col-md-3">
-                            <div class="card h-100">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="bi bi-person-badge"></i> Personal Information</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-4">
-                                        <label for="firstname-editinfo-4-comp-payroll" class="form-label">First Name *</label>
-                                        <input type="text" class="form-control" id="firstname-editinfo-4-comp-payroll">
-                                    </div>
-                                    <div class="mb-4">
-                                        <label for="surname-editinfo-4-comp-payroll" class="form-label">Surname *</label>
-                                        <input type="text" class="form-control" id="surname-editinfo-4-comp-payroll">
-                                    </div>
-                                    <div class="mb-4">
-                                        <label for="datejoined-editinfo-4-comp-payroll" class="form-label">Date Joined</label>
-                                        <input type="date" class="form-control" id="datejoined-editinfo-4-comp-payroll">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Column 2: Employment Details -->
-                        <div class="col-md-3">
-                            <div class="card h-100">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="bi bi-briefcase"></i> Employment Details</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-4">
-                                        <label for="department-editinfo-4-comp" class="form-label">Department</label>
-                                        <input type="text" class="form-control" id="department-editinfo-4-comp-payroll">
-                                    </div>
-                                    <div class="mb-4">
-                                        <label for="designation-editinfo-4-comp" class="form-label">Designation</label>
-                                        <input type="text" class="form-control" id="designation-editinfo-4-comp-payroll">
-                                    </div>
-                                    <div class="mb-4">
-                                        <label for="manager-editinfo-4-comp" class="form-label">Manager/Supervisor</label>
-                                        <input type="text" class="form-control" id="manager-editinfo-4-comp-payroll">
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Column 3: Salary Information -->
-                        <div class="col-md-3">
-                            <div class="card h-100">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="bi bi-cash-stack"></i> Salary Information</h6>
-                                </div>
-                                <div class="mb-4">
-                                    <label for="basecurrency-editinfo-4-comp-payroll" class="form-label">Base Currency</label>
-                                    <input type="text" class="form-control" id="basecurrency-editinfo-4-comp-payroll">
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-4">
-                                        <label for="basicsalary-editinfo-4-comp-payroll" class="form-label">Basic Salary</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="basicsalary-editinfo-4-comp-payroll" step="0.01" min="0">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Column 4: Banking Details -->
-                        <div class="col-md-3">
-                            <div class="card h-100">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="bi bi-bank"></i> Banking Details</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-4">
-                                        <label for="bank-editinfo-4-comp-payroll" class="form-label">Bank Name</label>
-                                        <input type="text" class="form-control" id="bank-editinfo-4-comp-payroll">
-                                    </div>
-                                    <div class="mb-4">
-                                        <label for="branchcode-editinfo-4-comp-payroll" class="form-label">Branch Name & Code</label>
-                                        <input type="text" class="form-control" id="branchcode-editinfo-4-comp-payroll">
-                                    </div>
-                                    <div class="mb-4">
-                                        <label for="accnumber-editinfo-4-comp-payroll" class="form-label">Account Number</label>
-                                        <input type="text" class="form-control" id="accnumber-editinfo-4-comp-payroll">
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div> <!-- End row -->
-                    
-                </div> <!-- End modal-body -->
-                
-                <div class="modal-footer">
-                    <div class="d-flex justify-content-between w-100">
-                        <div>
-                            <small class="text-muted">Last updated: <span id="lastUpdatedTime">--</span></small>
-                        </div>
-                        <div>
-                            <button type="button" class="btn btn-danger me-2" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle"></i> Cancel
-                            </button>
-                            <button type="button" class="btn btn-success" id="saveemployeepayrollBtn">
-                                <i class="bi bi-check-circle"></i> Save Changes
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-    <!-- Floating Alert Container -->
-    <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
-
-
-    <div class="modal fade" id="uploadPayrolldetailsModal" tabindex="-1" aria-labelledby="uploadPayrolldetailsModalLabel">
-        <div class="modal-dialog" style="max-width: 45%;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadPayrolldetailsTempModal">UPLOAD EMPLOYEE PAYROLL DETAILS FROM EXCEL TEMPLATE</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="d-flex flex-column align-items-center justify-content-center text-center">
-                        <form id="upload-form-payroll" action="/upload-excel-payroll" method="POST" enctype="multipart/form-data">
-                            <button class="btn upload-template-payroll btn-primary2 mt-3" style="width: max-content;">
-                                Upload Excel Template Containing Employee Payroll Details 
-                                <i class="bi bi-cloud-upload" style="margin-left: 5px;"></i>
-                            </button>
-                            <!-- Hidden file input -->
-                            <input type="file" id="file-upload-payroll" name="file-payroll" accept=".xlsx" style="display: none;">
-                        </form>
-                        <button class="btn btn-primary2 mt-3" id="download-btn-excel-template-payroll" style="width: max-content;">Download Employee Payroll Details Template <i class="bi bi-file-earmark-arrow-down" style="margin-left: 5px;"></i></button>
-                    </div>         
-                </div>
-                
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <main class="main-content" id="main-content">
-        <header>
-            <div class="employeetag">{{firstname}} {{surname}}, {{company_name}} {{role_narr}} <span style="color: white;background-color: #003366;border-radius: 10px;padding: 6px;font-size: 13px;">ID: {{id}}</span></div>
-            <div><span class="current-date" id="currdate">DATE: {{ today_date }}</span></div>
-            <span id="name-down" value="{{firstname}}" style="display: none;"></span>
-            <span id="name-down2" value="{{surname}}" style="display: none;"></span>
-
-
-            <div class="profile-dropdown">
-                <label for="profile-select" class="profile-label">PROFILE</label>
-
-                <select id="profile-select" class="form-select">
-                    <option value="user" class="dropdown-item" style="font-weight: bold;color:#003366 ;" selected>MY PROFILE</option>
-                    <option id= "adminoptionchoice" value="admin" class="dropdown-item" style="font-weight: bold;color:#003366 ;" data-hide="{{ hide_element }}">ADMIN</option>
+            <!-- ===== Profile Selector ===== -->
+            <div class="d-flex align-items-center gap-3 mb-3" data-hide="{{ hide_element }}" id="profile-selector">
+                <label class="profile-label">Switch View:</label>
+                <select id="profile-select" class="eds-form-select" style="width: auto; min-width: 160px;">
+                    <option value="user" selected>My Profile</option>
+                    <option id="adminoptionchoice" value="admin" data-hide="{{ hide_element }}">Admin</option>
                 </select>
-
             </div>
-            <button onclick="window.location.href='/logout'" class="btn btn-primary" style="width: max-content;">  Logout<i class="bi bi-door-closed-fill" style="margin-left: 7px;"></i>  </button>
-
-
-        </header>
 
 
 

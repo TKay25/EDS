@@ -1,32 +1,63 @@
-<!-- ===== EDS Sidebar Component ===== -->
-<div class="eds-sidebar" id="eds-sidebar">
-    <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="EDS Logo" class="eds-sidebar-logo">
-    <h5 class="eds-sidebar-title">Leave Management System</h5>
+<!-- ===== EDS Top Navbar Component ===== -->
+<nav class="eds-navbar-top" id="eds-navbar">
+    <div class="eds-navbar-left">
+        <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="EDS Logo" class="eds-navbar-logo">
+        <span class="eds-navbar-brand">EDS <span class="eds-navbar-brand-accent">LMS</span></span>
+    </div>
+    
+    <div class="eds-navbar-center">
+        {% if sidebar_buttons is defined %}
+            {% for btn in sidebar_buttons %}
+                {% if btn.url %}
+                    <button class="eds-nav-link-top" onclick="window.location.href='{{ btn.url }}'">
+                        {% if btn.icon %}<i class="{{ btn.icon }}"></i>{% endif %}
+                        {{ btn.label }}
+                    </button>
+                {% elif btn.click %}
+                    <button class="eds-nav-link-top" onclick="{{ btn.click }}">
+                        {% if btn.icon %}<i class="{{ btn.icon }}"></i>{% endif %}
+                        {{ btn.label }}
+                    </button>
+                {% elif btn.id %}
+                    <button class="eds-nav-link-top" id="{{ btn.id }}">
+                        {% if btn.icon %}<i class="{{ btn.icon }}"></i>{% endif %}
+                        {{ btn.label }}
+                    </button>
+                {% else %}
+                    <button class="eds-nav-link-top" onclick="{{ btn.action | default("alert('Coming soon')") }}">
+                        {% if btn.icon %}<i class="{{ btn.icon }}"></i>{% endif %}
+                        {{ btn.label }}
+                    </button>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <button class="eds-nav-link-top active" id="btn-dashboard"><i class="bi bi-speedometer2"></i> Dashboard</button>
+            <button class="eds-nav-link-top" id="btn-leave-apps-portal"><i class="bi bi-calendar-check"></i> Leave</button>
+            <button class="eds-nav-link-top" id="btn-employee-profiles"><i class="bi bi-people"></i> Employees</button>
+            <button class="eds-nav-link-top" id="btn-company-info"><i class="bi bi-building"></i> Company</button>
+            <button class="eds-nav-link-top" id="btn-log-query"><i class="bi bi-chat-dots"></i> Log Query</button>
+        {% endif %}
+    </div>
 
-    {% if sidebar_buttons is defined %}
-        {% for btn in sidebar_buttons %}
-            {% if btn.url %}
-                <button class="eds-sidebar-btn" onclick="window.location.href='{{ btn.url }}'"><span>{{ btn.label }}</span></button>
-            {% elif btn.click %}
-                <button class="eds-sidebar-btn" onclick="{{ btn.click }}"><span>{{ btn.label }}</span></button>
-            {% elif btn.id %}
-                <button class="eds-sidebar-btn" id="{{ btn.id }}"><span>{{ btn.label }}</span></button>
-            {% else %}
-                <button class="eds-sidebar-btn" onclick="{{ btn.action | default("alert('Coming soon')") }}"><span>{{ btn.label }}</span></button>
-            {% endif %}
-        {% endfor %}
-    {% else %}
-        <!-- Default sidebar buttons -->
-        <button class="eds-sidebar-btn" id="btn-dashboard"><span>Dashboard</span></button>
-        <button class="eds-sidebar-btn" id="btn-leave-apps-portal"><span>Leave Applications</span></button>
-        <button class="eds-sidebar-btn" id="btn-employee-profiles"><span>Employee Profiles</span></button>
-        <button class="eds-sidebar-btn" id="btn-company-info"><span>Company Info</span></button>
-        <button class="eds-sidebar-btn" id="btn-log-query"><span>Log Query</span></button>
-    {% endif %}
-
-    {% if logout_url is defined %}
-        <button class="eds-sidebar-btn" style="margin-top:auto;background:transparent;color:white;border-color:rgba(255,255,255,0.3);" onclick="window.location.href='{{ logout_url }}'"><span>Logout</span></button>
-    {% else %}
-        <button class="eds-sidebar-btn" style="margin-top:auto;background:transparent;color:white;border-color:rgba(255,255,255,0.3);" onclick="window.location.href='/logout'"><span>Logout</span></button>
-    {% endif %}
-</div>
+    <div class="eds-navbar-right">
+        {% if firstname is defined %}
+        <div class="eds-navbar-profile">
+            <div class="eds-navbar-avatar">{{ firstname[0] }}{{ surname[0] if surname is defined else '' }}</div>
+            <div>
+                <div class="eds-navbar-user">{{ firstname }} {{ surname | default('') }}</div>
+                <div class="eds-navbar-role">{{ role_narr | default('User') }}</div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if logout_url is defined %}
+            <button class="eds-btn eds-btn-sm eds-btn-outline-accent" onclick="window.location.href='{{ logout_url }}'">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        {% else %}
+            <button class="eds-btn eds-btn-sm eds-btn-outline-accent" onclick="window.location.href='/logout'">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        {% endif %}
+    </div>
+</nav>

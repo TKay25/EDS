@@ -1,16 +1,18 @@
-<!-- ===== EDS Header Component ===== -->
-<header class="eds-header">
-    <div class="eds-header-title">
-        {% if header_title is defined %}
-            {{ header_title }}
-        {% else %}
-            {{ firstname | default('User') }} {{ surname | default('') }}, {{ company_name | default('Dashboard') }}
-        {% endif %}
+<!-- ===== EDS Page Header Component ===== -->
+<div class="eds-page-header">
+    <div>
+        <h1 class="eds-page-title">
+            {% if header_title is defined %}
+                {{ header_title }}
+            {% else %}
+                {{ firstname | default('User') }} {{ surname | default('') }}
+            {% endif %}
+        </h1>
+        <p class="eds-page-subtitle">{{ company_name | default('Dashboard') }} &middot; <span id="current-date-display">{{ today_date | default('') }}</span></p>
     </div>
-    <div class="d-flex align-items-center gap-3">
+    <div class="eds-page-actions">
         {% if header_extra is defined %}
             {{ header_extra | safe }}
         {% endif %}
-        <span class="eds-header-date" id="current-date-display">{{ today_date | default('') }}</span>
     </div>
-</header>
+</div>

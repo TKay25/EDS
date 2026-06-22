@@ -151,24 +151,23 @@ const EDS = (() => {
     setState('modals', state.modals.filter(m => m !== modalId));
   }
 
-  // ===== SIDEBAR TOGGLE =====
+  // ===== SIDEBAR TOGGLE (deprecated - kept for compatibility) =====
   function toggleSidebar() {
-    const sidebar = $('.eds-sidebar');
-    const main = $('.eds-main');
-    if (sidebar && main) {
-      const isCollapsed = sidebar.style.width === '60px' || sidebar.classList.contains('collapsed');
-      if (isCollapsed) {
-        sidebar.style.width = '';
-        main.style.marginLeft = '';
-        sidebar.classList.remove('collapsed');
-      } else {
-        sidebar.style.width = '60px';
-        sidebar.style.minWidth = '60px';
-        main.style.marginLeft = '80px';
-        sidebar.classList.add('collapsed');
-      }
-      setState('sidebarOpen', !isCollapsed);
-    }
+    // Sidebar has been replaced with top navbar
+    console.log('Sidebar toggle is deprecated - using top navbar');
+  }
+
+  // ===== BACK TO TOP =====
+  function initBackToTop() {
+    const btn = document.getElementById('edsBackToTop');
+    if (!btn) return;
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }
 
   // ===== LOADING OVERLAY =====
@@ -319,6 +318,13 @@ const EDS = (() => {
     initStickyNavbar();
     initEmployeeSearch();
     updateDateDisplay();
+    // Navbar link active state
+    $$('.eds-nav-link-top').forEach(link => {
+      link.addEventListener('click', function() {
+        $$('.eds-nav-link-top').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
 
     // Init on next tick for dynamic content
     setTimeout(() => {

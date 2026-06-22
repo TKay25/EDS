@@ -40,5 +40,21 @@
     <!-- ===== EDS App JavaScript ===== -->
     <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
     {% block inline_scripts %}{% endblock %}
+
+    <!-- ===== Back to Top ===== -->
+    <button class="eds-back-to-top" id="edsBackToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <script>
+    // Back to top show/hide
+    window.addEventListener('scroll', function() {
+        var btn = document.getElementById('edsBackToTop');
+        if (btn) {
+            if (window.scrollY > 300) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+    });
+    </script>
 </body>
 </html>

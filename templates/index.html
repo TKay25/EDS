@@ -4,100 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leave Management System | Echelon Digital Solutions</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
 
     <style>
-        :root {
-            --primary: #003366;
-            --secondary: #FF6B00;
-            --dark: #1A1A2E;
-            --light: #F5F5F7;
-            --accent: #003366;
+        /* Landing page uses eds-app.css design system — only overrides here */
+        .eds-hero { padding: 140px 0 80px; min-height: auto; }
+        @media (max-width: 768px) {
+            .eds-hero h1 { font-size: 2.2rem; }
+            .eds-hero p { font-size: 0.95rem; }
         }
-
-        .hero-section {
-            background: linear-gradient(-90deg, #1A1A2E 40%, #1A1A2E 100%);
-            color: white;
-            padding: 150px 0 100px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: url('https://images.unsplash.com/photo-1573164574511-73c773193279?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') no-repeat center center;
-            background-size: cover;
-            opacity: 0.2;
-            z-index: 0;
-        }
-        .hero-content { position: relative; z-index: 1; }
-        .hero-section h1 { font-size: 3.5rem; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        .hero-section p { font-size: 1.2rem; max-width: 600px; margin: 0 auto 30px; }
-        .hero-section a { margin: 10px; padding: 15px 30px; border-radius: 50px; transition: all 0.3s ease; }
-        .hero-section a.btn-primary { background-color: #002f6c; border: 1px solid #ddd; }
-        .hero-section a.btn-primary:hover { background-color: #4169E1; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        .hero-section a.btn-outline-light:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-
-        .features-section { padding: 60px 0; text-align: center; background-color: #fff; }
-        .features-section h2 { margin-bottom: 40px; position: relative; display: inline-block; }
-        .features-section h2::after {
-            content: ''; position: absolute; bottom: -10px; left: 50%;
-            transform: translateX(-50%); width: 80px; height: 3px; background-color: #002f6c;
-        }
-        .feature-card {
-            padding: 30px 20px; border: none; border-radius: 10px;
-            transition: all 0.3s ease; background-color: #fff;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); height: 100%; margin-bottom: 20px;
-        }
-        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-        .feature-icon { font-size: 2.5rem; color: #002f6c; margin-bottom: 20px; }
-
-        .stats-section { background-color: #002f6c; color: white; padding: 60px 0; text-align: center; }
-        .stat-item { padding: 30px; }
-        .stat-number { font-size: 3rem; font-weight: 700; margin-bottom: 10px; }
-        .stat-label { font-size: 1.2rem; font-weight: 300; }
-
-        .how-it-works { padding: 80px 0; background-color: white; }
-        .step {
-            position: relative; padding: 30px; margin-bottom: 30px;
-            background-color: #f9f9f9; border-radius: 10px; transition: all 0.3s ease;
-        }
-        .step:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .step-number {
-            position: absolute; top: -15px; left: -15px; width: 50px; height: 50px;
-            background-color: #002f6c; color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; font-weight: 700;
-        }
-        .demo-section { padding: 80px 0; background-color: #f9f9f9; }
-
-        .cta {
-            background-color: #002f6c; color: white; padding: 100px 0;
-            text-align: center; position: relative; overflow: hidden;
-        }
-        .cta::before {
-            content: ''; position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
-            background-size: cover; opacity: 0.1; z-index: 0;
-        }
-        .cta-content { position: relative; z-index: 1; }
-        .cta h2 { margin-bottom: 20px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .cta p { max-width: 600px; margin: 0 auto 30px; font-size: 1.1rem; }
-        .cta a {
-            color: #002f6c; background-color: white; padding: 15px 30px;
-            border-radius: 50px; font-weight: bold; transition: all 0.3s ease;
-        }
+        .modal-header { background: var(--eds-primary) !important; border-radius: 12px 12px 0 0 !important; }
         .cta a:hover { background-color: #f0f0f0; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 
         .footer { background-color: #010752; color: white; padding: 60px 0 20px; }
@@ -166,126 +86,215 @@
     </div>
 
     <!-- ===== HERO ===== -->
-    <section class="hero-section">
-        <div class="container hero-content eds-fade-in">
-            <h1 class="animate__animated animate__fadeInDown">Effortless Leave Management</h1>
-            <p class="animate__animated animate__fadeInUp animate__delay-1s">Simplify your team's leave process with our intuitive tools and real-time tracking.</p>
-            <div class="animate__animated animate__fadeInUp animate__delay-2s">
-                <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">Administrator Company Setup</a>
-                <a href="#" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#logindModal">Login</a>
+    <section class="eds-hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7 eds-hero-content">
+                    <div class="eds-hero-badge"><i class="bi bi-rocket-takeoff"></i> Next-Gen HR Platform</div>
+                    <h1>Effortless <span class="highlight">Leave Management</span> for Modern Teams</h1>
+                    <p>Simplify your team's leave process with our intuitive tools, real-time tracking, and powerful analytics — all in one platform.</p>
+                    <div class="eds-hero-actions">
+                        <a href="#" class="eds-hero-btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">
+                            <i class="bi bi-rocket-takeoff"></i> Setup Your Company
+                        </a>
+                        <a href="#" class="eds-hero-btn-secondary" data-bs-toggle="modal" data-bs-target="#logindModal">
+                            <i class="bi bi-box-arrow-in-right"></i> Sign In
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-5 d-none d-lg-block text-center">
+                    <div style="width: 400px; height: 500px; margin: 0 auto; position: relative;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 350px; height: 420px; background: rgba(220,20,60,0.06); border-radius: 24px; border: 1px solid rgba(220,20,60,0.1);">
+                            <div style="position: absolute; top: 30px; left: 30px; right: 30px;">
+                                <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(220,20,60,0.2); display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-person-check" style="color: var(--eds-accent); font-size: 1rem;"></i>
+                                        </div>
+                                        <div>
+                                            <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; font-weight: 600;">Leave Approved</div>
+                                            <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">John D. · Annual Leave</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16,185,129,0.2); display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-check-lg" style="color: var(--eds-success); font-size: 1rem;"></i>
+                                        </div>
+                                        <div>
+                                            <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; font-weight: 600;">Sick Leave</div>
+                                            <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">Sarah M. · 3 days</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(245,158,11,0.2); display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-clock" style="color: var(--eds-warning); font-size: 1rem;"></i>
+                                        </div>
+                                        <div>
+                                            <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; font-weight: 600;">Pending Review</div>
+                                            <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">Mike R. · Maternity Leave</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- ===== STATS ===== -->
-    <section class="stats-section">
+    <section class="eds-features-dark">
         <div class="container">
             <div class="row">
-                <div class="col-md-3 col-6"><div class="stat-item eds-fade-in"><div class="stat-number" data-count="500">24</div><div class="stat-label">Companies</div></div></div>
-                <div class="col-md-3 col-6"><div class="stat-item eds-fade-in"><div class="stat-number" data-count="25000">200</div><div class="stat-label">Employees</div></div></div>
-                <div class="col-md-3 col-6"><div class="stat-item eds-fade-in"><div class="stat-number" data-count="98">100</div><div class="stat-label">% Satisfaction</div></div></div>
-                <div class="col-md-3 col-6"><div class="stat-item eds-fade-in"><div class="stat-number" data-count="24">24</div><div class="stat-label">/7 Support</div></div></div>
+                <div class="col-md-3 col-6 text-center py-3">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">500+</div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Companies</div>
+                </div>
+                <div class="col-md-3 col-6 text-center py-3">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">25K+</div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Employees</div>
+                </div>
+                <div class="col-md-3 col-6 text-center py-3">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">98%</div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Satisfaction</div>
+                </div>
+                <div class="col-md-3 col-6 text-center py-3">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">24/7</div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Support</div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- ===== FEATURES ===== -->
-    <section id="features" class="features-section">
+    <section class="eds-features">
         <div class="container">
-            <h2 class="eds-section-title">Why Choose Our LMS?</h2>
-            <p class="mb-5">Streamline your leave management process with our powerful features</p>
+            <h2>Why Choose Our LMS?</h2>
+            <p class="eds-section-desc">Streamline your leave management process with our powerful features designed for modern HR teams.</p>
             <div class="row">
-                <div class="col-lg-3 col-md-6"><div class="feature-card"><div class="feature-icon"><i class="bi bi-check-circle"></i></div><h5>Quick Approvals</h5><p>Managers can approve or deny leave requests instantly from any device, with automated notifications.</p></div></div>
-                <div class="col-lg-3 col-md-6"><div class="feature-card"><div class="feature-icon"><i class="bi bi-graph-up"></i></div><h5>Real-Time Tracking</h5><p>Stay updated on leave balances and schedules with our intuitive dashboard and calendar view.</p></div></div>
-                <div class="col-lg-3 col-md-6"><div class="feature-card"><div class="feature-icon"><i class="bi bi-file-earmark-bar-graph"></i></div><h5>Detailed Reporting</h5><p>Generate custom reports to analyze leave trends and make better scheduling decisions.</p></div></div>
-                <div class="col-lg-3 col-md-6"><div class="feature-card"><div class="feature-icon"><i class="bi bi-phone"></i></div><h5>Mobile Friendly</h5><p>Access the system from anywhere with our fully responsive design.</p></div></div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="eds-feature-card">
+                        <div class="eds-feature-icon"><i class="bi bi-check-circle"></i></div>
+                        <h4>Quick Approvals</h4>
+                        <p>Managers can approve or deny leave requests instantly from any device.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="eds-feature-card">
+                        <div class="eds-feature-icon"><i class="bi bi-graph-up"></i></div>
+                        <h4>Real-Time Tracking</h4>
+                        <p>Stay updated on leave balances and schedules with an intuitive dashboard.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="eds-feature-card">
+                        <div class="eds-feature-icon"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                        <h4>Detailed Reporting</h4>
+                        <p>Generate custom reports to analyze leave trends and optimize scheduling.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="eds-feature-card">
+                        <div class="eds-feature-icon"><i class="bi bi-phone"></i></div>
+                        <h4>Mobile Friendly</h4>
+                        <p>Access the system from anywhere with our fully responsive design.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- ===== HOW IT WORKS ===== -->
-    <section class="how-it-works">
+    <section class="eds-features-dark">
         <div class="container">
-            <h2 class="text-center mb-5 eds-section-title">How It Works</h2>
+            <h2>How It Works</h2>
+            <p class="eds-section-desc">Get started in three simple steps and transform your leave management process.</p>
             <div class="row">
-                <div class="col-md-4"><div class="step"><div class="step-number">1</div><h4>Sign Up</h4><p>Register your company and set up your leave policies in minutes with our intuitive setup wizard.</p></div></div>
-                <div class="col-md-4"><div class="step"><div class="step-number">2</div><h4>Invite Team</h4><p>Add your employees and managers to the system with bulk import or individual invitations.</p></div></div>
-                <div class="col-md-4"><div class="step"><div class="step-number">3</div><h4>Start Managing</h4><p>Employees can request leave, managers approve, and HR tracks everything in real-time.</p></div></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== DEMO ===== -->
-    <section class="demo-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h2>See It In Action</h2>
-                    <p>See how easy it is to manage your team's leave with our system.</p>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i> Simple interface for employees</li>
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i> Powerful tools for managers</li>
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i> Comprehensive reporting for HR</li>
-                    </ul>
-                    <a href="#" class="btn btn-primary9 mt-3" data-bs-toggle="modal" data-bs-target="#signupModal">Setup Your Company</a>
+                <div class="col-md-4 mb-4">
+                    <div class="eds-feature-card-dark">
+                        <div class="eds-feature-icon" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: 800;">1</div>
+                        <h4>Sign Up</h4>
+                        <p>Register your company and set up your leave policies in minutes.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="eds-feature-card-dark">
+                        <div class="eds-feature-icon" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: 800;">2</div>
+                        <h4>Invite Team</h4>
+                        <p>Add your employees and managers with bulk import or individual invites.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="eds-feature-card-dark">
+                        <div class="eds-feature-icon" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: 800;">3</div>
+                        <h4>Start Managing</h4>
+                        <p>Employees request leave, managers approve, HR tracks everything in real-time.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- ===== CTA ===== -->
-    <section class="cta">
-        <div class="container cta-content">
+    <section class="eds-cta">
+        <div class="container eds-cta-content">
             <h2>Ready to Streamline Your Leave Management?</h2>
             <p>Join thousands of companies who have transformed their HR processes with our solution.</p>
-            <a href="#" class="btn btn-lg" data-bs-toggle="modal" data-bs-target="#signupModal">Setup Your Company</a>
+            <a href="#" class="eds-hero-btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">
+                <i class="bi bi-rocket-takeoff"></i> Setup Your Company
+            </a>
         </div>
     </section>
 
     <!-- ===== FOOTER ===== -->
-    <footer class="footer">
+    <footer class="eds-landing-footer">
         <div class="container">
             <div class="row">
-                <div class="col-lg-4 mb-4 mb-lg-0">
-                    <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="Logo" class="footer-logo">
-                    <p>Simplifying leave management for businesses of all sizes since 2015.</p>
-                    <div class="social-icons">
-                        <a href="#"><i class="bi bi-facebook"></i></a>
-                        <a href="#"><i class="bi bi-twitter-x"></i></a>
-                        <a href="#"><i class="bi bi-linkedin"></i></a>
-                        <a href="#"><i class="bi bi-instagram"></i></a>
+                <div class="col-lg-4 mb-4">
+                    <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="EDS Logo" style="height: 36px; margin-bottom: 16px; filter: brightness(0) invert(1);">
+                    <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">Simplifying leave management for businesses of all sizes since 2015.</p>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" style="color: rgba(255,255,255,0.5); font-size: 1.2rem;"><i class="bi bi-facebook"></i></a>
+                        <a href="#" style="color: rgba(255,255,255,0.5); font-size: 1.2rem;"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" style="color: rgba(255,255,255,0.5); font-size: 1.2rem;"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" style="color: rgba(255,255,255,0.5); font-size: 1.2rem;"><i class="bi bi-instagram"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 mb-4 mb-md-0">
-                    <h4 class="footer-heading">Product</h4>
-                    <ul class="footer-links"><li><a href="#features">Features</a></li><li><a href="#">Integrations</a></li><li><a href="#">Updates</a></li></ul>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <h5>Product</h5>
+                    <ul><li><a href="#">Features</a></li><li><a href="#">Integrations</a></li><li><a href="#">Updates</a></li></ul>
                 </div>
-                <div class="col-lg-2 col-md-4 mb-4 mb-md-0">
-                    <h4 class="footer-heading">Resources</h4>
-                    <ul class="footer-links"><li><a href="#">Help Center</a></li><li><a href="#">Tutorials</a></li><li><a href="#">API Docs</a></li></ul>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <h5>Resources</h5>
+                    <ul><li><a href="#">Help Center</a></li><li><a href="#">Tutorials</a></li><li><a href="#">API Docs</a></li></ul>
                 </div>
-                <div class="col-lg-2 col-md-4 mb-4 mb-md-0">
-                    <h4 class="footer-heading">Company</h4>
-                    <ul class="footer-links"><li><a href="/main">About Us</a></li><li><a href="/main#contact">Contact</a></li></ul>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <h5>Company</h5>
+                    <ul><li><a href="/main">About Us</a></li><li><a href="/main#contact">Contact</a></li></ul>
                 </div>
-                <div class="col-lg-2">
-                    <h4 class="footer-heading">Legal</h4>
-                    <ul class="footer-links"><li><a href="/privacypolicy">Privacy</a></li><li><a href="#">Terms</a></li></ul>
+                <div class="col-lg-2 mb-4">
+                    <h5>Legal</h5>
+                    <ul><li><a href="/privacypolicy">Privacy</a></li><li><a href="#">Terms</a></li></ul>
                 </div>
             </div>
-            <div class="copyright"><p>&copy; 2026 Leave Management System. All Rights Reserved.</p></div>
+            <div class="eds-footer-bottom"><p>&copy; 2026 Echelon Digital Solutions. All Rights Reserved.</p></div>
         </div>
     </footer>
 
     <!-- ===== SIGNUP MODAL ===== -->
     <div class="modal fade" id="signupModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px; box-shadow: 0 5px 8px rgba(0,0,0,0.15);">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" style="font-weight: bold;">ADMINISTRATOR COMPANY SETUP</h5>
+                    <h5 class="modal-title">Administrator Company Setup</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" style="font-size: 15px;">
+                <div class="modal-body">
                     <form method="POST" action="/admin_sign_up">
                         <div class="eds-form-group">
                             <label class="eds-form-label">Company Name</label>
@@ -300,25 +309,25 @@
                             <input type="text" class="eds-form-input" name="surname" placeholder="Enter Surname" required>
                         </div>
                         <div class="eds-form-group">
-                            <label class="eds-form-label">Administrator WhatsApp Number</label>
-                            <input type="number" class="eds-form-input" name="whatsapp" placeholder="Enter WhatsApp Number (without first zero)" required>
+                            <label class="eds-form-label">WhatsApp Number</label>
+                            <input type="number" class="eds-form-input" name="whatsapp" placeholder="WhatsApp Number (without first zero)" required>
                         </div>
                         <div class="eds-form-group">
-                            <label class="eds-form-label">Administrator Email Address</label>
+                            <label class="eds-form-label">Email Address</label>
                             <input type="email" class="eds-form-input" name="email" placeholder="Enter Email Address" autocomplete="email" required>
                         </div>
                         <div class="eds-form-group">
                             <label class="eds-form-label">Password</label>
                             <div class="input-group">
                                 <input type="password" name="password" id="password" class="eds-form-input" placeholder="Enter Your Password" required>
-                                <button type="button" id="togglePasswordsignup" style="background-color:#003366;color:white;border:none;width:15%;border-radius:0 8px 8px 0;"><i class="bi bi-eye"></i></button>
+                                <button type="button" id="togglePasswordsignup" class="eds-btn eds-btn-sm" style="background:var(--eds-primary);color:white;border:none;border-radius:0 8px 8px 0;"><i class="bi bi-eye"></i></button>
                             </div>
                         </div>
                         <div class="eds-form-group">
                             <label class="eds-form-label">Confirm Password</label>
                             <input type="password" class="eds-form-input" name="confirmpassword" placeholder="Re-Enter Password" required>
                         </div>
-                        <button id="startFreeTrial" class="btn btn-primary9 btn-block shadow">Proceed to Setup</button>
+                        <button id="startFreeTrial" class="eds-btn eds-btn-primary eds-btn-full">Proceed to Setup</button>
                     </form>
                 </div>
             </div>
@@ -328,15 +337,15 @@
     <!-- ===== LOGIN MENU MODAL ===== -->
     <div class="modal fade" id="logindModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius:12px;box-shadow:0 5px 8px rgba(0,0,0,0.15);">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" style="font-weight:bold;"><i class="bi bi-door-open-fill"></i> LOGIN MENU</h5>
+                    <h5 class="modal-title"><i class="bi bi-door-open-fill"></i> Login Menu</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <button class="btn btn-primary9 btn-block shadow" data-bs-toggle="modal" data-bs-target="#loginModal" style="width:max-content;">Not A First Time Login <i class="bi bi-box-arrow-in-right ms-1"></i></button>
-                    <br><br>
-                    <button class="btn btn-primary9 btn-block shadow" data-bs-toggle="modal" data-bs-target="#loginoneModal" style="width:max-content;">First Time Login <i class="bi bi-box-arrow-in-right ms-1"></i></button>
+                    <button class="eds-btn eds-btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#loginModal">Not A First Time Login <i class="bi bi-box-arrow-in-right ms-1"></i></button>
+                    <br>
+                    <button class="eds-btn eds-btn-outline-accent" data-bs-toggle="modal" data-bs-target="#loginoneModal">First Time Login <i class="bi bi-box-arrow-in-right ms-1"></i></button>
                 </div>
             </div>
         </div>
@@ -345,10 +354,10 @@
     <!-- ===== LOGIN MODAL ===== -->
     <div class="modal fade" id="loginModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius:12px;box-shadow:0 5px 8px rgba(0,0,0,0.15);">
+            <div class="modal-content">
                 <form action="/login" method="POST">
                     <div class="modal-header">
-                        <h5 class="modal-title" style="font-weight:bold;"><i class="bi bi-door-open"></i> LOGIN</h5>
+                        <h5 class="modal-title"><i class="bi bi-door-open"></i> Login</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -360,14 +369,10 @@
                             <label class="eds-form-label">Password</label>
                             <div class="input-group">
                                 <input type="password" name="passwordlogin" id="passwordField" class="eds-form-input" placeholder="Enter Your Password" required>
-                                <button type="button" id="togglePassword" style="background-color:#003366;color:white;border:none;width:15%;border-radius:0 8px 8px 0;"><i class="bi bi-eye"></i></button>
+                                <button type="button" id="togglePassword" class="eds-btn eds-btn-sm" style="background:var(--eds-primary);color:white;border:none;border-radius:0 8px 8px 0;"><i class="bi bi-eye"></i></button>
                             </div>
                         </div>
-                        <button type="submit" id="userlogin" class="btn btn-primary9 btn-block shadow">Login</button>
-                        <div class="text-center mt-4">
-                            <span>Forgot Your Password?</span>
-                            <button type="button" class="btn btn-primary9 shadow mt-2" style="width:max-content;">Reset Password</button>
-                        </div>
+                        <button type="submit" id="userlogin" class="eds-btn eds-btn-primary eds-btn-full">Login</button>
                     </div>
                 </form>
             </div>
@@ -377,10 +382,10 @@
     <!-- ===== FIRST TIME LOGIN MODAL ===== -->
     <div class="modal fade" id="loginoneModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius:12px;box-shadow:0 5px 8px rgba(0,0,0,0.15);">
+            <div class="modal-content">
                 <form action="/login_first_time" method="POST">
                     <div class="modal-header">
-                        <h5 class="modal-title" style="font-weight:bold;"><i class="bi bi-door-open"></i> FIRST TIME LOGIN</h5>
+                        <h5 class="modal-title"><i class="bi bi-door-open"></i> First Time Login</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -392,14 +397,14 @@
                             <label class="eds-form-label">Password</label>
                             <div class="input-group">
                                 <input type="password" name="passwordloginfirsttime" id="passwordloginfirsttime" class="eds-form-input" placeholder="Enter Your Desired Password" required>
-                                <button type="button" id="togglePasswordloginfirsttime" style="background-color:#003366;color:white;border:none;width:15%;border-radius:0 8px 8px 0;"><i class="bi bi-eye"></i></button>
+                                <button type="button" id="togglePasswordloginfirsttime" class="eds-btn eds-btn-sm" style="background:var(--eds-primary);color:white;border:none;border-radius:0 8px 8px 0;"><i class="bi bi-eye"></i></button>
                             </div>
                         </div>
                         <div class="eds-form-group">
                             <label class="eds-form-label">Confirm Password</label>
                             <input type="password" class="eds-form-input" name="confirmpasswordfirsttime" placeholder="Re-Enter Password" required>
                         </div>
-                        <button type="submit" id="userloginfirstlogin" class="btn btn-primary9 btn-block shadow">Login</button>
+                        <button type="submit" id="userloginfirstlogin" class="eds-btn eds-btn-primary eds-btn-full">Login</button>
                     </div>
                 </form>
             </div>
@@ -407,23 +412,12 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
     <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
 
     <script>
         $(document).ready(function(){
-            $('.stat-number').each(function () {
-                $(this).prop('Counter', 0).animate({ Counter: $(this).text() }, {
-                    duration: 2000, easing: 'swing',
-                    step: function (now) { $(this).text(Math.ceil(now)); }
-                });
-            });
-
             $('#togglePassword').on('click', function () {
                 var f = document.getElementById('passwordField');
                 f.setAttribute('type', f.getAttribute('type') === 'password' ? 'text' : 'password');
@@ -459,11 +453,6 @@
                 for (var f of fields) { if (!$('input[name="'+f+'"]').val().trim()) { alert('Please fill out all required fields.'); return; } }
                 if (!/^[a-zA-Z].*/.test($('input[name="company_name"]').val().trim())) { alert("Invalid Company Name! Must start with a letter."); return; }
                 $('#edsLoader2').show(); $('#signupModal').find('form').submit();
-            });
-
-            $('a[href*="#"]:not([data-bs-toggle])').on('click', function(e) {
-                var t = $(this).attr('href');
-                if (t && t !== '#') { e.preventDefault(); $('html, body').animate({ scrollTop: $(t).offset().top }, 500, 'linear'); }
             });
         });
     </script>
