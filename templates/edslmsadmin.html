@@ -12,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
     <style>
         /* Main Styling */
         body {
@@ -1055,5 +1056,6 @@
         });
     </script>
 
+<script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
 </body>
 </html>

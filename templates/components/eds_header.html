@@ -1,0 +1,16 @@
+<!-- ===== EDS Header Component ===== -->
+<header class="eds-header">
+    <div class="eds-header-title">
+        {% if header_title is defined %}
+            {{ header_title }}
+        {% else %}
+            {{ firstname | default('User') }} {{ surname | default('') }}, {{ company_name | default('Dashboard') }}
+        {% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        {% if header_extra is defined %}
+            {{ header_extra | safe }}
+        {% endif %}
+        <span class="eds-header-date" id="current-date-display">{{ today_date | default('') }}</span>
+    </div>
+</header>

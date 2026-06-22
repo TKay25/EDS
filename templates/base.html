@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>{% block title %}Echelon Digital Solutions{% endblock %}</title>
+
+    {% if favicon %}
+    <link rel="icon" type="image/png" href="{{ favicon }}">
+    {% endif %}
+
+    <!-- ===== Core CSS ===== -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    {% block extra_css %}{% endblock %}
+
+    <!-- ===== EDS Design System ===== -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
+    {% block inline_css %}{% endblock %}
+</head>
+<body>
+    <!-- ===== Loading Overlay ===== -->
+    {% include 'components/eds_loading.html' %}
+
+    <!-- ===== Main Content ===== -->
+    {% block content %}{% endblock %}
+
+    <!-- ===== Core Scripts ===== -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_scripts %}{% endblock %}
+
+    <!-- ===== EDS App JavaScript ===== -->
+    <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
+    {% block inline_scripts %}{% endblock %}
+</body>
+</html>

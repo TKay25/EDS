@@ -1,0 +1,32 @@
+<!-- ===== EDS Sidebar Component ===== -->
+<div class="eds-sidebar" id="eds-sidebar">
+    <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="EDS Logo" class="eds-sidebar-logo">
+    <h5 class="eds-sidebar-title">Leave Management System</h5>
+
+    {% if sidebar_buttons is defined %}
+        {% for btn in sidebar_buttons %}
+            {% if btn.url %}
+                <button class="eds-sidebar-btn" onclick="window.location.href='{{ btn.url }}'"><span>{{ btn.label }}</span></button>
+            {% elif btn.click %}
+                <button class="eds-sidebar-btn" onclick="{{ btn.click }}"><span>{{ btn.label }}</span></button>
+            {% elif btn.id %}
+                <button class="eds-sidebar-btn" id="{{ btn.id }}"><span>{{ btn.label }}</span></button>
+            {% else %}
+                <button class="eds-sidebar-btn" onclick="{{ btn.action | default("alert('Coming soon')") }}"><span>{{ btn.label }}</span></button>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <!-- Default sidebar buttons -->
+        <button class="eds-sidebar-btn" id="btn-dashboard"><span>Dashboard</span></button>
+        <button class="eds-sidebar-btn" id="btn-leave-apps-portal"><span>Leave Applications</span></button>
+        <button class="eds-sidebar-btn" id="btn-employee-profiles"><span>Employee Profiles</span></button>
+        <button class="eds-sidebar-btn" id="btn-company-info"><span>Company Info</span></button>
+        <button class="eds-sidebar-btn" id="btn-log-query"><span>Log Query</span></button>
+    {% endif %}
+
+    {% if logout_url is defined %}
+        <button class="eds-sidebar-btn" style="margin-top:auto;background:transparent;color:white;border-color:rgba(255,255,255,0.3);" onclick="window.location.href='{{ logout_url }}'"><span>Logout</span></button>
+    {% else %}
+        <button class="eds-sidebar-btn" style="margin-top:auto;background:transparent;color:white;border-color:rgba(255,255,255,0.3);" onclick="window.location.href='/logout'"><span>Logout</span></button>
+    {% endif %}
+</div>

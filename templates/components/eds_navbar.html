@@ -1,0 +1,46 @@
+<!-- ===== EDS Navbar Component ===== -->
+<nav class="eds-navbar navbar navbar-expand-lg navbar-light bg-white fixed-top">
+    <div class="container eds-navbar-container">
+        <a class="eds-navbar-brand" href="/">
+            <img src="{{ url_for('static', filename='images/eds logo blue.png') }}" alt="EDS Logo" class="eds-navbar-logo">
+            <h1 class="eds-navbar-brand-text">ECHELON DIGITAL SOLUTIONS</h1>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#eds-navbar-nav" aria-controls="eds-navbar-nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="eds-navbar-nav">
+            <ul class="eds-nav navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="eds-nav-link nav-link {% if active_nav == 'home' %}active{% endif %}" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="eds-nav-link nav-link {% if active_nav == 'about' %}active{% endif %}" href="/#about">About</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="eds-nav-link nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Solutions
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
+                        <li><a class="dropdown-item" href="/#solutions">All Solutions</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/#leave-management">Leave Management</a></li>
+                        <li><a class="dropdown-item" href="/#treasury">Treasury Systems</a></li>
+                        <li><a class="dropdown-item" href="/#erm">Enterprise Risk Management</a></li>
+                        <li><a class="dropdown-item" href="/#payroll">Payroll Systems</a></li>
+                        <li><a class="dropdown-item" href="/#hr">HR Management</a></li>
+                        <li><a class="dropdown-item" href="/#custom">Custom Solutions</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="eds-nav-link nav-link {% if active_nav == 'clients' %}active{% endif %}" href="/#clients">Clients</a>
+                </li>
+                <li class="nav-item">
+                    <a class="eds-nav-link nav-link {% if active_nav == 'contact' %}active{% endif %}" href="/#contact">Contact</a>
+                </li>
+                <li class="nav-item ms-lg-3">
+                    <a class="eds-btn eds-btn-primary" href="/explore_lms">Access LMS</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
 
     <style>
         :root {
@@ -74,72 +75,6 @@
 
         .text-accent {
             color: var(--accent) !important;
-        }
-
-        /* Navbar */
-        .navbar {
-            padding: 20px 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .navbar.scrolled {
-            padding: 10px 0;
-            background-color: white !important;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-        .navbar-brand {
-            display: flex;
-            align-items: center; /* Align items vertically */
-            gap: 10px; /* Add spacing between the logo and text */
-            text-decoration: none;
-        }
-
-        .logo {
-            height: 50px; /* Adjust logo size as needed */
-        }
-
-        .brand-text {
-            font-size: 20px; /* Adjust text size */
-            color: #003366; /* Adjust text color */
-            margin: 0;
-        }
-
-
-        .navbar-brand img {
-            height: 40px;
-        }
-
-        .nav-link {
-            font-weight: 500;
-            padding: 8px 15px !important;
-            margin: 0 5px;
-            color: var(--primary) !important;
-        }
-
-        .nav-link:hover {
-            color: var(--primary) !important;
-        }
-
-        .nav-link.active {
-            color: var(--primary) !important;
-            font-weight: 600;
-        }
-
-        .dropdown-menu {
-            border: none;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-        }
-
-        .dropdown-item {
-            font-weight: 500;
-            padding: 8px 20px;
-        }
-
-        .dropdown-item:hover {
-            background-color: var(--light);
-            color: var(--primary);
         }
 
         /* Hero Section */
@@ -497,125 +432,6 @@
             font-size: 1.1rem;
         }
 
-        /* Footer */
-        .footer {
-            background-color: var(--dark);
-            color: white;
-            padding: 80px 0 0;
-        }
-
-        .footer-logo {
-            max-width: 180px;
-            margin-bottom: 20px;
-            filter: brightness(0) invert(1);
-        }
-
-        .footer-about p {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .footer-links h5 {
-            color: white;
-            margin-bottom: 25px;
-            font-size: 1.2rem;
-            position: relative;
-            padding-bottom: 10px;
-        }
-
-        .footer-links h5::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 40px;
-            height: 2px;
-            background-color: var(--accent);
-        }
-
-        .footer-links ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .footer-links li {
-            margin-bottom: 12px;
-        }
-
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.7);
-            transition: all 0.3s ease;
-        }
-
-        .footer-links a:hover {
-            color: white;
-            padding-left: 5px;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .social-links a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        .social-links a:hover {
-            background-color: var(--accent);
-            transform: translateY(-3px);
-        }
-
-        .footer-bottom {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 20px 0;
-            margin-top: 60px;
-        }
-
-        .copyright {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.9rem;
-        }
-
-        /* Back to Top Button */
-        .back-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            z-index: 99;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .back-to-top.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .back-to-top:hover {
-            background-color: var(--accent);
-            transform: translateY(-3px);
-        }
-
         /* Responsive Adjustments */
         @media (max-width: 992px) {
             section {
@@ -685,52 +501,7 @@
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="{{ url_for('static', filename='images/eds logo blue.png') }}" alt="Logo" class="logo">
-                <h1 class="brand-text">ECHELON DIGITAL SOLUTIONS</h1>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#home">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Solutions
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
-                            <li><a class="dropdown-item" href="#solutions">All Solutions</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#leave-management">Leave Management</a></li>
-                            <li><a class="dropdown-item" href="#treasury">Treasury Systems</a></li>
-                            <li><a class="dropdown-item" href="#erm">Enterprise Risk Management</a></li>
-                            <li><a class="dropdown-item" href="#payroll">Payroll Systems</a></li>
-                            <li><a class="dropdown-item" href="#hr">HR Management</a></li>
-                            <li><a class="dropdown-item" href="#custom">Custom Solutions</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#clients">Clients</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
-                    </li>
-                    <li class="nav-item ms-lg-3">
-                        <a class="btn btn-primary" href="#contact">Request Demo</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    {% include 'components/eds_navbar.html' %}
 
     <!-- Hero Section -->
     <section id="home" class="hero-section">
@@ -1332,92 +1103,7 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-5 mb-lg-0">
-                    <img src="https://via.placeholder.com/180x50?text=NexusTech" alt="NexusTech Solutions" class="footer-logo">
-                    <div class="footer-about">
-                        <p>Echelon Digital Solutions is a leading provider of enterprise software solutions, helping organizations streamline operations and drive growth through innovative technology.</p>
-                        <div class="social-links">
-                            <a href="#"><i class="bi bi-facebook"></i></a>
-                            <a href="#"><i class="bi bi-twitter"></i></a>
-                            <a href="#"><i class="bi bi-linkedin"></i></a>
-                            <a href="#"><i class="bi bi-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-5 mb-md-0">
-                    <div class="footer-links">
-                        <h5>Solutions</h5>
-                        <ul>
-                            <li><a href="#">Leave Management</a></li>
-                            <li><a href="#">Treasury Systems</a></li>
-                            <li><a href="#">ERM Solutions</a></li>
-                            <li><a href="#">Payroll Systems</a></li>
-                            <li><a href="#">HR Management</a></li>
-                            <li><a href="#">Custom Solutions</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-5 mb-md-0">
-                    <div class="footer-links">
-                        <h5>Services</h5>
-                        <ul>
-                            <li><a href="#">Custom Development</a></li>
-                            <li><a href="#">Cloud Solutions</a></li>
-                            <li><a href="#">Enterprise Security</a></li>
-                            <li><a href="#">Business Intelligence</a></li>
-                            <li><a href="#">Mobile Applications</a></li>
-                            <li><a href="#">System Integration</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-5 mb-md-0">
-                    <div class="footer-links">
-                        <h5>Company</h5>
-                        <ul>
-                            <li><a href="#">About Us</a></li>
-                            <li><a href="#">Leadership</a></li>
-                            <li><a href="#">Careers</a></li>
-                            <li><a href="#">News & Events</a></li>
-                            <li><a href="#">Case Studies</a></li>
-                            <li><a href="#">Contact Us</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-links">
-                        <h5>Resources</h5>
-                        <ul>
-                            <li><a href="#">Blog</a></li>
-                            <li><a href="#">Whitepapers</a></li>
-                            <li><a href="#">Webinars</a></li>
-                            <li><a href="#">Documentation</a></li>
-                            <li><a href="#">Support Center</a></li>
-                            <li><a href="#">API Reference</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p class="copyright">© 2025 Echelon Digital Solutions. All Rights Reserved.</p>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <a href="/echelon-digital-solutions-privacy-policy" class="copyright me-3" style="cursor: pointer;">Privacy Policy</a>
-                        <a href="#" class="copyright">Terms of Service</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Back to Top Button -->
-    <a href="#" class="back-to-top"><i class="bi bi-arrow-up"></i></a>
+    {% include 'components/eds_footer.html' %}
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1427,29 +1113,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
     
     <script>
-        // Navbar scroll effect
-        $(window).scroll(function() {
-            if ($(this).scrollTop() > 100) {
-                $('.navbar').addClass('scrolled');
-            } else {
-                $('.navbar').removeClass('scrolled');
-            }
-        });
-        
-        // Back to top button
-        $(window).scroll(function() {
-            if ($(this).scrollTop() > 300) {
-                $('.back-to-top').addClass('active');
-            } else {
-                $('.back-to-top').removeClass('active');
-            }
-        });
-        
-        $('.back-to-top').click(function(e) {
-            e.preventDefault();
-            $('html, body').animate({scrollTop: 0}, '300');
-        });
-        
         // Counter animation
         $('.stat-number').each(function () {
             $(this).prop('Counter', 0).animate({
@@ -1518,5 +1181,6 @@
             );
         });
     </script>
+<script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
 </body>
 </html>

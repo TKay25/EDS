@@ -1,0 +1,8 @@
+<!-- ===== EDS Stats Card Component ===== -->
+{% macro stats_card(icon, number, label, color='primary') %}
+<div class="eds-stat-card">
+    <div class="eds-stat-icon"><i class="bi {{ icon }}"></i></div>
+    <div class="eds-stat-number">{{ number }}</div>
+    <div class="eds-stat-label">{{ label }}</div>
+</div>
+{% endmacro %}

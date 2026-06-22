@@ -1,0 +1,54 @@
+<!-- ===== EDS Footer Component ===== -->
+<footer class="eds-footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-5 eds-footer-about">
+                <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="EDS Logo" class="eds-footer-logo">
+                <p>We build powerful enterprise software solutions that streamline operations, reduce costs, and drive growth for organizations of all sizes.</p>
+                <div class="eds-social-links">
+                    <a href="#" class="eds-social-link"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="eds-social-link"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" class="eds-social-link"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="eds-social-link"><i class="bi bi-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 mb-5 offset-lg-1 eds-footer-links">
+                <h5 class="eds-footer-heading">Quick Links</h5>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/#about">About Us</a></li>
+                    <li><a href="/#solutions">Solutions</a></li>
+                    <li><a href="/#clients">Clients</a></li>
+                    <li><a href="/#contact">Contact</a></li>
+                    <li><a href="/echelon-digital-solutions-privacy-policy">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-2 col-md-4 mb-5 eds-footer-links">
+                <h5 class="eds-footer-heading">Solutions</h5>
+                <ul>
+                    <li><a href="/#leave-management">Leave Management</a></li>
+                    <li><a href="/#treasury">Treasury Systems</a></li>
+                    <li><a href="/#erm">Risk Management</a></li>
+                    <li><a href="/#payroll">Payroll Systems</a></li>
+                    <li><a href="/#hr">HR Management</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-4 mb-5 eds-footer-links">
+                <h5 class="eds-footer-heading">Contact Info</h5>
+                <ul>
+                    <li><i class="bi bi-geo-alt me-2"></i> 20 Peakwood Village, Greendale, Harare</li>
+                    <li><i class="bi bi-envelope me-2"></i> echelonequipmentimports@gmail.com</li>
+                    <li><i class="bi bi-telephone me-2"></i> +263 777222217</li>
+                </ul>
+            </div>
+        </div>
+        <div class="eds-footer-bottom">
+            <p class="eds-copyright">&copy; {{ now.year if now is defined else "2026" }} Echelon Digital Solutions. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Back to Top -->
+<button id="back-to-top" class="eds-back-to-top">
+    <i class="bi bi-arrow-up"></i>
+</button>
