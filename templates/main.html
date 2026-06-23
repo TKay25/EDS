@@ -13,42 +13,153 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
     <style>
-        .eds-hero { padding: 150px 0 80px; min-height: auto; }
-        .eds-hero h1 { font-size: 3rem; }
+        /* Hero Carousel */
+        .eds-hero-carousel .owl-item { opacity: 0; transition: opacity 0.6s ease; }
+        .eds-hero-carousel .owl-item.active { opacity: 1; }
+        .eds-hero-carousel .owl-dots { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); }
+        .eds-hero-carousel .owl-dot span { width: 12px; height: 12px; margin: 0 6px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-block; transition: all var(--eds-transition-normal); }
+        .eds-hero-carousel .owl-dot.active span { background: var(--eds-accent); width: 30px; border-radius: 6px; box-shadow: var(--eds-shadow-accent); }
+        .eds-hero-carousel .owl-nav { display: none; }
+        .hero-slide { padding: 160px 0 100px; min-height: auto; }
+        .hero-slide h1 { font-size: 3rem; }
+        @media (max-width: 768px) { .hero-slide h1 { font-size: 2rem; } .hero-slide { padding: 130px 0 60px; } }
+        
+        /* Section animations */
+        .eds-features, .eds-features-dark, .eds-cta { opacity: 0; transform: translateY(30px); transition: all 0.7s ease; }
+        .eds-features.visible, .eds-features-dark.visible, .eds-cta.visible { opacity: 1; transform: translateY(0); }
+        .eds-feature-card, .eds-feature-card-dark { transition: all var(--eds-transition-normal); }
+        .eds-feature-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: var(--eds-shadow-lg); }
+        .eds-feature-card-dark:hover { transform: translateY(-8px) scale(1.02); }
+        
+        /* Animated counter */
+        .stat-counter { display: inline-block; }
+        
+        /* Solution tabs */
         .solution-tab-content { border-radius: var(--eds-radius-lg); border: 1px solid var(--eds-border-light); }
         .about-img { border-radius: var(--eds-radius-lg); box-shadow: var(--eds-shadow-lg); transition: all var(--eds-transition-normal); }
         .about-img:hover { transform: scale(1.02); }
-        .contact-info .icon-box { width: 50px; height: 50px; border-radius: var(--eds-radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
-        .testimonial-card { background: var(--eds-white); border-radius: var(--eds-radius-lg); padding: 32px; box-shadow: var(--eds-shadow-sm); border: 1px solid var(--eds-border-light); margin: 10px; position: relative; transition: all var(--eds-transition-normal); }
-        .testimonial-card:hover { transform: translateY(-4px); box-shadow: var(--eds-shadow-md); }
-        .testimonial-card::before { content: '"'; position: absolute; top: 16px; left: 20px; font-size: 4rem; color: var(--eds-accent); opacity: 0.1; font-family: Georgia, serif; line-height: 1; }
-        .testimonial-content { position: relative; z-index: 1; }
-        .testimonial-text { font-style: italic; color: var(--eds-text-light); }
-        .testimonial-author { display: flex; align-items: center; gap: 12px; }
-        .testimonial-author img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--eds-accent); }
         .client-logo { filter: grayscale(100%); opacity: 0.5; transition: all var(--eds-transition-normal); max-height: 60px; }
         .client-logo:hover { filter: grayscale(0%); opacity: 1; }
         .solutions-tabs .nav-link { border: none; padding: 12px 24px; font-weight: 600; color: var(--eds-text-light); border-radius: var(--eds-radius-md); margin: 0 4px 12px; transition: all var(--eds-transition-fast); }
         .solutions-tabs .nav-link.active { background: var(--eds-accent-gradient); color: var(--eds-white) !important; box-shadow: var(--eds-shadow-accent); }
-        @media (max-width: 768px) { .eds-hero h1 { font-size: 2rem; } .eds-hero { padding: 120px 0 60px; } }
+        
+        /* Floating shapes decoration */
+        .hero-shape { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; }
+        
+        /* Owl Carousel fade animation */
+        .animated { animation-duration: 0.8s; animation-fill-mode: both; }
+        @keyframes fadeOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+        .fadeOut { animation-name: fadeOut; }
+        @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+        .fadeIn { animation-name: fadeIn; }
+        .owl-carousel .owl-item { -webkit-backface-visibility: hidden; -webkit-transform: translateZ(0) scale(1.0, 1.0); }
     </style>
 </head>
 
 <body>
     {% include 'components/eds_navbar.html' %}
 
-    <!-- ===== HERO ===== -->
-    <section id="home" class="eds-hero">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-7 eds-hero-content">
-                    <div class="eds-hero-badge"><i class="bi bi-stars"></i> Enterprise Technology Partner</div>
-                    <h1>Transform Your Business With <span class="highlight">Smart Enterprise Solutions</span></h1>
-                    <p>We build powerful software solutions that streamline operations, reduce costs, and drive growth for organizations of all sizes.</p>
-                    <div class="eds-hero-actions">
-                        <a href="#solutions" class="eds-hero-btn-primary"><i class="bi bi-grid"></i> Explore Solutions</a>
-                        <a href="#contact" class="eds-hero-btn-secondary"><i class="bi bi-chat-dots"></i> Contact Us</a>
-                        <a data-bs-toggle="modal" data-bs-target="#privacypolicyModal" class="eds-hero-btn-secondary"><i class="bi bi-shield-check"></i> Privacy Policy</a>
+    <!-- ===== HERO SLIDER ===== -->
+    <section id="home" class="eds-hero" style="padding:0;min-height:auto;overflow:hidden;">
+        <div style="position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(220,20,60,0.08) 0%,transparent 70%);border-radius:50%;z-index:0;pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(220,20,60,0.05) 0%,transparent 70%);border-radius:50%;z-index:0;pointer-events:none;"></div>
+        <div class="owl-carousel owl-theme eds-hero-carousel" id="heroCarousel">
+            <!-- Slide 1 -->
+            <div class="hero-slide" style="position:relative;">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-7 eds-hero-content">
+                            <div class="eds-hero-badge animate__animated animate__fadeInDown"><i class="bi bi-stars"></i> Enterprise Technology Partner</div>
+                            <h1 class="animate__animated animate__fadeInUp">Transform Your Business With <span class="highlight">Smart Enterprise Solutions</span></h1>
+                            <p class="animate__animated animate__fadeInUp animate__delay-1s">We build powerful software solutions that streamline operations, reduce costs, and drive growth for organizations of all sizes.</p>
+                            <div class="eds-hero-actions animate__animated animate__fadeInUp animate__delay-2s">
+                                <a href="#solutions" class="eds-hero-btn-primary"><i class="bi bi-grid"></i> Explore Solutions</a>
+                                <a href="#contact" class="eds-hero-btn-secondary"><i class="bi bi-chat-dots"></i> Contact Us</a>
+                            </div>
+                        </div>
+                        <div class="col-lg-5 d-none d-lg-block text-center">
+                            <div style="width:380px;height:420px;margin:0 auto;position:relative;">
+                                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:400px;background:rgba(220,20,60,0.06);border-radius:24px;border:1px solid rgba(220,20,60,0.1);">
+                                    <div style="position:absolute;top:30px;left:30px;right:30px;">
+                                        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px;">
+                                            <div style="display:flex;align-items:center;gap:10px;">
+                                                <div style="width:36px;height:36px;border-radius:8px;background:rgba(220,20,60,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-person-check" style="color:var(--eds-accent);font-size:1rem;"></i></div>
+                                                <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Leave Approved</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">John D. - Annual Leave</div></div>
+                                            </div>
+                                        </div>
+                                        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px;">
+                                            <div style="display:flex;align-items:center;gap:10px;">
+                                                <div style="width:36px;height:36px;border-radius:8px;background:rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-check-lg" style="color:var(--eds-success);font-size:1rem;"></i></div>
+                                                <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Sick Leave</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">Sarah M. - 3 days</div></div>
+                                            </div>
+                                        </div>
+                                        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;">
+                                            <div style="display:flex;align-items:center;gap:10px;">
+                                                <div style="width:36px;height:36px;border-radius:8px;background:rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-clock" style="color:var(--eds-warning);font-size:1rem;"></i></div>
+                                                <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Pending Review</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">Mike R. - Maternity Leave</div></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 2 -->
+            <div class="hero-slide">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-7 eds-hero-content">
+                            <div class="eds-hero-badge animate__animated animate__fadeInDown"><i class="bi bi-cloud-check"></i> Cloud-Powered Platform</div>
+                            <h1 class="animate__animated animate__fadeInUp">Enterprise-Grade <span class="highlight">Cloud Solutions</span> for Modern Business</h1>
+                            <p class="animate__animated animate__fadeInUp animate__delay-1s">Scalable, secure, and reliable cloud infrastructure that grows with your business. From migration to management, we handle it all.</p>
+                            <div class="eds-hero-actions animate__animated animate__fadeInUp animate__delay-2s">
+                                <a href="#services" class="eds-hero-btn-primary"><i class="bi bi-cloud-arrow-up"></i> Our Services</a>
+                                <a href="#contact" class="eds-hero-btn-secondary"><i class="bi bi-telephone"></i> Talk to Us</a>
+                            </div>
+                        </div>
+                        <div class="col-lg-5 d-none d-lg-block text-center">
+                            <div style="width:380px;height:420px;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+                                <div style="text-align:center;">
+                                    <div style="font-size:5rem;color:rgba(220,20,60,0.15);margin-bottom:16px;"><i class="bi bi-cloud"></i></div>
+                                    <div style="display:flex;gap:16px;justify-content:center;">
+                                        <div style="width:60px;height:60px;border-radius:14px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.5rem;"><i class="bi bi-shield-check"></i></div>
+                                        <div style="width:60px;height:60px;border-radius:14px;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-success);font-size:1.5rem;"><i class="bi bi-speedometer2"></i></div>
+                                        <div style="width:60px;height:60px;border-radius:14px;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-warning);font-size:1.5rem;"><i class="bi bi-arrows-expand"></i></div>
+                                    </div>
+                                    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-top:20px;">Secure &bull; Scalable &bull; Reliable</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 3 -->
+            <div class="hero-slide">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-7 eds-hero-content">
+                            <div class="eds-hero-badge animate__animated animate__fadeInDown"><i class="bi bi-people"></i> 250+ Enterprise Clients</div>
+                            <h1 class="animate__animated animate__fadeInUp">Trusted By <span class="highlight">Industry Leaders</span> Across Africa</h1>
+                            <p class="animate__animated animate__fadeInUp animate__delay-1s">From startups to Fortune 500 companies, organizations trust Echelon Digital Solutions to power their digital transformation journey.</p>
+                            <div class="eds-hero-actions animate__animated animate__fadeInUp animate__delay-2s">
+                                <a href="#clients" class="eds-hero-btn-primary"><i class="bi bi-people"></i> Our Clients</a>
+                                <a data-bs-toggle="modal" data-bs-target="#privacypolicyModal" class="eds-hero-btn-secondary"><i class="bi bi-shield-check"></i> Privacy Policy</a>
+                            </div>
+                        </div>
+                        <div class="col-lg-5 d-none d-lg-block text-center">
+                            <div style="width:380px;height:420px;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+                                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:280px;">
+                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">CBZ</div>
+                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">NMB</div>
+                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">ZIM</div>
+                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">OLD</div>
+                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">EDC</div>
+                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">MBC</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -217,15 +328,25 @@
     <section class="eds-features-dark">
         <div class="container">
             <div class="row">
-                <div class="col-md-3 col-6 text-center py-3"><div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);">250+</div><div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Enterprise Clients</div></div>
-                <div class="col-md-3 col-6 text-center py-3"><div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);">15+</div><div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Years Experience</div></div>
-                <div class="col-md-3 col-6 text-center py-3"><div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);">500+</div><div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Projects Completed</div></div>
-                <div class="col-md-3 col-6 text-center py-3"><div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);">99%</div><div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Client Satisfaction</div></div>
+                <div class="col-md-3 col-6 text-center py-3">
+                    <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="250">0</span>+</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Enterprise Clients</div>
+                </div>
+                <div class="col-md-3 col-6 text-center py-3">
+                    <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="15">0</span>+</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Years Experience</div>
+                </div>
+                <div class="col-md-3 col-6 text-center py-3">
+                    <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="500">0</span>+</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Projects Completed</div>
+                </div>
+                <div class="col-md-3 col-6 text-center py-3">
+                    <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="99">0</span>%</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Client Satisfaction</div>
+                </div>
             </div>
         </div>
     </section>
-
-
 
     <!-- ===== CLIENTS ===== -->
     <section id="clients" class="eds-features" style="background:var(--eds-white);">
@@ -296,13 +417,84 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
     <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
     <script>
-        $('.testimonials-carousel').owlCarousel({ loop:true, margin:20, nav:true, dots:false, responsive:{ 0:{items:1}, 768:{items:2}, 992:{items:3} } });
-        $('.clients-carousel').owlCarousel({ loop:true, margin:30, nav:false, dots:true, autoplay:true, responsive:{ 0:{items:2}, 576:{items:3}, 768:{items:4}, 992:{items:6} } });
-        $('a[href*="#"]:not([data-bs-toggle])').on('click', function(e) {
-            e.preventDefault();
-            $('html, body').animate({ scrollTop: $($(this).attr('href')).offset().top - 70 }, 500, 'linear');
+        // Hero Carousel
+        $('#heroCarousel').owlCarousel({
+            items: 1,
+            loop: true,
+            margin: 0,
+            nav: false,
+            dots: true,
+            autoplay: true,
+            autoplayTimeout: 6000,
+            autoplayHoverPause: true,
+            smartSpeed: 800,
+            animateOut: 'fadeOut',
+            animateIn: 'fadeIn'
+        });
+
+        // Clients Carousel
+        $('.clients-carousel').owlCarousel({
+            loop: true, margin: 30, nav: false, dots: true, autoplay: true,
+            responsive: { 0: { items: 2 }, 576: { items: 3 }, 768: { items: 4 }, 992: { items: 6 } }
+        });
+
+        // Scroll-triggered reveal animations
+        function revealOnScroll() {
+            $('.eds-features, .eds-features-dark, .eds-cta').each(function () {
+                var elemTop = $(this).offset().top;
+                var winBottom = $(window).scrollTop() + $(window).height() - 80;
+                if (elemTop < winBottom) {
+                    $(this).addClass('visible');
+                }
+            });
+        }
+        $(window).on('scroll', revealOnScroll);
+        $(window).on('load', revealOnScroll);
+        revealOnScroll();
+
+        // Animated counter
+        function animateCounters() {
+            $('.stat-counter').each(function () {
+                var $this = $(this);
+                var countTo = parseInt($this.attr('data-count'));
+                if (!isNaN(countTo) && !$this.hasClass('counted')) {
+                    $this.addClass('counted');
+                    $({ count: 0 }).animate({ count: countTo }, {
+                        duration: 2500,
+                        easing: 'swing',
+                        step: function () {
+                            $this.text(Math.ceil(this.count).toLocaleString());
+                        },
+                        complete: function () {
+                            $this.text(countTo.toLocaleString());
+                        }
+                    });
+                }
+            });
+        }
+
+        // Trigger counters when stats section is visible
+        var statsRevealed = false;
+        $(window).on('scroll', function() {
+            var statsTop = $('.eds-features-dark').offset().top;
+            var winBottom = $(window).scrollTop() + $(window).height() - 100;
+            if (statsTop < winBottom && !statsRevealed) {
+                statsRevealed = true;
+                animateCounters();
+            }
+        });
+
+        // Smooth scroll with custom easing
+        $.easing.easeInOutCubic = function (x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+        $('a[href*="#"]:not([data-bs-toggle]):not([data-bs-target])').on('click', function(e) {
+            var target = $(this).attr('href');
+            if (target && target !== '#') {
+                e.preventDefault();
+                $('html, body').animate({ scrollTop: $(target).offset().top - 70 }, 700, 'easeInOutCubic');
+            }
         });
     </script>
 </body>
