@@ -167,6 +167,33 @@
             max-height: 500px;
             overflow-y: auto;
             padding-right: 5px;
+            width: 100%;
+        }
+
+        .container2 table,
+        .container2 .dataTables_wrapper {
+            width: 100% !important;
+        }
+
+        .container2 table th,
+        .container2 table td {
+            white-space: nowrap;
+            padding: 8px 12px !important;
+        }
+
+        .container2 .dataTables_wrapper .dataTables_filter,
+        .container2 .dataTables_wrapper .dataTables_info,
+        .container2 .dataTables_wrapper .dataTables_paginate {
+            float: none;
+            text-align: left;
+            margin: 8px 0;
+        }
+
+        .container2 .dataTables_wrapper .dataTables_filter input {
+            margin-left: 8px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--eds-border);
         }
 
         .btn-primary2 {

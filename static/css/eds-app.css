@@ -804,6 +804,20 @@ a:hover {
   background: rgba(220, 20, 60, 0.03) !important;
 }
 
+/* DataTables inside containers - full width */
+.dataTables_wrapper {
+  width: 100% !important;
+}
+
+.dataTables_wrapper .dataTables_scrollHead,
+.dataTables_wrapper .dataTables_scrollBody {
+  width: 100% !important;
+}
+
+table.dataTable {
+  width: 100% !important;
+}
+
 /* ===== BADGE ===== */
 .eds-badge {
   display: inline-block;
