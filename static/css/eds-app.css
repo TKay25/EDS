@@ -295,11 +295,16 @@ a:hover {
 
 /* ===== QUICK ACTION GRID (React-style Dashboard) ===== */
 .eds-quick-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
   margin-bottom: 24px;
-  justify-content: center;
+}
+
+.eds-quick-actions .eds-quick-action {
+  flex: 0 0 auto;
+  width: 130px;
 }
 
 .eds-quick-action {

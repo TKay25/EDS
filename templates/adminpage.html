@@ -800,10 +800,12 @@
             </div>
         </div>
         </div>
+        </div>
+    </div>
         <!-- ===== END Main LMS Content ===== -->
 
         <!-- ===== Payroll Content (shown when Payroll navbar button clicked) ===== -->
-        <div id="payroll-content" style="display: none;">
+        <div id="payroll-content" style="display: none;" data-currency-settings="{{ currency_settings_json | default('') }}">
             <!-- Currency Settings Bar -->
             <div class="card" style="padding: 16px 20px; margin-bottom: 16px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
@@ -851,27 +853,6 @@
                 </div>
             </div>
         </div>
-
-        <script>
-        // ===== Load payroll currency settings =====
-        (function() {
-            var currencyData = {{ currency_settings_json | default('null') | safe }};
-            if (currencyData) {
-                var usdPct = document.getElementById('payroll-usd-pct');
-                var zwgPct = document.getElementById('payroll-zwg-pct');
-                var rate = document.getElementById('payroll-rate');
-                if (currencyData.splitConfig) {
-                    if (usdPct) usdPct.textContent = currencyData.splitConfig.usdPercent + '%';
-                    if (zwgPct) zwgPct.textContent = currencyData.splitConfig.zwgPercent + '%';
-                    if (rate) rate.textContent = currencyData.splitConfig.exchangeRate || 'N/A';
-                } else {
-                    if (usdPct) usdPct.textContent = '100%';
-                    if (zwgPct) zwgPct.textContent = '0%';
-                    if (rate) rate.textContent = 'N/A';
-                }
-            }
-        })();
-        </script>
         <!-- ===== END Payroll Content ===== -->
 
 
@@ -5395,6 +5376,35 @@ document.addEventListener("DOMContentLoaded", function () {
         checkbox.addEventListener("change", updateChart);
     });
 });
+</script>
+
+<script>
+    // ===== Load payroll currency settings from data attribute =====
+    (function() {
+        var payrollDiv = document.getElementById('payroll-content');
+        if (payrollDiv) {
+            var raw = payrollDiv.getAttribute('data-currency-settings');
+            if (raw) {
+                try {
+                    var currencyData = JSON.parse(raw);
+                    if (currencyData) {
+                        var usdPct = document.getElementById('payroll-usd-pct');
+                        var zwgPct = document.getElementById('payroll-zwg-pct');
+                        var rate = document.getElementById('payroll-rate');
+                        if (currencyData.splitConfig) {
+                            if (usdPct) usdPct.textContent = (currencyData.splitConfig.usdPercent || 0) + '%';
+                            if (zwgPct) zwgPct.textContent = (currencyData.splitConfig.zwgPercent || 0) + '%';
+                            if (rate) rate.textContent = currencyData.splitConfig.exchangeRate || 'N/A';
+                        } else {
+                            if (usdPct) usdPct.textContent = '100%';
+                            if (zwgPct) zwgPct.textContent = '0%';
+                            if (rate) rate.textContent = 'N/A';
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+    })();
 </script>
 
 <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
