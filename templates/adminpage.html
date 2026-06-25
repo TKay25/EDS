@@ -259,6 +259,98 @@
             color: var(--eds-text-light);
         }
 
+        /* ===== TAB STYLING ===== */
+        .nav-tabs {
+            border-bottom: 2px solid var(--eds-border-light);
+            gap: 4px;
+            padding: 0;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            padding: 14px 24px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--eds-text-light);
+            border-radius: 10px 10px 0 0;
+            background: transparent;
+            transition: all 0.25s ease;
+            position: relative;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tabs .nav-link i {
+            font-size: 1.1rem;
+            opacity: 0.6;
+            transition: all 0.25s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--eds-primary);
+            background: var(--eds-blue-bg);
+        }
+
+        .nav-tabs .nav-link:hover i {
+            opacity: 0.9;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--eds-white);
+            background: var(--eds-accent-gradient);
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+        }
+
+        .nav-tabs .nav-link.active i {
+            opacity: 1;
+            color: var(--eds-white);
+        }
+
+        .nav-tabs .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 3px;
+            background: var(--eds-accent);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tab-pane {
+            animation: edsFadeIn 0.4s ease;
+        }
+
+        @keyframes edsFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Admin tabs inside card - match card style */
+        #admin-content .nav-tabs,
+        #user-content .nav-tabs {
+            padding: 0 4px;
+        }
+
+        #admin-content.card,
+        #user-content.card {
+            border-radius: 16px;
+            border: 1px solid var(--eds-border-light);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            padding: 24px;
+            background: var(--eds-white);
+            overflow: hidden;
+        }
+
+        #admin-content .tab-content,
+        #user-content .tab-content {
+            padding: 8px 4px;
+        }
+
         /* ===== BLURRY MODAL OVERLAY (like connectlink) ===== */
         .modal-backdrop {
             backdrop-filter: blur(8px) !important;
@@ -576,8 +668,13 @@
                     </div>
                 </div>
                 <div class="tab-pane fade" id="settings">
-                    <h4>Payments</h4>
-                    <p>Manage Payments</p>
+                    <div style="padding: 20px; text-align: center;">
+                        <i class="bi bi-building-fill-gear" style="font-size: 3rem; color: var(--eds-border); margin-bottom: 16px; display: block;"></i>
+                        <h4 style="font-weight: 700; color: var(--eds-primary); margin-bottom: 8px;">Company Profile & Settings</h4>
+                        <p style="color: var(--eds-text-light);">Manage company settings, profile information and payment configurations.</p>
+                        <hr style="max-width: 200px; margin: 20px auto; opacity: 0.3;">
+                        <p style="color: var(--eds-text-light); font-size: 0.9rem;"><i class="bi bi-info-circle"></i> Settings panel is under development.</p>
+                    </div>
                 </div>
             </div>
         </div>

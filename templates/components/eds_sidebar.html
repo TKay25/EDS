@@ -37,6 +37,7 @@
             <button class="eds-nav-link-top" id="btn-equipment"><i class="bi bi-tools"></i> Equipment</button>
             <button class="eds-nav-link-top" id="btn-performance"><i class="bi bi-bar-chart"></i> Performance</button>
         {% endif %}
+        <span class="eds-navbar-date"><i class="bi bi-calendar3"></i> {{ today_date | default('') }}</span>
     </div>
 
     <div class="eds-navbar-right">
@@ -61,6 +62,7 @@
                 <div>
                     <div class="eds-navbar-user">{{ firstname }} {{ surname | default('') }}</div>
                     <div class="eds-navbar-role">{{ role_narr | default('User') }}</div>
+                    <div class="eds-navbar-company">{{ company_name | default('') }}</div>
                 </div>
             </div>
             <ul class="dropdown-menu dropdown-menu-end eds-profile-dropdown">
