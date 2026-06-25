@@ -300,21 +300,29 @@
                     <div class="eds-quick-action-label">Edit My Info</div>
                     <span class="eds-quick-action-badge">1</span>
                 </div>
-                <div class="eds-quick-action" id="lmsview">
-                    <div class="eds-quick-action-icon"><i class="bi bi-view-list"></i></div>
-                    <div class="eds-quick-action-label">Leave Portal</div>
+                <div class="eds-quick-action" id="btn-quick-dashboard">
+                    <div class="eds-quick-action-icon"><i class="bi bi-speedometer2"></i></div>
+                    <div class="eds-quick-action-label">Dashboard</div>
                 </div>
-                <div class="eds-quick-action" id="btn-employee-profiles">
+                <div class="eds-quick-action" id="btn-quick-leave">
+                    <div class="eds-quick-action-icon"><i class="bi bi-calendar-check"></i></div>
+                    <div class="eds-quick-action-label">Leave</div>
+                </div>
+                <div class="eds-quick-action" id="btn-quick-employees">
+                    <div class="eds-quick-action-icon"><i class="bi bi-people"></i></div>
+                    <div class="eds-quick-action-label">Employees</div>
+                </div>
+                <div class="eds-quick-action" id="btn-quick-company">
+                    <div class="eds-quick-action-icon"><i class="bi bi-building"></i></div>
+                    <div class="eds-quick-action-label">Company</div>
+                </div>
+                <div class="eds-quick-action" id="btn-quick-log-query">
                     <div class="eds-quick-action-icon"><i class="bi bi-chat-dots"></i></div>
                     <div class="eds-quick-action-label">Log Query</div>
                 </div>
                 <div class="eds-quick-action" data-hide="{{ hide_element }}" id="attendance">
                     <div class="eds-quick-action-icon"><i class="bi bi-clock-history"></i></div>
                     <div class="eds-quick-action-label">Attendance</div>
-                </div>
-                <div class="eds-quick-action" data-hide="{{ hide_element }}" id="payroll">
-                    <div class="eds-quick-action-icon"><i class="bi bi-wallet2"></i></div>
-                    <div class="eds-quick-action-label">Payroll</div>
                 </div>
                 <div class="eds-quick-action" data-hide="{{ hide_element }}" id="equipmentassets">
                     <div class="eds-quick-action-icon"><i class="bi bi-tools"></i></div>
@@ -325,6 +333,9 @@
                     <div class="eds-quick-action-label">Performance</div>
                 </div>
             </div>
+
+        <!-- ===== Main LMS Content (toggled by navbar) ===== -->
+        <div id="main-content">
 
             <!-- ===== Profile Selector ===== -->
             <div class="d-flex align-items-center gap-3 mb-3" data-hide="{{ hide_element }}" id="profile-selector">
@@ -572,6 +583,26 @@
             </div>
         </div>
     </main>
+        </div>
+        <!-- ===== END Main LMS Content ===== -->
+
+        <!-- ===== Payroll Content (shown when Payroll navbar button clicked) ===== -->
+        <div id="payroll-content" style="display: none;">
+            <div class="card" style="padding: 20px; margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h4><i class="bi bi-wallet2"></i> Employee Payroll Management</h4>
+                    <div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadEmployeedetailsModal">
+                            <i class="bi bi-upload"></i> Upload Payroll Details
+                        </button>
+                    </div>
+                </div>
+                <div class="container2" style="max-height: 600px; overflow-y: auto;">
+                    {{ table_employees_payroll_html|safe }}
+                </div>
+            </div>
+        </div>
+        <!-- ===== END Payroll Content ===== -->
 
 
     <div class="modal fade" id="exportleaveapplicationsreportModal" tabindex="-1" aria-labelledby="exportleaveapplicationsreportModalLabel" >
@@ -2684,12 +2715,40 @@ $(document).ready(function () {
 
 
 
-$('#btn-dashboard').click(function() {
-        $('#dashboard-tab').tab('show');
-    });
+// ===== Quick action button handlers - switch to admin & show the right tab =====
+function switchToAdminTab(tabSelector) {
+    // First switch to admin profile view
+    var profileSelect = document.getElementById('profile-select');
+    if (profileSelect) {
+        profileSelect.value = 'admin';
+        toggleProfileContent();
+    }
+    // Show LMS view if payroll is active
+    showLmsView();
+    // Short delay to let admin content render, then show the tab
+    setTimeout(function() {
+        $(tabSelector).tab('show');
+    }, 50);
+}
 
-$('#btn-leave-apps-portal').click(function() {
-    $('#leave-apps-tab').tab('show');
+$('#btn-quick-dashboard').click(function() {
+    switchToAdminTab('#dashboard-tab');
+});
+
+$('#btn-quick-leave').click(function() {
+    switchToAdminTab('#leave-apps-tab');
+});
+
+$('#btn-quick-employees').click(function() {
+    switchToAdminTab('#employee-profiles-tab');
+});
+
+$('#btn-quick-company').click(function() {
+    switchToAdminTab('#settings');
+});
+
+$('#btn-quick-log-query').click(function() {
+    switchToAdminTab('#employee-profiles-tab');
 });
 
 $('#closepriv').on('click', function() {
@@ -3893,28 +3952,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    const payrollMenuBtn = document.querySelector('#payroll .accordion-button');
-    const mainContentx = document.getElementById('main-content');
-    const payrollContent = document.getElementById('payroll-content');
-    const viewlmscontent = document.getElementById('lmsview');
+    // ===== Navbar button handlers: Leave Portal / Payroll toggle =====
+    const navbarLmsBtn = document.getElementById('btn-lms-view');
+    const navbarPayrollBtn = document.getElementById('btn-payroll-view');
+    const mainContentDiv = document.getElementById('main-content');
+    const payrollContentDiv = document.getElementById('payroll-content');
 
-    if (payrollMenuBtn) {
-        payrollMenuBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // prevent any default Bootstrap accordion behavior
+    function showLmsView() {
+        if (mainContentDiv) mainContentDiv.style.display = 'block';
+        if (payrollContentDiv) payrollContentDiv.style.display = 'none';
+        if (navbarLmsBtn) navbarLmsBtn.classList.add('active');
+        if (navbarPayrollBtn) navbarPayrollBtn.classList.remove('active');
+    }
 
-            if(mainContentx) mainContentx.style.display = 'none';
-            if(payrollContent) payrollContent.style.display = 'block';
+    function showPayrollView() {
+        if (mainContentDiv) mainContentDiv.style.display = 'none';
+        if (payrollContentDiv) payrollContentDiv.style.display = 'block';
+        if (navbarPayrollBtn) navbarPayrollBtn.classList.add('active');
+        if (navbarLmsBtn) navbarLmsBtn.classList.remove('active');
+    }
+
+    if (navbarLmsBtn) {
+        navbarLmsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLmsView();
         });
     }
 
-    if (viewlmscontent) {
-    viewlmscontent.addEventListener('click', (e) => {
-        e.preventDefault(); // prevent any default Bootstrap accordion behavior
-
-        if(mainContentx) mainContentx.style.display = 'block';
-        if(payrollContent) payrollContent.style.display = 'none';
-    });
-}
+    if (navbarPayrollBtn) {
+        navbarPayrollBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showPayrollView();
+        });
+    }
 
 
 
