@@ -166,9 +166,9 @@
         }
 
         .btn-primary2 {
-            background: var(--eds-accent-gradient) !important;
+            background: var(--eds-primary) !important;
             color: var(--eds-white) !important;
-            border: 2px solid var(--eds-accent) !important;
+            border: 2px solid var(--eds-primary) !important;
             border-radius: var(--eds-radius-md) !important;
             padding: 8px 20px !important;
             font-weight: 600 !important;
@@ -179,14 +179,22 @@
         }
 
         .btn-primary2:hover {
+            background: var(--eds-accent) !important;
+            border-color: var(--eds-accent) !important;
             transform: translateY(-2px) !important;
-            box-shadow: var(--eds-shadow-accent) !important;
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3) !important;
+        }
+
+        .btn-primary2:active {
+            background: rgba(220, 20, 60, 0.2) !important;
+            border-color: var(--eds-accent) !important;
+            color: var(--eds-accent) !important;
         }
 
         .btn-primary3 {
-            background: var(--eds-white) !important;
-            color: var(--eds-accent) !important;
-            border: 2px solid var(--eds-accent) !important;
+            background: var(--eds-primary) !important;
+            color: var(--eds-white) !important;
+            border: 2px solid var(--eds-primary) !important;
             border-radius: var(--eds-radius-md) !important;
             padding: 6px 15px !important;
             font-size: 0.82rem !important;
@@ -197,29 +205,43 @@
 
         .btn-primary3:hover {
             background: var(--eds-accent) !important;
+            border-color: var(--eds-accent) !important;
             color: var(--eds-white) !important;
         }
 
+        .btn-primary3:active {
+            background: rgba(220, 20, 60, 0.2) !important;
+            border-color: var(--eds-accent) !important;
+            color: var(--eds-accent) !important;
+        }
+
         .btn-primary9 {
-            background: var(--eds-accent-gradient) !important;
+            background: var(--eds-primary) !important;
             color: var(--eds-white) !important;
-            border: 2px solid var(--eds-accent) !important;
+            border: 2px solid var(--eds-primary) !important;
             border-radius: var(--eds-radius-md) !important;
             padding: 10px 24px !important;
             font-weight: 700 !important;
             transition: all var(--eds-transition-fast) !important;
-            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.25);
         }
 
         .btn-primary9:hover {
+            background: var(--eds-accent) !important;
+            border-color: var(--eds-accent) !important;
             transform: translateY(-2px) !important;
-            box-shadow: var(--eds-shadow-accent) !important;
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3) !important;
+        }
+
+        .btn-primary9:active {
+            background: rgba(220, 20, 60, 0.2) !important;
+            border-color: var(--eds-accent) !important;
+            color: var(--eds-accent) !important;
         }
 
         .btn-primary10 {
-            background: var(--eds-white) !important;
-            color: var(--eds-primary) !important;
-            border: 2px solid var(--eds-border) !important;
+            background: var(--eds-primary) !important;
+            color: var(--eds-white) !important;
+            border: 2px solid var(--eds-primary) !important;
             border-radius: var(--eds-radius-md) !important;
             padding: 8px 20px !important;
             font-weight: 600 !important;
@@ -227,8 +249,14 @@
         }
 
         .btn-primary10:hover {
-            background: var(--eds-blue-bg) !important;
-            border-color: var(--eds-primary-light) !important;
+            background: var(--eds-accent) !important;
+            border-color: var(--eds-accent) !important;
+        }
+
+        .btn-primary10:active {
+            background: rgba(220, 20, 60, 0.2) !important;
+            border-color: var(--eds-accent) !important;
+            color: var(--eds-accent) !important;
         }
 
         #editEmployeePayrollModal .card {
@@ -334,6 +362,46 @@
         #admin-content .nav-tabs,
         #user-content .nav-tabs {
             padding: 0 4px;
+        }
+
+        /* ===== TAB BUTTON STYLING: dark deep blue / crimson hover / light crimson active ===== */
+        .tab-pane .btn-primary,
+        .tab-pane .btn {
+            background: #003366 !important;
+            color: white !important;
+            border: 2px solid #003366 !important;
+            border-radius: var(--eds-radius-md) !important;
+            padding: 8px 20px !important;
+            font-weight: 600 !important;
+            font-size: 0.85rem !important;
+            transition: all 0.25s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            box-shadow: none !important;
+        }
+
+        .tab-pane .btn-primary:hover,
+        .tab-pane .btn:hover {
+            background: var(--eds-accent) !important;
+            border-color: var(--eds-accent) !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3) !important;
+        }
+
+        .tab-pane .btn-primary:active,
+        .tab-pane .btn:active {
+            background: rgba(220, 20, 60, 0.15) !important;
+            border-color: var(--eds-accent) !important;
+            color: var(--eds-accent) !important;
+            transform: translateY(0);
+            box-shadow: none !important;
+        }
+
+        .tab-pane .btn-primary10,
+        .tab-pane .btn-primary3 {
+            font-size: 0.82rem !important;
         }
 
         #admin-content.card,
