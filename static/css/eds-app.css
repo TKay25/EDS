@@ -1067,6 +1067,191 @@ a:hover {
   }
 }
 
+/* ===== PROFILE DROPDOWN ===== */
+.eds-profile-dropdown {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--eds-radius-lg);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2), 0 8px 10px -6px rgba(0,0,0,0.1);
+  padding: 8px;
+  min-width: 220px;
+  margin-top: 8px !important;
+  background: rgba(30, 41, 59, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 70, 229, 0.15);
+}
+
+.eds-profile-dropdown .dropdown-item {
+  border-radius: var(--eds-radius-sm);
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all var(--eds-transition-fast);
+}
+
+.eds-profile-dropdown .dropdown-item i {
+  font-size: 1.15rem;
+  color: #94a3b8;
+  width: 20px;
+  text-align: center;
+  transition: all var(--eds-transition-fast);
+}
+
+.eds-profile-dropdown .dropdown-item:hover {
+  background: rgba(220, 20, 60, 0.15);
+  color: var(--eds-white);
+}
+
+.eds-profile-dropdown .dropdown-item:hover i {
+  color: var(--eds-accent);
+}
+
+.eds-profile-dropdown .eds-logout-item {
+  color: #f87171;
+}
+
+.eds-profile-dropdown .eds-logout-item i {
+  color: #f87171;
+}
+
+.eds-profile-dropdown .eds-logout-item:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.eds-profile-dropdown .eds-logout-item:hover i {
+  color: #fca5a5;
+}
+
+.eds-profile-dropdown .dropdown-divider {
+  margin: 6px 0;
+  opacity: 0.15;
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* Profile header inside dropdown */
+.eds-profile-dropdown-header {
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 6px;
+}
+
+.eds-profile-dropdown-header .name {
+  font-weight: 600;
+  color: var(--eds-white);
+  font-size: 0.95rem;
+}
+
+.eds-profile-dropdown-header .role {
+  font-size: 0.75rem;
+  color: var(--eds-text-light);
+  margin-top: 2px;
+}
+
+/* Fix dropdown toggle caret color */
+.eds-navbar-profile.dropdown-toggle::after {
+  color: var(--eds-text-light);
+  font-size: 0.7rem;
+}
+
+/* ===== SWITCH VIEW DROPDOWN (navbar) ===== */
+.eds-switch-view-dropdown {
+  margin-right: 12px;
+}
+
+.eds-switch-view-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--eds-radius-md);
+  background: var(--eds-blue-bg);
+  border: 1px solid var(--eds-border-light);
+  cursor: pointer;
+  transition: all var(--eds-transition-fast);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--eds-primary);
+}
+
+.eds-switch-view-trigger:hover {
+  background: var(--eds-border);
+  border-color: var(--eds-border);
+}
+
+.eds-switch-view-trigger i {
+  font-size: 0.9rem;
+  color: var(--eds-accent);
+}
+
+.eds-switch-view-trigger::after {
+  color: var(--eds-text-light);
+  font-size: 0.65rem;
+}
+
+.eds-switch-view-menu {
+  border: 1px solid var(--eds-border);
+  border-radius: var(--eds-radius-lg);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.08);
+  padding: 8px;
+  min-width: 200px;
+  margin-top: 8px !important;
+  background: var(--eds-white);
+}
+
+.eds-switch-view-menu .dropdown-item {
+  border-radius: var(--eds-radius-sm);
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--eds-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all var(--eds-transition-fast);
+}
+
+.eds-switch-view-menu .dropdown-item i {
+  font-size: 1.2rem;
+  color: var(--eds-text-light);
+  width: 22px;
+  text-align: center;
+  transition: all var(--eds-transition-fast);
+}
+
+.eds-switch-view-menu .dropdown-item:hover {
+  background: var(--eds-blue-bg);
+  color: var(--eds-accent);
+}
+
+.eds-switch-view-menu .dropdown-item:hover i {
+  color: var(--eds-accent);
+}
+
+.eds-switch-view-menu .dropdown-item.active {
+  background: var(--eds-accent-gradient);
+  color: var(--eds-white);
+  font-weight: 600;
+}
+
+.eds-switch-view-menu .dropdown-item.active i {
+  color: var(--eds-white);
+}
+
+/* Active indicator dot */
+.eds-switch-view-menu .dropdown-item.active::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--eds-white);
+  margin-left: auto;
+}
+
 /* ===== LANDING PAGE SPECIFIC ===== */
 
 /* Hero Section */

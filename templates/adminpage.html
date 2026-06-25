@@ -325,19 +325,7 @@
                     <div class="eds-quick-action-label">Edit My Info</div>
                     <span class="eds-quick-action-badge">1</span>
                 </div>
-                <div class="eds-quick-action" id="btn-quick-dashboard">
-                    <div class="eds-quick-action-icon"><i class="bi bi-speedometer2"></i></div>
-                    <div class="eds-quick-action-label">Dashboard</div>
-                </div>
-                <div class="eds-quick-action" id="btn-quick-leave">
-                    <div class="eds-quick-action-icon"><i class="bi bi-calendar-check"></i></div>
-                    <div class="eds-quick-action-label">Leave</div>
-                </div>
-                <div class="eds-quick-action" id="btn-quick-employees">
-                    <div class="eds-quick-action-icon"><i class="bi bi-people"></i></div>
-                    <div class="eds-quick-action-label">Employees</div>
-                </div>
-                <div class="eds-quick-action" id="btn-quick-company">
+                <div class="eds-quick-action" id="btn-quick-company" style="display:none;">
                     <div class="eds-quick-action-icon"><i class="bi bi-building"></i></div>
                     <div class="eds-quick-action-label">Company</div>
                 </div>
@@ -351,14 +339,11 @@
         <!-- ===== Main LMS Content (toggled by navbar) ===== -->
         <div id="main-content">
 
-            <!-- ===== Profile Selector ===== -->
-            <div class="d-flex align-items-center gap-3 mb-3" data-hide="{{ hide_element }}" id="profile-selector">
-                <label class="profile-label">Switch View:</label>
-                <select id="profile-select" class="eds-form-select" style="width: auto; min-width: 160px;">
-                    <option value="user" selected>My Profile</option>
-                    <option id="adminoptionchoice" value="admin" data-hide="{{ hide_element }}">Admin</option>
-                </select>
-            </div>
+            <!-- ===== Hidden profile select (for JS compatibility) ===== -->
+            <select id="profile-select" style="display:none;">
+                <option value="user" selected>My Profile</option>
+                <option id="adminoptionchoice" value="admin" data-hide="{{ hide_element }}">Admin</option>
+            </select>
 
 
 
@@ -3360,6 +3345,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (shouldHide === "True") {
             myDiv.remove();
             localStorage.removeItem('selectedProfile');
+            // Also remove admin option from navbar switch view dropdown
+            const navbarAdminOption = document.getElementById('navbar-admin-option');
+            if (navbarAdminOption) navbarAdminOption.remove();
         }
 
     const myDiv2 = document.getElementById('approversonly');
@@ -3370,39 +3358,6 @@ document.addEventListener('DOMContentLoaded', () => {
             myDiv2.remove();
         }
 
-
-    const myDiv3 = document.getElementById('attendance');
-
-    if (myDiv3) {
-        const shouldHide3 = myDiv3.getAttribute('data-hide');  // Correct attribute
-
-        // Hide if data-hide is "True"
-        if (shouldHide3 === "True") {
-            myDiv3.remove();
-        }
-    }
-
-    const myDiv4 = document.getElementById('performance');
-
-    if (myDiv4) {
-        const shouldHide4= myDiv4.getAttribute('data-hide');  // Correct attribute
-
-        // Hide if data-hide is "True"
-        if (shouldHide4 === "True") {
-            myDiv4.remove();
-        }
-    }
-
-    const myDiv5 = document.getElementById('payroll');
-
-    if (myDiv5) {
-        const shouldHide5= myDiv5.getAttribute('data-hide');  // Correct attribute
-
-        // Hide if data-hide is "True"
-        if (shouldHide5 === "True") {
-            myDiv5.remove();
-        }
-    }
 
     document.getElementById('formatexcellmsbookexport').addEventListener('click', () => {
             window.location.href = '/export_lms_book_excel';
@@ -5038,10 +4993,14 @@ $(document).ready(function() {
     function toggleProfileContent() {
     const selectedProfile = profileSelect.value;
     
+    // Show/hide Company quick action based on admin profile
+    const companyBtn = document.getElementById('btn-quick-company');
+    
     if (selectedProfile === 'user') {
         // Show user content, hide admin content with smooth transition
         userContent.style.display = 'block';
         adminContent.style.display = 'none';
+        if (companyBtn) companyBtn.style.display = 'none';
         setTimeout(() => {
             userContent.classList.add('fade-in');
             adminContent.classList.remove('fade-out');
@@ -5050,6 +5009,7 @@ $(document).ready(function() {
         // Show admin content, hide user content with smooth transition
         adminContent.style.display = 'block';
         userContent.style.display = 'none';
+        if (companyBtn) companyBtn.style.display = '';
         setTimeout(() => {
             adminContent.classList.add('fade-in');
             userContent.classList.remove('fade-out');
@@ -5063,6 +5023,31 @@ $(document).ready(function() {
 // Event listener for profile select change
 profileSelect.addEventListener('change', toggleProfileContent);
 
+// ===== Navbar Switch View Dropdown =====
+function syncNavbarSwitchView(value) {
+    const label = document.getElementById('navbar-switch-label');
+    const items = document.querySelectorAll('.eds-switch-item');
+    items.forEach(item => {
+        item.classList.toggle('active', item.dataset.value === value);
+    });
+    if (value === 'admin') {
+        label.textContent = 'Admin';
+    } else {
+        label.textContent = 'My Profile';
+    }
+}
+
+document.querySelectorAll('.eds-switch-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const value = this.dataset.value;
+        // Update hidden select
+        profileSelect.value = value;
+        toggleProfileContent();
+        syncNavbarSwitchView(value);
+    });
+});
+
 // On page load, retrieve the stored profile and apply it
 window.addEventListener('load', function() {
     const savedProfile = localStorage.getItem('selectedProfile');
@@ -5070,6 +5055,7 @@ window.addEventListener('load', function() {
     if (savedProfile) {
         profileSelect.value = savedProfile;
         toggleProfileContent();  // Apply the stored profile on page load
+        syncNavbarSwitchView(savedProfile);
     }
 });
 

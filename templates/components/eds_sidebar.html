@@ -41,23 +41,38 @@
 
     <div class="eds-navbar-right">
         {% if firstname is defined %}
-        <div class="eds-navbar-profile">
-            <div class="eds-navbar-avatar">{{ firstname[0] }}{{ surname[0] if surname is defined else '' }}</div>
-            <div>
-                <div class="eds-navbar-user">{{ firstname }} {{ surname | default('') }}</div>
-                <div class="eds-navbar-role">{{ role_narr | default('User') }}</div>
+
+        <!-- ===== Switch View Dropdown ===== -->
+        <div class="dropdown eds-switch-view-dropdown" id="navbar-switch-view">
+            <div class="eds-switch-view-trigger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" role="button">
+                <i class="bi bi-arrow-left-right"></i>
+                <span id="navbar-switch-label">My Profile</span>
             </div>
+            <ul class="dropdown-menu eds-switch-view-menu">
+                <li><a class="dropdown-item eds-switch-item active" data-value="user" href="#"><i class="bi bi-person-circle"></i> My Profile</a></li>
+                <li id="navbar-admin-option"><a class="dropdown-item eds-switch-item" data-value="admin" href="#"><i class="bi bi-shield-lock"></i> Admin</a></li>
+            </ul>
         </div>
-        {% endif %}
-        
-        {% if logout_url is defined %}
-            <button class="eds-btn eds-btn-sm eds-btn-outline-accent" onclick="window.location.href='{{ logout_url }}'">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </button>
-        {% else %}
-            <button class="eds-btn eds-btn-sm eds-btn-outline-accent" onclick="window.location.href='/logout'">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </button>
+
+        <!-- ===== Profile Dropdown ===== -->
+        <div class="dropdown">
+            <div class="eds-navbar-profile dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" role="button">
+                <div class="eds-navbar-avatar">{{ firstname[0] }}{{ surname[0] if surname is defined else '' }}</div>
+                <div>
+                    <div class="eds-navbar-user">{{ firstname }} {{ surname | default('') }}</div>
+                    <div class="eds-navbar-role">{{ role_narr | default('User') }}</div>
+                </div>
+            </div>
+            <ul class="dropdown-menu dropdown-menu-end eds-profile-dropdown">
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editinfoModal"><i class="bi bi-pencil-square"></i> Edit My Info</a></li>
+                <li><hr class="dropdown-divider"></li>
+                {% if logout_url is defined %}
+                <li><a class="dropdown-item eds-logout-item" href="{{ logout_url }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                {% else %}
+                <li><a class="dropdown-item eds-logout-item" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                {% endif %}
+            </ul>
+        </div>
         {% endif %}
     </div>
 </nav>
