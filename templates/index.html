@@ -55,6 +55,23 @@
             .btn-primary9 { width: 80%; }
             .stat-number { font-size: 2.5rem; }
         }
+
+        /* ===== BLURRY MODAL OVERLAY ===== */
+        .modal-backdrop {
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            background: rgba(10, 26, 58, 0.6) !important;
+        }
+        .modal-content {
+            border-radius: 16px;
+            border: 1px solid rgba(79, 70, 229, 0.1);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(79,70,229,0.08);
+            animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
     </style>
 </head>
 <body>
