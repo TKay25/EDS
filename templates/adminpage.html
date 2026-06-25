@@ -28,17 +28,29 @@
         }
 
         .summary-card {
-            background: var(--eds-white);
+            background: linear-gradient(135deg, var(--eds-white) 0%, rgba(220,20,60,0.02) 100%);
             border-radius: var(--eds-radius-lg);
             padding: 14px;
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: var(--eds-shadow-sm);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
             border: 1px solid var(--eds-border-light);
-            transition: all var(--eds-transition-normal);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
             overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--eds-accent-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .summary-card::after {
@@ -54,15 +66,24 @@
         }
 
         .summary-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--eds-shadow-md);
-            border-color: rgba(220, 20, 60, 0.15);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 8px 25px rgba(220,20,60,0.1);
+            border-color: rgba(220, 20, 60, 0.2);
+        }
+
+        .summary-card:hover::before {
+            opacity: 1;
         }
 
         .summary-card .icon {
             font-size: 1.4rem;
             color: var(--eds-accent);
-            opacity: 0.85;
+            opacity: 0.9;
+            transition: transform 0.3s ease;
+        }
+
+        .summary-card:hover .icon {
+            transform: scale(1.15);
         }
 
         .summary-card .details h5 {
@@ -625,63 +646,56 @@
                     <div class="tab-pane fade show active" id="dashboard-tab">
                         <div class="dashboard-summary">
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-people-fill fs-3" style="color: #003366;"></i></div>
-                                <div class="details">
-                                    <h5 style="font-weight: bolder;">Total Employees</h5>
-                                    <p>{{ total_employees }}</p>
-                                </div>
-                            </div>
-                            <div class="summary-card">
-                                <div class="icon"><i class="bi bi-hourglass-split fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-hourglass-split fs-3"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Open Leave Requests</h5>
                                     <p>{{ open_requests }}</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-calendar2-check-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-calendar2-check-fill fs-3"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Approved Leave</h5>
                                     <p>{{ approved_requests }}</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-check-circle-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-check-circle-fill fs-3"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Approval Rate</h5>
                                     <p>{{ approval_rate }}%</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-stopwatch-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-stopwatch-fill fs-3"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Average Approval Time</h5>
                                     <p>{{ avg_approval_time }} days</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-graph-up fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-graph-up fs-3"></i></div>
                                 <div class="details">
                                     <h5  style="font-weight: bolder;">Leave Days Utilization</h5>
                                     <p>{{ leave_utilization_rate }}%</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-1-circle-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-1-circle-fill fs-3"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Top Leave Type</h5>
                                     <p>{{ top_leave_type }} Leave</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-calendar2-date-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-calendar2-date-fill fs-3"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Average Leave Days / Emp</h5>
                                     <p>{{ avg_leave_days }}</p>
                                 </div>
                             </div>
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-clock-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-clock-fill fs-3"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Longest Leave</h5>
                                     <p>{{ longest_leave_days }} days</p>
@@ -689,7 +703,7 @@
                             </div>
 
                             <div class="summary-card">
-                                <div class="icon"><i class="bi bi-calendar-month-fill fs-3" style="color: #003366;"></i></div>
+                                <div class="icon"><i class="bi bi-calendar-month-fill fs-3"></i></div>
                                 <div class="details">
                                     <h5 style="font-weight: bolder;">Peak Leave Month</h5>
                                     <p>{{ peak_leave_month }}</p>
@@ -746,6 +760,13 @@
                     </div>
                 </div>
                 <div class="tab-pane fade" id="employee-profiles-tab">
+                    <div class="summary-card" style="margin-bottom:16px; max-width:280px;">
+                        <div class="icon"><i class="bi bi-people-fill"></i></div>
+                        <div class="details">
+                            <h5 style="font-weight:bolder;margin:0 0 2px 0;font-size:0.65rem;color:var(--eds-text-light);text-transform:uppercase;">Total Employees</h5>
+                            <p style="margin:0;font-size:1.4rem;font-weight:700;color:var(--eds-primary);">{{ total_employees }}</p>
+                        </div>
+                    </div>
                     <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addEmployeeModal"><i class="bi bi-person-plus-fill"></i>    Add New Employee(s)</button>
                     <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#RemoveEmployeeModal"><i class="bi bi-person-dash-fill"></i>    Remove Employee(s)</button>
                     <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#editempdetailsModal" style="width: max-content;"><i class="bi bi-people-fill"></i>    Edit Employee Personal Details</button>
@@ -778,16 +799,48 @@
                 </div>
             </div>
         </div>
-    </main>
         </div>
         <!-- ===== END Main LMS Content ===== -->
 
         <!-- ===== Payroll Content (shown when Payroll navbar button clicked) ===== -->
         <div id="payroll-content" style="display: none;">
-            <div class="card" style="padding: 20px; margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h4><i class="bi bi-wallet2"></i> Employee Payroll Management</h4>
-                    <div>
+            <!-- Currency Settings Bar -->
+            <div class="card" style="padding: 16px 20px; margin-bottom: 16px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="bi bi-currency-exchange" style="font-size:1.5rem; color:var(--eds-accent);"></i>
+                        <div>
+                            <div style="font-weight:600; font-size:0.9rem; color:var(--eds-primary);">Currency Split Configuration</div>
+                            <div style="font-size:0.75rem; color:var(--eds-text-light);">USD / ZWG payment proportions</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--eds-primary);">USD:</span>
+                            <span id="payroll-usd-pct" style="font-size:0.9rem; font-weight:700; color:var(--eds-accent);">--%</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--eds-primary);">ZWG:</span>
+                            <span id="payroll-zwg-pct" style="font-size:0.9rem; font-weight:700; color:var(--eds-accent);">--%</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--eds-primary);">Rate:</span>
+                            <span id="payroll-rate" style="font-size:0.9rem; font-weight:700; color:var(--eds-primary);">--</span>
+                        </div>
+                        <button class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem;" data-bs-toggle="modal" data-bs-target="#uploadEmployeedetailsModal">
+                            <i class="bi bi-gear"></i> Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Payroll Table -->
+            <div class="card" style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap:wrap; gap:10px;">
+                    <h4 style="margin:0; font-size:1.1rem; font-weight:700; color:var(--eds-primary);">
+                        <i class="bi bi-wallet2" style="color:var(--eds-accent);"></i> Employee Payroll Management
+                    </h4>
+                    <div style="display:flex; gap:8px;">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadEmployeedetailsModal">
                             <i class="bi bi-upload"></i> Upload Payroll Details
                         </button>
@@ -798,6 +851,27 @@
                 </div>
             </div>
         </div>
+
+        <script>
+        // ===== Load payroll currency settings =====
+        (function() {
+            var currencyData = {{ currency_settings_json | default('null') | safe }};
+            if (currencyData) {
+                var usdPct = document.getElementById('payroll-usd-pct');
+                var zwgPct = document.getElementById('payroll-zwg-pct');
+                var rate = document.getElementById('payroll-rate');
+                if (currencyData.splitConfig) {
+                    if (usdPct) usdPct.textContent = currencyData.splitConfig.usdPercent + '%';
+                    if (zwgPct) zwgPct.textContent = currencyData.splitConfig.zwgPercent + '%';
+                    if (rate) rate.textContent = currencyData.splitConfig.exchangeRate || 'N/A';
+                } else {
+                    if (usdPct) usdPct.textContent = '100%';
+                    if (zwgPct) zwgPct.textContent = '0%';
+                    if (rate) rate.textContent = 'N/A';
+                }
+            }
+        })();
+        </script>
         <!-- ===== END Payroll Content ===== -->
 
 
