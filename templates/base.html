@@ -19,8 +19,10 @@
 
     {% block extra_css %}{% endblock %}
 
-    <!-- ===== EDS Design System ===== -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
+    <!-- ===== EDS Design System ===== -->    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#07101E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
     {% block inline_css %}{% endblock %}
 </head>
 <body>
@@ -55,6 +57,14 @@
             else btn.classList.remove('active');
         }
     });
+    </script>
+    <!-- ===== PWA Service Worker Registration ===== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(() => console.log('EDS LMS: Service Worker registered'))
+                .catch(err => console.log('EDS LMS: SW registration failed', err));
+        }
     </script>
 </body>
 </html>

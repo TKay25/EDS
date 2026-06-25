@@ -6,7 +6,7 @@
 /* ===== DESIGN TOKENS ===== */
 :root {
   /* Brand Colors */
-  --eds-primary: #0D1B2A;
+  --eds-primary: #07101E;
   --eds-primary-dark: #070F1A;
   --eds-primary-light: #1B2F45;
   --eds-accent: #DC143C;
@@ -1184,10 +1184,21 @@ a:hover {
   margin-top: 2px;
 }
 
-/* Fix dropdown toggle caret color */
+/* Fix dropdown toggle caret - bigger & bolder */
 .eds-navbar-profile.dropdown-toggle::after {
-  color: var(--eds-text-light);
-  font-size: 0.7rem;
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+  content: "";
+  border-top: 6px solid var(--eds-accent);
+  border-right: 5px solid transparent;
+  border-bottom: 0;
+  border-left: 5px solid transparent;
+  transition: transform 0.2s ease;
+}
+
+.eds-navbar-profile.dropdown-toggle.show::after {
+  transform: rotate(180deg);
 }
 
 /* ===== SWITCH VIEW DROPDOWN (navbar) ===== */
@@ -1221,8 +1232,19 @@ a:hover {
 }
 
 .eds-switch-view-trigger::after {
-  color: var(--eds-text-light);
-  font-size: 0.65rem;
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+  content: "";
+  border-top: 5px solid var(--eds-accent);
+  border-right: 4px solid transparent;
+  border-bottom: 0;
+  border-left: 4px solid transparent;
+  transition: transform 0.2s ease;
+}
+
+.eds-switch-view-trigger.dropdown-toggle.show::after {
+  transform: rotate(180deg);
 }
 
 .eds-switch-view-menu {

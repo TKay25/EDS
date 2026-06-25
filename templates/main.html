@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#07101E">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
     <style>
         /* Hero Carousel */
@@ -513,6 +515,14 @@
                 $('html, body').animate({ scrollTop: $(target).offset().top - 70 }, 700, 'easeInOutCubic');
             }
         });
+    </script>
+    <!-- ===== PWA Service Worker Registration ===== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(() => console.log('EDS LMS: Service Worker registered'))
+                .catch(err => console.log('EDS LMS: SW registration failed', err));
+        }
     </script>
 </body>
 </html>

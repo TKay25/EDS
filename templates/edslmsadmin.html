@@ -12,6 +12,10 @@
     <link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#07101E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
     <style>
         /* Main Styling */
@@ -1082,5 +1086,13 @@
     </script>
 
 <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
+    <!-- ===== PWA Service Worker Registration ===== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(() => console.log('EDS LMS: Service Worker registered'))
+                .catch(err => console.log('EDS LMS: SW registration failed', err));
+        }
+    </script>
 </body>
 </html>

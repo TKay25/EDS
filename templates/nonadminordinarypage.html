@@ -709,5 +709,13 @@ $('#savePrivileges').on('click', function() {
 </script>
 
 <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
+    <!-- ===== PWA Service Worker Registration ===== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(() => console.log('EDS LMS: Service Worker registered'))
+                .catch(err => console.log('EDS LMS: SW registration failed', err));
+        }
+    </script>
 </body>
 </html>

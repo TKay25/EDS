@@ -1,0 +1,26 @@
+{
+  "name": "Echelon Digital Solutions LMS",
+  "short_name": "EDS LMS",
+  "description": "Leave Management System by Echelon Digital Solutions",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#07101E",
+  "theme_color": "#07101E",
+  "categories": ["business", "productivity", "human resources"],
+  "icons": [
+    {
+      "src": "/static/images/eds blue.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/eds blue.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
