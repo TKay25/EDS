@@ -3740,16 +3740,16 @@ document.addEventListener('DOMContentLoaded', () => {
     var excelBtn = document.getElementById('formatexcellmsbookexport');
     if (excelBtn) {
         excelBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.open('/export_lms_book_excel', '_blank');
+            e.target.blur();
+            window.location.href = '/export_lms_book_excel';
         });
     }
 
     var pdfBtn = document.getElementById('formatpdflmsbookexport');
     if (pdfBtn) {
         pdfBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.open('/export_lms_book_pdf', '_blank');
+            e.target.blur();
+            window.location.href = '/export_lms_book_pdf';
         });
     }
 
