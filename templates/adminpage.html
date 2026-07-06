@@ -2178,15 +2178,19 @@ $(document).ready(function() {
 <script>
 // JavaScript functions
 function updateSplitOptionAvailability() {
-    const baseCurrency = document.getElementById('baseCurrency').value;
+    const baseCurrencyEl = document.getElementById('baseCurrency');
+    if (!baseCurrencyEl) return; // Element not in DOM yet
+    const baseCurrency = baseCurrencyEl.value;
     const splitOption = document.getElementById('splitOption');
     const splitOptionContainer = document.getElementById('splitOptionContainer');
     const zwgBaseMessage = document.getElementById('zwgBaseMessage');
     const splitConfigSection = document.getElementById('splitConfigSection');
     
     // Update labels
-    document.getElementById('baseCurrencyLabel').textContent = baseCurrency;
-    document.getElementById('currentBaseCurrency').textContent = baseCurrency;
+    const bcl = document.getElementById('baseCurrencyLabel');
+    const cbc = document.getElementById('currentBaseCurrency');
+    if (bcl) bcl.textContent = baseCurrency;
+    if (cbc) cbc.textContent = baseCurrency;
     
     if (baseCurrency === 'ZWG') {
         // Hide split option when base is ZWG
@@ -2210,9 +2214,12 @@ function updateSplitOptionAvailability() {
 }
 
 function toggleSplitOptions() {
-    const splitOption = document.getElementById('splitOption').value;
+    const splitOptEl = document.getElementById('splitOption');
+    const baseCurrencyEl = document.getElementById('baseCurrency');
+    if (!splitOptEl || !baseCurrencyEl) return;
+    const splitOption = splitOptEl.value;
     const splitConfigSection = document.getElementById('splitConfigSection');
-    const baseCurrency = document.getElementById('baseCurrency').value;
+    const baseCurrency = baseCurrencyEl.value;
     
     if (baseCurrency === 'ZWG') {
         // Never show split if base is ZWG
@@ -2231,10 +2238,13 @@ function toggleSplitOptions() {
 }
 
 function calculateZWGSplit() {
-    const usdPercent = parseFloat(document.getElementById('usdSplitPercent').value) || 0;
+    const usdEl = document.getElementById('usdSplitPercent');
+    if (!usdEl) return false;
+    const usdPercent = parseFloat(usdEl.value) || 0;
     const zwgPercent = 100 - usdPercent;
     
-    document.getElementById('zwgSplitPercent').value = zwgPercent.toFixed(2);
+    const zwgEl = document.getElementById('zwgSplitPercent');
+    if (zwgEl) zwgEl.value = zwgPercent.toFixed(2);
     
     // Validate
     const validationDiv = document.getElementById('splitValidation');
@@ -2258,8 +2268,11 @@ function calculateZWGSplit() {
 }
 
 function updatePreview() {
-    const baseCurrency = document.getElementById('baseCurrency').value;
-    const splitOption = document.getElementById('splitOption').value;
+    const baseCurrencyEl = document.getElementById('baseCurrency');
+    const splitOptEl = document.getElementById('splitOption');
+    if (!baseCurrencyEl || !splitOptEl) return;
+    const baseCurrency = baseCurrencyEl.value;
+    const splitOption = splitOptEl.value;
     const previewDiv = document.getElementById('settingsPreview');
     
     if (baseCurrency === 'ZWG') {
@@ -3726,15 +3739,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     var excelBtn = document.getElementById('formatexcellmsbookexport');
     if (excelBtn) {
-        excelBtn.addEventListener('click', () => {
-            window.location.href = '/export_lms_book_excel';
+        excelBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.open('/export_lms_book_excel', '_blank');
         });
     }
 
     var pdfBtn = document.getElementById('formatpdflmsbookexport');
     if (pdfBtn) {
-        pdfBtn.addEventListener('click', () => {
-            window.location.href = '/export_lms_book_pdf';
+        pdfBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.open('/export_lms_book_pdf', '_blank');
         });
     }
 
