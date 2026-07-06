@@ -20190,9 +20190,12 @@ def disapprove_leave_application():
 @app.route('/export_lms_book_excel')
 def export_excel():
 
+    user_uuid = session.get('user_uuid')
+    if not user_uuid:
+        return "Unauthorized - Please log in", 401
+
     with get_db() as (cursor, connection):
 
-        user_uuid = session.get('user_uuid')
         if user_uuid:
 
             try:

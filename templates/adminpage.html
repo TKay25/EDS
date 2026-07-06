@@ -557,6 +557,7 @@
                 <option value="user" selected>My Profile</option>
                 <option id="adminoptionchoice" value="admin" data-hide="{{ hide_element }}">Admin</option>
             </select>
+        </div>
 
 
 
@@ -799,9 +800,6 @@
                 </div>
             </div>
         </div>
-        </div>
-        </div>
-    </div>
         <!-- ===== END Main LMS Content ===== -->
 
         <!-- ===== Payroll Content (shown when Payroll navbar button clicked) ===== -->
@@ -855,6 +853,7 @@
         </div>
         <!-- ===== END Payroll Content ===== -->
 
+    </div>
 
     <div class="modal fade" id="exportleaveapplicationsreportModal" tabindex="-1" aria-labelledby="exportleaveapplicationsreportModalLabel" >
         <div class="modal-dialog">
@@ -1458,7 +1457,7 @@
                 <select style="font-size: 13px;" class="form-control form-control-blue" name="role-emp-add" id="role-emp-add" required>
                   <option value="" disabled selected>Select Employee Role</option>
                   <option value="Administrator">Administrator</option>
-                  <option value="Ordinary User">Ordinary User</option>
+                  <option value="Ordinary User">Ordinary User</option> 
                 </select>
             </div>
             <div class="form-group">
@@ -1625,8 +1624,10 @@
     </div>
   </div>
   
+  <input type="hidden" id="role"  name="role" value="{{ role }}">
+  <input type="hidden" id="idadmin"  name="idadmin" value="{{ id }}">
 
-    <div class="modal fade" id="editModalapprover" tabindex="-1" role="dialog" aria-labelledby="editModalapproverLabel">
+  <div class="modal fade" id="editModalapprover" tabindex="-1" role="dialog" aria-labelledby="editModalapproverLabel">
         <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -1843,6 +1844,7 @@
 </div>
 
 
+
 <div class="modal fade" id="BulkLeaveDaysBalanceModal" tabindex="-1" aria-labelledby="BulkLeaveDaysBalanceModalLabel">
     <div class="modal-dialog" style="max-width: 40%;">
         <div class="modal-content">
@@ -1894,17 +1896,6 @@
         </div>
     </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2436,11 +2427,13 @@ function showAlert(type, message) {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners for live updates
-    document.getElementById('usdSplitPercent').addEventListener('input', updatePreview);
-    document.getElementById('exchangeRateToZWG').addEventListener('input', updatePreview);
+    var usdInput = document.getElementById('usdSplitPercent');
+    if (usdInput) usdInput.addEventListener('input', updatePreview);
+    var exchangeInput = document.getElementById('exchangeRateToZWG');
+    if (exchangeInput) exchangeInput.addEventListener('input', updatePreview);
     
     // Initial setup
-    updateSplitOptionAvailability();
+    if (typeof updateSplitOptionAvailability === 'function') updateSplitOptionAvailability();
 });
 </script>
 
@@ -2579,8 +2572,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 },
                 tooltip: {
-                    mode: 'index',
-                    intersect: false,
                     backgroundColor: 'rgba(7,16,30,0.9)',
                     titleFont: { size: 13, weight: '600' },
                     bodyFont: { size: 12 },
@@ -2598,12 +2589,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     beginAtZero: true,
                     suggestedMax: 100,
                     grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-                    ticks: { font: { size: 11 } },
-                    title: {
-                        display: true,
-                        text: '% Department Occupancy',
-                        font: { size: 11, weight: '600' }
-                    }
+                    ticks: { font: { size: 11 } }
                 },
                 x: {
                     grid: { display: false },
@@ -3244,7 +3230,7 @@ $('#adminextrainfo').on('click', function () {
     // Optional: Show a loading overlay
     $('#edsLoader').show();
 
-    // AJAX request to send data to Flask backend
+    // Send the form data using AJAX
     $.ajax({
         url: '/admin-modal',  // Replace with your Flask endpoint
         method: 'POST',
@@ -3262,9 +3248,14 @@ $('#adminextrainfo').on('click', function () {
             // Hide loading overlay
             $('#edsLoader').hide();
 
-            // Handle error (e.g., display error message)
-            alert('Error: ' + error);
-            console.error("Error details:", xhr.responseText);
+            // Check the response for more specific error messages
+            if (xhr.status === 400) {
+                alert('Bad Request: Please check your input data.');
+            } else if (xhr.status === 500) {
+                alert('Server Error: Something went wrong on the server side.');
+            } else {
+                alert('Error: ' + error);
+            }
         }
     });
 });
@@ -3353,9 +3344,17 @@ $('#editbalanceconfirm').on('click', function() {
 
         },
         error: function(xhr, status, error) {
-            // Handle any errors (e.g., alert user)
-            alert('Error: ' + error);
-            $('#edsLoader').hide();  // Hide overlay if error occurs
+            // Hide loading overlay and display error message
+            $('#edsLoader').hide();
+
+            // Check the response for more specific error messages
+            if (xhr.status === 400) {
+                alert('Bad Request: Please check your input data.');
+            } else if (xhr.status === 500) {
+                alert('Server Error: Something went wrong on the server side.');
+            } else {
+                alert('Error: ' + error);
+            }
         }
     });
 });
@@ -3393,7 +3392,8 @@ $('#saveaddemployee').on('click', function(e) {
     $.ajax({
         url: '/manual_add_employee',
         method: 'POST',
-        data: formData,
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
         success: function(response) {
             
             $('#addEmployeeModal').modal('hide');
@@ -3429,7 +3429,9 @@ $('#saveaddemployee').on('click', function(e) {
 
 
 
-document.getElementById('savenewinfocomp').addEventListener('click', function() {
+var savenewinfocompBtn = document.getElementById('savenewinfocomp');
+if (savenewinfocompBtn) {
+savenewinfocompBtn.addEventListener('click', function() {
     const firstnameInput = document.getElementById('firstname-editinfo-4-comp');
     const surnameInput = document.getElementById('surname-editinfo-4-comp');
     const whatsappInput = document.getElementById('whatsapp-editinfo-4-comp');
@@ -3507,7 +3509,9 @@ document.getElementById('savenewinfocomp').addEventListener('click', function() 
 
 
 
-document.getElementById('savenewinfo').addEventListener('click', function() {
+var savenewinfoBtn = document.getElementById('savenewinfo');
+if (savenewinfoBtn) {
+savenewinfoBtn.addEventListener('click', function() {
     const whatsappInput = document.getElementById('whatsapp-editinfo-4');
     const emailInput = document.getElementById('email-editinfo-4');
     const addressInput = document.getElementById('address-editinfo-4');
@@ -3555,9 +3559,12 @@ document.getElementById('savenewinfo').addEventListener('click', function() {
         }
     });
 });
+}
 
 
-document.getElementById('saveemployeepayrollBtn').addEventListener('click', function() {
+var payrollBtn = document.getElementById('saveemployeepayrollBtn');
+if (payrollBtn) {
+payrollBtn.addEventListener('click', function() {
     const firstnameInput = document.getElementById('firstname-editinfo-4-comp-payroll');
     const surnameInput = document.getElementById('surname-editinfo-4-comp-payroll');
     const datejoinedInput = document.getElementById('datejoined-editinfo-4-comp-payroll');
@@ -3700,36 +3707,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const myDiv = document.getElementById('adminoptionchoice');
+    if (myDiv) {
         const shouldHide = myDiv.getAttribute('data-hide');
-
-        // Hide if data-hide is "true"
         if (shouldHide === "True") {
             myDiv.remove();
             localStorage.removeItem('selectedProfile');
-            // Also remove admin option from navbar switch view dropdown
             const navbarAdminOption = document.getElementById('navbar-admin-option');
             if (navbarAdminOption) navbarAdminOption.remove();
         }
+    }
 
     const myDiv2 = document.getElementById('approversonly');
+    if (myDiv2) {
         const shouldHide2 = myDiv2.getAttribute('data-hide');
-
-        // Hide if data-hide is "true"
         if (shouldHide2 === "True") {
             myDiv2.remove();
         }
+    }
 
 
-    document.getElementById('formatexcellmsbookexport').addEventListener('click', () => {
+    var excelBtn = document.getElementById('formatexcellmsbookexport');
+    if (excelBtn) {
+        excelBtn.addEventListener('click', () => {
             window.location.href = '/export_lms_book_excel';
         });
+    }
 
-    document.getElementById('formatpdflmsbookexport').addEventListener('click', () => {
-        window.location.href = '/export_lms_book_pdf';
-    });
+    var pdfBtn = document.getElementById('formatpdflmsbookexport');
+    if (pdfBtn) {
+        pdfBtn.addEventListener('click', () => {
+            window.location.href = '/export_lms_book_pdf';
+        });
+    }
 
     // Handling form submission using AJAX
-    document.getElementById('upload-form').addEventListener('submit', function(event) {
+    var uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+    uploadForm.addEventListener('submit', function(event) {
         event.preventDefault(); // Prevent default form submission (since we're using AJAX)
 
         // Send the form data using AJAX
@@ -3757,7 +3771,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    document.getElementById('upload-form-payroll').addEventListener('submit', function(event) {
+    var uploadFormPayroll = document.getElementById('upload-form-payroll');
+    if (uploadFormPayroll) {
+    uploadFormPayroll.addEventListener('submit', function(event) {
         event.preventDefault(); // Prevent default form submission (since we're using AJAX)
 
         // Send the form data using AJAX
@@ -3787,7 +3803,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    document.getElementById('leaveForm').addEventListener('submit', function (e) {
+    var leaveFormEl = document.getElementById('leaveForm');
+    if (leaveFormEl) {
+    leaveFormEl.addEventListener('submit', function (e) {
     // Prevent the default form submission
     e.preventDefault();
 
@@ -3864,11 +3882,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   });
 
+    }
+
+
+    }
+
+
+    }
+
+
+});
+
 
 
     
     // Event listener for "Select All" button
-    document.getElementById('selectAllCheckboxes').addEventListener('click', function () {
+    var selectAllApproverBtn = document.getElementById('selectAllCheckboxes');
+    if (selectAllApproverBtn) {
+    selectAllApproverBtn.addEventListener('click', function () {
         const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-approver");
         checkboxes.forEach(checkbox => {
             if (!checkbox.checked) {
@@ -3878,9 +3909,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    }
 
     // Event listener for "Deselect All" button
-    document.getElementById('deselectAllCheckboxes').addEventListener('click', function () {
+    var deselectAllApproverBtn = document.getElementById('deselectAllCheckboxes');
+    if (deselectAllApproverBtn) {
+    deselectAllApproverBtn.addEventListener('click', function () {
         const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-approver");
         checkboxes.forEach(checkbox => {
             if (checkbox.checked) {
@@ -3890,35 +3924,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    }
 
     // Trigger file input click on button click
-    document.querySelector('.upload-template').addEventListener('click', function(event) {
+    var uploadTemplate = document.querySelector('.upload-template');
+    if (uploadTemplate) {
+    uploadTemplate.addEventListener('click', function(event) {
         event.preventDefault(); // Prevent any accidental form submission
         document.getElementById('file-upload').click(); // This will open file manager
     });
+    }
 
-    document.querySelector('.upload-template-payroll').addEventListener('click', function(event) {
+    var uploadTemplatePayroll = document.querySelector('.upload-template-payroll');
+    if (uploadTemplatePayroll) {
+    uploadTemplatePayroll.addEventListener('click', function(event) {
         event.preventDefault(); // Prevent any accidental form submission
         document.getElementById('file-upload-payroll').click(); // This will open file manager
     });
+    }
     // Submit form after a file is selected
-    document.getElementById('file-upload').addEventListener('change', function() {
+    var fileUpload = document.getElementById('file-upload');
+    if (fileUpload) {
+    fileUpload.addEventListener('change', function() {
         if (this.files.length > 0) {
             // Prevent form submission for now
             document.getElementById('upload-form').submit();  
             $('#edsLoader').show(); // Show loading overlay
         }
     });
+    }
 
 
     // Submit form after a file is selected
-    document.getElementById('file-upload-payroll').addEventListener('change', function() {
+    var fileUploadPayroll = document.getElementById('file-upload-payroll');
+    if (fileUploadPayroll) {
+    fileUploadPayroll.addEventListener('change', function() {
         if (this.files.length > 0) {
             // Prevent form submission for now
             document.getElementById('upload-form-payroll').submit();  
             $('#edsLoader').show(); // Show loading overlay
         }
     });
+    }
 
 
 
@@ -3973,13 +4020,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    document.getElementById('download-btn-excel-template').addEventListener('click', function() {
+    var downloadExcelBtn = document.getElementById('download-btn-excel-template');
+    if (downloadExcelBtn) {
+    downloadExcelBtn.addEventListener('click', function() {
         window.location.href = "/download-excel-template-add-employees";  // Triggers the Flask route to download the file
     });
+    }
 
-    document.getElementById('download-btn-excel-template-payroll').addEventListener('click', function() {
+    var downloadExcelPayrollBtn = document.getElementById('download-btn-excel-template-payroll');
+    if (downloadExcelPayrollBtn) {
+    downloadExcelPayrollBtn.addEventListener('click', function() {
         window.location.href = "/download-excel-template-payroll-employees";  // Triggers the Flask route to download the file
     });
+    }
 
     const bulkApproverAssignButton = document.getElementById('bulkapproverassign');
     const approverDropdown = document.getElementById('leaveapplicationsapprover-emp-bulk');
@@ -4045,7 +4098,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    document.getElementById('confirmAssign').addEventListener('click', function () {
+    var confirmAssignBtn = document.getElementById('confirmAssign');
+    if (confirmAssignBtn) {
+    confirmAssignBtn.addEventListener('click', function () {
         // Prepare the data to send to Flask
         const approver = document.getElementById('leaveapplicationsapprover-emp-bulk').value;
         const selectedEmployees = Array.from(document.getElementById('selectedEmployeesUl').children)
@@ -4127,8 +4182,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
-    document.getElementById('selectAllCheckboxesbalances').addEventListener('click', function () {
+    var selectAllBalBtn = document.getElementById('selectAllCheckboxesbalances');
+    if (selectAllBalBtn) {
+    selectAllBalBtn.addEventListener('click', function () {
         const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-balances");
         checkboxes.forEach(checkbox => {
             if (!checkbox.checked) {
@@ -4138,9 +4194,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    }
 
     // Event listener for "Deselect All" button
-    document.getElementById('deselectAllCheckboxesbalances').addEventListener('click', function () {
+    var deselectAllBalBtn = document.getElementById('deselectAllCheckboxesbalances');
+    if (deselectAllBalBtn) {
+    deselectAllBalBtn.addEventListener('click', function () {
         const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-balances");
         checkboxes.forEach(checkbox => {
             if (checkbox.checked) {
@@ -4150,6 +4209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    }
 
     const bulkBalancesAssignButton = document.getElementById('bulkbalancesassign');
     const balancesDropdown = document.getElementById('leavedaysbalance-emp-bulk');
@@ -4191,6 +4251,8 @@ document.addEventListener('DOMContentLoaded', () => {
     bulkBalancesAssignButton.addEventListener('click', function () {
         const selectedBalance = balancesDropdown.value;
 
+        console.log('Selected Balance:', selectedBalance);
+
         // Check if an approver is selected
         if (!selectedBalance) {
             alert('Please input new leave days balance before proceeding.');
@@ -4213,14 +4275,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    document.getElementById('confirmAssignbalances').addEventListener('click', function () {
+    var confirmBalBtn = document.getElementById('confirmAssignbalances');
+    if (confirmBalBtn) {
+    confirmBalBtn.addEventListener('click', function () {
         // Prepare the data to send to Flask
         const balance = document.getElementById('leavedaysbalance-emp-bulk').value;
         const selectedEmployees = Array.from(document.getElementById('selectedEmployeesUlbalances').children)
             .map(li => li.getAttribute('data-employee-id'));
 
         if (!balance || selectedEmployees.length === 0) {
-            alert('Please input new leave days balance and at least one employee before proceeding.');
+            alert('Please input new monthly leave days accumulator and at least one employee before proceeding.');
             return;
         }
 
@@ -4259,6 +4323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    }
 
 
 
@@ -4269,8 +4334,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
-    document.getElementById('selectAllCheckboxesaccumulators').addEventListener('click', function () {
+    var selectAllAccBtn = document.getElementById('selectAllCheckboxesaccumulators');
+    if (selectAllAccBtn) {
+    selectAllAccBtn.addEventListener('click', function () {
         const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-accumulators");
         checkboxes.forEach(checkbox => {
             if (!checkbox.checked) {
@@ -4280,6 +4346,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    }
 
 
     // ===== Navbar button handlers: Leave Portal / Payroll toggle =====
@@ -4338,7 +4405,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Event listener for "Deselect All" button
-    document.getElementById('deselectAllCheckboxesaccumulators').addEventListener('click', function () {
+    var deselectAllAccBtn = document.getElementById('deselectAllCheckboxesaccumulators');
+    if (deselectAllAccBtn) {
+    deselectAllAccBtn.addEventListener('click', function () {
         const checkboxes = document.querySelectorAll(".employee-checkbox-bulk-accumulators");
         checkboxes.forEach(checkbox => {
             if (checkbox.checked) {
@@ -4348,6 +4417,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    }
 
     const bulkAccumulatorsAssignButton = document.getElementById('bulkaccumulatorsassign');
     const accumulatorsDropdown = document.getElementById('leavedaysaccumulators-emp-bulk');
@@ -4393,7 +4463,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check if an approver is selected
         if (!selectedAccumulator) {
-            alert('Please input new leave days accumulator before proceeding.');
+            alert('Please input new monthly leave days accumulator before proceeding.');
             return;
         }
 
@@ -4413,7 +4483,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    document.getElementById('confirmAssignaccumulators').addEventListener('click', function () {
+    var confirmAccBtn = document.getElementById('confirmAssignaccumulators');
+    if (confirmAccBtn) {
+    confirmAccBtn.addEventListener('click', function () {
         // Prepare the data to send to Flask
         const accumulator = document.getElementById('leavedaysaccumulators-emp-bulk').value;
         const selectedEmployees = Array.from(document.getElementById('selectedEmployeesUlaccumulators').children)
@@ -4459,7 +4531,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
+    }
 
 
 
@@ -4645,7 +4717,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         errorMsg += "\nDetails: " + responseJSON.error;
                     }
                 } catch (e) {
-                    errorMsg += "\nUnexpected error format.";
+                    errorMsg += "\nCould not parse error response.";
                 }
 
                 alert("Error: " + errorMsg);
@@ -4672,7 +4744,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         currentIdrevokeapp = $(this).data('id');
-        $('#appreapply-id').text('APP ID: ' + currentIdrevokeapp );
+        $('#apprevoke-id').text('APP ID: ' + currentIdrevokeapp );
         var row = $('#myleaveappsTable td').filter(function() {
             return $(this).text() == currentIdrevokeapp ;
         }).closest('tr');
@@ -4685,7 +4757,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         var message = `Proceed to apply for Revocation of <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIdrevokeapp}</strong>]</span>?`;
         
-
+    
         $('#revokeappLeaveApplication').html(message);
 
 
@@ -4728,9 +4800,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
-
-
     let currentIdreviveapp = null
 
     $(document).on('click', '.revive-app-btn', function() {
@@ -4753,9 +4822,9 @@ document.addEventListener('DOMContentLoaded', () => {
         var leaveEndDate = formatDate(row.find('td').eq(5).text());
         var leavedays = row.find('td').eq(6).text();
         
-        var message = `Proceed to Revive <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${name}</span></strong> applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIdreviveapp}</strong>]</span>?`;
+        var message = `Proceed to Revive <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavetype}</span></strong> Leave Application for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${name}</span> applied on <br><br> <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${dateapplied}</span></strong> <br><br> for <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leavedays} day(s)</span></strong> <br><br> from <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveStartDate}</span></strong> to <strong><span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">${leaveEndDate}</span></strong> <br><br> <span style="background-color:#e9f1fb;padding:7px; border-radius:15px;">[App ID -- <strong>${currentIdreviveapp}</strong>]</span>?`;
         
-
+    
         $('#reviveLeaveApplication').html(message);
 
 
@@ -5072,6 +5141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+
     // Update input value dynamically (optional, for reference or debugging)
     document.getElementById('leavedaysbalance-emp').addEventListener('input', function () {
         const inputValue = this.value;
@@ -5170,12 +5240,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
-
-
-
-});
-
   </script>
 <script>
     $(document).ready(function () {
@@ -5217,7 +5281,6 @@ document.addEventListener('DOMContentLoaded', () => {
             order: [[0, 'desc']] // Sort first column (index 0) in descending order
 
         });
-
         
         
         $('#myleaveappsTable').DataTable({
@@ -5280,7 +5343,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 </script>
 <script>
-$(document).ready(function() {
     // For Bulk Role Modal
     $('#BulkRoleModal').on('shown.bs.modal', function() {
         initializeBulkTable('#employeesbulk2Table');
@@ -5314,7 +5376,6 @@ $(document).ready(function() {
             console.log("Table not found:", tableId);
         }
     }
-});
 </script>
 <script>
     // Function to filter employees based on search input
@@ -5524,7 +5585,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <script>
     // ===== Load payroll currency settings from data attribute =====
-    (function() {
+    function loadPayrollCurrencySettings() {
         var payrollDiv = document.getElementById('payroll-content');
         if (payrollDiv) {
             var raw = payrollDiv.getAttribute('data-currency-settings');
@@ -5548,17 +5609,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 } catch(e) {}
             }
         }
-    })();
+    };
+
 </script>
 
 <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
-    <!-- ===== PWA Service Worker Registration ===== -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/static/service-worker.js')
-                .then(() => console.log('EDS LMS: Service Worker registered'))
-                .catch(err => console.log('EDS LMS: SW registration failed', err));
-        }
-    </script>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/service-worker.js')
+            .then(() => console.log('EDS LMS: Service Worker registered'))
+            .catch(err => console.log('EDS LMS: SW registration failed', err));
+    }
+</script>
 </body>
 </html>
+
