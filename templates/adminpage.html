@@ -496,6 +496,172 @@
                 transform: translateY(0) scale(1);
             }
         }
+
+        /* ===== Mobile Sidebar Toggle Button ===== */
+        .sidebar-toggle-btn {
+            display: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+            background: var(--eds-primary, #003366);
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .sidebar-toggle-btn:hover {
+            background: var(--eds-accent, #dc143c);
+        }
+
+        /* ===== Sidebar Overlay ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* ===== Sidebar Navigation ===== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: var(--eds-primary, #003366);
+            color: #fff;
+            z-index: 999;
+            transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-brand {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .sidebar-brand-accent {
+            color: var(--eds-accent, #dc143c);
+        }
+        .sidebar-close-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .sidebar-close-btn:hover {
+            color: #fff;
+        }
+
+        .sidebar-body {
+            padding: 16px 0;
+            flex: 1;
+        }
+        .sidebar-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 20px 16px;
+        }
+        .sidebar-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--eds-accent, #dc143c);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .sidebar-user-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .sidebar-user-role {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+        }
+        .sidebar-divider {
+            border-color: rgba(255,255,255,0.1);
+            margin: 8px 20px;
+        }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-left-color: var(--eds-accent, #dc143c);
+        }
+        .sidebar-nav-item.active {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            border-left-color: var(--eds-accent, #dc143c);
+        }
+        .sidebar-nav-item i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* ===== Mobile Responsive ===== */
+        @media (max-width: 992px) {
+            .sidebar-toggle-btn {
+                display: block;
+            }
+            .sidebar {
+                left: -280px;
+            }
+            .sidebar.active {
+                left: 0;
+            }
+        }
     </style>
 </head>
 
@@ -516,6 +682,52 @@
 
     <!-- ===== Top Navbar ===== -->
     {% include 'components/eds_sidebar.html' %}
+
+    <!-- ===== Mobile Sidebar Toggle Button ===== -->
+    <button class="sidebar-toggle-btn" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+        <i class="bi bi-list"></i> Menu
+    </button>
+
+    <!-- ===== Sidebar Overlay (for mobile) ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== Sidebar Navigation ===== -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-brand">EDS <span class="sidebar-brand-accent">LMS</span></span>
+            <button class="sidebar-close-btn" id="sidebarCloseBtn">&times;</button>
+        </div>
+        <div class="sidebar-body">
+            <div class="sidebar-user-info">
+                <div class="sidebar-avatar">{{ firstname[0] }}{{ surname[0] if surname is defined else '' }}</div>
+                <div>
+                    <div class="sidebar-user-name">{{ firstname }} {{ surname | default('') }}</div>
+                    <div class="sidebar-user-role">{{ role_narr | default('User') }}</div>
+                </div>
+            </div>
+            <hr class="sidebar-divider">
+            <nav class="sidebar-nav">
+                <a class="sidebar-nav-item active" href="#" onclick="switchProfile('user')">
+                    <i class="bi bi-person-circle"></i> My Dashboard
+                </a>
+                <a class="sidebar-nav-item" href="#" data-bs-toggle="modal" data-bs-target="#leaveApplicationModal">
+                    <i class="bi bi-file-earmark-medical"></i> Apply for Leave
+                </a>
+                <a class="sidebar-nav-item" href="#" data-bs-toggle="modal" data-bs-target="#editinfoModal">
+                    <i class="bi bi-pencil-square"></i> Edit My Info
+                </a>
+                {% if hide_element is not defined or not hide_element %}
+                <a class="sidebar-nav-item" href="#" onclick="switchProfile('admin')">
+                    <i class="bi bi-shield-lock"></i> Admin Panel
+                </a>
+                {% endif %}
+                <hr class="sidebar-divider">
+                <a class="sidebar-nav-item" href="/logout">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </nav>
+        </div>
+    </div>
 
     <!-- ===== Main Content ===== -->
     <div class="eds-app-shell">
@@ -2037,8 +2249,17 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleMenu(false);
     });
     
+    // Close menu when clicking the close button
+    const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleMenu(false);
+        });
+    }
+    
     // Close menu when clicking on a menu item (for better UX)
-    const menuItems = sidebar.querySelectorAll('.list-group-item, .accordion-button');
+    const menuItems = sidebar.querySelectorAll('.sidebar-nav-item, .list-group-item, .accordion-button');
     menuItems.forEach(item => {
         item.addEventListener('click', function() {
             if (window.innerWidth <= 992) {
@@ -2103,73 +2324,77 @@ $(document).ready(function() {
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Get settings from data attribute
-        const settingsElement = document.getElementById('currency-settings-data');
-        if (settingsElement) {
-            const settingsJson = settingsElement.dataset.settings;
-            try {
-                const currencySettings = JSON.parse(settingsJson);
-                
-                if (currencySettings) {
-                    console.log('Loading currency settings:', currencySettings);
+        // Get settings from data-currency-settings on the payroll-content div
+        const payrollContent = document.getElementById('payroll-content');
+        if (payrollContent) {
+            const settingsJson = payrollContent.getAttribute('data-currency-settings');
+            if (settingsJson && settingsJson.length > 0) {
+                try {
+                    const currencySettings = JSON.parse(settingsJson);
                     
-                    // Set base currency
-                    const baseCurrencySelect = document.getElementById('baseCurrency');
-                    if (baseCurrencySelect && currencySettings.baseCurrency) {
-                        baseCurrencySelect.value = currencySettings.baseCurrency;
-                    }
-                    
-                    // Set split option
-                    const splitOptionSelect = document.getElementById('splitOption');
-                    if (splitOptionSelect) {
-                        splitOptionSelect.value = currencySettings.splitEnabled ? '2' : '1';
-                    }
-                    
-                    // Trigger the toggle function to show/hide split config
-                    if (typeof toggleSplitOptions === 'function') {
-                        toggleSplitOptions();
-                    }
-                    
-                    // Set split configuration values if split is enabled
-                    if (currencySettings.splitEnabled && currencySettings.splitConfig) {
-                        const usdSplitPercent = document.getElementById('usdSplitPercent');
-                        const zwgSplitPercent = document.getElementById('zwgSplitPercent');
-                        const exchangeRate = document.getElementById('exchangeRateToZWG');
-                        const baseCurrencyLabel = document.getElementById('baseCurrencyLabel');
-                        const currentBaseCurrency = document.getElementById('currentBaseCurrency');
+                    if (currencySettings) {
+                        console.log('Loading currency settings:', currencySettings);
                         
-                        if (usdSplitPercent) {
-                            usdSplitPercent.value = currencySettings.splitConfig.usdPercent || 60;
-                        }
-                        if (zwgSplitPercent) {
-                            zwgSplitPercent.value = currencySettings.splitConfig.zwgPercent || 40;
-                        }
-                        if (exchangeRate) {
-                            exchangeRate.value = currencySettings.splitConfig.exchangeRate || 0;
-                        }
-                        if (baseCurrencyLabel) {
-                            baseCurrencyLabel.textContent = currencySettings.baseCurrency || 'USD';
-                        }
-                        if (currentBaseCurrency) {
-                            currentBaseCurrency.textContent = currencySettings.baseCurrency || 'USD';
+                        // Set base currency
+                        const baseCurrencySelect = document.getElementById('baseCurrency');
+                        if (baseCurrencySelect && currencySettings.baseCurrency) {
+                            baseCurrencySelect.value = currencySettings.baseCurrency;
                         }
                         
-                        // Trigger calculation
-                        if (typeof calculateZWGSplit === 'function') {
-                            calculateZWGSplit();
+                        // Set split option
+                        const splitOptionSelect = document.getElementById('splitOption');
+                        if (splitOptionSelect) {
+                            splitOptionSelect.value = currencySettings.splitEnabled ? '2' : '1';
+                        }
+                        
+                        // Trigger the toggle function to show/hide split config
+                        if (typeof toggleSplitOptions === 'function') {
+                            toggleSplitOptions();
+                        }
+                        
+                        // Set split configuration values if split is enabled
+                        if (currencySettings.splitEnabled && currencySettings.splitConfig) {
+                            const usdSplitPercent = document.getElementById('usdSplitPercent');
+                            const zwgSplitPercent = document.getElementById('zwgSplitPercent');
+                            const exchangeRate = document.getElementById('exchangeRateToZWG');
+                            const baseCurrencyLabel = document.getElementById('baseCurrencyLabel');
+                            const currentBaseCurrency = document.getElementById('currentBaseCurrency');
+                            
+                            if (usdSplitPercent) {
+                                usdSplitPercent.value = currencySettings.splitConfig.usdPercent || 60;
+                            }
+                            if (zwgSplitPercent) {
+                                zwgSplitPercent.value = currencySettings.splitConfig.zwgPercent || 40;
+                            }
+                            if (exchangeRate) {
+                                exchangeRate.value = currencySettings.splitConfig.exchangeRate || 0;
+                            }
+                            if (baseCurrencyLabel) {
+                                baseCurrencyLabel.textContent = currencySettings.baseCurrency || 'USD';
+                            }
+                            if (currentBaseCurrency) {
+                                currentBaseCurrency.textContent = currencySettings.baseCurrency || 'USD';
+                            }
+                            
+                            // Trigger calculation
+                            if (typeof calculateZWGSplit === 'function') {
+                                calculateZWGSplit();
+                            }
+                        }
+                        
+                        // Update split option availability based on base currency
+                        if (typeof updateSplitOptionAvailability === 'function') {
+                            updateSplitOptionAvailability();
                         }
                     }
-                    
-                    // Update split option availability based on base currency
-                    if (typeof updateSplitOptionAvailability === 'function') {
-                        updateSplitOptionAvailability();
-                    }
+                } catch (e) {
+                    console.error('Error parsing currency settings:', e);
                 }
-            } catch (e) {
-                console.error('Error parsing currency settings:', e);
+            } else {
+                console.log('No currency settings data available');
             }
         } else {
-            console.log('No currency settings element found');
+            console.log('Payroll content element not found');
         }
     });
 </script>
@@ -3641,16 +3866,19 @@ payrollBtn.addEventListener('click', function() {
 
 
 async function downloadLeaveApp(appId) {
-    const btn = document.querySelector(`button[data-id="${appId}"]`);
+    const btn = document.querySelector(`button[data-id="${appId}"], button[data-ID="${appId}"]`);
+    if (!btn) {
+        console.error('Download button not found for app ID:', appId);
+        return;
+    }
     const originalText = btn.innerHTML;
     // Find the <tr> where the button is located
     const row = btn.closest('tr');
 
     // Find the full name from the "Employee Name" column
-    // You can improve this by assigning a class to that <td> (e.g., <td class="employee-name">)
-    const nameCell = Array.from(row.cells).find(cell =>
+    const nameCell = row ? Array.from(row.cells).find(cell =>
         cell.textContent.trim() && !cell.querySelector('button') && isNaN(cell.textContent.trim())
-    );
+    ) : null;
 
     const fullName = nameCell ? nameCell.textContent.trim() : 'Unknown_Name';
     
@@ -3690,14 +3918,23 @@ async function downloadLeaveApp(appId) {
     } catch (error) {
         console.error('Download failed:', error);
         btn.innerHTML = '<i class="fa fa-exclamation-circle"></i> Failed - Retry';
-        // Optional: Show user-friendly alert
         alert(`Download failed: ${error.message}`);
     } finally {
-        // 6. Reset button (even if success or error)
+        // 6. Reset button
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
 }
+
+// Fallback delegated click handler for dynamically added download buttons
+$(document).on('click', '.download-app-btn', function(e) {
+    // If the onclick attribute already handled it, skip
+    if (e.isDefaultPrevented()) return;
+    const appId = $(this).data('id') || $(this).attr('data-ID');
+    if (appId && typeof downloadLeaveApp === 'function') {
+        downloadLeaveApp(appId);
+    }
+});
 
 
 document.addEventListener('DOMContentLoaded', () => {
