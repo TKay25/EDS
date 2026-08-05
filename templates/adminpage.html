@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>HR Management System Dashboard</title>
         <meta name="mobile-web-app-capable" content="yes">
-        <!-- <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}"> -->
+        <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
         <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -662,10 +662,109 @@
                 left: 0;
             }
         }
+        /* ===== ADMIN UI REVAMP ===== */
+        html { scroll-behavior: smooth; }
+        ::selection { background: rgba(220,20,60,0.85); color: #fff; }
+        :focus-visible { outline: 3px solid rgba(220,20,60,0.45); outline-offset: 3px; }
+
+        /* Scroll progress bar */
+        .eds-scroll-progress {
+          position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+          background: var(--eds-accent-gradient);
+          box-shadow: 0 0 12px rgba(220,20,60,0.7);
+          z-index: 3000; transition: width 0.08s linear;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #0b1626; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--eds-accent), var(--eds-accent-dark)); border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--eds-accent-light); }
+
+        /* Navbar: frosted + scrolled shadow */
+        .eds-navbar-top {
+          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          transition: box-shadow var(--eds-transition-normal), background var(--eds-transition-normal);
+        }
+        .eds-navbar-top.scrolled { box-shadow: 0 6px 24px rgba(7,16,30,0.18); }
+
+        /* Quick actions: premium rest + hover */
+        .eds-quick-action {
+          box-shadow: var(--eds-shadow-xs);
+          border: 1px solid rgba(13,27,42,0.06);
+        }
+        .eds-quick-action:hover {
+          transform: translateY(-5px);
+          box-shadow: var(--eds-shadow-lg), 0 10px 24px rgba(220,20,60,0.12);
+        }
+        .eds-quick-action-icon {
+          box-shadow: 0 4px 12px rgba(220,20,60,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+
+        /* Stat cards: hover glow + accent bar */
+        .eds-stat-card { box-shadow: var(--eds-shadow-sm); }
+        .eds-stat-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 3px;
+          background: var(--eds-accent-gradient);
+          transform: scaleX(0);
+          transform-origin: left;
+          transition: transform var(--eds-transition-normal);
+        }
+        .eds-stat-card:hover {
+          transform: translateY(-5px);
+          box-shadow: var(--eds-shadow-lg), 0 12px 28px rgba(220,20,60,0.14);
+        }
+        .eds-stat-card:hover::before { transform: scaleX(1); }
+
+        /* Tables: premium header + row hover */
+        .eds-table-container { box-shadow: var(--eds-shadow-sm); }
+        .eds-table th {
+          background: linear-gradient(135deg, var(--eds-primary), var(--eds-primary-light));
+          color: var(--eds-white);
+          font-weight: 600;
+          letter-spacing: 0.02em;
+        }
+        .eds-table tbody tr { transition: background var(--eds-transition-fast); }
+        .eds-table tbody tr:nth-child(even) { background: rgba(13,27,42,0.02); }
+        .eds-table tbody tr:hover td { background: rgba(220,20,60,0.04); }
+
+        /* Generic cards hover */
+        .eds-card:hover { box-shadow: var(--eds-shadow-lg); }
+
+        /* Summary + graph cards deeper hover */
+        .summary-card:hover { box-shadow: 0 12px 30px rgba(220,20,60,0.14); }
+        .graph-card:hover { box-shadow: var(--eds-shadow-md), 0 8px 20px rgba(220,20,60,0.08); }
+
+        /* Back to top */
+        .back-to-top {
+          position: fixed; right: 22px; bottom: 22px; width: 46px; height: 46px;
+          border-radius: var(--eds-radius-full); background: var(--eds-accent-gradient); color: #fff;
+          border: none; box-shadow: var(--eds-shadow-accent); display: flex; align-items: center; justify-content: center;
+          font-size: 1.1rem; cursor: pointer; opacity: 0; visibility: hidden; transform: translateY(12px);
+          transition: all var(--eds-transition-normal); z-index: 2500;
+        }
+        .back-to-top.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .back-to-top:hover { transform: translateY(-3px) scale(1.04); }
+        .back-to-top-ring { position: absolute; inset: 0; transform: rotate(-90deg); }
+        .back-to-top-ring circle { fill: none; stroke-width: 3; }
+        .back-to-top-ring-bg { stroke: rgba(255,255,255,0.25); }
+        .back-to-top-ring-fg { stroke: #fff; stroke-dasharray: 125.6; stroke-dashoffset: 125.6; transition: stroke-dashoffset 0.1s linear; }
+        .back-to-top-icon { position: relative; z-index: 1; }
+
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+        }
     </style>
 </head>
 
 <body>
+    <div id="eds-scroll-progress" class="eds-scroll-progress" aria-hidden="true"></div>
     <div class="eds-loader" id="edsLoader" style="display: none;">
         <br><br>
         <p style="font-weight: 700;color: white;font-size: 1.2rem;">We Are Committing Your Changes {{firstname}}, Please Wait...</p>
@@ -5862,6 +5961,35 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
 </script>
+
+    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+        <svg class="back-to-top-ring" viewBox="0 0 46 46" width="46" height="46" aria-hidden="true">
+            <circle class="back-to-top-ring-bg" cx="23" cy="23" r="20"></circle>
+            <circle class="back-to-top-ring-fg" id="back-to-top-ring-fg" cx="23" cy="23" r="20"></circle>
+        </svg>
+        <i class="bi bi-arrow-up back-to-top-icon"></i>
+    </button>
+
+    <script>
+        // ===== ADMIN UI REVAMP: motion & details =====
+        (function () {
+            var doc = document.documentElement;
+            var progress = document.getElementById('eds-scroll-progress');
+            var ring = document.getElementById('back-to-top-ring-fg');
+            var CIRC = 125.6; // 2 * PI * 20
+            var navbar = document.querySelector('.eds-navbar-top');
+
+            function onScroll() {
+                var max = doc.scrollHeight - window.innerHeight;
+                var pct = max > 0 ? window.scrollY / max : 0;
+                if (progress) progress.style.width = (pct * 100) + '%';
+                if (ring) ring.style.strokeDashoffset = CIRC * (1 - pct);
+                if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 24);
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        })();
+    </script>
 
 <script src="{{ url_for('static', filename='js/eds-app.js') }}"></script>
 <script>
