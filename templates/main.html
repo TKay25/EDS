@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Echelon Digital Solutions</title>
+    <meta name="description" content="Echelon Digital Solutions delivers enterprise software, cloud, security, and business intelligence solutions that transform business operations across Zimbabwe.">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,13 +19,22 @@
         /* Hero Carousel */
         .eds-hero-carousel .owl-item { opacity: 0; transition: opacity 0.6s ease; }
         .eds-hero-carousel .owl-item.active { opacity: 1; }
-        .eds-hero-carousel .owl-dots { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); }
+        .eds-hero-carousel .owl-dots { position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%); z-index: 3; }
         .eds-hero-carousel .owl-dot span { width: 12px; height: 12px; margin: 0 6px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-block; transition: all var(--eds-transition-normal); }
         .eds-hero-carousel .owl-dot.active span { background: var(--eds-accent); width: 30px; border-radius: 6px; box-shadow: var(--eds-shadow-accent); }
         .eds-hero-carousel .owl-nav { display: none; }
-        .hero-slide { padding: 160px 0 100px; min-height: auto; }
-        .hero-slide h1 { font-size: 3rem; }
+        .hero-slide { padding: 160px 0 100px; min-height: 72vh; display: flex; align-items: center; }
+        .hero-slide h1 { font-size: clamp(2rem, 3.2vw + 1rem, 3.4rem); }
         @media (max-width: 768px) { .hero-slide h1 { font-size: 2rem; } .hero-slide { padding: 130px 0 60px; } }
+
+        /* Hero background image + overlay */
+        .eds-hero-overlay {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+          background: linear-gradient(120deg, rgba(7,16,30,0.95) 0%, rgba(7,16,30,0.85) 45%, rgba(7,16,30,0.6) 100%);
+        }
         
         /* Section animations */
         .eds-features, .eds-features-dark, .eds-cta { opacity: 0; transform: translateY(30px); transition: all 0.7s ease; }
@@ -38,10 +48,33 @@
         
         /* Solution tabs */
         .solution-tab-content { border-radius: var(--eds-radius-lg); border: 1px solid var(--eds-border-light); }
-        .about-img { border-radius: var(--eds-radius-lg); box-shadow: var(--eds-shadow-lg); transition: all var(--eds-transition-normal); }
+        .about-img { border-radius: var(--eds-radius-lg); box-shadow: var(--eds-shadow-lg); border: 4px solid var(--eds-accent); transition: all var(--eds-transition-normal); }
         .about-img:hover { transform: scale(1.02); }
-        .client-logo { filter: grayscale(100%); opacity: 0.5; transition: all var(--eds-transition-normal); max-height: 60px; }
-        .client-logo:hover { filter: grayscale(0%); opacity: 1; }
+        .client-logo {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 80px;
+          padding: 14px 12px;
+          border-radius: var(--eds-radius-md);
+          background: var(--eds-blue-bg);
+          border: 1px solid var(--eds-border-light);
+          font-weight: 700;
+          font-size: 0.78rem;
+          line-height: 1.3;
+          letter-spacing: 0.02em;
+          text-align: center;
+          color: var(--eds-primary);
+          filter: grayscale(100%);
+          opacity: 0.7;
+          transition: all var(--eds-transition-normal);
+        }
+        .client-logo:hover {
+          filter: grayscale(0%);
+          opacity: 1;
+          transform: translateY(-3px);
+          box-shadow: var(--eds-shadow-sm);
+        }
         .solutions-tabs .nav-link { border: none; padding: 12px 24px; font-weight: 600; color: var(--eds-text-light); border-radius: var(--eds-radius-md); margin: 0 4px 12px; transition: all var(--eds-transition-fast); }
         .solutions-tabs .nav-link.active { background: var(--eds-accent-gradient); color: var(--eds-white) !important; box-shadow: var(--eds-shadow-accent); }
         
@@ -54,7 +87,7 @@
         .fadeOut { animation-name: fadeOut; }
         @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
         .fadeIn { animation-name: fadeIn; }
-        .owl-carousel .owl-item { -webkit-backface-visibility: hidden; -webkit-transform: translateZ(0) scale(1.0, 1.0); }
+        .owl-carousel .owl-item { -webkit-backface-visibility: hidden; backface-visibility: hidden; -webkit-transform: translateZ(0) scale(1.0, 1.0); transform: translateZ(0) scale(1.0, 1.0); }
 
         /* ===== BLURRY MODAL OVERLAY ===== */
         .modal-backdrop {
@@ -72,6 +105,171 @@
             from { opacity: 0; transform: translateY(30px) scale(0.96); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
+
+        /* ===== LANDING PAGE UI ENHANCEMENTS ===== */
+
+        /* Landing navbar (styled here for the landing page) */
+        .eds-navbar {
+          background: rgba(255,255,255,0.9) !important;
+          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(13,27,42,0.06);
+          padding: 14px 0;
+          transition: padding var(--eds-transition-normal), box-shadow var(--eds-transition-normal), background var(--eds-transition-normal);
+        }
+        .eds-navbar.scrolled {
+          padding: 8px 0;
+          background: rgba(255,255,255,0.97) !important;
+          box-shadow: 0 6px 24px rgba(13,27,42,0.08);
+        }
+        .eds-nav { gap: 4px; align-items: center; }
+        .eds-nav .nav-link.eds-nav-link {
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: var(--eds-primary);
+          padding: 8px 16px;
+          border-radius: var(--eds-radius-md);
+          transition: all var(--eds-transition-fast);
+        }
+        .eds-nav .nav-link.eds-nav-link:hover,
+        .eds-nav .nav-link.eds-nav-link:focus-visible { color: var(--eds-accent); background: rgba(220,20,60,0.06); }
+        .eds-nav .nav-link.eds-nav-link.active { color: var(--eds-accent); background: rgba(220,20,60,0.08); }
+        .eds-nav .dropdown-menu {
+          border: 1px solid var(--eds-border-light);
+          border-radius: var(--eds-radius-md);
+          border-top: 2px solid var(--eds-accent);
+          box-shadow: var(--eds-shadow-md);
+          padding: 8px;
+          min-width: 240px;
+        }
+        .eds-nav .dropdown-item {
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: var(--eds-primary);
+          border-radius: var(--eds-radius-sm);
+          padding: 8px 12px;
+          transition: all var(--eds-transition-fast);
+        }
+        .eds-nav .dropdown-item:hover { background: rgba(220,20,60,0.06); color: var(--eds-accent); padding-left: 18px; }
+        .eds-navbar .navbar-toggler { border: none; }
+        .eds-navbar .navbar-toggler:focus { box-shadow: 0 0 0 3px rgba(220,20,60,0.15); }
+        @media (max-width: 991.98px) {
+          .eds-navbar .navbar-collapse {
+            background: var(--eds-white);
+            margin-top: 12px;
+            border: 1px solid var(--eds-border-light);
+            border-radius: var(--eds-radius-lg);
+            box-shadow: var(--eds-shadow-md);
+            padding: 12px;
+          }
+          .eds-nav { align-items: stretch; gap: 2px; }
+          .eds-nav .nav-link.eds-nav-link { padding: 10px 14px; }
+        }
+
+        /* Section headings with accent underline */
+        .eds-features h2::after,
+        .eds-features-dark h2::after,
+        .eds-cta h2::after {
+          content: '';
+          display: block;
+          width: 56px;
+          height: 4px;
+          margin: 12px auto 0;
+          border-radius: var(--eds-radius-full);
+          background: var(--eds-accent-gradient);
+        }
+
+        /* Hero scroll indicator */
+        .eds-hero-scroll {
+          position: absolute;
+          left: 50%;
+          bottom: 22px;
+          transform: translateX(-50%);
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          color: rgba(255,255,255,0.6);
+          font-size: 0.68rem;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+          text-decoration: none;
+          transition: color var(--eds-transition-fast);
+        }
+        .eds-hero-scroll:hover { color: var(--eds-white); }
+        .eds-hero-scroll .mouse {
+          width: 24px;
+          height: 38px;
+          border: 2px solid rgba(255,255,255,0.45);
+          border-radius: 14px;
+          display: flex;
+          justify-content: center;
+          padding-top: 6px;
+        }
+        .eds-hero-scroll .mouse span {
+          width: 3px;
+          height: 8px;
+          border-radius: 3px;
+          background: var(--eds-accent);
+          animation: edsScrollWheel 1.8s ease-in-out infinite;
+        }
+        @keyframes edsScrollWheel {
+          0% { transform: translateY(0); opacity: 1; }
+          70% { transform: translateY(12px); opacity: 0; }
+          100% { transform: translateY(0); opacity: 0; }
+        }
+
+        /* Stats icons */
+        .eds-stat-icon {
+          font-size: 1.5rem;
+          color: var(--eds-accent);
+          margin-bottom: 10px;
+          line-height: 1;
+        }
+
+        /* Back to top button */
+        .back-to-top {
+          position: fixed;
+          right: 22px;
+          bottom: 22px;
+          width: 46px;
+          height: 46px;
+          border-radius: var(--eds-radius-full);
+          background: var(--eds-accent-gradient);
+          color: var(--eds-white);
+          border: none;
+          box-shadow: var(--eds-shadow-accent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.1rem;
+          cursor: pointer;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(12px);
+          transition: all var(--eds-transition-normal);
+          z-index: 1040;
+        }
+        .back-to-top.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .back-to-top:hover { transform: translateY(-3px) scale(1.04); }
+
+        /* Anchor scroll offset under the fixed navbar */
+        section[id] { scroll-margin-top: 80px; }
+
+        /* Footer social links hover */
+        .eds-landing-footer .connect-links a { transition: all var(--eds-transition-fast); }
+        .eds-landing-footer .connect-links a:hover { color: var(--eds-accent) !important; transform: translateY(-3px); }
+
+        /* Respect reduced-motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.001ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.001ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
     </style>
 </head>
 
@@ -79,10 +277,11 @@
     {% include 'components/eds_navbar.html' %}
 
     <!-- ===== HERO SLIDER ===== -->
-    <section id="home" class="eds-hero" style="padding:0;min-height:auto;overflow:hidden;">
+    <section id="home" class="eds-hero" style="padding:0;min-height:auto;overflow:hidden;background:url('/static/images/meeting-hero.jpg') center/cover no-repeat;background-color:var(--eds-darker);">
+        <div class="eds-hero-overlay"></div>
         <div style="position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(220,20,60,0.08) 0%,transparent 70%);border-radius:50%;z-index:0;pointer-events:none;"></div>
         <div style="position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(220,20,60,0.05) 0%,transparent 70%);border-radius:50%;z-index:0;pointer-events:none;"></div>
-        <div class="owl-carousel owl-theme eds-hero-carousel" id="heroCarousel">
+        <div class="owl-carousel owl-theme eds-hero-carousel" id="heroCarousel" style="position:relative;z-index:1;">
             <!-- Slide 1 -->
             <div class="hero-slide" style="position:relative;">
                 <div class="container">
@@ -160,7 +359,7 @@
                     <div class="row align-items-center">
                         <div class="col-lg-7 eds-hero-content">
                             <div class="eds-hero-badge animate__animated animate__fadeInDown"><i class="bi bi-people"></i> 250+ Enterprise Clients</div>
-                            <h1 class="animate__animated animate__fadeInUp">Trusted By <span class="highlight">Industry Leaders</span> Across Africa</h1>
+                            <h1 class="animate__animated animate__fadeInUp">Trusted By <span class="highlight">Industry Leaders</span> Across Zimbabwe</h1>
                             <p class="animate__animated animate__fadeInUp animate__delay-1s">From small businesses to leading enterprises across Zimbabwe, organizations trust Echelon Digital Solutions to power their digital transformation journey.</p>
                             <div class="eds-hero-actions animate__animated animate__fadeInUp animate__delay-2s">
                                 <a href="#clients" class="eds-hero-btn-primary"><i class="bi bi-people"></i> Our Clients</a>
@@ -169,13 +368,11 @@
                         </div>
                         <div class="col-lg-5 d-none d-lg-block text-center">
                             <div style="width:380px;height:420px;margin:0 auto;display:flex;align-items:center;justify-content:center;">
-                                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:280px;">
-                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">CBZ</div>
-                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">NMB</div>
-                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">ZIM</div>
-                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">OLD</div>
-                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">EDC</div>
-                                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;">MBC</div>
+                                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:300px;">
+                                    <div style="height:92px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.35;">ConnectLink Properties</div>
+                                    <div style="height:92px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.35;">ConnectLink Hardware</div>
+                                    <div style="height:92px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.35;">Brilliant Chemicals</div>
+                                    <div style="height:92px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.35;">GenSpech</div>
                                 </div>
                             </div>
                         </div>
@@ -183,6 +380,10 @@
                 </div>
             </div>
         </div>
+        <a href="#about" class="eds-hero-scroll" aria-label="Scroll down to About section">
+            <span class="mouse"><span></span></span>
+            Scroll
+        </a>
     </section>
 
         <!-- ===== ABOUT ===== -->
@@ -190,11 +391,11 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-5 mb-lg-0">
-                    <img src="{{ url_for('static', filename='images/image 3.jpg') }}" alt="About Echelon Digital Solutions" class="img-fluid about-img">
+                    <img src="{{ url_for('static', filename='images/image 3.jpg') }}" alt="About Echelon Digital Solutions" class="img-fluid about-img" loading="lazy" decoding="async">
                 </div>
                 <div class="col-lg-6">
                     <h2>About Echelon Digital Solutions</h2>
-                    <p style="color: var(--eds-text-light);">Founded in 2023, Echelon Digital Solutions has been at the forefront of enterprise software development, helping organizations across industries transform their operations with cutting-edge technology solutions.</p>
+                    <p style="color: var(--eds-text-light);">Founded in 2023, Echelon Digital Solutions has been at the forefront of enterprise software development, helping organizations in the construction, retail, manufacturing, and other industries transform their operations with cutting-edge technology solutions.</p>
                     <p style="color: var(--eds-text-light);">Our team of experienced developers, analysts, and consultants work closely with clients to understand their unique challenges and deliver tailored solutions that drive real business value.</p>
                     <div class="row mt-4">
                         <div class="col-6 mb-3"><div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);"><i class="bi bi-check-lg"></i></div><span style="font-weight:500;font-size:0.9rem;">34+ Enterprise Clients</span></div></div>
@@ -279,7 +480,7 @@
                                     <a href="{{ url_for('explore_lms') }}" class="eds-btn eds-btn-primary mt-3">Explore <i class="bi bi-arrow-right"></i></a>
                                 </div>
                                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                                    <img src="{{ url_for('static', filename='images/lms.jpg') }}" alt="LMS" class="img-fluid" style="border-radius:var(--eds-radius-lg);box-shadow:var(--eds-shadow-lg);max-height:320px;">
+                                    <img src="{{ url_for('static', filename='images/lms.jpg') }}" alt="Leave Management System dashboard preview" class="img-fluid" style="border-radius:var(--eds-radius-lg);box-shadow:var(--eds-shadow-lg);max-height:320px;border:4px solid var(--eds-accent);" loading="lazy" decoding="async">
                                 </div>
                             </div>
                         </div>
@@ -294,10 +495,10 @@
                                         <div class="col-6 mb-2"><span><i class="bi bi-check-circle-fill" style="color:var(--eds-accent);"></i> Risk management</span></div>
                                         <div class="col-6 mb-2"><span><i class="bi bi-check-circle-fill" style="color:var(--eds-accent);"></i> Audit reporting</span></div>
                                     </div>
-                                    <button class="eds-btn eds-btn-primary mt-3">Request Demo</button>
+                                    <a href="#contact" class="eds-btn eds-btn-primary mt-3">Request Demo</a>
                                 </div>
                                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);display:flex;align-items:center;justify-content:center;"><i class="bi bi-bank" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
+                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-bank" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
                                 </div>
                             </div>
                         </div>
@@ -312,10 +513,10 @@
                                         <div class="col-6 mb-2"><span><i class="bi bi-check-circle-fill" style="color:var(--eds-accent);"></i> Compliance management</span></div>
                                         <div class="col-6 mb-2"><span><i class="bi bi-check-circle-fill" style="color:var(--eds-accent);"></i> Executive dashboards</span></div>
                                     </div>
-                                    <button class="eds-btn eds-btn-primary mt-3">Request Demo</button>
+                                    <a href="#contact" class="eds-btn eds-btn-primary mt-3">Request Demo</a>
                                 </div>
                                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);display:flex;align-items:center;justify-content:center;"><i class="bi bi-shield-check" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
+                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-shield-check" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
                                 </div>
                             </div>
                         </div>
@@ -330,10 +531,10 @@
                                         <div class="col-6 mb-2"><span><i class="bi bi-check-circle-fill" style="color:var(--eds-accent);"></i> Employee self-service</span></div>
                                         <div class="col-6 mb-2"><span><i class="bi bi-check-circle-fill" style="color:var(--eds-accent);"></i> Multi-country compliance</span></div>
                                     </div>
-                                    <button class="eds-btn eds-btn-primary mt-3">Request Demo</button>
+                                    <a href="#contact" class="eds-btn eds-btn-primary mt-3">Request Demo</a>
                                 </div>
                                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);display:flex;align-items:center;justify-content:center;"><i class="bi bi-cash-stack" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
+                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-cash-stack" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
                                 </div>
                             </div>
                         </div>
@@ -348,18 +549,22 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-3 col-6 text-center py-3">
+                    <div class="eds-stat-icon"><i class="bi bi-buildings"></i></div>
                     <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="250">0</span>+</div>
                     <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Enterprise Clients</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
+                    <div class="eds-stat-icon"><i class="bi bi-award"></i></div>
                     <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="15">0</span>+</div>
                     <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Years Experience</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
+                    <div class="eds-stat-icon"><i class="bi bi-kanban"></i></div>
                     <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="500">0</span>+</div>
                     <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Projects Completed</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
+                    <div class="eds-stat-icon"><i class="bi bi-emoji-smile"></i></div>
                     <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="99">0</span>%</div>
                     <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Client Satisfaction</div>
                 </div>
@@ -373,14 +578,10 @@
             <div class="text-center"><h2>Trusted By Industry Leaders</h2><p class="eds-section-desc">We're proud to partner with organizations across various sectors</p></div>
             <div class="row"><div class="col-12">
                 <div class="owl-carousel owl-theme clients-carousel">
-                    <div class="item"><img src="https://via.placeholder.com/150x80?text=Client+1" class="client-logo"></div>
-                    <div class="item"><img src="https://via.placeholder.com/150x80?text=Client+2" class="client-logo"></div>
-                    <div class="item"><img src="https://via.placeholder.com/150x80?text=Client+3" class="client-logo"></div>
-                    <div class="item"><img src="https://via.placeholder.com/150x80?text=Client+4" class="client-logo"></div>
-                    <div class="item"><img src="https://via.placeholder.com/150x80?text=Client+5" class="client-logo"></div>
-                    <div class="item"><img src="https://via.placeholder.com/150x80?text=Client+6" class="client-logo"></div>
-                    <div class="item"><img src="https://via.placeholder.com/150x80?text=Client+7" class="client-logo"></div>
-                    <div class="item"><img src="https://via.placeholder.com/150x80?text=Client+8" class="client-logo"></div>
+                    <div class="item"><div class="client-logo">ConnectLink Properties</div></div>
+                    <div class="item"><div class="client-logo">ConnectLink Hardware</div></div>
+                    <div class="item"><div class="client-logo">Brilliant Chemicals</div></div>
+                    <div class="item"><div class="client-logo">GenSpech</div></div>
                 </div>
             </div></div>
         </div>
@@ -405,14 +606,34 @@
             <div class="row">
                 <div class="col-lg-6 mb-5 mb-lg-0">
                     <div class="eds-card" style="margin:0;">
-                        <div class="d-flex align-items-start gap-3 mb-4"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-geo-alt"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Our Location</h5><p style="margin:0;color:var(--eds-text-light);font-size:0.9rem;">Peakwood Village, 41 Cecil Road, Greendale, Harare</p></div></div>
-                        <div class="d-flex align-items-start gap-3 mb-4"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-envelope"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Email Us</h5><p style="margin:0;color:var(--eds-text-light);font-size:0.9rem;">echelonequipmentimports@gmail.com</p></div></div>
-                        <div class="d-flex align-items-start gap-3"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-phone"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Call Us</h5><p style="margin:0;color:var(--eds-text-light);font-size:0.9rem;">+263 777 222 217</p></div></div>
+                        <div class="d-flex align-items-start gap-3 mb-4"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-geo-alt"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Our Location</h5><p style="margin:0;"><a href="https://www.google.com/maps/search/?api=1&query=Peakwood+Village%2C+41+Cecil+Road%2C+Greendale%2C+Harare" target="_blank" rel="noopener" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">Peakwood Village, 41 Cecil Road, Greendale, Harare <i class="bi bi-box-arrow-up-right" style="font-size:0.7rem;"></i></a></p></div></div>
+                        <div class="d-flex align-items-start gap-3 mb-4"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-envelope"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Email Us</h5><p style="margin:0;"><a href="mailto:echelonequipmentimports@gmail.com" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">echelonequipmentimports@gmail.com</a></p></div></div>
+                        <div class="d-flex align-items-start gap-3"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-phone"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Call Us</h5><p style="margin:0;"><a href="tel:+263777222217" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">+263 777 222 217</a></p></div></div>
                     </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="eds-card" style="margin:0;">
-                        <form><div class="row"><div class="col-md-6 mb-3"><input type="text" class="eds-form-input" placeholder="Your Name" required></div><div class="col-md-6 mb-3"><input type="email" class="eds-form-input" placeholder="Your Email" required></div></div><div class="mb-3"><input type="text" class="eds-form-input" placeholder="Subject"></div><div class="mb-3"><textarea class="eds-form-input" rows="4" placeholder="Your Message" required></textarea></div><button type="submit" class="eds-btn eds-btn-primary">Send Message</button></form>
+                        <form id="contactForm" novalidate>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="contact-name" class="eds-form-label">Your Name</label>
+                                    <input type="text" class="eds-form-input" id="contact-name" name="name" placeholder="John Doe" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="contact-email" class="eds-form-label">Your Email</label>
+                                    <input type="email" class="eds-form-input" id="contact-email" name="email" placeholder="you@company.com" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="contact-subject" class="eds-form-label">Subject</label>
+                                <input type="text" class="eds-form-input" id="contact-subject" name="subject" placeholder="How can we help?">
+                            </div>
+                            <div class="mb-3">
+                                <label for="contact-message" class="eds-form-label">Message</label>
+                                <textarea class="eds-form-input" id="contact-message" name="message" rows="4" placeholder="Tell us about your project..." required></textarea>
+                            </div>
+                            <button type="submit" class="eds-btn eds-btn-primary"><i class="bi bi-send"></i> Send Message</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -427,11 +648,13 @@
                 <div class="col-lg-2 col-md-4 mb-4"><h5>Solutions</h5><ul><li><a href="#solutions">Leave Management</a></li><li><a href="#solutions">Treasury</a></li><li><a href="#solutions">ERM</a></li><li><a href="#solutions">Payroll</a></li></ul></div>
                 <div class="col-lg-2 col-md-4 mb-4"><h5>Company</h5><ul><li><a href="#about">About</a></li><li><a href="#services">Services</a></li><li><a href="#clients">Clients</a></li><li><a href="#contact">Contact</a></li></ul></div>
                 <div class="col-lg-2 col-md-4 mb-4"><h5>Resources</h5><ul><li><a href="#">Help Center</a></li><li><a href="#">API Docs</a></li><li><a data-bs-toggle="modal" data-bs-target="#privacypolicyModal" style="cursor:pointer;">Privacy Policy</a></li><li><a href="#">Terms</a></li></ul></div>
-                <div class="col-lg-2 mb-4"><h5>Connect</h5><div class="d-flex gap-3 mt-2"><a href="#" style="color:rgba(255,255,255,0.5);font-size:1.2rem;"><i class="bi bi-facebook"></i></a><a href="#" style="color:rgba(255,255,255,0.5);font-size:1.2rem;"><i class="bi bi-linkedin"></i></a><a href="#" style="color:rgba(255,255,255,0.5);font-size:1.2rem;"><i class="bi bi-twitter-x"></i></a></div></div>
+                <div class="col-lg-2 mb-4"><h5>Connect</h5><div class="d-flex gap-3 mt-2 connect-links"><a href="#" style="color:rgba(255,255,255,0.5);font-size:1.2rem;" aria-label="Facebook"><i class="bi bi-facebook"></i></a><a href="#" style="color:rgba(255,255,255,0.5);font-size:1.2rem;" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a><a href="#" style="color:rgba(255,255,255,0.5);font-size:1.2rem;" aria-label="X (Twitter)"><i class="bi bi-twitter-x"></i></a></div></div>
             </div>
             <div class="eds-footer-bottom"><p>&copy; 2026 Echelon Digital Solutions. All Rights Reserved.</p></div>
         </div>
     </footer>
+
+    <button id="back-to-top" class="back-to-top" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -457,7 +680,7 @@
         // Clients Carousel
         $('.clients-carousel').owlCarousel({
             loop: true, margin: 30, nav: false, dots: true, autoplay: true,
-            responsive: { 0: { items: 2 }, 576: { items: 3 }, 768: { items: 4 }, 992: { items: 6 } }
+            responsive: { 0: { items: 2 }, 576: { items: 3 }, 992: { items: 4 } }
         });
 
         // Scroll-triggered reveal animations
@@ -509,11 +732,36 @@
         // Smooth scroll with custom easing
         $.easing.easeInOutCubic = function (x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
         $('a[href*="#"]:not([data-bs-toggle]):not([data-bs-target])').on('click', function(e) {
-            var target = $(this).attr('href');
-            if (target && target !== '#') {
+            var raw = $(this).attr('href');
+            if (!raw || raw === '#') return;
+            // Support both "#section" and "/#section" (navbar links) hrefs
+            var hash = raw.split('#')[1];
+            if (!hash) return;
+            var target = '#' + hash;
+            var $el = $(target);
+            if ($el.length) {
                 e.preventDefault();
-                $('html, body').animate({ scrollTop: $(target).offset().top - 70 }, 700, 'easeInOutCubic');
+                // Activate the matching solution tab when navigating to a tab-pane
+                if ($el.hasClass('tab-pane')) {
+                    var tabBtn = $('[data-bs-toggle="pill"][data-bs-target="' + target + '"]');
+                    if (tabBtn.length && window.bootstrap) {
+                        bootstrap.Tab.getOrCreateInstance(tabBtn[0]).show();
+                    }
+                }
+                $('html, body').animate({ scrollTop: $el.offset().top - 70 }, 700, 'easeInOutCubic');
             }
+        });
+
+        // Contact form → compose email via mailto
+        $('#contactForm').on('submit', function (e) {
+            e.preventDefault();
+            var name = $.trim($('#contact-name').val());
+            var email = $.trim($('#contact-email').val());
+            var subject = $.trim($('#contact-subject').val()) || ('Website enquiry from ' + name);
+            var message = $.trim($('#contact-message').val());
+            var body = 'Name: ' + name + '\nEmail: ' + email + '\n\n' + message;
+            window.location.href = 'mailto:echelonequipmentimports@gmail.com?subject=' +
+                encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
         });
     </script>
     <!-- ===== PWA Service Worker Registration ===== -->
