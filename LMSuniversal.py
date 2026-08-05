@@ -16397,13 +16397,13 @@ def run1(table_name, empid):
         applied_date = datetime.now().strftime('%Y-%m-%d')
 
         ######### payroll
-        querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, accnumber, bank, c8, c8type, zwg_percent, usd_percent FROM {table_name};"
+        querypayroll = f"SELECT id, firstname, surname, leaveapprovername, department, designation, datejoined, accnumber, bank, c8, c8type, zwg_percent, usd_percent, branch, currency FROM {table_name};"
         cursor.execute(querypayroll)
         rowspayroll = cursor.fetchall()
 
-        df_employees_payroll = pd.DataFrame(rowspayroll, columns=["id","Firstname", "Surname","Manager_Supervisor", "Department", "Designation","Date Joined","accnumber","Bank","basicsalary","type", "ZWG %", "USD %"])
+        df_employees_payroll = pd.DataFrame(rowspayroll, columns=["id","Firstname", "Surname","Manager_Supervisor", "Department", "Designation","Date Joined","accnumber","Bank","basicsalary","type", "ZWG %", "USD %", "branch", "basecurrency"])
         df_employees_payroll['Action'] = df_employees_payroll.apply(
-            lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['id']}" data-firstname="{row['Firstname']}" data-surname="{row['Surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}" data-accnumber="{row['accnumber']}"  data-bank="{row['Bank']}"  data-basicsalary="{row['basicsalary']}">Edit Information</button></div>''', axis=1
+            lambda row: f'''<div style="display: flex; gap: 10px;font-size: 12px;"><button class="btn btn-primary3 edit-emp-details-comp-btn-payroll" data-id="{row['id']}" data-firstname="{row['Firstname']}" data-surname="{row['Surname']}" data-manager="{row['Manager_Supervisor']}" data-department="{row['Department']}" data-designation="{row['Designation']}"  data-datejoined="{row['Date Joined']}" data-accnumber="{row['accnumber']}"  data-bank="{row['Bank']}"  data-branch="{row['branch']}"  data-basicsalary="{row['basicsalary']}"  data-basecurrency="{row['basecurrency']}">Edit Information</button></div>''', axis=1
         )
         df_employees_payroll['Employee Name'] = df_employees_payroll['Firstname'] + ' ' + df_employees_payroll['Surname']
 
@@ -16424,11 +16424,12 @@ def run1(table_name, empid):
             if settings:
                 currency_settings = {
                     'baseCurrency': settings[0],
+                    'splitEnabled': settings[1] is not None and settings[2] is not None,
                     'splitConfig': {
-                        'usdPercent': float(settings[2]) if settings[2] is not None else 60,
-                        'zwgPercent': float(settings[3]) if settings[3] is not None else 40,
-                        'exchangeRate': float(settings[4]) if settings[4] is not None else 0
-                    } if settings[1] else None
+                        'usdPercent': float(settings[1]) if settings[1] is not None else 60,
+                        'zwgPercent': float(settings[2]) if settings[2] is not None else 40,
+                        'exchangeRate': float(settings[3]) if settings[3] is not None else 0
+                    } if settings[1] is not None else None
                 }
         except Exception as e:
             print(f"Error fetching currency settings: {e}")
@@ -16978,12 +16979,12 @@ def get_currency_settings():
                     'success': True,
                     'data': {
                         'baseCurrency': settings[0],
-                        'splitEnabled': settings[1],
+                        'splitEnabled': settings[1] is not None and settings[2] is not None,
                         'splitConfig': {
-                            'usdPercent': float(settings[2]) if settings[2] is not None else 0,
-                            'zwgPercent': float(settings[3]) if settings[3] is not None else 0,
-                            'exchangeRate': float(settings[4]) if settings[4] is not None else 0
-                        } if settings[1] else None
+                            'usdPercent': float(settings[1]) if settings[1] is not None else 0,
+                            'zwgPercent': float(settings[2]) if settings[2] is not None else 0,
+                            'exchangeRate': float(settings[3]) if settings[3] is not None else 0
+                        } if settings[1] is not None else None
                     }
                 })
             else:
@@ -18508,7 +18509,7 @@ def update_employee_details_payroll():
                 designation = data.get('designation', '')
                 manager = data.get('manager', '')
                 basecurrency = data.get('basecurrency', '')
-                basicsalary = data.get('basicsalaryy', '')
+                basicsalary = data.get('basicsalary', '')
                 bank = data.get('bank', '')
                 branch = data.get('branch', '')
                 payrollidemp = data.get('payroll_id')
@@ -18517,14 +18518,6 @@ def update_employee_details_payroll():
                 update_query = f"""UPDATE {details_table} SET datejoined = %s, department = %s, designation = %s, manager = %s, basecurrency = %s, basicsalary = %s, bank = %s, branch = %s WHERE id = %s; """
                 cursor.execute(update_query, (datejoined, department, designation, manager, basecurrency, basicsalary, bank, branch, payrollidemp))
                 connection.commit()
-                update_query = f"""UPDATE {details_table} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE id = %s; """
-                cursor.execute(update_query, (whatsapp, email, empid))
-                connection.commit()
-
-                table_name_apps_pending_approval = company_name + 'appspendingapproval'
-                #update_query = f"""UPDATE {table_name_apps_pending_approval} SET leaveapproverwhatsapp = %s, leaveapproveremail = %s WHERE leaveapproverid = %s; """
-                #cursor.execute(update_query, (whatsapp, email, empid))
-                #connection.commit()
 
                 return jsonify({
                     'success': True,

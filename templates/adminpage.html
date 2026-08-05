@@ -1136,7 +1136,7 @@
                             <span style="font-size:0.8rem; font-weight:600; color:var(--eds-primary);">Rate:</span>
                             <span id="payroll-rate" style="font-size:0.9rem; font-weight:700; color:var(--eds-primary);">--</span>
                         </div>
-                        <button class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem;" data-bs-toggle="modal" data-bs-target="#uploadEmployeedetailsModal">
+                        <button class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem;" data-bs-toggle="modal" data-bs-target="#currencySettingsModal">
                             <i class="bi bi-gear"></i> Settings
                         </button>
                     </div>
@@ -1595,6 +1595,154 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Edit Employee Payroll Details Modal ===== -->
+<div class="modal fade" id="editEmployeePayrollModal" tabindex="-1" role="dialog" aria-labelledby="editEmployeePayrollModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="editEmployeePayrollModalLabel">
+                    <i class="bi bi-wallet2"></i> EMPLOYEE PAYROLL DETAILS EDITOR — <span id="emp-name-title-payroll" class="uppercase-text"></span>
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="bi bi-person-badge"></i> Employee ID: <span id="emp-id"></span></h6>
+                    </div>
+                    <div class="card-body">
+                        <input type="hidden" id="emp-id-hidden-comp-payroll" name="employee_payroll_id">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstname-editinfo-4-comp-payroll" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="firstname-editinfo-4-comp-payroll" placeholder="Enter first name">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="surname-editinfo-4-comp-payroll" class="form-label">Surname</label>
+                                <input type="text" class="form-control" id="surname-editinfo-4-comp-payroll" placeholder="Enter surname">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="manager-editinfo-4-comp-payroll" class="form-label">Manager / Supervisor</label>
+                                <input type="text" class="form-control" id="manager-editinfo-4-comp-payroll" placeholder="Enter manager / supervisor">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="department-editinfo-4-comp-payroll" class="form-label">Department</label>
+                                <input type="text" class="form-control" id="department-editinfo-4-comp-payroll" placeholder="Enter department">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="designation-editinfo-4-comp-payroll" class="form-label">Designation</label>
+                                <input type="text" class="form-control" id="designation-editinfo-4-comp-payroll" placeholder="Enter designation">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="datejoined-editinfo-4-comp-payroll" class="form-label">Date Joined</label>
+                                <input type="date" class="form-control" id="datejoined-editinfo-4-comp-payroll" placeholder="Enter date joined">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="accnumber-editinfo-4-comp-payroll" class="form-label">Account Number</label>
+                                <input type="text" class="form-control" id="accnumber-editinfo-4-comp-payroll" placeholder="Enter account number">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="bank-editinfo-4-comp-payroll" class="form-label">Bank</label>
+                                <input type="text" class="form-control" id="bank-editinfo-4-comp-payroll" placeholder="Enter bank">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="branch-editinfo-4-comp-payroll" class="form-label">Branch</label>
+                                <input type="text" class="form-control" id="branch-editinfo-4-comp-payroll" placeholder="Enter branch">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="basicsalary-editinfo-4-comp-payroll" class="form-label">Basic Salary (Base Currency)</label>
+                                <input type="number" step="0.01" class="form-control" id="basicsalary-editinfo-4-comp-payroll" placeholder="Enter basic salary">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="basecurrency-editinfo-4-comp-payroll" class="form-label">Base Currency</label>
+                                <input type="text" class="form-control" id="basecurrency-editinfo-4-comp-payroll" placeholder="Enter base currency">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveemployeepayrollBtn">Save Changes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Currency Split Configuration Modal ===== -->
+<div class="modal fade" id="currencySettingsModal" tabindex="-1" role="dialog" aria-labelledby="currencySettingsModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="currencySettingsModalLabel"><i class="bi bi-gear"></i>    CURRENCY SPLIT CONFIGURATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="payroll-settings-tab" class="tab-pane">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="baseCurrency" class="form-label">Base Currency</label>
+                                    <select id="baseCurrency" class="form-select" onchange="updateSplitOptionAvailability()">
+                                        <option value="USD">USD</option>
+                                        <option value="ZWG">ZWG</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="ZAR">ZAR</option>
+                                        <option value="ZWL">ZWL</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="zwgBaseMessage" class="alert alert-warning" style="display:none; margin-bottom:0;">
+                                        <i class="bi bi-info-circle"></i> ZWG is the base currency. Currency split is not available — all payments will be made in ZWG.
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="splitOptionContainer" class="mb-3">
+                                <label for="splitOption" class="form-label">Payment Split</label>
+                                <select id="splitOption" class="form-select" onchange="toggleSplitOptions()">
+                                    <option value="1">No Split — pay 100% in base currency</option>
+                                    <option value="2">Split between base currency and ZWG</option>
+                                </select>
+                            </div>
+                            <div id="splitConfigSection" style="display:none;">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Base Currency (<span id="baseCurrencyLabel">USD</span>) Percentage</label>
+                                        <div class="input-group">
+                                            <input type="number" id="usdSplitPercent" class="form-control" min="0" max="100" step="0.01" value="60">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="zwgSplitPercent" class="form-label">ZWG Percentage</label>
+                                        <div class="input-group">
+                                            <input type="number" id="zwgSplitPercent" class="form-control" readonly>
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="exchangeRateToZWG" class="form-label">Exchange Rate (1 <span id="currentBaseCurrency">USD</span> = ? ZWG)</label>
+                                        <input type="number" id="exchangeRateToZWG" class="form-control" step="0.0001" min="0" value="1200">
+                                    </div>
+                                </div>
+                                <div id="splitValidation" class="alert" style="display:none;">
+                                    <span id="validationMessage"></span>
+                                </div>
+                            </div>
+                            <div id="settingsPreview" class="mt-3 p-3" style="background: var(--eds-blue-bg); border-radius: var(--eds-radius-md); border: 1px solid var(--eds-border-light);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="resetCurrencySettings()">Reset Defaults</button>
+                <button type="button" class="btn btn-primary" onclick="saveCurrencySettings()"><i class="bi bi-check-lg"></i> Save Settings</button>
             </div>
         </div>
     </div>
@@ -2422,6 +2570,31 @@ $(document).ready(function() {
 
 
 <script>
+    function updatePayrollCurrencyDisplay(currencySettings) {
+        if (!currencySettings) return;
+        const usdEl = document.getElementById('payroll-usd-pct');
+        const zwgEl = document.getElementById('payroll-zwg-pct');
+        const rateEl = document.getElementById('payroll-rate');
+        if (!usdEl || !zwgEl || !rateEl) return;
+
+        const baseCurrency = currencySettings.baseCurrency || 'USD';
+        const split = currencySettings.splitEnabled && currencySettings.splitConfig;
+
+        if (split) {
+            usdEl.textContent = (currencySettings.splitConfig.usdPercent != null ? Number(currencySettings.splitConfig.usdPercent).toFixed(2) : '0.00') + '%';
+            zwgEl.textContent = (currencySettings.splitConfig.zwgPercent != null ? Number(currencySettings.splitConfig.zwgPercent).toFixed(2) : '0.00') + '%';
+            rateEl.textContent = currencySettings.splitConfig.exchangeRate != null ? Number(currencySettings.splitConfig.exchangeRate).toLocaleString() : '--';
+        } else if (baseCurrency === 'ZWG') {
+            usdEl.textContent = '0%';
+            zwgEl.textContent = '100%';
+            rateEl.textContent = '--';
+        } else {
+            usdEl.textContent = '100%';
+            zwgEl.textContent = '0%';
+            rateEl.textContent = '--';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Get settings from data-currency-settings on the payroll-content div
         const payrollContent = document.getElementById('payroll-content');
@@ -2433,6 +2606,7 @@ $(document).ready(function() {
                     
                     if (currencySettings) {
                         console.log('Loading currency settings:', currencySettings);
+                        updatePayrollCurrencyDisplay(currencySettings);
                         
                         // Set base currency
                         const baseCurrencySelect = document.getElementById('baseCurrency');
@@ -2700,6 +2874,7 @@ function saveCurrencySettings() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            updatePayrollCurrencyDisplay(settings);
             showAlert('success', 'Currency configuration saved successfully!');
         } else {
             showAlert('error', 'Error saving configuration: ' + data.message);
@@ -3910,7 +4085,7 @@ payrollBtn.addEventListener('click', function() {
     const basecurrencyInput = document.getElementById('basecurrency-editinfo-4-comp-payroll');
     const basicsalaryInput = document.getElementById('basicsalary-editinfo-4-comp-payroll');
     const bankInput = document.getElementById('bank-editinfo-4-comp-payroll');
-    const branchInput = document.getElementById('bank-editinfo-4-comp-payroll');
+    const branchInput = document.getElementById('branch-editinfo-4-comp-payroll');
     const payrollidemp = document.getElementById('emp-id-hidden-comp-payroll')
 
     // If field is empty, use placeholder value
