@@ -40,14 +40,14 @@
         .eds-features, .eds-features-dark, .eds-cta { opacity: 0; transform: translateY(30px); transition: all 0.7s ease; }
         .eds-features.visible, .eds-features-dark.visible, .eds-cta.visible { opacity: 1; transform: translateY(0); }
         .eds-feature-card, .eds-feature-card-dark { transition: all var(--eds-transition-normal); }
-        .eds-feature-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: var(--eds-shadow-lg); }
+        .eds-feature-card:hover { transform: translateY(-8px) scale(1.02) !important; box-shadow: var(--eds-shadow-xl); }
         .eds-feature-card-dark:hover { transform: translateY(-8px) scale(1.02); }
         
         /* Animated counter */
         .stat-counter { display: inline-block; }
         
         /* Solution tabs */
-        .solution-tab-content { border-radius: var(--eds-radius-lg); border: 1px solid var(--eds-border-light); }
+        .solution-tab-content { border-radius: var(--eds-radius-lg); border: 1px solid var(--eds-border-light); box-shadow: var(--eds-shadow-sm); }
         .about-img { border-radius: var(--eds-radius-lg); box-shadow: var(--eds-shadow-lg); border: 4px solid var(--eds-accent); transition: all var(--eds-transition-normal); }
         .about-img:hover { transform: scale(1.02); }
         .client-logo {
@@ -59,6 +59,7 @@
           border-radius: var(--eds-radius-md);
           background: var(--eds-blue-bg);
           border: 1px solid var(--eds-border-light);
+          box-shadow: var(--eds-shadow-xs);
           font-weight: 700;
           font-size: 0.78rem;
           line-height: 1.3;
@@ -227,6 +228,9 @@
           margin-bottom: 10px;
           line-height: 1;
         }
+        .eds-stat-number {
+          text-shadow: 0 6px 20px rgba(220, 20, 60, 0.35);
+        }
 
         /* Back to top button */
         .back-to-top {
@@ -261,6 +265,235 @@
         .eds-landing-footer .connect-links a { transition: all var(--eds-transition-fast); }
         .eds-landing-footer .connect-links a:hover { color: var(--eds-accent) !important; transform: translateY(-3px); }
 
+        /* ===== WORLD-CLASS POLISH ===== */
+
+        html { scroll-behavior: smooth; }
+        ::selection { background: rgba(220,20,60,0.85); color: var(--eds-white); }
+        :focus-visible { outline: 3px solid rgba(220,20,60,0.45); outline-offset: 3px; }
+
+        /* Hero badge: glow + pulsing icon */
+        .eds-hero-badge {
+          box-shadow: 0 8px 24px rgba(220,20,60,0.25), inset 0 1px 0 rgba(255,255,255,0.12);
+          -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+        }
+        .eds-hero-badge i { animation: edsIconPulse 2.4s ease-in-out infinite; }
+        @keyframes edsIconPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+
+        /* Hero headline depth */
+        .eds-hero h1 { text-shadow: 0 4px 30px rgba(0,0,0,0.35); }
+
+        /* Hero + primary buttons: shine sweep + richer glow */
+        .eds-hero-btn-primary, .eds-btn-primary {
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+        }
+        .eds-hero-btn-primary::after, .eds-btn-primary::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -80%;
+          width: 45%;
+          height: 100%;
+          background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+          transform: skewX(-20deg);
+          transition: left 0.6s ease;
+          pointer-events: none;
+          z-index: 1;
+        }
+        .eds-hero-btn-primary:hover::after, .eds-btn-primary:hover::after { left: 130%; }
+        .eds-hero-btn-secondary {
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 8px 20px rgba(0,0,0,0.25);
+          -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+        }
+
+        /* Feature cards: premium depth + hover accent bar */
+        .eds-feature-card {
+          position: relative;
+          overflow: hidden;
+          box-shadow: var(--eds-shadow-sm);
+        }
+        .eds-feature-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0;
+          width: 100%; height: 4px;
+          background: var(--eds-accent-gradient);
+          opacity: 0;
+          transform: scaleX(0);
+          transform-origin: left;
+          transition: all var(--eds-transition-normal);
+        }
+        .eds-feature-card:hover::before { opacity: 1; transform: scaleX(1); }
+        .eds-feature-card:hover .eds-feature-icon {
+          transform: translateY(-4px) scale(1.08);
+          box-shadow: var(--eds-shadow-accent);
+        }
+
+        /* Feature icons: glass + glow */
+        .eds-feature-icon {
+          box-shadow: 0 8px 20px rgba(220,20,60,0.18), inset 0 1px 0 rgba(255,255,255,0.45);
+          transition: all var(--eds-transition-normal);
+        }
+
+        /* Solution visual boxes: depth + hover lift */
+        .eds-solution-visual {
+          box-shadow: 0 18px 40px rgba(13,27,42,0.12), 0 6px 16px rgba(220,20,60,0.12);
+          transition: all var(--eds-transition-normal);
+        }
+        .eds-solution-visual:hover {
+          transform: translateY(-6px) scale(1.02);
+          box-shadow: 0 26px 55px rgba(13,27,42,0.16), 0 10px 24px rgba(220,20,60,0.2);
+        }
+
+        /* Images: layered premium shadow */
+        .about-img, #leave-management img {
+          box-shadow: 0 26px 55px rgba(13,27,42,0.2), 0 12px 28px rgba(220,20,60,0.16), 0 0 0 1px rgba(255,255,255,0.06);
+        }
+
+        /* Solution tab panel inner highlight */
+        .solution-tab-content {
+          box-shadow: var(--eds-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+
+        /* Stats icons: glow */
+        .eds-stat-icon {
+          filter: drop-shadow(0 6px 12px rgba(220,20,60,0.35));
+        }
+
+        /* Contact info icon chips */
+        .eds-contact-icon {
+          box-shadow: 0 8px 18px rgba(220,20,60,0.18), inset 0 1px 0 rgba(255,255,255,0.6);
+          transition: all var(--eds-transition-normal);
+        }
+        .eds-contact-icon:hover {
+          transform: translateY(-3px);
+          box-shadow: var(--eds-shadow-accent), inset 0 1px 0 rgba(255,255,255,0.4);
+        }
+
+        /* Hero dashboard panel + tiles (glass) */
+        .eds-hero-dash {
+          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+          box-shadow: 0 30px 70px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+        .eds-hero-tile {
+          -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+          box-shadow: 0 10px 26px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
+          transition: all var(--eds-transition-normal);
+        }
+        .eds-hero-tile:hover { transform: translateX(4px); }
+
+        /* CTA heading glow */
+        .eds-cta h2 { text-shadow: 0 6px 30px rgba(220,20,60,0.35); }
+
+        /* Client logo hover: deeper lift */
+        .client-logo:hover { box-shadow: var(--eds-shadow-md); }
+
+        /* Cards: deeper hover shadow */
+        .eds-card:hover { box-shadow: var(--eds-shadow-lg); }
+
+        /* ===== PREMIUM MOTION & DETAILS ===== */
+
+        /* Scroll progress bar */
+        .eds-scroll-progress {
+          position: fixed;
+          top: 0; left: 0;
+          height: 3px;
+          width: 0%;
+          background: var(--eds-accent-gradient);
+          box-shadow: 0 0 12px rgba(220,20,60,0.7);
+          z-index: 2000;
+          transition: width 0.08s linear;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #0b1626; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--eds-accent), var(--eds-accent-dark)); border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--eds-accent-light); }
+
+        /* Animated hero highlight */
+        .eds-hero h1 .highlight {
+          background: linear-gradient(90deg, #DC143C, #FF5F7F, #FF2E5A, #DC143C);
+          background-size: 220% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: edsGradientShift 5s linear infinite;
+        }
+        @keyframes edsGradientShift { to { background-position: 220% center; } }
+
+        /* Floating orbs */
+        .eds-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(70px);
+          opacity: 0.4;
+          pointer-events: none;
+          z-index: 0;
+          animation: edsOrbFloat 16s ease-in-out infinite;
+        }
+        .eds-orb-1 { width: 440px; height: 440px; top: -140px; right: 6%; background: rgba(220,20,60,0.45); }
+        .eds-orb-2 { width: 320px; height: 320px; bottom: -60px; left: 2%; background: rgba(30,64,175,0.5); animation-delay: -5s; }
+        .eds-orb-3 { width: 240px; height: 240px; top: 36%; left: 44%; background: rgba(220,20,60,0.28); animation-delay: -9s; }
+        @keyframes edsOrbFloat {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33% { transform: translate(34px,-46px) scale(1.06); }
+          66% { transform: translate(-28px,30px) scale(0.96); }
+        }
+
+        /* Client logo marquee */
+        .eds-logo-marquee {
+          overflow: hidden;
+          -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+        }
+        .eds-logo-marquee-track {
+          display: flex;
+          width: max-content;
+          animation: edsMarquee 26s linear infinite;
+        }
+        .eds-logo-marquee-group { display: flex; gap: 30px; padding-right: 30px; }
+        .eds-logo-marquee:hover .eds-logo-marquee-track { animation-play-state: paused; }
+        .eds-logo-marquee .client-logo { min-width: 230px; }
+        @keyframes edsMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* 3D tilt on solution visuals */
+        .eds-solution-visual { will-change: transform; }
+
+        /* Staggered card reveal */
+        body.eds-js .eds-feature-card,
+        body.eds-js .eds-card {
+          opacity: 0;
+          transform: translateY(26px);
+          transition: opacity 0.7s ease, transform 0.7s ease, box-shadow var(--eds-transition-normal);
+        }
+        body.eds-js .eds-feature-card.eds-revealed,
+        body.eds-js .eds-card.eds-revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* Image hover zoom */
+        #leave-management img { transition: transform var(--eds-transition-normal); }
+        #leave-management img:hover { transform: scale(1.05); }
+
+        /* Back-to-top progress ring */
+        .back-to-top-ring { position: absolute; inset: 0; transform: rotate(-90deg); }
+        .back-to-top-ring circle { fill: none; stroke-width: 3; }
+        .back-to-top-ring-bg { stroke: rgba(255,255,255,0.25); }
+        .back-to-top-ring-fg {
+          stroke: #fff;
+          stroke-dasharray: 125.6;
+          stroke-dashoffset: 125.6;
+          transition: stroke-dashoffset 0.1s linear;
+        }
+        .back-to-top-icon { position: relative; z-index: 1; }
+
         /* Respect reduced-motion preferences */
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
@@ -274,11 +507,15 @@
 </head>
 
 <body>
+    <div id="eds-scroll-progress" class="eds-scroll-progress" aria-hidden="true"></div>
     {% include 'components/eds_navbar.html' %}
 
     <!-- ===== HERO SLIDER ===== -->
     <section id="home" class="eds-hero" style="padding:0;min-height:auto;overflow:hidden;background:url('/static/images/meeting-hero.jpg') center/cover no-repeat;background-color:var(--eds-darker);">
         <div class="eds-hero-overlay"></div>
+        <div class="eds-orb eds-orb-1"></div>
+        <div class="eds-orb eds-orb-2"></div>
+        <div class="eds-orb eds-orb-3"></div>
         <div style="position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(220,20,60,0.08) 0%,transparent 70%);border-radius:50%;z-index:0;pointer-events:none;"></div>
         <div style="position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(220,20,60,0.05) 0%,transparent 70%);border-radius:50%;z-index:0;pointer-events:none;"></div>
         <div class="owl-carousel owl-theme eds-hero-carousel" id="heroCarousel" style="position:relative;z-index:1;">
@@ -297,21 +534,21 @@
                         </div>
                         <div class="col-lg-5 d-none d-lg-block text-center">
                             <div style="width:380px;height:420px;margin:0 auto;position:relative;">
-                                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:400px;background:rgba(220,20,60,0.06);border-radius:24px;border:1px solid rgba(220,20,60,0.1);">
+                                <div class="eds-hero-dash" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:400px;background:rgba(220,20,60,0.06);border-radius:24px;border:1px solid rgba(220,20,60,0.1);">
                                     <div style="position:absolute;top:30px;left:30px;right:30px;">
-                                        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px;">
+                                        <div class="eds-hero-tile" style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px;">
                                             <div style="display:flex;align-items:center;gap:10px;">
                                                 <div style="width:36px;height:36px;border-radius:8px;background:rgba(220,20,60,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-person-check" style="color:var(--eds-accent);font-size:1rem;"></i></div>
                                                 <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Leave Approved</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">John D. - Annual Leave</div></div>
                                             </div>
                                         </div>
-                                        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px;">
+                                        <div class="eds-hero-tile" style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px;">
                                             <div style="display:flex;align-items:center;gap:10px;">
                                                 <div style="width:36px;height:36px;border-radius:8px;background:rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-check-lg" style="color:var(--eds-success);font-size:1rem;"></i></div>
                                                 <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Sick Leave</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">Sarah M. - 3 days</div></div>
                                             </div>
                                         </div>
-                                        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;">
+                                        <div class="eds-hero-tile" style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;">
                                             <div style="display:flex;align-items:center;gap:10px;">
                                                 <div style="width:36px;height:36px;border-radius:8px;background:rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-clock" style="color:var(--eds-warning);font-size:1rem;"></i></div>
                                                 <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Pending Review</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">Mike R. - Maternity Leave</div></div>
@@ -440,12 +677,12 @@
                 <p class="eds-section-desc">We offer comprehensive software development services tailored to meet your enterprise needs</p>
             </div>
             <div class="row">
-                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card text-start"><div class="eds-feature-icon"><i class="bi bi-laptop"></i></div><h4>Custom Software Development</h4><p>Tailored solutions designed specifically for your business processes and requirements, built with scalability and security in mind.</p></div></div>
-                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card text-start"><div class="eds-feature-icon"><i class="bi bi-cloud"></i></div><h4>Cloud Solutions</h4><p>Migrate your operations to the cloud with our secure, scalable, and cost-effective cloud computing solutions.</p></div></div>
-                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card text-start"><div class="eds-feature-icon"><i class="bi bi-shield-lock"></i></div><h4>Enterprise Security</h4><p>Comprehensive security solutions including risk assessment, penetration testing, and secure system architecture.</p></div></div>
-                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card text-start"><div class="eds-feature-icon"><i class="bi bi-graph-up"></i></div><h4>Business Intelligence</h4><p>Transform your data into actionable insights with our advanced analytics and reporting solutions.</p></div></div>
-                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card text-start"><div class="eds-feature-icon"><i class="bi bi-phone"></i></div><h4>Mobile Applications</h4><p>Extend your enterprise capabilities to mobile devices with our cross-platform mobile solutions.</p></div></div>
-                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card text-start"><div class="eds-feature-icon"><i class="bi bi-gear"></i></div><h4>System Integration</h4><p>Seamlessly connect your existing systems with new solutions for unified operations.</p></div></div>
+                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card"><div class="eds-feature-icon"><i class="bi bi-laptop"></i></div><h4>Custom Software Development</h4><p>Tailored solutions designed specifically for your business processes and requirements, built with scalability and security in mind.</p></div></div>
+                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card"><div class="eds-feature-icon"><i class="bi bi-cloud"></i></div><h4>Cloud Solutions</h4><p>Migrate your operations to the cloud with our secure, scalable, and cost-effective cloud computing solutions.</p></div></div>
+                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card"><div class="eds-feature-icon"><i class="bi bi-shield-lock"></i></div><h4>Enterprise Security</h4><p>Comprehensive security solutions including risk assessment, penetration testing, and secure system architecture.</p></div></div>
+                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card"><div class="eds-feature-icon"><i class="bi bi-graph-up"></i></div><h4>Business Intelligence</h4><p>Transform your data into actionable insights with our advanced analytics and reporting solutions.</p></div></div>
+                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card"><div class="eds-feature-icon"><i class="bi bi-phone"></i></div><h4>Mobile Applications</h4><p>Extend your enterprise capabilities to mobile devices with our cross-platform mobile solutions.</p></div></div>
+                <div class="col-lg-4 col-md-6 mb-4"><div class="eds-feature-card"><div class="eds-feature-icon"><i class="bi bi-gear"></i></div><h4>System Integration</h4><p>Seamlessly connect your existing systems with new solutions for unified operations.</p></div></div>
             </div>
         </div>
     </section>
@@ -480,7 +717,7 @@
                                     <a href="{{ url_for('explore_lms') }}" class="eds-btn eds-btn-primary mt-3">Explore <i class="bi bi-arrow-right"></i></a>
                                 </div>
                                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                                    <img src="{{ url_for('static', filename='images/lms.jpg') }}" alt="Leave Management System dashboard preview" class="img-fluid" style="border-radius:var(--eds-radius-lg);box-shadow:var(--eds-shadow-lg);max-height:320px;border:4px solid var(--eds-accent);" loading="lazy" decoding="async">
+                                    <img src="{{ url_for('static', filename='images/lms.jpg') }}" alt="Leave Management System dashboard preview" class="img-fluid" style="border-radius:var(--eds-radius-lg);max-height:320px;border:4px solid var(--eds-accent);" loading="lazy" decoding="async">
                                 </div>
                             </div>
                         </div>
@@ -498,7 +735,7 @@
                                     <a href="#contact" class="eds-btn eds-btn-primary mt-3">Request Demo</a>
                                 </div>
                                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-bank" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
+                                    <div class="eds-solution-visual" style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-bank" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
                                 </div>
                             </div>
                         </div>
@@ -516,7 +753,7 @@
                                     <a href="#contact" class="eds-btn eds-btn-primary mt-3">Request Demo</a>
                                 </div>
                                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-shield-check" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
+                                    <div class="eds-solution-visual" style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-shield-check" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
                                 </div>
                             </div>
                         </div>
@@ -534,7 +771,7 @@
                                     <a href="#contact" class="eds-btn eds-btn-primary mt-3">Request Demo</a>
                                 </div>
                                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                                    <div style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-cash-stack" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
+                                    <div class="eds-solution-visual" style="width:300px;height:300px;margin:0 auto;background:linear-gradient(135deg,rgba(220,20,60,0.05),rgba(13,27,42,0.05));border-radius:var(--eds-radius-lg);border:4px solid var(--eds-accent);display:flex;align-items:center;justify-content:center;"><i class="bi bi-cash-stack" style="font-size:5rem;color:var(--eds-accent);opacity:0.3;"></i></div>
                                 </div>
                             </div>
                         </div>
@@ -550,22 +787,22 @@
             <div class="row">
                 <div class="col-md-3 col-6 text-center py-3">
                     <div class="eds-stat-icon"><i class="bi bi-buildings"></i></div>
-                    <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="250">0</span>+</div>
+                    <div class="eds-stat-number" style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="250">0</span>+</div>
                     <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Enterprise Clients</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
                     <div class="eds-stat-icon"><i class="bi bi-award"></i></div>
-                    <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="15">0</span>+</div>
+                    <div class="eds-stat-number" style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="15">0</span>+</div>
                     <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Years Experience</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
                     <div class="eds-stat-icon"><i class="bi bi-kanban"></i></div>
-                    <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="500">0</span>+</div>
+                    <div class="eds-stat-number" style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="500">0</span>+</div>
                     <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Projects Completed</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
                     <div class="eds-stat-icon"><i class="bi bi-emoji-smile"></i></div>
-                    <div style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="99">0</span>%</div>
+                    <div class="eds-stat-number" style="font-size:2.5rem;font-weight:800;color:var(--eds-accent);"><span class="stat-counter" data-count="99">0</span>%</div>
                     <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Client Satisfaction</div>
                 </div>
             </div>
@@ -577,11 +814,21 @@
         <div class="container">
             <div class="text-center"><h2>Trusted By Industry Leaders</h2><p class="eds-section-desc">We're proud to partner with organizations across various sectors</p></div>
             <div class="row"><div class="col-12">
-                <div class="owl-carousel owl-theme clients-carousel">
-                    <div class="item"><div class="client-logo">ConnectLink Properties</div></div>
-                    <div class="item"><div class="client-logo">ConnectLink Hardware</div></div>
-                    <div class="item"><div class="client-logo">Brilliant Chemicals</div></div>
-                    <div class="item"><div class="client-logo">GenSpech</div></div>
+                <div class="eds-logo-marquee">
+                    <div class="eds-logo-marquee-track">
+                        <div class="eds-logo-marquee-group">
+                            <div class="client-logo">ConnectLink Properties</div>
+                            <div class="client-logo">ConnectLink Hardware</div>
+                            <div class="client-logo">Brilliant Chemicals</div>
+                            <div class="client-logo">GenSpech</div>
+                        </div>
+                        <div class="eds-logo-marquee-group">
+                            <div class="client-logo">ConnectLink Properties</div>
+                            <div class="client-logo">ConnectLink Hardware</div>
+                            <div class="client-logo">Brilliant Chemicals</div>
+                            <div class="client-logo">GenSpech</div>
+                        </div>
+                    </div>
                 </div>
             </div></div>
         </div>
@@ -606,9 +853,9 @@
             <div class="row">
                 <div class="col-lg-6 mb-5 mb-lg-0">
                     <div class="eds-card" style="margin:0;">
-                        <div class="d-flex align-items-start gap-3 mb-4"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-geo-alt"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Our Location</h5><p style="margin:0;"><a href="https://www.google.com/maps/search/?api=1&query=Peakwood+Village%2C+41+Cecil+Road%2C+Greendale%2C+Harare" target="_blank" rel="noopener" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">Peakwood Village, 41 Cecil Road, Greendale, Harare <i class="bi bi-box-arrow-up-right" style="font-size:0.7rem;"></i></a></p></div></div>
-                        <div class="d-flex align-items-start gap-3 mb-4"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-envelope"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Email Us</h5><p style="margin:0;"><a href="mailto:echelonequipmentimports@gmail.com" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">echelonequipmentimports@gmail.com</a></p></div></div>
-                        <div class="d-flex align-items-start gap-3"><div style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-phone"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Call Us</h5><p style="margin:0;"><a href="tel:+263777222217" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">+263 777 222 217</a></p></div></div>
+                        <div class="d-flex align-items-start gap-3 mb-4"><div class="eds-contact-icon" style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-geo-alt"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Our Location</h5><p style="margin:0;"><a href="https://www.google.com/maps/search/?api=1&query=Peakwood+Village%2C+41+Cecil+Road%2C+Greendale%2C+Harare" target="_blank" rel="noopener" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">Peakwood Village, 41 Cecil Road, Greendale, Harare <i class="bi bi-box-arrow-up-right" style="font-size:0.7rem;"></i></a></p></div></div>
+                        <div class="d-flex align-items-start gap-3 mb-4"><div class="eds-contact-icon" style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-envelope"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Email Us</h5><p style="margin:0;"><a href="mailto:echelonequipmentimports@gmail.com" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">echelonequipmentimports@gmail.com</a></p></div></div>
+                        <div class="d-flex align-items-start gap-3"><div class="eds-contact-icon" style="width:50px;height:50px;border-radius:var(--eds-radius-md);background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);font-size:1.3rem;flex-shrink:0;"><i class="bi bi-phone"></i></div><div><h5 style="margin:0 0 4px;font-size:1rem;">Call Us</h5><p style="margin:0;"><a href="tel:+263777222217" style="color:var(--eds-text-light);font-size:0.9rem;text-decoration:none;">+263 777 222 217</a></p></div></div>
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -654,7 +901,13 @@
         </div>
     </footer>
 
-    <button id="back-to-top" class="back-to-top" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+        <svg class="back-to-top-ring" viewBox="0 0 46 46" width="46" height="46" aria-hidden="true">
+            <circle class="back-to-top-ring-bg" cx="23" cy="23" r="20"></circle>
+            <circle class="back-to-top-ring-fg" id="back-to-top-ring-fg" cx="23" cy="23" r="20"></circle>
+        </svg>
+        <i class="bi bi-arrow-up back-to-top-icon"></i>
+    </button>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -677,11 +930,7 @@
             animateIn: 'fadeIn'
         });
 
-        // Clients Carousel
-        $('.clients-carousel').owlCarousel({
-            loop: true, margin: 30, nav: false, dots: true, autoplay: true,
-            responsive: { 0: { items: 2 }, 576: { items: 3 }, 992: { items: 4 } }
-        });
+        // (Client logos now use a CSS marquee)
 
         // Scroll-triggered reveal animations
         function revealOnScroll() {
@@ -763,6 +1012,87 @@
             window.location.href = 'mailto:echelonequipmentimports@gmail.com?subject=' +
                 encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
         });
+    </script>
+
+    <script>
+        // ===== PREMIUM MOTION & DETAILS =====
+        (function () {
+            var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            document.body.classList.add('eds-js');
+
+            var doc = document.documentElement;
+            var progress = document.getElementById('eds-scroll-progress');
+            var ring = document.getElementById('back-to-top-ring-fg');
+            var CIRC = 125.6; // 2 * PI * 20
+
+            function onScroll() {
+                var max = doc.scrollHeight - window.innerHeight;
+                var pct = max > 0 ? window.scrollY / max : 0;
+                if (progress) progress.style.width = (pct * 100) + '%';
+                if (ring) ring.style.strokeDashoffset = CIRC * (1 - pct);
+
+                // Hero parallax
+                var hero = document.querySelector('.eds-hero');
+                if (hero && !reduceMotion && window.scrollY < window.innerHeight * 1.2) {
+                    hero.style.backgroundPosition = 'center ' + (window.scrollY * 0.35) + 'px';
+                }
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+
+            // Staggered reveal for cards
+            var allCards = Array.prototype.slice.call(document.querySelectorAll('.eds-feature-card, .eds-card'));
+            if ('IntersectionObserver' in window) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            var el = entry.target;
+                            el.style.transitionDelay = ((allCards.indexOf(el) % 6) * 0.07) + 's';
+                            el.classList.add('eds-revealed');
+                            setTimeout(function () { el.style.transitionDelay = ''; }, 900);
+                            io.unobserve(el);
+                        }
+                    });
+                }, { threshold: 0.12 });
+                allCards.forEach(function (el) { io.observe(el); });
+            } else {
+                allCards.forEach(function (el) { el.classList.add('eds-revealed'); });
+            }
+
+            // Navbar scrollspy
+            var navLinks = Array.prototype.slice.call(document.querySelectorAll('.eds-nav .nav-link'));
+            var spySections = navLinks
+                .map(function (a) { var id = (a.getAttribute('href') || '').split('#')[1]; return id ? document.getElementById(id) : null; })
+                .filter(Boolean);
+            if (navLinks.length) {
+                function setActive() {
+                    var pos = window.scrollY + 140;
+                    var current = null;
+                    spySections.forEach(function (sec) { if (sec.offsetTop <= pos) current = sec; });
+                    var isTop = window.scrollY < 160;
+                    navLinks.forEach(function (a) {
+                        var href = a.getAttribute('href') || '';
+                        var id = href.split('#')[1];
+                        a.classList.toggle('active', isTop ? href === '/' : (!!current && current.id === id));
+                    });
+                }
+                window.addEventListener('scroll', setActive, { passive: true });
+                setActive();
+            }
+
+            // 3D tilt on solution visuals
+            if (!reduceMotion && window.matchMedia('(hover: hover)').matches) {
+                document.querySelectorAll('.eds-solution-visual').forEach(function (card) {
+                    card.addEventListener('mousemove', function (e) {
+                        var r = card.getBoundingClientRect();
+                        var px = (e.clientX - r.left) / r.width - 0.5;
+                        var py = (e.clientY - r.top) / r.height - 0.5;
+                        card.style.transform = 'perspective(800px) rotateY(' + (px * 12) + 'deg) rotateX(' + (-py * 12) + 'deg) translateY(-4px)';
+                    });
+                    card.addEventListener('mouseleave', function () { card.style.transform = ''; });
+                });
+            }
+        })();
     </script>
     <!-- ===== PWA Service Worker Registration ===== -->
     <script>
