@@ -18515,7 +18515,7 @@ def update_employee_details_payroll():
                 payrollidemp = data.get('payroll_id')
                 
                 details_table = company_name + 'main'
-                update_query = f"""UPDATE {details_table} SET datejoined = %s, department = %s, designation = %s, manager = %s, basecurrency = %s, basicsalary = %s, bank = %s, branch = %s WHERE id = %s; """
+                update_query = f"""UPDATE {details_table} SET datejoined = %s, department = %s, designation = %s, leaveapprovername = %s, currency = %s, c8 = %s, bank = %s, branch = %s WHERE id = %s; """
                 cursor.execute(update_query, (datejoined, department, designation, manager, basecurrency, basicsalary, bank, branch, payrollidemp))
                 connection.commit()
 
