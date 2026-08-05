@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leave Management System | Echelon Digital Solutions</title>
+    <meta name="description" content="Simplify leave management for modern teams with Echelon Digital Solutions' cloud HR platform — real-time tracking, quick approvals, and powerful analytics in one place.">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -76,9 +78,206 @@
             from { opacity: 0; transform: translateY(30px) scale(0.96); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
+
+        /* ===== EDS LANDING PREMIUM POLISH ===== */
+        html { scroll-behavior: smooth; }
+        ::selection { background: rgba(220,20,60,0.85); color: var(--eds-white); }
+        :focus-visible { outline: 3px solid rgba(220,20,60,0.45); outline-offset: 3px; }
+
+        /* Scroll progress bar */
+        .eds-scroll-progress {
+          position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+          background: var(--eds-accent-gradient);
+          box-shadow: 0 0 12px rgba(220,20,60,0.7);
+          z-index: 2000; transition: width 0.08s linear;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #0b1626; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--eds-accent), var(--eds-accent-dark)); border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--eds-accent-light); }
+
+        /* Hero: background image + overlay + orbs */
+        .eds-hero {
+          background: url('/static/images/meeting-hero.jpg') center/cover no-repeat;
+          background-color: var(--eds-darker);
+          position: relative;
+          overflow: hidden;
+        }
+        .eds-hero::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          background: linear-gradient(120deg, rgba(7,16,30,0.95) 0%, rgba(7,16,30,0.85) 45%, rgba(7,16,30,0.6) 100%);
+        }
+        .eds-hero > .container { position: relative; z-index: 1; }
+        .eds-orb {
+          position: absolute; border-radius: 50%; filter: blur(70px);
+          opacity: 0.4; pointer-events: none; z-index: 0;
+          animation: edsOrbFloat 16s ease-in-out infinite;
+        }
+        .eds-orb-1 { width: 440px; height: 440px; top: -140px; right: 6%; background: rgba(220,20,60,0.45); }
+        .eds-orb-2 { width: 320px; height: 320px; bottom: -60px; left: 2%; background: rgba(30,64,175,0.5); animation-delay: -5s; }
+        .eds-orb-3 { width: 240px; height: 240px; top: 36%; left: 44%; background: rgba(220,20,60,0.28); animation-delay: -9s; }
+        @keyframes edsOrbFloat {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33% { transform: translate(34px,-46px) scale(1.06); }
+          66% { transform: translate(-28px,30px) scale(0.96); }
+        }
+
+        /* Hero badge + headline */
+        .eds-hero-badge {
+          box-shadow: 0 8px 24px rgba(220,20,60,0.25), inset 0 1px 0 rgba(255,255,255,0.12);
+          -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+        }
+        .eds-hero-badge i { animation: edsIconPulse 2.4s ease-in-out infinite; }
+        @keyframes edsIconPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+        .eds-hero h1 { text-shadow: 0 4px 30px rgba(0,0,0,0.35); }
+        .eds-hero h1 .highlight {
+          background: linear-gradient(90deg, #DC143C, #FF5F7F, #FF2E5A, #DC143C);
+          background-size: 220% auto;
+          -webkit-background-clip: text; background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: edsGradientShift 5s linear infinite;
+        }
+        @keyframes edsGradientShift { to { background-position: 220% center; } }
+
+        /* Buttons: shine sweep */
+        .eds-hero-btn-primary, .eds-btn-primary { position: relative; overflow: hidden; isolation: isolate; }
+        .eds-hero-btn-primary::after, .eds-btn-primary::after {
+          content: ''; position: absolute; top: 0; left: -80%; width: 45%; height: 100%;
+          background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+          transform: skewX(-20deg); transition: left 0.6s ease; pointer-events: none; z-index: 1;
+        }
+        .eds-hero-btn-primary:hover::after, .eds-btn-primary:hover::after { left: 130%; }
+        .eds-hero-btn-secondary {
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 8px 20px rgba(0,0,0,0.25);
+          -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+        }
+
+        /* Hero product mockup */
+        .eds-hero-mockup { position: relative; width: 520px; max-width: 100%; margin: 0 auto; }
+        .eds-mockup-browser {
+          border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.14);
+          background: var(--eds-primary);
+          box-shadow: 0 50px 100px rgba(0,0,0,0.5), 0 24px 60px rgba(220,20,60,0.16), 0 0 0 1px rgba(255,255,255,0.04);
+        }
+        .eds-mockup-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .eds-mockup-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .eds-mockup-dot-red { background: #ff5f57; }
+        .eds-mockup-dot-yellow { background: #febc2e; }
+        .eds-mockup-dot-green { background: #28c840; }
+        .eds-mockup-address { flex: 1; margin-left: 8px; background: rgba(255,255,255,0.06); border-radius: 6px; padding: 5px 12px; font-size: 0.7rem; color: rgba(255,255,255,0.5); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .eds-mockup-screen { display: block; width: 100%; height: auto; max-height: 400px; object-fit: cover; object-position: top; }
+        .eds-mockup-float {
+          position: absolute; display: flex; align-items: center; gap: 8px;
+          background: rgba(13,27,42,0.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; padding: 10px 14px;
+          font-size: 0.75rem; font-weight: 600; color: var(--eds-white);
+          box-shadow: 0 18px 44px rgba(0,0,0,0.45); animation: edsChipFloat 5s ease-in-out infinite;
+        }
+        .eds-mockup-float i { color: var(--eds-accent); font-size: 1rem; }
+        .eds-mockup-float-1 { top: 16%; left: -34px; }
+        .eds-mockup-float-2 { bottom: 14%; right: -26px; animation-delay: -2.5s; }
+        @keyframes edsChipFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @media (max-width: 1199.98px) { .eds-mockup-float-1 { left: -6px; } .eds-mockup-float-2 { right: -6px; } }
+
+        /* Section eyebrow labels */
+        .eds-eyebrow { display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.22em; font-size: 0.72rem; font-weight: 700; color: var(--eds-accent); margin-bottom: 10px; }
+        .eds-eyebrow::before { content: ''; width: 22px; height: 2px; border-radius: 2px; background: var(--eds-accent-gradient); }
+        .eds-features-dark .eds-eyebrow, .eds-cta .eds-eyebrow { color: var(--eds-accent-light); }
+        .eds-features h2::after, .eds-features-dark h2::after, .eds-cta h2::after {
+          content: ''; display: block; width: 56px; height: 4px; margin: 12px auto 0;
+          border-radius: var(--eds-radius-full); background: var(--eds-accent-gradient);
+        }
+        .eds-h2-left::after { margin: 12px 0 0; }
+        .eds-cta h2 { text-shadow: 0 6px 30px rgba(220,20,60,0.35); }
+
+        /* Feature cards: animated gradient border + reveal */
+        @property --eds-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+        .eds-feature-card { position: relative; overflow: hidden; box-shadow: var(--eds-shadow-sm); }
+        .eds-feature-card::after {
+          content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 2px;
+          background: conic-gradient(from var(--eds-angle, 0deg), rgba(220,20,60,0) 0deg, rgba(220,20,60,0.9) 70deg, rgba(255,46,90,1) 150deg, rgba(220,20,60,0) 230deg, rgba(220,20,60,0) 360deg);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+          opacity: 0; transition: opacity var(--eds-transition-normal); pointer-events: none; z-index: 1;
+        }
+        .eds-feature-card:hover::after { opacity: 1; animation: edsBorderSpin 2.6s linear infinite; }
+        @keyframes edsBorderSpin { to { --eds-angle: 360deg; } }
+        .eds-feature-card:hover { transform: translateY(-8px) scale(1.02) !important; box-shadow: var(--eds-shadow-xl); }
+        .eds-feature-card:hover .eds-feature-icon { transform: translateY(-4px) scale(1.08); box-shadow: var(--eds-shadow-accent); }
+        .eds-feature-icon { box-shadow: 0 8px 20px rgba(220,20,60,0.18), inset 0 1px 0 rgba(255,255,255,0.45); transition: all var(--eds-transition-normal); }
+        .eds-feature-card-dark { position: relative; overflow: hidden; transition: all var(--eds-transition-normal); }
+        .eds-feature-card-dark:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 18px 40px rgba(0,0,0,0.35); }
+
+        /* How it works step connector */
+        .eds-step { position: relative; }
+        @media (min-width: 768px) {
+          .eds-step:not(:last-child)::after {
+            content: ''; position: absolute; top: 32px; right: -22px; width: 44px; height: 2px;
+            background: linear-gradient(90deg, rgba(220,20,60,0.6), rgba(220,20,60,0.05));
+          }
+        }
+
+        /* Stats icons */
+        .eds-stat-icon { font-size: 1.5rem; color: var(--eds-accent); margin-bottom: 10px; line-height: 1; filter: drop-shadow(0 6px 12px rgba(220,20,60,0.35)); }
+        .eds-stat-number { text-shadow: 0 6px 20px rgba(220,20,60,0.35); }
+
+        /* Split image */
+        .about-img {
+          border-radius: var(--eds-radius-lg); border: 4px solid var(--eds-accent);
+          box-shadow: 0 26px 55px rgba(13,27,42,0.2), 0 12px 28px rgba(220,20,60,0.16);
+          transition: all var(--eds-transition-normal);
+        }
+        .about-img:hover { transform: scale(1.02); }
+
+        /* CTA animated gradient + glow */
+        .eds-cta { background: linear-gradient(120deg, #07101E, #16233A, #0D1B2A, #07101E); background-size: 300% 300%; animation: edsCtaFlow 16s ease infinite; }
+        @keyframes edsCtaFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .eds-cta::after { content: ''; position: absolute; width: 520px; height: 520px; top: 50%; left: 50%; transform: translate(-50%,-50%); background: radial-gradient(circle, rgba(220,20,60,0.16), transparent 70%); pointer-events: none; }
+
+        /* Footer social hover */
+        .eds-landing-footer .connect-links a { transition: all var(--eds-transition-fast); }
+        .eds-landing-footer .connect-links a:hover { color: var(--eds-accent) !important; transform: translateY(-3px); }
+
+        /* Staggered reveal */
+        body.eds-js .eds-feature-card, body.eds-js .eds-feature-card-dark, body.eds-js .eds-card {
+          opacity: 0; transform: translateY(26px);
+          transition: opacity 0.7s ease, transform 0.7s ease, box-shadow var(--eds-transition-normal);
+        }
+        body.eds-js .eds-revealed { opacity: 1; transform: translateY(0); }
+
+        /* Back to top */
+        .back-to-top {
+          position: fixed; right: 22px; bottom: 22px; width: 46px; height: 46px;
+          border-radius: var(--eds-radius-full); background: var(--eds-accent-gradient); color: var(--eds-white);
+          border: none; box-shadow: var(--eds-shadow-accent); display: flex; align-items: center; justify-content: center;
+          font-size: 1.1rem; cursor: pointer; opacity: 0; visibility: hidden; transform: translateY(12px);
+          transition: all var(--eds-transition-normal); z-index: 1040;
+        }
+        .back-to-top.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .back-to-top:hover { transform: translateY(-3px) scale(1.04); }
+        .back-to-top-ring { position: absolute; inset: 0; transform: rotate(-90deg); }
+        .back-to-top-ring circle { fill: none; stroke-width: 3; }
+        .back-to-top-ring-bg { stroke: rgba(255,255,255,0.25); }
+        .back-to-top-ring-fg { stroke: #fff; stroke-dasharray: 125.6; stroke-dashoffset: 125.6; transition: stroke-dashoffset 0.1s linear; }
+        .back-to-top-icon { position: relative; z-index: 1; }
+
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+        }
     </style>
 </head>
 <body>
+    <div id="eds-scroll-progress" class="eds-scroll-progress" aria-hidden="true"></div>
 
     {% include 'components/eds_loading.html' %}
 
@@ -108,6 +307,9 @@
 
     <!-- ===== HERO ===== -->
     <section class="eds-hero">
+        <div class="eds-orb eds-orb-1"></div>
+        <div class="eds-orb eds-orb-2"></div>
+        <div class="eds-orb eds-orb-3"></div>
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-7 eds-hero-content">
@@ -124,44 +326,18 @@
                     </div>
                 </div>
                 <div class="col-lg-5 d-none d-lg-block text-center">
-                    <div style="width: 400px; height: 500px; margin: 0 auto; position: relative;">
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 350px; height: 420px; background: rgba(220,20,60,0.06); border-radius: 24px; border: 1px solid rgba(220,20,60,0.1);">
-                            <div style="position: absolute; top: 30px; left: 30px; right: 30px;">
-                                <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(220,20,60,0.2); display: flex; align-items: center; justify-content: center;">
-                                            <i class="bi bi-person-check" style="color: var(--eds-accent); font-size: 1rem;"></i>
-                                        </div>
-                                        <div>
-                                            <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; font-weight: 600;">Leave Approved</div>
-                                            <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">John D. · Annual Leave</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16,185,129,0.2); display: flex; align-items: center; justify-content: center;">
-                                            <i class="bi bi-check-lg" style="color: var(--eds-success); font-size: 1rem;"></i>
-                                        </div>
-                                        <div>
-                                            <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; font-weight: 600;">Sick Leave</div>
-                                            <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">Sarah M. · 3 days</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 16px;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(245,158,11,0.2); display: flex; align-items: center; justify-content: center;">
-                                            <i class="bi bi-clock" style="color: var(--eds-warning); font-size: 1rem;"></i>
-                                        </div>
-                                        <div>
-                                            <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; font-weight: 600;">Pending Review</div>
-                                            <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">Mike R. · Maternity Leave</div>
-                                        </div>
-                                    </div>
-                                </div>
+                    <div class="eds-hero-mockup">
+                        <div class="eds-mockup-browser">
+                            <div class="eds-mockup-bar">
+                                <span class="eds-mockup-dot eds-mockup-dot-red"></span>
+                                <span class="eds-mockup-dot eds-mockup-dot-yellow"></span>
+                                <span class="eds-mockup-dot eds-mockup-dot-green"></span>
+                                <span class="eds-mockup-address">app.eds.co.zw/leave</span>
                             </div>
+                            <img src="{{ url_for('static', filename='images/lms.jpg') }}" alt="Leave management dashboard preview" class="eds-mockup-screen" loading="lazy" decoding="async">
                         </div>
+                        <div class="eds-mockup-float eds-mockup-float-1"><i class="bi bi-check-circle-fill"></i> Leave Approved</div>
+                        <div class="eds-mockup-float eds-mockup-float-2"><i class="bi bi-clock-fill"></i> Pending Review</div>
                     </div>
                 </div>
             </div>
@@ -173,19 +349,23 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-3 col-6 text-center py-3">
-                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">500+</div>
+                    <div class="eds-stat-icon"><i class="bi bi-buildings"></i></div>
+                    <div class="eds-stat-number" style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">500+</div>
                     <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Companies</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
-                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">25K+</div>
+                    <div class="eds-stat-icon"><i class="bi bi-people"></i></div>
+                    <div class="eds-stat-number" style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">25K+</div>
                     <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Employees</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
-                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">98%</div>
+                    <div class="eds-stat-icon"><i class="bi bi-emoji-smile"></i></div>
+                    <div class="eds-stat-number" style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">98%</div>
                     <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Satisfaction</div>
                 </div>
                 <div class="col-md-3 col-6 text-center py-3">
-                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">24/7</div>
+                    <div class="eds-stat-icon"><i class="bi bi-headset"></i></div>
+                    <div class="eds-stat-number" style="font-size: 2.5rem; font-weight: 800; color: var(--eds-accent);">24/7</div>
                     <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Support</div>
                 </div>
             </div>
@@ -195,7 +375,10 @@
     <!-- ===== FEATURES ===== -->
     <section class="eds-features">
         <div class="container">
-            <h2>Why Choose Our LMS?</h2>
+            <div class="text-center">
+                <span class="eds-eyebrow">Features</span>
+                <h2>Why Choose Our LMS?</h2>
+            </div>
             <p class="eds-section-desc">Streamline your leave management process with our powerful features designed for modern HR teams.</p>
             <div class="row">
                 <div class="col-lg-3 col-md-6 mb-4">
@@ -230,27 +413,53 @@
         </div>
     </section>
 
+    <!-- ===== BUILT FOR MODERN TEAMS ===== -->
+    <section class="eds-features" style="background: var(--eds-light);">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <img src="{{ url_for('static', filename='images/image 3.jpg') }}" alt="Modern teams using the EDS leave management platform" class="img-fluid about-img" loading="lazy" decoding="async">
+                </div>
+                <div class="col-lg-6">
+                    <span class="eds-eyebrow">Built For Modern Teams</span>
+                    <h2 class="eds-h2-left">Leave Management That Scales With Your Business</h2>
+                    <p style="color: var(--eds-text-light);">From small teams to enterprise organizations, the EDS platform adapts to your workflows and grows with you — without the complexity.</p>
+                    <div class="row mt-4">
+                        <div class="col-6 mb-3"><div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);"><i class="bi bi-check-lg"></i></div><span style="font-weight:500;font-size:0.9rem;">Bulk employee import</span></div></div>
+                        <div class="col-6 mb-3"><div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);"><i class="bi bi-check-lg"></i></div><span style="font-weight:500;font-size:0.9rem;">Custom leave policies</span></div></div>
+                        <div class="col-6 mb-3"><div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);"><i class="bi bi-check-lg"></i></div><span style="font-weight:500;font-size:0.9rem;">WhatsApp notifications</span></div></div>
+                        <div class="col-6 mb-3"><div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(220,20,60,0.1);display:flex;align-items:center;justify-content:center;color:var(--eds-accent);"><i class="bi bi-check-lg"></i></div><span style="font-weight:500;font-size:0.9rem;">Role-based access control</span></div></div>
+                    </div>
+                    <a href="#" class="eds-btn eds-btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#signupModal"><i class="bi bi-rocket-takeoff"></i> Start Free</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ===== HOW IT WORKS ===== -->
     <section class="eds-features-dark">
         <div class="container">
-            <h2>How It Works</h2>
+            <div class="text-center">
+                <span class="eds-eyebrow">Get Started</span>
+                <h2>How It Works</h2>
+            </div>
             <p class="eds-section-desc">Get started in three simple steps and transform your leave management process.</p>
             <div class="row">
-                <div class="col-md-4 mb-4">
+                <div class="col-md-4 mb-4 eds-step">
                     <div class="eds-feature-card-dark">
                         <div class="eds-feature-icon" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: 800;">1</div>
                         <h4>Sign Up</h4>
                         <p>Register your company and set up your leave policies in minutes.</p>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
+                <div class="col-md-4 mb-4 eds-step">
                     <div class="eds-feature-card-dark">
                         <div class="eds-feature-icon" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: 800;">2</div>
                         <h4>Invite Team</h4>
                         <p>Add your employees and managers with bulk import or individual invites.</p>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
+                <div class="col-md-4 mb-4 eds-step">
                     <div class="eds-feature-card-dark">
                         <div class="eds-feature-icon" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: 800;">3</div>
                         <h4>Start Managing</h4>
@@ -264,6 +473,7 @@
     <!-- ===== CTA ===== -->
     <section class="eds-cta">
         <div class="container eds-cta-content">
+            <span class="eds-eyebrow">Start Free Today</span>
             <h2>Ready to Streamline Your Leave Management?</h2>
             <p>Join thousands of companies who have transformed their HR processes with our solution.</p>
             <a href="#" class="eds-hero-btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">
@@ -279,7 +489,7 @@
                 <div class="col-lg-4 mb-4">
                     <img src="{{ url_for('static', filename='images/EDS LOGO.png') }}" alt="EDS Logo" style="height: 36px; margin-bottom: 16px; filter: brightness(0) invert(1);">
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">Simplifying leave management for businesses of all sizes since 2015.</p>
-                    <div class="d-flex gap-3 mt-3">
+                    <div class="d-flex gap-3 mt-3 connect-links">
                         <a href="#" style="color: rgba(255,255,255,0.5); font-size: 1.2rem;"><i class="bi bi-facebook"></i></a>
                         <a href="#" style="color: rgba(255,255,255,0.5); font-size: 1.2rem;"><i class="bi bi-twitter-x"></i></a>
                         <a href="#" style="color: rgba(255,255,255,0.5); font-size: 1.2rem;"><i class="bi bi-linkedin"></i></a>
@@ -432,6 +642,14 @@
         </div>
     </div>
 
+    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+        <svg class="back-to-top-ring" viewBox="0 0 46 46" width="46" height="46" aria-hidden="true">
+            <circle class="back-to-top-ring-bg" cx="23" cy="23" r="20"></circle>
+            <circle class="back-to-top-ring-fg" id="back-to-top-ring-fg" cx="23" cy="23" r="20"></circle>
+        </svg>
+        <i class="bi bi-arrow-up back-to-top-icon"></i>
+    </button>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -476,6 +694,53 @@
                 $('#edsLoader2').show(); $('#signupModal').find('form').submit();
             });
         });
+    </script>
+
+    <script>
+        // ===== EDS LANDING PREMIUM MOTION =====
+        (function () {
+            var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            document.body.classList.add('eds-js');
+
+            var doc = document.documentElement;
+            var progress = document.getElementById('eds-scroll-progress');
+            var ring = document.getElementById('back-to-top-ring-fg');
+            var CIRC = 125.6; // 2 * PI * 20
+
+            function onScroll() {
+                var max = doc.scrollHeight - window.innerHeight;
+                var pct = max > 0 ? window.scrollY / max : 0;
+                if (progress) progress.style.width = (pct * 100) + '%';
+                if (ring) ring.style.strokeDashoffset = CIRC * (1 - pct);
+
+                // Hero parallax
+                var hero = document.querySelector('.eds-hero');
+                if (hero && !reduceMotion && window.scrollY < window.innerHeight * 1.2) {
+                    hero.style.backgroundPosition = 'center ' + (window.scrollY * 0.35) + 'px';
+                }
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+
+            // Staggered reveal
+            var allCards = Array.prototype.slice.call(document.querySelectorAll('.eds-feature-card, .eds-feature-card-dark, .eds-card'));
+            if ('IntersectionObserver' in window) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            var el = entry.target;
+                            el.style.transitionDelay = ((allCards.indexOf(el) % 6) * 0.07) + 's';
+                            el.classList.add('eds-revealed');
+                            setTimeout(function () { el.style.transitionDelay = ''; }, 900);
+                            io.unobserve(el);
+                        }
+                    });
+                }, { threshold: 0.12 });
+                allCards.forEach(function (el) { io.observe(el); });
+            } else {
+                allCards.forEach(function (el) { el.classList.add('eds-revealed'); });
+            }
+        })();
     </script>
     <!-- ===== PWA Service Worker Registration ===== -->
     <script>

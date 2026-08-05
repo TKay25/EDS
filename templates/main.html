@@ -309,24 +309,34 @@
           backdrop-filter: blur(6px);
         }
 
-        /* Feature cards: premium depth + hover accent bar */
+        /* Feature cards: premium depth + animated gradient border */
+        @property --eds-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
         .eds-feature-card {
           position: relative;
           overflow: hidden;
           box-shadow: var(--eds-shadow-sm);
         }
-        .eds-feature-card::before {
+        .eds-feature-card::after {
           content: '';
           position: absolute;
-          top: 0; left: 0;
-          width: 100%; height: 4px;
-          background: var(--eds-accent-gradient);
+          inset: 0;
+          border-radius: inherit;
+          padding: 2px;
+          background: conic-gradient(from var(--eds-angle, 0deg), rgba(220,20,60,0) 0deg, rgba(220,20,60,0.9) 70deg, rgba(255,46,90,1) 150deg, rgba(220,20,60,0) 230deg, rgba(220,20,60,0) 360deg);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask-composite: exclude;
           opacity: 0;
-          transform: scaleX(0);
-          transform-origin: left;
-          transition: all var(--eds-transition-normal);
+          transition: opacity var(--eds-transition-normal);
+          pointer-events: none;
+          z-index: 1;
         }
-        .eds-feature-card:hover::before { opacity: 1; transform: scaleX(1); }
+        .eds-feature-card:hover::after {
+          opacity: 1;
+          animation: edsBorderSpin 2.6s linear infinite;
+        }
+        @keyframes edsBorderSpin { to { --eds-angle: 360deg; } }
         .eds-feature-card:hover .eds-feature-icon {
           transform: translateY(-4px) scale(1.08);
           box-shadow: var(--eds-shadow-accent);
@@ -494,6 +504,120 @@
         }
         .back-to-top-icon { position: relative; z-index: 1; }
 
+        /* ===== LEVEL-3 PREMIUM ===== */
+
+        /* Section eyebrow labels */
+        .eds-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.22em;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--eds-accent);
+          margin-bottom: 10px;
+        }
+        .eds-eyebrow::before {
+          content: '';
+          width: 22px;
+          height: 2px;
+          border-radius: 2px;
+          background: var(--eds-accent-gradient);
+        }
+
+        /* Hero product mockup */
+        .eds-hero-mockup {
+          position: relative;
+          width: 520px;
+          max-width: 100%;
+          margin: 0 auto;
+        }
+        .eds-mockup-browser {
+          border-radius: 18px;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.14);
+          background: var(--eds-primary);
+          box-shadow: 0 50px 100px rgba(0,0,0,0.5), 0 24px 60px rgba(220,20,60,0.16), 0 0 0 1px rgba(255,255,255,0.04);
+        }
+        .eds-mockup-bar {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 16px;
+          background: rgba(255,255,255,0.05);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .eds-mockup-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .eds-mockup-dot-red { background: #ff5f57; }
+        .eds-mockup-dot-yellow { background: #febc2e; }
+        .eds-mockup-dot-green { background: #28c840; }
+        .eds-mockup-address {
+          flex: 1;
+          margin-left: 8px;
+          background: rgba(255,255,255,0.06);
+          border-radius: 6px;
+          padding: 5px 12px;
+          font-size: 0.7rem;
+          color: rgba(255,255,255,0.5);
+          text-align: left;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .eds-mockup-screen {
+          display: block;
+          width: 100%;
+          height: auto;
+          max-height: 400px;
+          object-fit: cover;
+          object-position: top;
+        }
+        .eds-mockup-float {
+          position: absolute;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(13,27,42,0.88);
+          -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.14);
+          border-radius: 12px;
+          padding: 10px 14px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--eds-white);
+          box-shadow: 0 18px 44px rgba(0,0,0,0.45);
+          animation: edsChipFloat 5s ease-in-out infinite;
+        }
+        .eds-mockup-float i { color: var(--eds-accent); font-size: 1rem; }
+        .eds-mockup-float-1 { top: 16%; left: -34px; }
+        .eds-mockup-float-2 { bottom: 14%; right: -26px; animation-delay: -2.5s; }
+        @keyframes edsChipFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @media (max-width: 1199.98px) {
+          .eds-mockup-float-1 { left: -6px; }
+          .eds-mockup-float-2 { right: -6px; }
+        }
+
+        /* CTA animated gradient + glow */
+        .eds-cta {
+          background: linear-gradient(120deg, #07101E, #16233A, #0D1B2A, #07101E);
+          background-size: 300% 300%;
+          animation: edsCtaFlow 16s ease infinite;
+        }
+        @keyframes edsCtaFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .eds-cta::after {
+          content: '';
+          position: absolute;
+          width: 520px;
+          height: 520px;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: radial-gradient(circle, rgba(220,20,60,0.16), transparent 70%);
+          pointer-events: none;
+        }
+
         /* Respect reduced-motion preferences */
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
@@ -533,29 +657,18 @@
                             </div>
                         </div>
                         <div class="col-lg-5 d-none d-lg-block text-center">
-                            <div style="width:380px;height:420px;margin:0 auto;position:relative;">
-                                <div class="eds-hero-dash" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:400px;background:rgba(220,20,60,0.06);border-radius:24px;border:1px solid rgba(220,20,60,0.1);">
-                                    <div style="position:absolute;top:30px;left:30px;right:30px;">
-                                        <div class="eds-hero-tile" style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px;">
-                                            <div style="display:flex;align-items:center;gap:10px;">
-                                                <div style="width:36px;height:36px;border-radius:8px;background:rgba(220,20,60,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-person-check" style="color:var(--eds-accent);font-size:1rem;"></i></div>
-                                                <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Leave Approved</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">John D. - Annual Leave</div></div>
-                                            </div>
-                                        </div>
-                                        <div class="eds-hero-tile" style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px;">
-                                            <div style="display:flex;align-items:center;gap:10px;">
-                                                <div style="width:36px;height:36px;border-radius:8px;background:rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-check-lg" style="color:var(--eds-success);font-size:1rem;"></i></div>
-                                                <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Sick Leave</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">Sarah M. - 3 days</div></div>
-                                            </div>
-                                        </div>
-                                        <div class="eds-hero-tile" style="background:rgba(255,255,255,0.06);border-radius:12px;padding:16px;">
-                                            <div style="display:flex;align-items:center;gap:10px;">
-                                                <div style="width:36px;height:36px;border-radius:8px;background:rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;"><i class="bi bi-clock" style="color:var(--eds-warning);font-size:1rem;"></i></div>
-                                                <div><div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">Pending Review</div><div style="color:rgba(255,255,255,0.5);font-size:0.7rem;">Mike R. - Maternity Leave</div></div>
-                                            </div>
-                                        </div>
+                            <div class="eds-hero-mockup">
+                                <div class="eds-mockup-browser">
+                                    <div class="eds-mockup-bar">
+                                        <span class="eds-mockup-dot eds-mockup-dot-red"></span>
+                                        <span class="eds-mockup-dot eds-mockup-dot-yellow"></span>
+                                        <span class="eds-mockup-dot eds-mockup-dot-green"></span>
+                                        <span class="eds-mockup-address">app.echelondigital.co.zw</span>
                                     </div>
+                                    <img src="{{ url_for('static', filename='images/lms.jpg') }}" alt="EDS platform dashboard preview" class="eds-mockup-screen" loading="lazy" decoding="async">
                                 </div>
+                                <div class="eds-mockup-float eds-mockup-float-1"><i class="bi bi-check-circle-fill"></i> Leave Approved</div>
+                                <div class="eds-mockup-float eds-mockup-float-2"><i class="bi bi-person-plus-fill"></i> New Employee</div>
                             </div>
                         </div>
                     </div>
@@ -631,6 +744,7 @@
                     <img src="{{ url_for('static', filename='images/image 3.jpg') }}" alt="About Echelon Digital Solutions" class="img-fluid about-img" loading="lazy" decoding="async">
                 </div>
                 <div class="col-lg-6">
+                    <span class="eds-eyebrow">About Us</span>
                     <h2>About Echelon Digital Solutions</h2>
                     <p style="color: var(--eds-text-light);">Founded in 2023, Echelon Digital Solutions has been at the forefront of enterprise software development, helping organizations in the construction, retail, manufacturing, and other industries transform their operations with cutting-edge technology solutions.</p>
                     <p style="color: var(--eds-text-light);">Our team of experienced developers, analysts, and consultants work closely with clients to understand their unique challenges and deliver tailored solutions that drive real business value.</p>
@@ -673,6 +787,7 @@
     <section id="services" class="eds-features" style="background:var(--eds-light);">
         <div class="container">
             <div class="text-center">
+                <span class="eds-eyebrow">What We Do</span>
                 <h2>Our Core Services</h2>
                 <p class="eds-section-desc">We offer comprehensive software development services tailored to meet your enterprise needs</p>
             </div>
@@ -691,6 +806,7 @@
     <section id="solutions" class="eds-features">
         <div class="container">
             <div class="text-center">
+                <span class="eds-eyebrow">Our Products</span>
                 <h2>Our Enterprise Solutions</h2>
                 <p class="eds-section-desc">Comprehensive software solutions designed to optimize your business operations</p>
             </div>
@@ -812,7 +928,7 @@
     <!-- ===== CLIENTS ===== -->
     <section id="clients" class="eds-features" style="background:var(--eds-white);">
         <div class="container">
-            <div class="text-center"><h2>Trusted By Industry Leaders</h2><p class="eds-section-desc">We're proud to partner with organizations across various sectors</p></div>
+            <div class="text-center"><span class="eds-eyebrow">Our Clients</span><h2>Trusted By Industry Leaders</h2><p class="eds-section-desc">We're proud to partner with organizations across various sectors</p></div>
             <div class="row"><div class="col-12">
                 <div class="eds-logo-marquee">
                     <div class="eds-logo-marquee-track">
@@ -837,6 +953,7 @@
     <!-- ===== CTA ===== -->
     <section class="eds-cta">
         <div class="container eds-cta-content">
+            <span class="eds-eyebrow">Let's Talk</span>
             <h2>Ready to Transform Your Business?</h2>
             <p>Schedule a personalized demo to see how our solutions can address your specific challenges and drive operational excellence.</p>
             <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
@@ -849,7 +966,7 @@
     <!-- ===== CONTACT ===== -->
     <section id="contact" class="eds-features">
         <div class="container">
-            <div class="text-center"><h2>Get In Touch</h2><p class="eds-section-desc">Have questions or ready to get started? Our team is here to help.</p></div>
+            <div class="text-center"><span class="eds-eyebrow">Contact Us</span><h2>Get In Touch</h2><p class="eds-section-desc">Have questions or ready to get started? Our team is here to help.</p></div>
             <div class="row">
                 <div class="col-lg-6 mb-5 mb-lg-0">
                     <div class="eds-card" style="margin:0;">
