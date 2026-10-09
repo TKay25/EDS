@@ -1,10 +1,8 @@
 /* ==========================================================================
-   User access management workspace
+   User access management workspace — portal access toggles
    ========================================================================== */
 (function () {
   'use strict';
-
-  var COMPANY_NAME = 'brilliant chemicals pvt ltd';
 
   function escapeHtml(value) {
     return String(value === null || value === undefined ? '' : value)
@@ -15,248 +13,32 @@
       .replace(/'/g, '&#39;');
   }
 
-  function modal(id) {
-    var element = document.getElementById(id);
-    return element ? new bootstrap.Modal(element) : null;
-  }
-
-  var addModal = modal('addEmployeeModal');
-  var removeModal = modal('removeEmployeeModal');
-  var roleModal = modal('roleModal');
-  var departmentModal = modal('departmentModal');
-  var approverModal = modal('approverModal');
-  var balanceModal = modal('balanceModal');
-
-  function showAlert(id, text, kind) {
-    var box = document.getElementById(id);
-    var label = document.getElementById(id + 'Text');
+  function showAlert(text, kind) {
+    var box = document.getElementById('accessAlert');
+    var label = document.getElementById('accessAlertText');
     if (!box || !label) return;
     label.textContent = text;
     box.className = 'ps-alert is-' + (kind || 'info');
     box.style.display = 'flex';
   }
 
-  function hideAlerts(ids) {
-    ids.forEach(function (id) {
-      var box = document.getElementById(id);
-      if (box) box.style.display = 'none';
-    });
+  function hideAlert() {
+    var box = document.getElementById('accessAlert');
+    if (box) box.style.display = 'none';
   }
 
-  function postForm(url, data, onDone) {
-    fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(data).toString()
-    })
-      .then(function (response) {
-        return response.text().then(function (text) {
-          var payload = null;
-          try { payload = JSON.parse(text); } catch (error) { payload = null; }
-          onDone(response.ok, payload, text);
-        });
-      })
-      .catch(function () { onDone(false, { message: 'Request failed. Please try again.' }, ''); });
-  }
-
-  /* --------------------------------------------------------------- adding */
-  var openAdd = document.getElementById('openAddEmployee');
-  if (openAdd && addModal) {
-    openAdd.addEventListener('click', function () {
-      document.getElementById('addEmployeeForm').reset();
-      hideAlerts(['addEmployeeAlert']);
-      addModal.show();
-    });
-  }
-
-  var addForm = document.getElementById('addEmployeeForm');
-  if (addForm) {
-    addForm.addEventListener('submit', function (event) {
-      event.preventDefault();
-      var body = new FormData();
-      body.append('firstname', document.getElementById('addFirstname').value.trim());
-      body.append('surname', document.getElementById('addSurname').value.trim());
-      body.append('whatsapp', document.getElementById('addWhatsapp').value.trim());
-      body.append('email', document.getElementById('addEmail').value.trim());
-      body.append('role', document.getElementById('addRole').value);
-      body.append('department', document.getElementById('addDepartment').value);
-      body.append('selected_employees', document.getElementById('addApprover').value);
-      body.append('currentleavedays', document.getElementById('addBalance').value);
-      body.append('monthlyaccumulation', document.getElementById('addAccumulation').value);
-
-      fetch('/manual_add_employee', { method: 'POST', body: body })
-        .then(function (response) {
-          if (response.ok) {
-            showAlert('addEmployeeAlert', 'Employee added successfully.', 'ok');
-            setTimeout(function () { window.location.reload(); }, 900);
-          } else {
-            return response.text().then(function (text) {
-              showAlert('addEmployeeAlert', text || 'Could not add the employee.', 'error');
-            });
-          }
-        })
-        .catch(function () { showAlert('addEmployeeAlert', 'Could not add the employee.', 'error'); });
-    });
-  }
-
-  /* ------------------------------------------------------------ removing */
-  var openRemove = document.getElementById('openRemoveEmployee');
-  if (openRemove && removeModal) {
-    openRemove.addEventListener('click', function () {
-      hideAlerts(['removeEmployeeAlert']);
-      removeModal.show();
-    });
-  }
-
-  var confirmRemove = document.getElementById('confirmRemoveEmployees');
-  if (confirmRemove) {
-    confirmRemove.addEventListener('click', function () {
-      var ids = Array.prototype.slice
-        .call(document.querySelectorAll('#removeEmployeeModal .employee-checkbox:checked'))
-        .map(function (checkbox) { return parseInt(checkbox.value, 10); });
-
-      if (!ids.length) {
-        showAlert('removeEmployeeAlert', 'Select at least one employee.', 'error');
-        return;
-      }
-
-      fetch('/remove_employees', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employee_ids: ids, companyname: COMPANY_NAME })
-      })
-        .then(function (response) { return response.json(); })
-        .then(function (result) {
-          if (result.success) {
-            showAlert('removeEmployeeAlert', result.message || 'Employees removed.', 'ok');
-            setTimeout(function () { window.location.reload(); }, 900);
-          } else {
-            showAlert('removeEmployeeAlert', result.message || 'Could not remove the selected employees.', 'error');
-          }
-        })
-        .catch(function () { showAlert('removeEmployeeAlert', 'Could not remove the selected employees.', 'error'); });
-    });
-  }
-
-  /* ----------------------------------------------------------- row edits */
-  document.addEventListener('click', function (event) {
-    var role = event.target.closest('.edit-priv-btn');
-    if (role && roleModal) {
-      event.preventDefault();
-      document.getElementById('roleCurrentId').value = role.dataset.ID || role.dataset.id || '';
-      hideAlerts(['roleAlert']);
-      roleModal.show();
-      return;
-    }
-
-    var department = event.target.closest('.edit-department-btn');
-    if (department && departmentModal) {
-      event.preventDefault();
-      document.getElementById('departmentCurrentId').value = department.dataset.ID || department.dataset.id || '';
-      hideAlerts(['departmentAlert']);
-      departmentModal.show();
-      return;
-    }
-
-    var approver = event.target.closest('.change-approver-btn');
-    if (approver && approverModal) {
-      event.preventDefault();
-      document.getElementById('approverCurrentId').value = approver.dataset.ID || approver.dataset.id || '';
-      hideAlerts(['approverAlert']);
-      approverModal.show();
-      return;
-    }
-
-    var balance = event.target.closest('.edit-balance-btn');
-    if (balance && balanceModal) {
-      event.preventDefault();
-      document.getElementById('balanceCurrentId').value = balance.dataset.ID || balance.dataset.id || '';
-      hideAlerts(['balanceAlert']);
-      balanceModal.show();
-    }
-  });
-
-  var saveRole = document.getElementById('saveRole');
-  if (saveRole) {
-    saveRole.addEventListener('click', function () {
-      postForm('/update_role', {
-        role: document.getElementById('roleSelect').value,
-        currentId: document.getElementById('roleCurrentId').value
-      }, function (ok, payload) {
-        if (ok) {
-          showAlert('roleAlert', (payload && payload.message) || 'Role updated.', 'ok');
-          setTimeout(function () { window.location.reload(); }, 900);
-        } else {
-          showAlert('roleAlert', (payload && (payload.message || payload.error)) || 'Could not update the role.', 'error');
-        }
-      });
-    });
-  }
-
-  var saveDepartment = document.getElementById('saveDepartment');
-  if (saveDepartment) {
-    saveDepartment.addEventListener('click', function () {
-      postForm('/update_department', {
-        department: document.getElementById('departmentSelect').value,
-        currentId: document.getElementById('departmentCurrentId').value,
-        companyname: COMPANY_NAME
-      }, function (ok, payload) {
-        if (ok) {
-          showAlert('departmentAlert', (payload && payload.message) || 'Department updated.', 'ok');
-          setTimeout(function () { window.location.reload(); }, 900);
-        } else {
-          showAlert('departmentAlert', (payload && (payload.message || payload.error)) || 'Could not update the department.', 'error');
-        }
-      });
-    });
-  }
-
-  var saveApprover = document.getElementById('saveApprover');
-  if (saveApprover) {
-    saveApprover.addEventListener('click', function () {
-      var approver = document.getElementById('approverSelect').value;
-      if (!approver) {
-        showAlert('approverAlert', 'Choose an approver first.', 'error');
-        return;
-      }
-      postForm('/update_approver', {
-        approver: approver,
-        currentIdapprover: document.getElementById('approverCurrentId').value
-      }, function (ok, payload) {
-        if (ok) {
-          showAlert('approverAlert', (payload && payload.message) || 'Approver updated.', 'ok');
-          setTimeout(function () { window.location.reload(); }, 900);
-        } else {
-          showAlert('approverAlert', (payload && (payload.message || payload.error)) || 'Could not update the approver.', 'error');
-        }
-      });
-    });
-  }
-
-  var saveBalance = document.getElementById('saveBalance');
-  if (saveBalance) {
-    saveBalance.addEventListener('click', function () {
-      postForm('/update_balance', {
-        balance: document.getElementById('balanceInput').value,
-        currentIdbalance: document.getElementById('balanceCurrentId').value
-      }, function (ok, payload) {
-        if (ok) {
-          showAlert('balanceAlert', (payload && payload.message) || 'Balance updated.', 'ok');
-          setTimeout(function () { window.location.reload(); }, 900);
-        } else {
-          showAlert('balanceAlert', (payload && (payload.message || payload.error)) || 'Could not update the balance.', 'error');
-        }
-      });
-    });
-  }
-
-  /* --------------------------------------------------------- portal access */
   var matrixHead = document.getElementById('accessMatrixHead');
   var matrixBody = document.getElementById('accessMatrixBody');
+  var managerList = document.getElementById('accessManagersList');
+  var managerChip = document.getElementById('accessManagerChip');
+  var grantSelect = document.getElementById('grantManagerSelect');
+  var grantButton = document.getElementById('grantManagerButton');
   var matrixModules = [];
+  var matrixEmployees = [];
 
   function loadMatrix() {
     if (!matrixBody) return;
+    hideAlert();
     fetch('/api/access/matrix')
       .then(function (response) { return response.json(); })
       .then(function (payload) {
@@ -266,7 +48,9 @@
           return;
         }
         matrixModules = payload.modules || [];
-        renderMatrix(payload.employees || []);
+        matrixEmployees = payload.employees || [];
+        renderMatrix(matrixEmployees);
+        renderManagers();
       })
       .catch(function () {
         matrixBody.innerHTML = '<tr><td class="ps-muted" colspan="3">Unable to load portal access.</td></tr>';
@@ -288,7 +72,7 @@
       var cells = matrixModules.map(function (module) {
         var enabled = !!(employee.modules && employee.modules[module.key]);
         return '<td class="ps-access-cell">' +
-          '<label class="ps-switch" title="' + escapeHtml(module.title) + '">' +
+          '<label class="ps-switch" title="' + escapeHtml(module.full_title || module.title) + '">' +
           '<input type="checkbox" data-employee="' + employee.id + '" data-module="' + escapeHtml(module.key) + '"' +
           (enabled ? ' checked' : '') + ' aria-label="' + escapeHtml(module.title) + ' for ' + escapeHtml(employee.name) + '">' +
           '<span class="ps-switch-track"></span>' +
@@ -305,42 +89,118 @@
     }).join('');
   }
 
-  if (matrixBody) {
-    matrixBody.addEventListener('change', function (event) {
-      var checkbox = event.target.closest('input[data-module]');
-      if (!checkbox) return;
-      var wrapper = checkbox.closest('.ps-switch');
-      var restore = checkbox.checked;
-      wrapper.classList.add('is-busy');
+  function isManager(employee) {
+    return !!(employee.modules && employee.modules.access);
+  }
 
-      fetch('/api/access/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          employee_id: parseInt(checkbox.getAttribute('data-employee'), 10),
-          module: checkbox.getAttribute('data-module'),
-          enabled: checkbox.checked
-        })
-      })
-        .then(function (response) { return response.json(); })
-        .then(function (result) {
-          if (result.success) {
-            showAlert('accessAlert', 'Portal access updated.', 'ok');
-          } else {
-            checkbox.checked = !restore;
-            showAlert('accessAlert', result.message || 'Could not update portal access.', 'error');
-          }
-        })
-        .catch(function () {
-          checkbox.checked = !restore;
-          showAlert('accessAlert', 'Could not update portal access.', 'error');
-        })
-        .finally(function () { wrapper.classList.remove('is-busy'); });
+  function renderManagers() {
+    var managers = matrixEmployees.filter(isManager);
+    var others = matrixEmployees.filter(function (employee) { return !isManager(employee); });
+
+    if (managerChip) {
+      managerChip.innerHTML = '<i class="bi bi-shield-lock"></i> <strong>' + managers.length +
+        '</strong> access manager' + (managers.length === 1 ? '' : 's');
+    }
+
+    if (managerList) {
+      if (!managers.length) {
+        managerList.innerHTML = '<p class="ps-muted" style="font-size:0.82rem;margin:0;">' +
+          'Nobody can manage access yet. Grant it below, or give an employee the ' +
+          '<em>Manage access</em> switch in the matrix.</p>';
+      } else {
+        managerList.innerHTML = managers.map(function (employee) {
+          return '<div class="ps-manager">' +
+            '<label class="ps-switch" title="Manage access for ' + escapeHtml(employee.name) + '">' +
+            '<input type="checkbox" checked data-employee="' + employee.id + '" data-module="access" ' +
+            'aria-label="Manage access for ' + escapeHtml(employee.name) + '">' +
+            '<span class="ps-switch-track"></span>' +
+            '</label>' +
+            '<span class="ps-manager-details">' +
+            '<span class="ps-manager-name">' + escapeHtml(employee.name) + '</span>' +
+            '<span class="ps-manager-role">' + escapeHtml(employee.role || 'Employee') + '</span>' +
+            '</span></div>';
+        }).join('');
+      }
+    }
+
+    if (grantSelect) {
+      grantSelect.innerHTML = '<option value="">Grant access management to…</option>' +
+        others.map(function (employee) {
+          return '<option value="' + employee.id + '">' + escapeHtml(employee.name) +
+            (employee.role ? ' — ' + escapeHtml(employee.role) : '') + '</option>';
+        }).join('');
+      grantSelect.disabled = !others.length;
+    }
+    if (grantButton) grantButton.disabled = !others.length;
+  }
+
+  function applyToggle(employeeId, module, enabled, checkbox) {
+    var wrapper = checkbox ? checkbox.closest('.ps-switch') : null;
+    var before = !enabled;
+    var moduleTitle = module;
+    matrixModules.forEach(function (entry) {
+      if (entry.key === module) moduleTitle = entry.full_title || entry.title;
     });
+    if (wrapper) wrapper.classList.add('is-busy');
 
+    return fetch('/api/access/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ employee_id: parseInt(employeeId, 10), module: module, enabled: enabled })
+    })
+      .then(function (response) { return response.json(); })
+      .then(function (result) {
+        if (!result.success) {
+          if (checkbox) checkbox.checked = before;
+          showAlert(result.message || 'Could not update portal access.', 'error');
+          return false;
+        }
+        var employee = matrixEmployees.filter(function (entry) {
+          return String(entry.id) === String(employeeId);
+        })[0];
+        if (employee) {
+          employee.modules = employee.modules || {};
+          employee.modules[module] = enabled;
+        }
+        renderMatrix(matrixEmployees);
+        renderManagers();
+        showAlert(moduleTitle + (enabled ? ' enabled' : ' disabled') + ' for ' +
+          ((employee && employee.name) || 'this employee') +
+          '. The change applies from their next sign in.', 'ok');
+        return true;
+      })
+      .catch(function () {
+        if (checkbox) checkbox.checked = before;
+        showAlert('Could not update portal access.', 'error');
+        return false;
+      })
+      .then(function (value) {
+        if (wrapper) wrapper.classList.remove('is-busy');
+        return value;
+      });
+  }
+
+  document.addEventListener('change', function (event) {
+    var checkbox = event.target.closest('input[data-module]');
+    if (!checkbox) return;
+    applyToggle(checkbox.getAttribute('data-employee'), checkbox.getAttribute('data-module'),
+                checkbox.checked, checkbox);
+  });
+
+  if (grantButton && grantSelect) {
+    grantButton.addEventListener('click', function () {
+      var employeeId = grantSelect.value;
+      if (!employeeId) {
+        showAlert('Choose an employee to grant access management to.', 'error');
+        return;
+      }
+      applyToggle(employeeId, 'access', true, null);
+    });
+  }
+
+  if (matrixBody) {
     var refresh = document.getElementById('refreshAccessMatrix');
     if (refresh) refresh.addEventListener('click', loadMatrix);
-
     loadMatrix();
   }
 })();

@@ -13,6 +13,8 @@
   --ps-text: #0D1B2A;
   --ps-text-soft: #586B80;
   --ps-accent: #DC143C;
+  --ps-accent-light: #FF2E5A;
+  --ps-accent-dark: #A80F2D;
   --ps-accent-soft: rgba(220, 20, 60, 0.1);
   --ps-ok: #10B981;
   --ps-warn: #F59E0B;
@@ -844,6 +846,35 @@ table.ps-table td.ps-access-cell { text-align: center; }
 .ps-access-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; font-size: 0.74rem; color: var(--ps-text-soft); }
 .ps-access-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .ps-access-legend i { color: var(--ps-accent); }
+.ps-access-legend b { color: var(--ps-text); font-weight: 700; }
+
+.ps-select-sm {
+  width: auto;
+  min-width: 240px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  border-radius: 999px;
+}
+
+.ps-manager-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ps-manager {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px 9px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ps-line);
+  background: var(--ps-surface-alt);
+}
+
+.ps-manager-details { display: flex; flex-direction: column; line-height: 1.25; }
+.ps-manager-name { font-size: 0.8rem; font-weight: 600; color: var(--ps-text); }
+.ps-manager-role { font-size: 0.68rem; color: var(--ps-text-soft); }
 
 /* ==========================================================================
    Polish layer ? refines the LMS tables, controls and surfaces that the
@@ -871,23 +902,29 @@ table.ps-table td.ps-access-cell { text-align: center; }
   gap: 6px;
   padding: 7px 13px;
   border-radius: 999px;
-  border: 1px solid rgba(220, 20, 60, 0.24);
-  background: var(--ps-accent-soft);
-  color: var(--ps-accent);
+  border: 1px solid #E1E7EF;
+  background: #FFFFFF;
+  color: var(--ps-text);
   font-family: inherit;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
   box-shadow: none;
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.ps-table-wrap td div {
+  flex-wrap: wrap;
+  row-gap: 8px;
 }
 
 .ps-table-wrap td .btn:hover,
 .ps-table-wrap .btn-primary3:hover,
 .ps-table-wrap .btn-primary:hover {
-  background: rgba(220, 20, 60, 0.17);
+  background: var(--ps-accent-soft);
+  border-color: rgba(220, 20, 60, 0.28);
   color: var(--ps-accent-dark);
   transform: translateY(-1px);
 }

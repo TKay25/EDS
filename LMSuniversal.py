@@ -6499,6 +6499,13 @@ def webhook():
                     print("✅ Sending message to:", to)
                     print("📩 Message body:", text)
 
+                    # Keep the company channel's CRM transcript complete.
+                    try:
+                        company_channel_track(display_phone_number, sender_id, to, text,
+                                              "button" if buttons else "text")
+                    except Exception as track_error:
+                        print(f"company channel tracking error: {track_error}")
+
                     """try:
                         response_json = response.json()
                         print("📝 WhatsApp API Response Data:", response_json)
@@ -6559,6 +6566,13 @@ def webhook():
                     print("📡 WhatsApp API Response Status:", response.status_code)  
 
                     print("List message response:", response.json())
+
+                    # Keep the company channel's CRM transcript complete.
+                    try:
+                        company_channel_track(display_phone_number, sender_id, recipient, text, "list")
+                    except Exception as track_error:
+                        print(f"company channel tracking error: {track_error}")
+
                     return response
 
                 print("📥 Full incoming data:", json.dumps(data, indent=2))
@@ -6896,6 +6910,23 @@ def webhook():
                                         # Staff can hop between the staff assistant and the
                                         # customer assistant on the same number.
                                         # ------------------------------------------------
+                                        on_company_channel = str(display_phone_number) in COMPANY_SYSTEM_WA_NUMBERS
+
+                                        if on_company_channel:
+                                            # Make sure the company system tables exist in this
+                                            # worker before anything tries to read or write them.
+                                            try:
+                                                ensure_company_system_tables()
+                                                inbound_text, inbound_type, _inbound_id = _wa_inbound_preview(message)
+                                                crm_record_message(
+                                                    sender_id, "inbound", "staff",
+                                                    inbound_text or f"[{inbound_type}]", inbound_type,
+                                                    display_name=f"{first_name} {last_name}".strip() or None,
+                                                    company_reg=COMPANY_SYSTEM_PREFIX,
+                                                    channel=display_phone_number, is_staff=True)
+                                            except Exception as track_error:
+                                                print(f"staff message tracking error: {track_error}")
+
                                         incoming_text = (message.get("text") or {}).get("body", "").strip().lower()
                                         incoming_id = ""
                                         if message.get("type") == "interactive":
@@ -20580,6 +20611,7 @@ def ensure_crm_tables():
                 last_message_at TIMESTAMP,
                 last_message_direction VARCHAR(12),
                 assigned_to VARCHAR(120),
+                is_staff BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
             );
@@ -20600,17 +20632,24 @@ def ensure_crm_tables():
         cursor.execute("CREATE INDEX IF NOT EXISTS whatsapp_messages_chat_idx ON whatsapp_messages (chat_id, id);")
         # Bring installs created before these columns existed up to date.
         cursor.execute("ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS delivered BOOLEAN;")
+        cursor.execute("ALTER TABLE whatsapp_chats ADD COLUMN IF NOT EXISTS is_staff BOOLEAN DEFAULT FALSE;")
+        cursor.execute("UPDATE whatsapp_chats SET is_staff = FALSE WHERE is_staff IS NULL;")
         connection.commit()
     _crm_tables_ready = True
 
 
 def crm_record_message(wa_number, direction, sender, body, message_type="text",
                        display_name=None, company_reg=None, escalate=False,
-                       reason=None, channel=None, delivered=None):
-    """Persist one WhatsApp message and keep the CRM chat index in sync."""
+                       reason=None, channel=None, delivered=None, is_staff=False):
+    """Persist one WhatsApp message and keep the CRM chat index in sync.
+
+    Staff conversations are stored too so the inbox is a complete record of the
+    channel, but they are flagged and never counted as unattended enquiries.
+    """
     if not wa_number or not body:
         return None
     wa_number = str(wa_number)[-15:]
+    is_staff = bool(is_staff)
     try:
         ensure_crm_tables()
         with get_db() as (cursor, connection):
@@ -20622,30 +20661,34 @@ def crm_record_message(wa_number, direction, sender, body, message_type="text",
                     INSERT INTO whatsapp_chats (wa_number, display_name, company_reg, channel,
                                                 status, unattended, handoff_reason, unread_count,
                                                 last_message, last_message_at, last_message_direction,
-                                                created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, 'bot', %s, %s, %s, %s, NOW(), %s, NOW(), NOW())
+                                                is_staff, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, 'bot', %s, %s, %s, %s, NOW(), %s, %s, NOW(), NOW())
                     RETURNING id
-                """, (wa_number, display_name, company_reg, channel, bool(escalate), reason,
-                      1 if direction == "inbound" else 0, body, direction))
+                """, (wa_number, display_name, company_reg, channel,
+                      bool(escalate) and not is_staff, reason,
+                      0 if is_staff else (1 if direction == "inbound" else 0),
+                      body, direction, is_staff))
                 chat_id = cursor.fetchone()[0]
             else:
                 chat_id = row[0]
                 if direction == "inbound":
                     cursor.execute("""
                         UPDATE whatsapp_chats
-                        SET unread_count = unread_count + 1,
-                            unattended = CASE WHEN %s THEN TRUE ELSE unattended END,
+                        SET unread_count = CASE WHEN %s THEN unread_count ELSE unread_count + 1 END,
+                            unattended = CASE WHEN %s THEN TRUE WHEN %s THEN FALSE ELSE unattended END,
                             handoff_reason = COALESCE(%s, handoff_reason),
                             display_name = COALESCE(%s, display_name),
                             company_reg = COALESCE(%s, company_reg),
                             channel = COALESCE(%s, channel),
+                            is_staff = is_staff OR %s,
                             last_message = %s,
                             last_message_at = NOW(),
                             last_message_direction = 'inbound',
                             updated_at = NOW()
                         WHERE id = %s
-                    """, (bool(escalate), reason, display_name, company_reg, channel,
-                          body, chat_id))
+                    """, (is_staff, bool(escalate) and not is_staff, is_staff,
+                          None if is_staff else reason, display_name, company_reg, channel,
+                          is_staff, body, chat_id))
                 elif sender == "agent":
                     cursor.execute("""
                         UPDATE whatsapp_chats
@@ -20671,6 +20714,37 @@ def crm_record_message(wa_number, direction, sender, body, message_type="text",
         return chat_id
     except Exception as e:
         print(f"CRM log error: {e}")
+        return None
+
+
+def crm_chat_id(wa_number, display_name=None, channel=None, is_staff=False):
+    """Resolve (creating when needed) the CRM chat row for a number."""
+    if not wa_number:
+        return None
+    wa_number = str(wa_number)[-15:]
+    try:
+        ensure_crm_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT id FROM whatsapp_chats WHERE wa_number = %s", (wa_number,))
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            cursor.execute("""
+                INSERT INTO whatsapp_chats (wa_number, display_name, company_reg, channel,
+                                            status, unattended, unread_count, is_staff,
+                                            created_at, updated_at)
+                VALUES (%s, %s, %s, %s, 'bot', FALSE, 0, %s, NOW(), NOW())
+                ON CONFLICT (wa_number) DO NOTHING
+                RETURNING id
+            """, (wa_number, display_name, COMPANY_SYSTEM_PREFIX, channel, bool(is_staff)))
+            row = cursor.fetchone()
+            if row is None:
+                cursor.execute("SELECT id FROM whatsapp_chats WHERE wa_number = %s", (wa_number,))
+                row = cursor.fetchone()
+            connection.commit()
+            return row[0] if row else None
+    except Exception as e:
+        print(f"CRM chat lookup error: {e}")
         return None
 
 
@@ -20751,6 +20825,57 @@ def crm_send_whatsapp(wa_number, text, channel=None):
     except Exception as e:
         print(f"CRM send error: {e}")
         return False, str(e)
+
+
+def crm_send_whatsapp_payload(wa_number, payload, channel=None):
+    """Send one raw WhatsApp message payload from the company channel."""
+    creds = _wa_channels.get(str(channel)) if channel else None
+    if creds is None:
+        token = os.getenv("WHATSAPP_ACCESS_TOKEN")
+        phone_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+        if token and phone_id:
+            creds = {"token": token, "phone_id": str(phone_id)}
+    if creds is None and _wa_channels:
+        creds = list(_wa_channels.values())[-1]
+    if creds is None:
+        return False, "WhatsApp delivery is not configured on this deployment."
+    body = dict(payload)
+    body["messaging_product"] = "whatsapp"
+    body["to"] = wa_number
+    try:
+        response = requests.post(
+            f"https://graph.facebook.com/v18.0/{creds['phone_id']}/messages",
+            headers={"Authorization": "Bearer " + str(creds['token']),
+                     "Content-Type": "application/json"},
+            json=body,
+            timeout=20,
+        )
+        if response.status_code >= 400:
+            print(f"CRM send failed: {response.status_code} {response.text}")
+            return False, "WhatsApp rejected the message."
+        return True, ""
+    except Exception as e:
+        print(f"CRM send error: {e}")
+        return False, str(e)
+
+
+def company_channel_track(display_phone_number, sender_id, recipient, body,
+                          message_type="text", delivered=True, staff=True):
+    """Record a message that belongs to a company WhatsApp conversation.
+
+    Only messages sent back to the person who just wrote in are recorded, so
+    notifications the platform sends to third parties never pollute the inbox.
+    """
+    if not display_phone_number or not sender_id or not recipient or not body:
+        return None
+    if str(display_phone_number) not in COMPANY_SYSTEM_WA_NUMBERS:
+        return None
+    if str(recipient)[-15:] != str(sender_id)[-15:]:
+        return None
+    return crm_record_message(sender_id, "outbound", "staff" if staff else "bot", body,
+                              message_type, company_reg=COMPANY_SYSTEM_PREFIX,
+                              channel=display_phone_number, delivered=delivered,
+                              is_staff=staff)
 
 
 # ---------------------------------------------------------------------------
@@ -21036,13 +21161,12 @@ def _shop_save_order(state, channel, wa_number=None, customer=None):
     reference = f"BC-{datetime.now().strftime('%y%m%d')}-{random.randint(1000, 9999)}"
     wa_number = str(wa_number)[-15:] if wa_number else None
     try:
-        ensure_shop_tables()
+        ensure_company_system_tables()
+        # Every order hangs off the conversation it came from so the CRM can
+        # show the enquiry alongside the order.
+        chat_id = crm_chat_id(wa_number, display_name=customer.get("name") or customer.get("company"),
+                              channel=channel) if wa_number else None
         with get_db() as (cursor, connection):
-            chat_id = None
-            if wa_number:
-                cursor.execute("SELECT id FROM whatsapp_chats WHERE wa_number = %s", (wa_number,))
-                row = cursor.fetchone()
-                chat_id = row[0] if row else None
             cursor.execute("""
                 INSERT INTO shop_orders (reference, customer_name, company, phone, email,
                                          delivery_address, channel, wa_number, chat_id, notes,
@@ -21416,6 +21540,129 @@ def shop_nav_block(nav):
     return "━━━━━━━━━━━━━━━\n" + "\n".join(lines)
 
 
+def shop_nav_options(nav):
+    """Navigation choices offered alongside every prompt."""
+    options = []
+    if nav and nav.get("back"):
+        options.append({"id": "b", "label": "Back"})
+    if nav and nav.get("menu"):
+        options.append({"id": "m", "label": "Main menu"})
+    return options
+
+
+# WhatsApp limits: three reply buttons, ten list rows, short titles, and a
+# smaller body allowance on button messages than on lists.
+WA_BUTTON_LIMIT = 3
+WA_BUTTON_TITLE_LIMIT = 20
+WA_BUTTON_BODY_LIMIT = 1024
+WA_LIST_ROWS_MAX = 10
+WA_LIST_ROW_TITLE_LIMIT = 24
+WA_LIST_SECTION_TITLE_LIMIT = 24
+
+
+def _wa_clip(text, limit):
+    text = " ".join(str(text or "").split())
+    if len(text) <= limit:
+        return text
+    return text[:limit - 1].rstrip() + "…"
+
+
+def _wa_text_payload(body):
+    return {"type": "text", "text": {"body": body}}
+
+
+def _wa_button_payload(body, options):
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body},
+            "action": {
+                "buttons": [
+                    {"type": "reply",
+                     "reply": {"id": option["id"],
+                               "title": _wa_clip(option["label"], WA_BUTTON_TITLE_LIMIT)}}
+                    for option in options[:WA_BUTTON_LIMIT]
+                ]
+            },
+        },
+    }
+
+
+def _wa_list_payload(body, options, nav_count=0):
+    content = options[:len(options) - nav_count] if nav_count else options
+    sections = []
+    if content:
+        sections.append({
+            "title": "Choose",
+            "rows": [{"id": option["id"],
+                      "title": _wa_clip(option["label"], WA_LIST_ROW_TITLE_LIMIT)}
+                     for option in content],
+        })
+    if nav_count:
+        sections.append({
+            "title": "Navigation",
+            "rows": [{"id": option["id"],
+                      "title": _wa_clip(option["label"], WA_LIST_ROW_TITLE_LIMIT)}
+                     for option in options[len(options) - nav_count:]],
+        })
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "list",
+            "body": {"text": body},
+            "action": {"button": "Choose an option", "sections": sections},
+        },
+    }
+
+
+def shop_whatsapp_payloads(messages, nav=None):
+    """Render one assistant turn as WhatsApp buttons or a list.
+
+    Buttons are used when the whole prompt fits in three replies, a list when it
+    does not. WhatsApp caps a list at ten rows, so any choices beyond that stay
+    in the body as numbers — those numbers map to the same choices the engine
+    stores, so typing one still works.
+    """
+    texts = []
+    choice = None
+    for message in messages or []:
+        if not message:
+            continue
+        if message.get("options"):
+            choice = message
+        else:
+            texts.append(message.get("text") or "")
+
+    parts = [part.strip() for part in texts if part and part.strip()]
+    choice_text = (choice.get("text") or "").strip() if choice else ""
+    if choice_text:
+        parts.append(choice_text)
+
+    content_options = list((choice or {}).get("options") or [])
+    nav_options = shop_nav_options(nav)
+    options = content_options + nav_options
+    body = "\n\n".join(parts)
+
+    if not options:
+        return [_wa_text_payload(body)] if body else []
+
+    if len(options) <= WA_BUTTON_LIMIT:
+        prompt = body or "Choose an option:"
+        if len(prompt) > WA_BUTTON_BODY_LIMIT:
+            return [_wa_text_payload(prompt), _wa_button_payload("Choose an option:", options)]
+        return [_wa_button_payload(prompt, options)]
+
+    capacity = WA_LIST_ROWS_MAX - len(nav_options)
+    if len(content_options) > capacity:
+        hidden = content_options[capacity:]
+        body = body + "\n\nReply with a number for the rest:\n" + "\n".join(
+            f"{index}. {option['label']}"
+            for index, option in enumerate(hidden, start=capacity + 1))
+        options = content_options[:capacity] + nav_options
+    return [_wa_list_payload(body, options, len(nav_options))]
+
+
 def shop_messages_to_text(messages, nav=None):
     """Flatten assistant messages into WhatsApp-friendly text."""
     parts = []
@@ -21570,13 +21817,16 @@ def shop_webhook_turn(sender_id, display_phone_number, message, staff=False):
     """Run one shopping-assistant turn over WhatsApp.
 
     Returns the actions still to be handled by the caller. Staff conversations
-    are answered without creating customer records in the CRM inbox.
+    are answered and recorded like customer ones, but they are flagged as staff
+    so they never count as unattended customer enquiries. The inbound message is
+    recorded by the caller, which already knows whether the sender is staff.
     """
     text, mtype, reply_id = _wa_inbound_preview(message)
+    staff = bool(staff)
     state_key = f"wa:{str(sender_id)[-15:]}"
     state = shop_load_state(state_key) or {"step": "menu", "cart": [], "ctx": {},
                                           "customer": {}, "history": []}
-    state["staff"] = bool(staff)
+    state["staff"] = staff
 
     new_state, messages, actions = shop_engine(
         state, raw_input=text, button_id=reply_id,
@@ -21587,17 +21837,40 @@ def shop_webhook_turn(sender_id, display_phone_number, message, staff=False):
     if any(action.get("type") == "switch_staff" for action in actions):
         return actions
 
-    rendered = shop_messages_to_text(messages, new_state.get("nav"))
-    if rendered:
-        if staff:
-            crm_send_whatsapp(sender_id, rendered, display_phone_number)
-        else:
-            _crm_reply(sender_id, rendered, display_phone_number)
+    shop_send_whatsapp(sender_id, messages, new_state.get("nav"), display_phone_number,
+                       staff=staff)
     return actions
+
+
+def shop_send_whatsapp(wa_number, messages, nav, channel=None, staff=False):
+    """Deliver one assistant turn as WhatsApp buttons/lists, then log it.
+
+    The transcript keeps the full readable prompt — including every choice — so
+    an agent reading the conversation sees everything the customer was offered.
+    """
+    payloads = shop_whatsapp_payloads(messages, nav)
+    readable = shop_messages_to_text(messages, nav)
+    if not payloads and not readable:
+        return False
+
+    kind = "text"
+    ok = True
+    for payload in payloads:
+        sent, _detail = crm_send_whatsapp_payload(wa_number, payload, channel)
+        ok = ok and sent
+        if payload.get("type") == "interactive":
+            kind = (payload.get("interactive") or {}).get("type") or "interactive"
+
+    if readable:
+        crm_record_message(wa_number, "outbound", "staff" if staff else "bot", readable,
+                           kind, company_reg=COMPANY_SYSTEM_PREFIX, channel=channel,
+                           delivered=ok, is_staff=staff)
+    return ok
 
 
 def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=""):
     """Run the shopping assistant for a customer (a number that is not staff)."""
+    ensure_company_system_tables()
     text, mtype, reply_id = _wa_inbound_preview(message)
     lowered = (text or "").strip().lower()
     wants_human = any(keyword in lowered for keyword in _CUSTOMER_HUMAN_KEYWORDS)
@@ -21639,17 +21912,17 @@ def _safe_scalar(query, params=None, default=0):
 # ------------------------------------------------------------ portal access --
 COMPANY_MODULES = [
     {"key": "leave", "title": "Leave Management", "icon": "bi-calendar2-check",
-     "url": "/portal/leave",
+     "url": "/portal/leave", "matrix_title": "Leave",
      "description": "Apply for leave, track applications, approve requests, manage balances and export the LMS book."},
     {"key": "hr", "title": "HR & Payroll", "icon": "bi-wallet2",
-     "url": "/portal/hr-payroll",
-     "description": "Employee records, payroll details, banking information and USD / ZWG currency split configuration."},
+     "url": "/portal/hr-payroll", "matrix_title": "HR & Payroll",
+     "description": "Employee records and administration, payroll details, banking information and USD / ZWG currency split configuration."},
     {"key": "crm", "title": "CRM Portal", "icon": "bi-headset",
-     "url": "/portal/crm",
+     "url": "/portal/crm", "matrix_title": "CRM",
      "description": "WhatsApp customer enquiries, unattended conversations and one-click handover to a human agent."},
     {"key": "access", "title": "User Access Management", "icon": "bi-shield-lock",
-     "url": "/portal/user-access",
-     "description": "Add or remove employees, assign roles and approvers, and control who can open each portal."},
+     "url": "/portal/user-access", "matrix_title": "Manage access",
+     "description": "Control which portals each employee can open after they sign in."},
 ]
 COMPANY_MODULE_KEYS = [module["key"] for module in COMPANY_MODULES]
 
@@ -21675,6 +21948,23 @@ def ensure_access_tables():
         """)
         connection.commit()
     _access_tables_ready = True
+
+
+def ensure_company_system_tables():
+    """Create every company system table.
+
+    Read paths need this as much as write paths: the CRM inbox, the access
+    matrix and the order log all query tables that may not exist yet on a fresh
+    deployment or in a worker that has not written anything. Each helper is
+    guarded so one failure cannot stop the others from being attempted, and a
+    successful run is remembered for the lifetime of the process.
+    """
+    for ensure in (ensure_crm_tables, ensure_shop_tables, ensure_access_tables,
+                   ensure_number_mode_table):
+        try:
+            ensure()
+        except Exception as e:
+            print(f"table setup failed ({ensure.__name__}): {e}")
 
 
 def default_module_access(role):
@@ -21731,6 +22021,7 @@ def set_module_access(employee_id, module, enabled, updated_by=None):
 
 def access_matrix():
     """Every employee with their effective portal access flags."""
+    ensure_company_system_tables()
     with get_db() as (cursor, connection):
         cursor.execute(f"""
             SELECT id, firstname, surname, role, department
@@ -21798,6 +22089,7 @@ def portal_api_user(module=None):
 
 def company_system_stats():
     """Headline numbers shown on the portal hub cards."""
+    ensure_company_system_tables()
     pending_table = f"{COMPANY_SYSTEM_PREFIX}appspendingapproval"
     return {
         "stat_employees": _safe_scalar(f"SELECT COUNT(*) FROM {COMPANY_SYSTEM_TABLE}"),
@@ -21816,6 +22108,7 @@ def company_system_stats():
 
 
 def _crm_chats(filter_key="all"):
+    ensure_company_system_tables()
     where = ["company_reg = %s"]
     params = [COMPANY_SYSTEM_PREFIX]
     if filter_key == "unattended":
@@ -21826,11 +22119,15 @@ def _crm_chats(filter_key="all"):
         where.append("status = 'bot'")
     elif filter_key == "closed":
         where.append("status = 'closed'")
+    elif filter_key == "staff":
+        where.append("is_staff = TRUE")
+    elif filter_key == "customers":
+        where.append("is_staff = FALSE")
     else:
         where.append("status <> 'closed'")
     query = f"""
         SELECT id, wa_number, display_name, status, unattended, handoff_reason,
-               unread_count, last_message, last_message_at, assigned_to
+               unread_count, last_message, last_message_at, assigned_to, is_staff
         FROM whatsapp_chats
         WHERE {' AND '.join(where)}
         ORDER BY COALESCE(last_message_at, created_at) DESC
@@ -21853,6 +22150,7 @@ def _crm_chats(filter_key="all"):
             "last_message_at": row[8].strftime("%d %b %Y %H:%M") if row[8] else "",
             "last_message_iso": row[8].isoformat() if row[8] else "",
             "assigned_to": row[9] or "",
+            "is_staff": bool(row[10]),
         })
     return chats
 
@@ -21957,14 +22255,10 @@ def portal_user_access():
     user, denied = company_system_guard('access')
     if denied:
         return denied
-    try:
-        results = run1(COMPANY_SYSTEM_TABLE, user['id'])
-    except Exception as e:
-        print(f"User access data error: {e}")
-        results = {}
     return render_template('user_access.html', user=user, active_nav='access',
                            nav_modules=user_modules(user),
-                           **results, **company_system_stats())
+                           modules=COMPANY_MODULES,
+                           **company_system_stats())
 
 
 @app.route('/portal/crm')
@@ -21998,8 +22292,26 @@ def access_matrix_api():
     return jsonify({
         'success': True,
         'employees': employees,
-        'modules': [{'key': module['key'], 'title': module['title']} for module in COMPANY_MODULES],
+        'modules': [{'key': module['key'],
+                     'title': module['matrix_title'],
+                     'full_title': module['title']} for module in COMPANY_MODULES],
+        'access_managers': sum(1 for employee in employees if employee['modules'].get('access')),
     })
+
+
+def access_manager_count(exclude_employee=None):
+    """How many employees can currently change portal access.
+
+    This is the count that must never reach zero, otherwise nobody could switch
+    portal access on again.
+    """
+    total = 0
+    for employee in access_matrix():
+        if exclude_employee is not None and int(employee["id"]) == int(exclude_employee):
+            continue
+        if employee["modules"].get("access"):
+            total += 1
+    return total
 
 
 @app.route('/api/access/toggle', methods=['POST'])
@@ -22021,6 +22333,13 @@ def access_toggle_api():
     if int(employee_id) == int(user['id']) and module == 'access' and not enabled:
         return jsonify({'success': False,
                         'message': 'You cannot remove your own user access management permission.'}), 400
+
+    if module == 'access' and not enabled:
+        remaining = access_manager_count(exclude_employee=employee_id)
+        if remaining < 1:
+            return jsonify({'success': False,
+                            'message': 'This employee is the only person who can manage access. '
+                                       'Give someone else access management first.'}), 400
 
     if not set_module_access(employee_id, module, enabled, user['id']):
         return jsonify({'success': False, 'message': 'Could not update access. Please try again.'}), 500

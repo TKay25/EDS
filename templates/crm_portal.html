@@ -66,6 +66,7 @@
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="all">All</button>
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="escalated">Unattended</button>
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="human">Agent live</button>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="staff">Staff</button>
                 </div>
             </div>
             <div class="ps-chat-list" id="crmChatList">
@@ -76,6 +77,7 @@
                         <div class="ps-chat-meta">
                             <div class="ps-chat-name">
                                 {{ chat.display_name }}
+                                {% if chat.is_staff %}<span class="ps-tag">Staff</span>{% endif %}
                                 {% if chat.unread_count %}<span class="ps-badge">{{ chat.unread_count }}</span>{% endif %}
                             </div>
                             <div class="ps-chat-preview">{{ chat.last_message or 'No messages yet' }}</div>
@@ -87,7 +89,7 @@
                     <div class="ps-empty">
                         <i class="bi bi-chat-square-text"></i>
                         <h4>No conversations yet</h4>
-                        <p>Customer messages on the company WhatsApp channel appear here.</p>
+                        <p>Every message on the company WhatsApp channel appears here, from customers and staff alike.</p>
                     </div>
                 {% endif %}
             </div>
