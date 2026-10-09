@@ -25,6 +25,8 @@ import io
 import base64
 import json
 import requests
+import hashlib
+import urllib.parse
 from weasyprint import HTML
 import re
 from paynow import Paynow
@@ -15785,6 +15787,12 @@ def paynow_result():
             data = request.form.to_dict()
             print("Paynow Result Webhook:", data)
 
+            # Brilliant Chemicals orders pay through this same gateway.
+            order_reference = str(data.get('reference') or '')
+            if order_reference.startswith("BC-"):
+                shop_paynow_callback(order_reference, data)
+                return "ok", 200
+
             pollurlex = data.get('pollurl')
             status = data.get('status')
             ticketref = data.get('paynowreference')
@@ -20884,6 +20892,52 @@ def company_channel_track(display_phone_number, sender_id, recipient, body,
 
 BRAND_NAME = "Knockout"
 
+# ---------------------------------------------------------------- payments --
+# Paynow (Express Checkout) pushes the EcoCash prompt straight to the
+# customer's handset. The integration key is a secret: set
+# PAYNOW_INTEGRATION_KEY in the environment rather than in this file.
+PAYNOW_INTEGRATION_ID = os.getenv("PAYNOW_INTEGRATION_ID", "20625")
+PAYNOW_INTEGRATION_KEY = os.getenv("PAYNOW_INTEGRATION_KEY", "")
+PAYNOW_RETURN_URL = os.getenv("PAYNOW_RETURN_URL", "https://eds-dfym.onrender.com/paynow/return")
+PAYNOW_RESULT_URL = os.getenv("PAYNOW_RESULT_URL",
+                              "https://eds-dfym.onrender.com/paynow/result/update")
+PAYNOW_CURRENCY = os.getenv("PAYNOW_CURRENCY", "USD")
+
+# Basket prices per pack size, "product-id|size" -> amount, for example
+# SHOP_PRICES='{"foam-bath|500ml": 2.50}'. An unpriced cart can still be
+# ordered, it just cannot be paid for up front.
+SHOP_PRICES = {}
+try:
+    SHOP_PRICES = json.loads(os.getenv("SHOP_PRICES", "") or "{}")
+except Exception as _price_error:
+    print(f"SHOP_PRICES could not be read: {_price_error}")
+
+
+def paynow_configured():
+    return bool(PAYNOW_INTEGRATION_ID and PAYNOW_INTEGRATION_KEY)
+
+
+def shop_price(item):
+    """Price for one cart line, or None when the business has not set one."""
+    value = SHOP_PRICES.get(f"{item.get('id')}|{item.get('size')}")
+    if value is None:
+        return None
+    try:
+        return round(float(value), 2)
+    except (TypeError, ValueError):
+        return None
+
+
+def shop_cart_total(cart):
+    """Order total, or None when any line is missing a price."""
+    total = 0.0
+    for item in cart or []:
+        price = shop_price(item)
+        if price is None:
+            return None
+        total += price * int(item.get("qty") or 0)
+    return round(total, 2)
+
 COMPANY_SYSTEM_CONTACT = {
     "email": "sales@brilliantchemicals.co.zw",
     "phones": ["+263 737 066 415", "+263 772 801 892"],
@@ -20894,49 +20948,49 @@ COMPANY_SYSTEM_CONTACT = {
 BRILLIANT_PRODUCTS = [
     {
         "id": "foam-bath",
-        "name": "Knockout Foam Bath",
+        "name": "Foam Bath",
         "summary": "High foaming, berry bubbly foam bath enriched with glycerine, avocado and aloe vera extracts.",
         "sizes": ["500ml", "1 Litre", "Bulk pack"],
     },
     {
         "id": "dishwashing-liquid",
-        "name": "Knockout Dishwashing Liquid",
+        "name": "Dishwashing Liquid",
         "summary": "High foaming lemon degreasing dishwashing liquid, available in 750ml and 1 Litre.",
         "sizes": ["750ml", "1 Litre", "Bulk pack"],
     },
     {
         "id": "toilet-cleaner",
-        "name": "Knockout Toilet Cleaner & Sanitizer",
+        "name": "Toilet Cleaner & Sanitizer",
         "summary": "Removes stubborn stains and germs and leaves a fresh pine or lavender scent.",
         "sizes": ["500ml", "Bulk pack"],
     },
     {
         "id": "all-purpose-cleaner",
-        "name": "Knockout All Purpose Cleaner",
+        "name": "All Purpose Cleaner",
         "summary": "Restores white surfaces and lifts grease, oil and stains from stoves, fridges and tiles.",
         "sizes": ["500ml", "750ml", "Bulk pack"],
     },
     {
         "id": "scouring-powder",
-        "name": "Knockout Scouring Powder",
+        "name": "Scouring Powder",
         "summary": "Clears encrusted deposits from pots and pans and removes rust from tools.",
         "sizes": ["500g", "Bulk pack"],
     },
     {
         "id": "petroleum-jelly",
-        "name": "Knockout Perfumed Petroleum Jelly",
+        "name": "Perfumed Petroleum Jelly",
         "summary": "Skin care jelly for minor scrapes, dryness and everyday moisture.",
         "sizes": ["100ml", "250ml", "Bulk pack"],
     },
     {
         "id": "pine-gel",
-        "name": "Knockout Pine Gel",
+        "name": "Pine Gel",
         "summary": "Strong, non-abrasive disinfectant cleaner for floors, counters, sinks and bathrooms.",
         "sizes": ["500ml", "5 Litre", "Bulk pack"],
     },
     {
         "id": "thick-bleach",
-        "name": "Knockout Thick Bleach",
+        "name": "Thick Bleach",
         "summary": "Multipurpose thick bleach that lifts stains and odours and kills 99.9% of germs.",
         "sizes": ["750ml", "2 Litre", "Bulk pack"],
     },
@@ -20986,9 +21040,25 @@ def ensure_shop_tables():
                 created_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_payment_events (
+                id SERIAL PRIMARY KEY,
+                reference VARCHAR(32),
+                event VARCHAR(40),
+                status VARCHAR(40),
+                payload TEXT,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
         # Bring installs created before these columns existed up to date.
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS wa_number VARCHAR(32);")
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS chat_id INTEGER;")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20);")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(24) DEFAULT 'unpaid';")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS payment_reference VARCHAR(80);")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS payment_poll_url TEXT;")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS payment_amount NUMERIC(12, 2);")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP;")
         connection.commit()
     _shop_tables_ready = True
 
@@ -21029,6 +21099,22 @@ def _shop_options(text, options):
     return {"type": "options", "text": text, "options": [{"id": o[0], "label": o[1]} for o in options]}
 
 
+# WhatsApp list rows are capped at 24 characters, so the brand prefix is
+# dropped from choice labels and anything still too long gets a short form.
+SHOP_LABEL_OVERRIDES = {
+    "Toilet Cleaner & Sanitizer": "Toilet Cleaner",
+}
+
+
+def _shop_short_name(name):
+    """Product name as shown on a WhatsApp choice, without the brand prefix."""
+    name = str(name or "").strip()
+    if name in SHOP_LABEL_OVERRIDES:
+        return SHOP_LABEL_OVERRIDES[name]
+    prefix = f"{BRAND_NAME} "
+    return name[len(prefix):] if name.startswith(prefix) else name
+
+
 def shop_greeting(cart=None, staff=False):
     count = sum(item["qty"] for item in (cart or []))
     cart_label = "View Cart"
@@ -21047,7 +21133,8 @@ def shop_greeting(cart=None, staff=False):
 
 
 def _shop_category_list():
-    options = [(f"cat:{index}", product["name"]) for index, product in enumerate(BRILLIANT_PRODUCTS)]
+    options = [(f"cat:{index}", _shop_short_name(product["name"]))
+               for index, product in enumerate(BRILLIANT_PRODUCTS)]
     return _shop_options(
         f"🛍️ *Browse Products*\n{BRAND_NAME} — household, cleaning and personal care.\n\n"
         "Select a category to browse:",
@@ -21087,8 +21174,10 @@ def _shop_cart_message(cart):
         )
     total = sum(item["qty"] for item in cart)
     options = [("shop", "Add more products"), ("checkout", "Submit order enquiry")]
-    options += [(f"qty:{index}", f"Change quantity — {item['name']}") for index, item in enumerate(cart)]
-    options += [(f"rm:{index}", f"Remove — {item['name']} ({item['size']})") for index, item in enumerate(cart)]
+    options += [(f"qty:{index}", f"Change quantity — {_shop_short_name(item['name'])}")
+                for index, item in enumerate(cart)]
+    options += [(f"rm:{index}", f"Remove — {_shop_short_name(item['name'])} ({item['size']})")
+                for index, item in enumerate(cart)]
     options.append(("clear", "Empty the cart"))
     return _shop_options(
         f"🛒 *Your Cart* — {total} item{'s' if total != 1 else ''}\n\n"
@@ -21116,7 +21205,8 @@ def _shop_search_results(cart, query):
             f"😕 I could not find anything for “{query}”.\n\nTry another keyword, or browse the full range."),
             _shop_options("You can also:", [("shop", "Browse all categories")])]
         return "search", {}, messages
-    options = [(f"prod:{BRILLIANT_PRODUCTS.index(product)}", product["name"]) for product in matches]
+    options = [(f"prod:{BRILLIANT_PRODUCTS.index(product)}", _shop_short_name(product["name"]))
+               for product in matches]
     messages = [_shop_options(
         f"🔎 *Search results for “{query}”* — {len(matches)} product"
         f"{'s' if len(matches) != 1 else ''} found:",
@@ -21153,7 +21243,8 @@ def _shop_about():
     )]
 
 
-def _shop_save_order(state, channel, wa_number=None, customer=None):
+def _shop_save_order(state, channel, wa_number=None, customer=None, payment_method=None,
+                     amount=None, payment_status="unpaid"):
     cart = state.get("cart") or []
     if not cart:
         return None
@@ -21171,13 +21262,14 @@ def _shop_save_order(state, channel, wa_number=None, customer=None):
             cursor.execute("""
                 INSERT INTO shop_orders (reference, customer_name, company, phone, email,
                                          delivery_address, channel, wa_number, chat_id, notes,
-                                         item_count, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                                         item_count, payment_method, payment_status, payment_amount,
+                                         created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 RETURNING id
             """, (reference, customer.get("name"), customer.get("company"), customer.get("phone"),
                   customer.get("email"), customer.get("delivery_address"), channel,
                   wa_number, chat_id, customer.get("notes"),
-                  sum(item["qty"] for item in cart)))
+                  sum(item["qty"] for item in cart), payment_method, payment_status, amount))
             order_id = cursor.fetchone()[0]
             for item in cart:
                 cursor.execute("""
@@ -21505,28 +21597,248 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "order_confirm":
         if low in ("confirm_order", "yes", "y", "confirm", "ok"):
-            reference = _shop_save_order(state, channel, wa_number, customer)
+            total = shop_cart_total(cart)
+            can_pay = total is not None and paynow_configured()
+            reference = _shop_save_order(state, channel, wa_number, customer,
+                                         payment_method="ecocash" if can_pay else "later")
             if not reference:
                 return result("order_confirm", [_shop_text(
                     "😕 Sorry, we could not save your order just now. Please try once more, or call "
                     f"{COMPANY_SYSTEM_CONTACT['phones'][0]}.")])
+            ctx = {"reference": reference, "amount": total}
+            if can_pay:
+                return result("payment", [
+                    _shop_text(
+                        "🎉 *Order received*\n\n"
+                        f"Thank you {customer.get('name', '')}! Your reference is *{reference}*.\n"
+                        f"Order total: *{PAYNOW_CURRENCY} {total:.2f}*"),
+                    _shop_options(
+                        "How would you like to pay?",
+                        [("paynow", f"Pay now with EcoCash — {PAYNOW_CURRENCY} {total:.2f}"),
+                         ("paylater", "Place the order and pay later")]),
+                ], new_ctx=ctx)
+
             cart = []
-            ctx = {}
-            return result("menu", [
-                _shop_text(
-                    "🎉 *Order enquiry received*\n\n"
-                    f"Thank you {customer.get('name', '')}! Your reference is *{reference}*.\n\n"
-                    "Our sales team will confirm pricing and delivery within one working day.\n\n"
-                    f"Any questions? Call {COMPANY_SYSTEM_CONTACT['phones'][0]} or email "
-                    f"{COMPANY_SYSTEM_CONTACT['email']}."),
-                greet(),
-            ], actions=[{"type": "escalate", "reason": f"New order enquiry {reference}"}],
+            return result("menu", _shop_order_placed(reference, customer, total), actions=[
+                {"type": "escalate", "reason": f"New order enquiry {reference}"}],
                 new_ctx=ctx, new_history=[])
+
         if low in ("cart", "back"):
             return result("cart", [_shop_cart_message(cart)])
         return result("order_confirm", _shop_order_confirmation(cart, customer))
 
+    if step == "payment":
+        if low in ("paylater", "later", "pay later", "no"):
+            cart = []
+            return result("menu", _shop_order_placed(ctx.get("reference"), customer,
+                                                     ctx.get("amount"), paid=False),
+                          actions=[{"type": "escalate",
+                                    "reason": f"New order enquiry {ctx.get('reference')}"}],
+                          new_history=[])
+        if low in ("paynow", "pay", "ecocash", "yes"):
+            phone = str(customer.get("phone") or "").strip() or str(wa_number or "")
+            return result("pay_phone", [_shop_text(
+                f"📱 Send the EcoCash prompt to which number?\n\n"
+                f"Reply *yes* to use *{phone}*, or type the number to use a different line.")],
+                new_ctx=dict(ctx, phone=phone))
+        if low in ("b", "back"):
+            return result("order_confirm", _shop_order_confirmation(cart, customer))
+        return result("payment", [_shop_options(
+            "How would you like to pay?",
+            [("paynow", "Pay now with EcoCash"), ("paylater", "Place the order and pay later")])])
+
+    if step == "pay_phone":
+        typed = (raw_input or "").strip()
+        phone = ctx.get("phone") if low in ("yes", "y", "confirm", "ok") else typed
+        phone = re.sub(r"[^0-9]", "", str(phone or ""))
+        if phone.startswith("263"):
+            phone = "0" + phone[3:]
+        if not (phone.startswith("07") and len(phone) >= 10):
+            return result("pay_phone", [_shop_text(
+                "That does not look like a Zimbabwean mobile number. "
+                "Please send it like *0771234567*, or reply *B* to change your choice.")])
+        ok, message, poll_url = paynow_initiate(
+            ctx.get("reference"), ctx.get("amount") or 0, phone, customer,
+            description=f"Brilliant Chemicals order {ctx.get('reference')}")
+        if not ok:
+            return result("payment", [
+                _shop_text(f"⚠️ {message}\n\nYou can still place the order and pay later."),
+                _shop_options("What would you like to do?",
+                              [("paynow", "Try EcoCash again"),
+                               ("paylater", "Place the order and pay later")]),
+            ], new_ctx=ctx)
+        shop_payment_update(ctx.get("reference"), "pending", poll_url, ctx.get("amount"))
+        cart = []
+        return result("pay_wait", [
+            _shop_text(
+                "📲 *Check your phone*\n\n"
+                f"An EcoCash prompt for *{PAYNOW_CURRENCY} {float(ctx.get('amount') or 0):.2f}* "
+                "has been sent. Enter your EcoCash PIN to authorise the payment.\n\n"
+                "The prompt expires after a few minutes. I will confirm here as soon as it clears."),
+            _shop_options("Once you are done:",
+                          [("paid_check", "I have authorised it"),
+                           ("paylater", "Pay later instead")]),
+        ], actions=[{"type": "escalate",
+                     "reason": f"EcoCash payment pending {ctx.get('reference')}"}])
+
+    if step == "pay_wait":
+        reference = ctx.get("reference")
+        method, status, poll_url, amount = shop_order_payment(reference)
+        if (status or "").lower() == "paid":
+            cart = []
+            return result("menu", [
+                _shop_text(f"🎉 *Payment received* — thank you!\n\n"
+                           f"Reference *{reference}* is paid and confirmed."),
+                greet(),
+            ], new_history=[])
+        if low in ("paylater", "later", "pay later"):
+            shop_payment_update(reference, "pay_later")
+            cart = []
+            return result("menu", _shop_order_placed(reference, customer, amount, paid=False),
+                          new_history=[])
+        ok, paynow_status, _payload = paynow_poll(poll_url)
+        if ok and paynow_status == "paid":
+            shop_payment_update(reference, "paid", paid=True)
+            cart = []
+            return result("menu", [
+                _shop_text(f"🎉 *Payment received* — thank you!\n\n"
+                           f"Reference *{reference}* is paid and confirmed."),
+                greet(),
+            ], new_history=[])
+        if ok and paynow_status in ("cancelled", "failed", "error"):
+            shop_payment_update(reference, paynow_status or "failed")
+            return result("pay_wait", [
+                _shop_text(f"😕 EcoCash reported the payment as *{paynow_status}*. "
+                           "You can try again, or place the order and pay later."),
+                _shop_options("What would you like to do?",
+                              [("paynow", "Try EcoCash again"),
+                               ("paylater", "Pay later instead")]),
+            ], new_ctx=ctx)
+        return result("pay_wait", [
+            _shop_text("⏳ EcoCash is still waiting for your PIN. The prompt is on your phone — "
+                       "authorise it and then reply *yes*."),
+            _shop_options("Once you are done:",
+                          [("paid_check", "I have authorised it"),
+                           ("paylater", "Pay later instead")]),
+        ], new_ctx=ctx)
+
     return finish("menu", [greet()], new_history=[])
+
+
+def _shop_order_placed(reference, customer, amount=None, paid=False):
+    """The confirmation shown once an order exists, paid or not."""
+    lines = ["🎉 *Order confirmed*" if paid else "✅ *Order placed*",
+             "",
+             f"Thank you {customer.get('name', '')}! Your reference is *{reference}*."]
+    if amount is not None and not paid:
+        lines.append(f"Amount due: *{PAYNOW_CURRENCY} {float(amount):.2f}*")
+    lines.append("")
+    lines.append("Our sales team will confirm delivery and payment details within one working day."
+                 if not paid else
+                 "Our sales team will be in touch about delivery.")
+    lines.append("")
+    lines.append(f"Any questions? Call {COMPANY_SYSTEM_CONTACT['phones'][0]} or email "
+                 f"{COMPANY_SYSTEM_CONTACT['email']}.")
+    return [_shop_text("\n".join(lines)), greet()]
+
+
+def _shop_payment_event(reference, event, status, payload=""):
+    """Archive every step of a payment so a dispute can be traced."""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_payment_events (reference, event, status, payload, created_at)
+                VALUES (%s, %s, %s, %s, NOW())
+            """, (reference, event, status, str(payload)[:2000]))
+            connection.commit()
+    except Exception as e:
+        print(f"payment event error: {e}")
+
+
+def _paynow_client():
+    """Paynow gateway client, configured from the environment."""
+    if not paynow_configured():
+        return None
+    try:
+        return Paynow(PAYNOW_INTEGRATION_ID, PAYNOW_INTEGRATION_KEY,
+                      PAYNOW_RETURN_URL, PAYNOW_RESULT_URL)
+    except Exception as e:
+        print(f"paynow client error: {e}")
+        return None
+
+
+def paynow_initiate(reference, amount, phone, customer=None, description=None):
+    """Push an EcoCash prompt to a customer's handset. (ok, message, poll_url)."""
+    client = _paynow_client()
+    if client is None:
+        return False, "EcoCash payments are not configured on this deployment.", ""
+    customer = customer or {}
+    try:
+        payment = client.create_payment(reference, customer.get("email") or "")
+        payment.add(description or f"Brilliant Chemicals order {reference}", float(amount))
+        response = client.send_mobile(payment, phone, "ecocash")
+    except Exception as e:
+        print(f"paynow initiate error: {e}")
+        _shop_payment_event(reference, "initiate", "error", e)
+        return False, "We could not reach EcoCash just now.", ""
+
+    success = bool(getattr(response, "success", False))
+    poll_url = getattr(response, "poll_url", "") or ""
+    error = getattr(response, "error", "") or ""
+    _shop_payment_event(reference, "initiate", "ok" if success else "error", error or poll_url)
+    if success:
+        return True, getattr(response, "instructions", "") or "", poll_url
+    return False, error or "EcoCash did not accept the request.", poll_url
+
+
+def paynow_poll(poll_url):
+    """Check a pending transaction. Returns (ok, status, paid)."""
+    client = _paynow_client()
+    if client is None or not poll_url:
+        return False, "", False
+    try:
+        reply = client.check_transaction_status(poll_url)
+    except Exception as e:
+        print(f"paynow poll error: {e}")
+        return False, "", False
+    status = getattr(reply, "status", "") or ""
+    return True, str(status).strip().lower(), bool(getattr(reply, "paid", False))
+
+
+def shop_payment_update(reference, status, poll_url=None, amount=None, paid=False):
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_orders
+                SET payment_status = %s,
+                    payment_poll_url = COALESCE(%s, payment_poll_url),
+                    payment_amount = COALESCE(%s, payment_amount),
+                    paid_at = CASE WHEN %s THEN NOW() ELSE paid_at END
+                WHERE reference = %s
+            """, (status, poll_url, amount, paid, reference))
+            connection.commit()
+        return True
+    except Exception as e:
+        print(f"payment update error: {e}")
+        return False
+
+
+def shop_order_payment(reference):
+    """(method, status, poll_url, amount) for one order."""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT payment_method, payment_status, payment_poll_url, payment_amount
+                FROM shop_orders WHERE reference = %s
+            """, (reference,))
+            row = cursor.fetchone()
+        return row if row else (None, None, None, None)
+    except Exception as e:
+        print(f"payment lookup error: {e}")
+        return (None, None, None, None)
 
 
 def shop_nav_block(nav):
@@ -22419,6 +22731,40 @@ def crm_chat_reply(chat_id):
     if not sent:
         response['message'] = f"Saved to the conversation, but WhatsApp delivery failed: {detail}"
     return jsonify(response)
+
+
+def shop_paynow_callback(reference, data):
+    """Record a Paynow status update for a Brilliant Chemicals order."""
+    status = str((data or {}).get('status') or '').strip().lower()
+    if not reference:
+        return False
+    _shop_payment_event(reference, "callback", status, data)
+    if status == 'paid':
+        shop_payment_update(reference, 'paid', paid=True)
+        shop_send_whatsapp_reference(
+            reference,
+            "🎉 *Payment received* — thank you!\n\n"
+            f"Reference *{reference}* is paid and confirmed. "
+            "Our sales team will be in touch about delivery.")
+    else:
+        shop_payment_update(reference, status or 'pending')
+    return True
+
+
+def shop_send_whatsapp_reference(reference, message):
+    """Send a plain WhatsApp update for the conversation behind an order."""
+    ensure_shop_tables()
+    with get_db() as (cursor, connection):
+        cursor.execute("SELECT wa_number, channel, chat_id FROM shop_orders WHERE reference = %s",
+                       (reference,))
+        row = cursor.fetchone()
+    if not row or not row[0]:
+        return False
+    sent, _detail = crm_send_whatsapp(row[0], message, row[1])
+    crm_record_message(row[0], "outbound", "system", message, "text",
+                       company_reg=COMPANY_SYSTEM_PREFIX, channel=row[1], delivered=sent,
+                       is_staff=str(row[1] or "").endswith("staff"))
+    return sent
 
 
 @app.route('/logout')
