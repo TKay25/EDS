@@ -45,7 +45,8 @@
     function renderList(chats) {
       if (!chats.length) {
         listEl.innerHTML = '<div class="ps-empty"><i class="bi bi-chat-square-text"></i>' +
-          '<h4>No conversations yet</h4><p>Customer messages on the company WhatsApp channel appear here.</p></div>';
+          '<h4>No conversations yet</h4><p>Every message on the company WhatsApp channel appears here, ' +
+          'from customers and staff alike.</p></div>';
         return;
       }
       listEl.innerHTML = chats.map(function (chat) {
@@ -57,6 +58,7 @@
           '<div class="ps-chat-avatar">' + initials + '</div>' +
           '<div class="ps-chat-meta">' +
           '<div class="ps-chat-name">' + escapeHtml(chat.display_name || ('+' + chat.wa_number)) +
+          (chat.is_staff ? ' <span class="ps-tag">Staff</span>' : '') +
           (chat.unread_count ? ' <span class="ps-badge">' + chat.unread_count + '</span>' : '') + '</div>' +
           '<div class="ps-chat-preview">' + preview + '</div>' +
           '<div class="ps-chat-time">' + escapeHtml(chat.last_message_at || '') + '</div>' +

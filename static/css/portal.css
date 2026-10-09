@@ -876,6 +876,21 @@ table.ps-table td.ps-access-cell { text-align: center; }
 .ps-manager-name { font-size: 0.8rem; font-weight: 600; color: var(--ps-text); }
 .ps-manager-role { font-size: 0.68rem; color: var(--ps-text-soft); }
 
+.ps-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1D4ED8;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
 /* ==========================================================================
    Polish layer ? refines the LMS tables, controls and surfaces that the
    portal pages reuse

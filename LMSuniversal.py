@@ -21161,9 +21161,10 @@ def _shop_save_order(state, channel, wa_number=None, customer=None):
     reference = f"BC-{datetime.now().strftime('%y%m%d')}-{random.randint(1000, 9999)}"
     wa_number = str(wa_number)[-15:] if wa_number else None
     try:
-        ensure_company_system_tables()
-        # Every order hangs off the conversation it came from so the CRM can
-        # show the enquiry alongside the order.
+        # The order needs its own tables plus the conversation index it links to;
+        # both are created here so a fresh worker can still take an order.
+        ensure_shop_tables()
+        ensure_crm_tables()
         chat_id = crm_chat_id(wa_number, display_name=customer.get("name") or customer.get("company"),
                               channel=channel) if wa_number else None
         with get_db() as (cursor, connection):
@@ -22299,21 +22300,6 @@ def access_matrix_api():
     })
 
 
-def access_manager_count(exclude_employee=None):
-    """How many employees can currently change portal access.
-
-    This is the count that must never reach zero, otherwise nobody could switch
-    portal access on again.
-    """
-    total = 0
-    for employee in access_matrix():
-        if exclude_employee is not None and int(employee["id"]) == int(exclude_employee):
-            continue
-        if employee["modules"].get("access"):
-            total += 1
-    return total
-
-
 @app.route('/api/access/toggle', methods=['POST'])
 def access_toggle_api():
     user = company_system_user()
@@ -22330,16 +22316,12 @@ def access_toggle_api():
     if employee_id is None or module not in COMPANY_MODULE_KEYS:
         return jsonify({'success': False, 'message': 'Unknown employee or portal.'}), 400
 
+    # Nobody may switch off their own access management: it is the only thing
+    # stopping the company from locking itself out of this page.
     if int(employee_id) == int(user['id']) and module == 'access' and not enabled:
         return jsonify({'success': False,
-                        'message': 'You cannot remove your own user access management permission.'}), 400
-
-    if module == 'access' and not enabled:
-        remaining = access_manager_count(exclude_employee=employee_id)
-        if remaining < 1:
-            return jsonify({'success': False,
-                            'message': 'This employee is the only person who can manage access. '
-                                       'Give someone else access management first.'}), 400
+                        'message': 'You cannot remove your own access management permission. '
+                                   'Ask another access manager to do it, or grant someone else first.'}), 400
 
     if not set_module_access(employee_id, module, enabled, user['id']):
         return jsonify({'success': False, 'message': 'Could not update access. Please try again.'}), 500
