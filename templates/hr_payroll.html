@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR &amp; Payroll | Brilliant Chemicals</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+</head>
+<body class="ps-body">
+
+{% include 'components/eds_portal_nav.html' %}
+
+<main class="ps-shell">
+    <header class="ps-hero">
+        <span class="ps-eyebrow"><i class="bi bi-wallet2"></i> HR &amp; Payroll</span>
+        <h1>People and payroll</h1>
+        <p>Employee records, payroll banking details and the USD / ZWG payment split — all in one workspace.</p>
+    </header>
+
+    <section class="ps-stats">
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-people-fill"></i> Employees</div>
+            <div class="ps-stat-value">{{ total_employees | default(0) }}</div>
+            <div class="ps-stat-note">On the payroll register</div>
+        </div>
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-cash-stack"></i> Base currency</div>
+            <div class="ps-stat-value" id="hrBaseCurrency">--</div>
+            <div class="ps-stat-note">Payroll settlement currency</div>
+        </div>
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-currency-exchange"></i> Split</div>
+            <div class="ps-stat-value" id="hrSplitLabel">--</div>
+            <div class="ps-stat-note" id="hrSplitNote">USD / ZWG proportions</div>
+        </div>
+    </section>
+
+    <section class="ps-panel">
+        <div class="ps-panel-head">
+            <h3><i class="bi bi-sliders"></i> Currency configuration</h3>
+            <div class="ps-panel-actions">
+                <span class="ps-chip">USD <strong id="hrUsdPct">--%</strong></span>
+                <span class="ps-chip">ZWG <strong id="hrZwgPct">--%</strong></span>
+                <span class="ps-chip">Rate <strong id="hrRate">--</strong></span>
+                <button class="ps-btn ps-btn-dark ps-btn-sm" type="button" id="openCurrencyModal">
+                    <i class="bi bi-gear"></i> Configure
+                </button>
+            </div>
+        </div>
+        <div class="ps-panel-body">
+            <p class="ps-muted" style="font-size:0.84rem;margin:0;">
+                Currency settings apply to every employee record. When the split is disabled the full salary is paid in the base currency.
+            </p>
+        </div>
+    </section>
+
+    <h2 class="ps-section-title"><i class="bi bi-person-vcard"></i> Payroll register</h2>
+
+    <section class="ps-panel">
+        <div class="ps-panel-head">
+            <h3><i class="bi bi-bank"></i> Employee payroll details</h3>
+            <div class="ps-panel-actions">
+                <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="downloadPayrollTemplate">
+                    <i class="bi bi-download"></i> Template
+                </button>
+                <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="openPayrollUpload">
+                    <i class="bi bi-upload"></i> Upload payroll details
+                </button>
+            </div>
+        </div>
+        <div class="ps-table-wrap">
+            {% if table_employees_payroll_html %}
+                {{ table_employees_payroll_html | safe }}
+            {% else %}
+                <div class="ps-empty">
+                    <i class="bi bi-inbox"></i>
+                    <h4>No payroll records yet</h4>
+                    <p>Upload a payroll template to populate banking and salary details.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <h2 class="ps-section-title"><i class="bi bi-people"></i> HR directory</h2>
+
+    <section class="ps-panel">
+        <div class="ps-panel-head">
+            <h3><i class="bi bi-person-lines-fill"></i> Employee personal details</h3>
+            <div class="ps-panel-actions">
+                <span class="ps-chip"><i class="bi bi-people"></i> <strong>{{ total_employees | default(0) }}</strong> employees</span>
+            </div>
+        </div>
+        <div class="ps-table-wrap">
+            {% if employee_personal_details_html %}
+                {{ employee_personal_details_html | safe }}
+            {% else %}
+                <div class="ps-empty">
+                    <i class="bi bi-inbox"></i>
+                    <h4>No employee records yet</h4>
+                    <p>Add employees from the User Access Management page.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+
+<!-- ===== Currency settings ===== -->
+<div class="modal fade" id="currencySettingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-currency-exchange"></i> Currency configuration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="currencySettingsForm">
+                <div class="modal-body">
+                    <div class="ps-field">
+                        <label for="baseCurrencySelect">Base currency</label>
+                        <select class="ps-select" id="baseCurrencySelect" name="baseCurrency">
+                            <option value="USD">USD — United States Dollar</option>
+                            <option value="ZWG">ZWG — Zimbabwe Gold</option>
+                        </select>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="splitEnabled">
+                        <label class="form-check-label" for="splitEnabled" style="font-size:0.85rem;">Enable USD / ZWG split</label>
+                    </div>
+                    <div id="splitFields" style="display:none;">
+                        <div class="ps-field">
+                            <label for="usdPercent">USD percentage</label>
+                            <input class="ps-input" type="number" min="0" max="100" step="0.01" id="usdPercent" value="60">
+                        </div>
+                        <div class="ps-field">
+                            <label for="zwgPercent">ZWG percentage</label>
+                            <input class="ps-input" type="number" min="0" max="100" step="0.01" id="zwgPercent" value="40">
+                        </div>
+                        <div class="ps-field">
+                            <label for="exchangeRate">Exchange rate (ZWG per USD)</label>
+                            <input class="ps-input" type="number" min="0" step="0.0001" id="exchangeRate" value="0">
+                        </div>
+                    </div>
+                    <div id="currencyAlert" class="ps-alert is-ok" style="display:none;">
+                        <i class="bi bi-check-circle-fill"></i><span id="currencyAlertText"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="ps-btn ps-btn-primary"><i class="bi bi-check2"></i> Save configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Edit payroll details ===== -->
+<div class="modal fade" id="editPayrollModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Edit payroll details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editPayrollForm">
+                <div class="modal-body">
+                    <p class="ps-muted" id="editPayrollName" style="font-size:0.86rem;"></p>
+                    <input type="hidden" id="payrollId">
+                    <div class="ps-grid-2">
+                        <div class="ps-field">
+                            <label for="payrollDateJoined">Date joined</label>
+                            <input class="ps-input" type="date" id="payrollDateJoined">
+                        </div>
+                        <div class="ps-field">
+                            <label for="payrollDepartment">Department</label>
+                            <input class="ps-input" type="text" id="payrollDepartment">
+                        </div>
+                        <div class="ps-field">
+                            <label for="payrollDesignation">Designation</label>
+                            <input class="ps-input" type="text" id="payrollDesignation">
+                        </div>
+                        <div class="ps-field">
+                            <label for="payrollManager">Manager / supervisor</label>
+                            <input class="ps-input" type="text" id="payrollManager">
+                        </div>
+                        <div class="ps-field">
+                            <label for="payrollSalary">Basic salary</label>
+                            <input class="ps-input" type="number" step="0.01" id="payrollSalary">
+                        </div>
+                        <div class="ps-field">
+                            <label for="payrollCurrency">Base currency</label>
+                            <select class="ps-select" id="payrollCurrency">
+                                <option value="USD">USD</option>
+                                <option value="ZWG">ZWG</option>
+                            </select>
+                        </div>
+                        <div class="ps-field">
+                            <label for="payrollBank">Bank</label>
+                            <input class="ps-input" type="text" id="payrollBank">
+                        </div>
+                        <div class="ps-field">
+                            <label for="payrollBranch">Branch</label>
+                            <input class="ps-input" type="text" id="payrollBranch">
+                        </div>
+                    </div>
+                    <div id="payrollAlert" class="ps-alert" style="display:none;">
+                        <i class="bi bi-info-circle-fill"></i><span id="payrollAlertText"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="ps-btn ps-btn-primary"><i class="bi bi-check2"></i> Save details</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Edit HR details ===== -->
+<div class="modal fade" id="editHrModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-gear"></i> Edit employee details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editHrForm">
+                <div class="modal-body">
+                    <input type="hidden" id="hrId">
+                    <div class="ps-field">
+                        <label for="hrFirstname">First name</label>
+                        <input class="ps-input" type="text" id="hrFirstname" required>
+                    </div>
+                    <div class="ps-field">
+                        <label for="hrSurname">Surname</label>
+                        <input class="ps-input" type="text" id="hrSurname" required>
+                    </div>
+                    <div class="ps-field">
+                        <label for="hrWhatsapp">WhatsApp number (9 digits)</label>
+                        <input class="ps-input" type="text" id="hrWhatsapp" maxlength="12" inputmode="numeric">
+                    </div>
+                    <div class="ps-field">
+                        <label for="hrEmail">Email address</label>
+                        <input class="ps-input" type="email" id="hrEmail">
+                    </div>
+                    <div class="ps-field">
+                        <label for="hrAddress">Home address</label>
+                        <input class="ps-input" type="text" id="hrAddress">
+                    </div>
+                    <div id="hrAlert" class="ps-alert" style="display:none;">
+                        <i class="bi bi-info-circle-fill"></i><span id="hrAlertText"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="ps-btn ps-btn-primary"><i class="bi bi-check2"></i> Save employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Upload payroll spreadsheet ===== -->
+<div class="modal fade" id="payrollUploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-upload"></i> Upload payroll details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="payrollUploadForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <p class="ps-muted" style="font-size:0.84rem;">
+                        Upload the payroll workbook (.xlsx). Use the template button to download the exact column layout.
+                    </p>
+                    <div class="ps-field">
+                        <label for="payrollFile">Payroll workbook</label>
+                        <input class="ps-input" type="file" id="payrollFile" name="file-payroll" accept=".xlsx" required>
+                    </div>
+                    <div id="payrollUploadAlert" class="ps-alert" style="display:none;">
+                        <i class="bi bi-info-circle-fill"></i><span id="payrollUploadAlertText"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="ps-btn ps-btn-primary"><i class="bi bi-cloud-upload"></i> Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="currencySettingsData">{{ currency_settings_json | default('{}') | safe }}</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/portal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hr-payroll.js') }}"></script>
+</body>
+</html>

@@ -6756,6 +6756,13 @@ def webhook():
 
 
 
+                # Make the Meta credentials available to the CRM inbox
+                # so agent replies can be delivered from the same channel.
+                try:
+                    register_wa_channel(display_phone_number, ACCESS_TOKEN, PHONE_NUMBER_ID)
+                except Exception as channel_error:
+                    print(f"channel registration skipped: {channel_error}")
+
                 if data and "entry" in data:
                     for entry in data["entry"]:
                         for change in entry["changes"]:
@@ -6848,6 +6855,32 @@ def webhook():
                                                     break  
                                                     
                                             if not found:
+
+                                                # A number that is not an employee is a customer.
+                                                # On the company channel those enquiries are handled
+                                                # by the shopping assistant and tracked in the CRM inbox.
+                                                if str(display_phone_number) in COMPANY_SYSTEM_WA_NUMBERS:
+
+                                                    profile_name = ""
+                                                    try:
+                                                        contacts = change["value"].get("contacts") or []
+                                                        if contacts:
+                                                            profile_name = (contacts[0].get("profile") or {}).get("name", "")
+                                                    except Exception:
+                                                        profile_name = ""
+
+                                                    try:
+                                                        crm_customer_webhook(
+                                                            sender_id,
+                                                            display_phone_number,
+                                                            message,
+                                                            profile_name,
+                                                        )
+                                                    except Exception as crm_error:
+                                                        print(f"CRM enquiry error: {crm_error}")
+
+                                                    return jsonify({"status": "received"}), 200
+
                                                 send_whatsapp_message(
                                                     sender_id, 
                                                     "Oops, you are not registered. Kindly get in touch with your leave administrator for assistance."
@@ -6858,6 +6891,71 @@ def webhook():
                                         finally:
                                             if connection:
                                                 print('DONE')
+
+                                        # ------------------------------------------------
+                                        # Staff can hop between the staff assistant and the
+                                        # customer assistant on the same number.
+                                        # ------------------------------------------------
+                                        incoming_text = (message.get("text") or {}).get("body", "").strip().lower()
+                                        incoming_id = ""
+                                        if message.get("type") == "interactive":
+                                            inter = message.get("interactive") or {}
+                                            if inter.get("type") == "list_reply":
+                                                incoming_id = (inter.get("list_reply") or {}).get("id", "")
+                                            elif inter.get("type") == "button_reply":
+                                                incoming_id = (inter.get("button_reply") or {}).get("id", "")
+
+                                        wants_staff_back = incoming_id == "Switchstaff" or incoming_text in (
+                                            "switch to staff", "staff", "back to staff")
+                                        wants_customer = incoming_id == "Switchcust" or incoming_text in (
+                                            "switch to customer", "customer", "shop as a customer")
+
+                                        open_staff_menu = False
+
+                                        if wa_mode_get(sender_id) == "customer":
+
+                                            switch_back = wants_staff_back
+                                            if not switch_back:
+                                                try:
+                                                    actions = shop_webhook_turn(
+                                                        sender_id, display_phone_number, message, staff=True)
+                                                except Exception as shop_error:
+                                                    print(f"staff shop assistant error: {shop_error}")
+                                                    actions = []
+                                                switch_back = any(
+                                                    a.get("type") == "switch_staff" for a in actions)
+
+                                            if not switch_back:
+                                                return jsonify({"status": "received"}), 200
+
+                                            wa_mode_set(sender_id, "staff")
+                                            open_staff_menu = True
+
+                                        elif wants_customer:
+
+                                            wa_mode_set(sender_id, "customer")
+                                            try:
+                                                shop_webhook_turn(
+                                                    sender_id, display_phone_number,
+                                                    {"type": "text", "text": {"body": "menu"}},
+                                                    staff=True)
+                                            except Exception as shop_error:
+                                                print(f"switch to customer error: {shop_error}")
+                                            return jsonify({"status": "received"}), 200
+
+                                        else:
+                                            open_staff_menu = wants_staff_back
+
+                                        if open_staff_menu:
+                                            # Re-open the staff menu for the employee.
+                                            message = {
+                                                "from": sender_id,
+                                                "type": "interactive",
+                                                "interactive": {
+                                                    "type": "list_reply",
+                                                    "list_reply": {"id": "Menu", "title": "Main Menu"},
+                                                },
+                                            }
 
                                         if role_foc_8 == "Ordinary User":
 
@@ -7199,7 +7297,8 @@ def webhook():
                                                                             {"id": "Track", "title": "Track My Application"},
                                                                             {"id": "Checkbal", "title": "Check Days Balance"},
                                                                             {"id": "myhist", "title": "My Applications History"},
-                                                                            {"id": "Myinfo", "title": "My Info"}
+                                                                            {"id": "Myinfo", "title": "My Info"},
+                                                                            {"id": "Switchcust", "title": "Switch to Customer"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -7300,7 +7399,8 @@ def webhook():
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "myhist", "title": "My Applications History"},
-                                                                        {"id": "Myinfo", "title": "My Info"}
+                                                                        {"id": "Myinfo", "title": "My Info"},
+                                                                        {"id": "Switchcust", "title": "Switch to Customer"}
                                                                     ]
                                                                 }
                                                             ]
@@ -8179,7 +8279,8 @@ def webhook():
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "myhist", "title": "My Applications History"},
-                                                                        {"id": "Myinfo", "title": "My Info"}
+                                                                        {"id": "Myinfo", "title": "My Info"},
+                                                                        {"id": "Switchcust", "title": "Switch to Customer"}
                                                                     ]
                                                                 }
                                                             ]
@@ -8236,7 +8337,8 @@ def webhook():
                                                                         {"id": "Track", "title": "Track My Application"},
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "myhist", "title": "My Applications History"},
-                                                                        {"id": "Myinfo", "title": "My Info"}
+                                                                        {"id": "Myinfo", "title": "My Info"},
+                                                                        {"id": "Switchcust", "title": "Switch to Customer"}
                                                                     ]
                                                                 }
                                                             ]
@@ -8713,7 +8815,8 @@ def webhook():
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                         {"id": "myhist", "title": "My Applications History"},
-                                                                        {"id": "Myinfo", "title": "My Info"}     
+                                                                        {"id": "Myinfo", "title": "My Info"}     ,
+                                                                        {"id": "Switchcust", "title": "Switch to Customer"}
                                                                     ]
                                                                 }
                                                             ]
@@ -9168,7 +9271,8 @@ def webhook():
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "myhist", "title": "My Applications History"},
-                                                                    {"id": "Myinfo", "title": "My Info"}
+                                                                    {"id": "Myinfo", "title": "My Info"},
+                                                                    {"id": "Switchcust", "title": "Switch to Customer"}
                                                                 ]
                                                             }
                                                         ]
@@ -9747,7 +9851,8 @@ def webhook():
                                                                         {"id": "Checkbal", "title": "Check Days Balance"},
                                                                         {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                         {"id": "myhist", "title": "My Applications History"},
-                                                                        {"id": "Myinfo", "title": "My Info"}
+                                                                        {"id": "Myinfo", "title": "My Info"},
+                                                                        {"id": "Switchcust", "title": "Switch to Customer"}
                                                                     ]
                                                                 }
                                                             ]
@@ -10156,7 +10261,8 @@ def webhook():
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "myhist", "title": "My Applications History"},
-                                                                    {"id": "Myinfo", "title": "My Info"}
+                                                                    {"id": "Myinfo", "title": "My Info"},
+                                                                    {"id": "Switchcust", "title": "Switch to Customer"}
                                                                 ]
                                                             }
                                                         ]
@@ -10213,7 +10319,8 @@ def webhook():
                                                                     {"id": "Checkbal", "title": "Check Days Balance"},
                                                                     {"id": "Pending", "title": "Apps Pending My Approval"},
                                                                     {"id": "myhist", "title": "My Applications History"},
-                                                                    {"id": "Myinfo", "title": "My Info"}
+                                                                    {"id": "Myinfo", "title": "My Info"},
+                                                                    {"id": "Switchcust", "title": "Switch to Customer"}
                                                                 ]
                                                             }
                                                         ]
@@ -10763,7 +10870,8 @@ def webhook():
                                                                                     {"id": "Myinfo", "title": "My Info"},
                                                                                     {"id": "Empmgt", "title": "Employee Management"},
                                                                                     {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                                    {"id": "Company", "title": "Company Profile"}
+                                                                                    {"id": "Company", "title": "Company Profile"},
+                                                                                    {"id": "Switchcust", "title": "Switch to Customer"}
                                                                                 ]
                                                                             }
                                                                         ]
@@ -10809,7 +10917,8 @@ def webhook():
                                                                                 {"id": "Myinfo", "title": "My Info"},
                                                                                 {"id": "Empmgt", "title": "Employee Management"},
                                                                                 {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                                {"id": "Company", "title": "Company Profile"}
+                                                                                {"id": "Company", "title": "Company Profile"},
+                                                                                {"id": "Switchcust", "title": "Switch to Customer"}
                                                                             ]
                                                                         }
                                                                     ]
@@ -10962,7 +11071,8 @@ def webhook():
                                                                                 {"id": "Myinfo", "title": "My Info"},
                                                                                 {"id": "Empmgt", "title": "Employee Management"},
                                                                                 {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                                {"id": "Company", "title": "Company Profile"}
+                                                                                {"id": "Company", "title": "Company Profile"},
+                                                                                {"id": "Switchcust", "title": "Switch to Customer"}
                                                                             ]
                                                                         }
                                                                     ]
@@ -11223,7 +11333,8 @@ def webhook():
                                                                             {"id": "Myinfo", "title": "My Info"},
                                                                             {"id": "Empmgt", "title": "Employee Management"},
                                                                             {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                            {"id": "Company", "title": "Company Profile"}
+                                                                            {"id": "Company", "title": "Company Profile"},
+                                                                            {"id": "Switchcust", "title": "Switch to Customer"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -11680,7 +11791,8 @@ def webhook():
                                                                                 {"id": "Myinfo", "title": "My Info"},
                                                                                 {"id": "Empmgt", "title": "Employee Management"},
                                                                                 {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                                {"id": "Company", "title": "Company Profile"}
+                                                                                {"id": "Company", "title": "Company Profile"},
+                                                                                {"id": "Switchcust", "title": "Switch to Customer"}
                                                                             ]
                                                                         }
                                                                     ]
@@ -12311,7 +12423,8 @@ def webhook():
                                                                             {"id": "Myinfo", "title": "My Info"},
                                                                             {"id": "Empmgt", "title": "Employee Management"},
                                                                             {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                            {"id": "Company", "title": "Company Profile"}
+                                                                            {"id": "Company", "title": "Company Profile"},
+                                                                            {"id": "Switchcust", "title": "Switch to Customer"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -12523,7 +12636,8 @@ def webhook():
                                                                             {"id": "Myinfo", "title": "My Info"},
                                                                             {"id": "Empmgt", "title": "Employee Management"},
                                                                             {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                            {"id": "Company", "title": "Company Profile"}
+                                                                            {"id": "Company", "title": "Company Profile"},
+                                                                            {"id": "Switchcust", "title": "Switch to Customer"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -12577,7 +12691,8 @@ def webhook():
                                                                             {"id": "Myinfo", "title": "My Info"},
                                                                             {"id": "Empmgt", "title": "Employee Management"},
                                                                             {"id": "Analyticscomp", "title": "Analytics & Insights"},
-                                                                            {"id": "Company", "title": "Company Profile"}
+                                                                            {"id": "Company", "title": "Company Profile"},
+                                                                            {"id": "Switchcust", "title": "Switch to Customer"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -13445,6 +13560,7 @@ def webhook():
                                                                                 {"id": "Empmgt", "title": "Employee Management"},
                                                                                 {"id": "Analyticscomp", "title": "Analytics & Insights"},
                                                                                 {"id": "Company", "title": "Company Profile"},
+                                                                                {"id": "Switchcust", "title": "Switch to Customer"}
                                                                             ]
                                                                         }
                                                                     ]
@@ -13625,6 +13741,7 @@ def webhook():
                                                                             {"id": "Empmgt", "title": "Employee Management"},
                                                                             {"id": "Analyticscomp", "title": "Analytics & Insights"},
                                                                             {"id": "Company", "title": "Company Profile"},
+                                                                            {"id": "Switchcust", "title": "Switch to Customer"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -14362,6 +14479,7 @@ def webhook():
                                                                             {"id": "Empmgt", "title": "Employee Management"},
                                                                             {"id": "Analyticscomp", "title": "Analytics & Insights"},
                                                                             {"id": "Company", "title": "Company Profile"},
+                                                                            {"id": "Switchcust", "title": "Switch to Customer"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -14720,6 +14838,7 @@ def webhook():
                                                                         {"id": "Empmgt", "title": "Employee Management"},
                                                                         {"id": "Analyticscomp", "title": "Analytics & Insights"},
                                                                         {"id": "Company", "title": "Company Profile"},
+                                                                        {"id": "Switchcust", "title": "Switch to Customer"}
                                                                     ]
                                                                 }
                                                             ]
@@ -15198,6 +15317,7 @@ def webhook():
                                                                             {"id": "Empmgt", "title": "Employee Management"},
                                                                             {"id": "Analyticscomp", "title": "Analytics & Insights"},
                                                                             {"id": "Company", "title": "Company Profile"},
+                                                                            {"id": "Switchcust", "title": "Switch to Customer"}
                                                                         ]
                                                                     }
                                                                 ]
@@ -15292,6 +15412,7 @@ def webhook():
                                                                         {"id": "Empmgt", "title": "Employee Management"},
                                                                         {"id": "Analyticscomp", "title": "Analytics & Insights"},
                                                                         {"id": "Company", "title": "Company Profile"},
+                                                                        {"id": "Switchcust", "title": "Switch to Customer"}
                                                                     ]
                                                                 }
                                                             ]
@@ -15353,6 +15474,7 @@ def webhook():
                                                                         {"id": "Empmgt", "title": "Employee Management"},
                                                                         {"id": "Analyticscomp", "title": "Analytics & Insights"},
                                                                         {"id": "Company", "title": "Company Profile"},
+                                                                        {"id": "Switchcust", "title": "Switch to Customer"}
                                                                     ]
                                                                 }
                                                             ]
@@ -20392,6 +20514,1611 @@ def export_pdf():
             )
         else:
             return "Unauthorized access", 401
+
+# ============================================================================
+# COMPANY SYSTEM  —  Brilliant Chemicals portal
+# ----------------------------------------------------------------------------
+# Company login, portal hub, HR & Payroll, CRM inbox (customer enquiries),
+# User Access Management and the in-dashboard assistant that mirrors the
+# WhatsApp bot running on the company channel.
+# ============================================================================
+
+COMPANY_SYSTEM_TABLE = "brilliant_chemicals_pvt_ltdmain"
+COMPANY_SYSTEM_PREFIX = "brilliant_chemicals_pvt_ltd"
+COMPANY_SYSTEM_NAME = "Brilliant Chemicals"
+COMPANY_SYSTEM_ADMIN_ROLE = "Administrator"
+
+# The company WhatsApp channel. Numbers that belong to employees keep the
+# existing LMS assistant; every other number on this channel is treated as a
+# customer enquiry and is routed into the CRM inbox. Comma-separated override:
+# COMPANY_SYSTEM_WA_NUMBERS="263789339777,263790060968"
+COMPANY_SYSTEM_WA_NUMBERS = {
+    number.strip()
+    for number in os.getenv("COMPANY_SYSTEM_WA_NUMBERS", "263789339777").split(",")
+    if number.strip()
+}
+
+
+def company_system_channel_label():
+    """The company WhatsApp number shown to users."""
+    return sorted(COMPANY_SYSTEM_WA_NUMBERS)[0] if COMPANY_SYSTEM_WA_NUMBERS else ""
+
+_wa_channels = {}
+_crm_tables_ready = False
+
+
+def register_wa_channel(display_phone_number, access_token, phone_number_id):
+    """Remember the Meta credentials a webhook request arrived on."""
+    try:
+        if display_phone_number and access_token and phone_number_id:
+            _wa_channels[str(display_phone_number)] = {
+                "token": access_token,
+                "phone_id": str(phone_number_id),
+            }
+    except Exception as e:
+        print(f"register_wa_channel failed: {e}")
+
+
+def ensure_crm_tables():
+    """Create the CRM inbox tables the first time they are needed."""
+    global _crm_tables_ready
+    if _crm_tables_ready:
+        return
+    with get_db() as (cursor, connection):
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS whatsapp_chats (
+                id SERIAL PRIMARY KEY,
+                wa_number VARCHAR(32) UNIQUE,
+                display_name VARCHAR(200),
+                company_reg VARCHAR(120),
+                channel VARCHAR(32),
+                status VARCHAR(20) DEFAULT 'bot',
+                unattended BOOLEAN DEFAULT TRUE,
+                handoff_reason VARCHAR(200),
+                unread_count INTEGER DEFAULT 0,
+                last_message TEXT,
+                last_message_at TIMESTAMP,
+                last_message_direction VARCHAR(12),
+                assigned_to VARCHAR(120),
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS whatsapp_messages (
+                id SERIAL PRIMARY KEY,
+                chat_id INTEGER,
+                wa_number VARCHAR(32),
+                direction VARCHAR(12),
+                sender VARCHAR(24),
+                message_type VARCHAR(24),
+                body TEXT,
+                delivered BOOLEAN,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS whatsapp_messages_chat_idx ON whatsapp_messages (chat_id, id);")
+        # Bring installs created before these columns existed up to date.
+        cursor.execute("ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS delivered BOOLEAN;")
+        connection.commit()
+    _crm_tables_ready = True
+
+
+def crm_record_message(wa_number, direction, sender, body, message_type="text",
+                       display_name=None, company_reg=None, escalate=False,
+                       reason=None, channel=None, delivered=None):
+    """Persist one WhatsApp message and keep the CRM chat index in sync."""
+    if not wa_number or not body:
+        return None
+    wa_number = str(wa_number)[-15:]
+    try:
+        ensure_crm_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT id FROM whatsapp_chats WHERE wa_number = %s", (wa_number,))
+            row = cursor.fetchone()
+
+            if row is None:
+                cursor.execute("""
+                    INSERT INTO whatsapp_chats (wa_number, display_name, company_reg, channel,
+                                                status, unattended, handoff_reason, unread_count,
+                                                last_message, last_message_at, last_message_direction,
+                                                created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, 'bot', %s, %s, %s, %s, NOW(), %s, NOW(), NOW())
+                    RETURNING id
+                """, (wa_number, display_name, company_reg, channel, bool(escalate), reason,
+                      1 if direction == "inbound" else 0, body, direction))
+                chat_id = cursor.fetchone()[0]
+            else:
+                chat_id = row[0]
+                if direction == "inbound":
+                    cursor.execute("""
+                        UPDATE whatsapp_chats
+                        SET unread_count = unread_count + 1,
+                            unattended = CASE WHEN %s THEN TRUE ELSE unattended END,
+                            handoff_reason = COALESCE(%s, handoff_reason),
+                            display_name = COALESCE(%s, display_name),
+                            company_reg = COALESCE(%s, company_reg),
+                            channel = COALESCE(%s, channel),
+                            last_message = %s,
+                            last_message_at = NOW(),
+                            last_message_direction = 'inbound',
+                            updated_at = NOW()
+                        WHERE id = %s
+                    """, (bool(escalate), reason, display_name, company_reg, channel,
+                          body, chat_id))
+                elif sender == "agent":
+                    cursor.execute("""
+                        UPDATE whatsapp_chats
+                        SET unread_count = 0, unattended = FALSE,
+                            last_message = %s, last_message_at = NOW(),
+                            last_message_direction = 'outbound', updated_at = NOW()
+                        WHERE id = %s
+                    """, (body, chat_id))
+                else:
+                    cursor.execute("""
+                        UPDATE whatsapp_chats
+                        SET last_message = %s, last_message_at = NOW(),
+                            last_message_direction = 'outbound', updated_at = NOW()
+                        WHERE id = %s
+                    """, (body, chat_id))
+
+            cursor.execute("""
+                INSERT INTO whatsapp_messages (chat_id, wa_number, direction, sender, message_type,
+                                               body, delivered, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (chat_id, wa_number, direction, sender, message_type, body, delivered))
+            connection.commit()
+        return chat_id
+    except Exception as e:
+        print(f"CRM log error: {e}")
+        return None
+
+
+def crm_set_chat_mode(chat_id, mode, assigned_to=None):
+    """Switch a chat between the assistant and a human agent."""
+    try:
+        ensure_crm_tables()
+        with get_db() as (cursor, connection):
+            if mode == "human":
+                cursor.execute("""
+                    UPDATE whatsapp_chats
+                    SET status = 'human', unattended = FALSE, assigned_to = %s,
+                        handoff_reason = NULL, unread_count = 0, updated_at = NOW()
+                    WHERE id = %s
+                """, (assigned_to, chat_id))
+            elif mode == "escalated":
+                cursor.execute("""
+                    UPDATE whatsapp_chats
+                    SET status = 'escalated', unattended = TRUE, updated_at = NOW()
+                    WHERE id = %s
+                """, (chat_id,))
+            elif mode == "closed":
+                cursor.execute("""
+                    UPDATE whatsapp_chats
+                    SET status = 'closed', unattended = FALSE, updated_at = NOW()
+                    WHERE id = %s
+                """, (chat_id,))
+            else:
+                cursor.execute("""
+                    UPDATE whatsapp_chats
+                    SET status = 'bot', assigned_to = NULL, updated_at = NOW()
+                    WHERE id = %s
+                """, (chat_id,))
+            connection.commit()
+        return True
+    except Exception as e:
+        print(f"CRM mode error: {e}")
+        return False
+
+
+def crm_chat_is_human(wa_number):
+    """True when a human agent has taken the conversation over."""
+    try:
+        ensure_crm_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT status FROM whatsapp_chats WHERE wa_number = %s", (str(wa_number)[-15:],))
+            row = cursor.fetchone()
+        return bool(row and row[0] == "human")
+    except Exception as e:
+        print(f"CRM lookup error: {e}")
+        return False
+
+
+def crm_send_whatsapp(wa_number, text, channel=None):
+    """Send a WhatsApp text from the company channel. Returns (ok, detail)."""
+    creds = _wa_channels.get(str(channel)) if channel else None
+    if creds is None:
+        token = os.getenv("WHATSAPP_ACCESS_TOKEN")
+        phone_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+        if token and phone_id:
+            creds = {"token": token, "phone_id": str(phone_id)}
+    if creds is None and _wa_channels:
+        creds = list(_wa_channels.values())[-1]
+    if creds is None:
+        return False, "WhatsApp delivery is not configured on this deployment."
+    try:
+        response = requests.post(
+            f"https://graph.facebook.com/v18.0/{creds['phone_id']}/messages",
+            headers={"Authorization": f"Bearer {creds['token']}", "Content-Type": "application/json"},
+            json={"messaging_product": "whatsapp", "to": wa_number,
+                  "type": "text", "text": {"body": text}},
+            timeout=20,
+        )
+        if response.status_code >= 400:
+            print(f"CRM send failed: {response.status_code} {response.text}")
+            return False, "WhatsApp rejected the message."
+        return True, ""
+    except Exception as e:
+        print(f"CRM send error: {e}")
+        return False, str(e)
+
+
+# ---------------------------------------------------------------------------
+# Brilliant Chemicals (Knockout) online shopping assistant
+# ---------------------------------------------------------------------------
+
+BRAND_NAME = "Knockout"
+
+COMPANY_SYSTEM_CONTACT = {
+    "email": "sales@brilliantchemicals.co.zw",
+    "phones": ["+263 737 066 415", "+263 772 801 892"],
+    "address": "Number 7529, Tynwald South, Harare, Zimbabwe",
+    "hours": "Monday to Friday, 8:00 AM - 5:00 PM",
+}
+
+BRILLIANT_PRODUCTS = [
+    {
+        "id": "foam-bath",
+        "name": "Knockout Foam Bath",
+        "summary": "High foaming, berry bubbly foam bath enriched with glycerine, avocado and aloe vera extracts.",
+        "sizes": ["500ml", "1 Litre", "Bulk pack"],
+    },
+    {
+        "id": "dishwashing-liquid",
+        "name": "Knockout Dishwashing Liquid",
+        "summary": "High foaming lemon degreasing dishwashing liquid, available in 750ml and 1 Litre.",
+        "sizes": ["750ml", "1 Litre", "Bulk pack"],
+    },
+    {
+        "id": "toilet-cleaner",
+        "name": "Knockout Toilet Cleaner & Sanitizer",
+        "summary": "Removes stubborn stains and germs and leaves a fresh pine or lavender scent.",
+        "sizes": ["500ml", "Bulk pack"],
+    },
+    {
+        "id": "all-purpose-cleaner",
+        "name": "Knockout All Purpose Cleaner",
+        "summary": "Restores white surfaces and lifts grease, oil and stains from stoves, fridges and tiles.",
+        "sizes": ["500ml", "750ml", "Bulk pack"],
+    },
+    {
+        "id": "scouring-powder",
+        "name": "Knockout Scouring Powder",
+        "summary": "Clears encrusted deposits from pots and pans and removes rust from tools.",
+        "sizes": ["500g", "Bulk pack"],
+    },
+    {
+        "id": "petroleum-jelly",
+        "name": "Knockout Perfumed Petroleum Jelly",
+        "summary": "Skin care jelly for minor scrapes, dryness and everyday moisture.",
+        "sizes": ["100ml", "250ml", "Bulk pack"],
+    },
+    {
+        "id": "pine-gel",
+        "name": "Knockout Pine Gel",
+        "summary": "Strong, non-abrasive disinfectant cleaner for floors, counters, sinks and bathrooms.",
+        "sizes": ["500ml", "5 Litre", "Bulk pack"],
+    },
+    {
+        "id": "thick-bleach",
+        "name": "Knockout Thick Bleach",
+        "summary": "Multipurpose thick bleach that lifts stains and odours and kills 99.9% of germs.",
+        "sizes": ["750ml", "2 Litre", "Bulk pack"],
+    },
+]
+
+_shop_tables_ready = False
+
+
+def ensure_shop_tables():
+    """Create the shopping assistant tables the first time they are needed."""
+    global _shop_tables_ready
+    if _shop_tables_ready:
+        return
+    with get_db() as (cursor, connection):
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_sessions (
+                session_key VARCHAR(80) PRIMARY KEY,
+                state TEXT,
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_orders (
+                id SERIAL PRIMARY KEY,
+                reference VARCHAR(32) UNIQUE,
+                customer_name VARCHAR(200),
+                company VARCHAR(200),
+                phone VARCHAR(40),
+                email VARCHAR(200),
+                delivery_address TEXT,
+                channel VARCHAR(20),
+                wa_number VARCHAR(32),
+                chat_id INTEGER,
+                notes TEXT,
+                item_count INTEGER DEFAULT 0,
+                status VARCHAR(20) DEFAULT 'new',
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_order_items (
+                id SERIAL PRIMARY KEY,
+                order_id INTEGER,
+                product VARCHAR(200),
+                pack_size VARCHAR(100),
+                quantity INTEGER,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        # Bring installs created before these columns existed up to date.
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS wa_number VARCHAR(32);")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS chat_id INTEGER;")
+        connection.commit()
+    _shop_tables_ready = True
+
+
+def shop_load_state(key):
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT state FROM shop_sessions WHERE session_key = %s", (key,))
+            row = cursor.fetchone()
+        if row and row[0]:
+            return json.loads(row[0])
+    except Exception as e:
+        print(f"shop state load error: {e}")
+    return {}
+
+
+def shop_save_state(key, state):
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_sessions (session_key, state, updated_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (session_key) DO UPDATE
+                SET state = EXCLUDED.state, updated_at = NOW()
+            """, (key, json.dumps(state)))
+            connection.commit()
+    except Exception as e:
+        print(f"shop state save error: {e}")
+
+
+def _shop_text(text):
+    return {"type": "text", "text": text}
+
+
+def _shop_options(text, options):
+    return {"type": "options", "text": text, "options": [{"id": o[0], "label": o[1]} for o in options]}
+
+
+def shop_greeting(cart=None, staff=False):
+    count = sum(item["qty"] for item in (cart or []))
+    cart_label = "View Cart"
+    if count:
+        cart_label = f"View Cart ({count} item{'s' if count != 1 else ''})"
+    options = [("shop", "Shop"), ("search", "Search Products"), ("cart", cart_label),
+               ("support", "Talk to Support"), ("about", "About Us")]
+    if staff:
+        options.append(("switch_staff", "Switch to Staff"))
+    return _shop_options(
+        "Welcome to Brilliant Chemicals Online Shopping Bot! 👋\n\n"
+        "I can help you browse our Knockout range, build an order and reach our sales team. "
+        "Reply with an option number:",
+        options,
+    )
+
+
+def _shop_category_list():
+    options = [(f"cat:{index}", product["name"]) for index, product in enumerate(BRILLIANT_PRODUCTS)]
+    return _shop_options(
+        f"🛍️ *Browse Products*\n{BRAND_NAME} — household, cleaning and personal care.\n\n"
+        "Select a category to browse:",
+        options,
+    )
+
+
+def _shop_product_list(category_index):
+    product = BRILLIANT_PRODUCTS[category_index]
+    return _shop_options(
+        f"🧴 *{product['name']}*\n\n{product['summary']}\n\n"
+        f"Available pack sizes: {', '.join(product['sizes'])}",
+        [(f"prod:{category_index}", "Choose pack size")],
+    )
+
+
+def _shop_size_list(product, category_index):
+    return _shop_options(
+        f"📦 *{product['name']}*\n\nWhich pack size would you like?",
+        [(f"size:{index}", size) for index, size in enumerate(product["sizes"])],
+    )
+
+
+def _shop_cart_summary(cart):
+    lines = []
+    for index, item in enumerate(cart, start=1):
+        lines.append(f"{index}. {item['name']} ({item['size']}) × {item['qty']}")
+    return "\n".join(lines)
+
+
+def _shop_cart_message(cart):
+    if not cart:
+        return _shop_options(
+            "🛒 *Your cart is empty*\n\nAdd a few Knockout products and they will show up here. "
+            "You can also type a product name to search for it.",
+            [("shop", "Browse products"), ("search", "Search products")],
+        )
+    total = sum(item["qty"] for item in cart)
+    options = [("shop", "Add more products"), ("checkout", "Submit order enquiry")]
+    options += [(f"qty:{index}", f"Change quantity — {item['name']}") for index, item in enumerate(cart)]
+    options += [(f"rm:{index}", f"Remove — {item['name']} ({item['size']})") for index, item in enumerate(cart)]
+    options.append(("clear", "Empty the cart"))
+    return _shop_options(
+        f"🛒 *Your Cart* — {total} item{'s' if total != 1 else ''}\n\n"
+        f"{_shop_cart_summary(cart)}\n\n"
+        "Pricing is confirmed by our sales team on quotation. What would you like to do?",
+        options,
+    )
+
+
+def _shop_search_prompt():
+    return _shop_text(
+        "🔎 *Search Products*\n\nType a product name or keyword — for example *bleach*, *jelly*, "
+        "*pine* or *dish*."
+    )
+
+
+def _shop_search_results(cart, query):
+    query = (query or "").strip().lower()
+    matches = [
+        product for product in BRILLIANT_PRODUCTS
+        if query in product["name"].lower() or query in product["summary"].lower()
+    ]
+    if not matches:
+        messages = [_shop_text(
+            f"😕 I could not find anything for “{query}”.\n\nTry another keyword, or browse the full range."),
+            _shop_options("You can also:", [("shop", "Browse all categories")])]
+        return "search", {}, messages
+    options = [(f"prod:{BRILLIANT_PRODUCTS.index(product)}", product["name"]) for product in matches]
+    messages = [_shop_options(
+        f"🔎 *Search results for “{query}”* — {len(matches)} product"
+        f"{'s' if len(matches) != 1 else ''} found:",
+        options)]
+    return "search_results", {"query": query}, messages
+
+
+def _shop_support():
+    return [_shop_options(
+        "☎️ *Customer Support*\n\nHow would you like to contact Brilliant Chemicals Sales?",
+        [("support_call", "Call Brilliant Chemicals"), ("support_msg", "Message Brilliant Chemicals")],
+    )]
+
+
+def _shop_about():
+    phones = COMPANY_SYSTEM_CONTACT["phones"]
+    return [_shop_options(
+        "🏢 *About Brilliant Chemicals (Pvt) Ltd*\n\n"
+        "We are a Zimbabwean company, registered as *Vivid Chemicals*, that manufactures, markets and "
+        f"distributes high quality domestic household and personal care products under our brand *{BRAND_NAME}*.\n\n"
+        f"• *Brand:* {BRAND_NAME} — a registered trademark, proudly SAZ approved\n"
+        "• *Vision:* To improve the quality of life in all households of all nations by providing high "
+        "quality household and personal care products at affordable prices\n"
+        "• *Quality:* Supplier rating, incoming raw material inspection and finished goods inspection, so "
+        "our products are consistently of high quality and always meet customer needs\n"
+        "• *Strengths:* A lean and efficient structure, modern high capacity production, and an "
+        "experienced and energetic leadership team\n"
+        "• *Values:* Passion for customers, trust and respect for individuals, uncompromising integrity, "
+        "results through teamwork, and speed and agility\n\n"
+        "*Visit us:* Number 7529, Tynwald South, Harare, Zimbabwe (8:00 AM – 5:00 PM)\n"
+        f"*Call:* {phones[0]} / {phones[1]}\n"
+        f"*Email:* {COMPANY_SYSTEM_CONTACT['email']}",
+        [("shop", "Shop our products"), ("support", "Talk to Support")],
+    )]
+
+
+def _shop_save_order(state, channel, wa_number=None, customer=None):
+    cart = state.get("cart") or []
+    if not cart:
+        return None
+    customer = customer or {}
+    reference = f"BC-{datetime.now().strftime('%y%m%d')}-{random.randint(1000, 9999)}"
+    wa_number = str(wa_number)[-15:] if wa_number else None
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            chat_id = None
+            if wa_number:
+                cursor.execute("SELECT id FROM whatsapp_chats WHERE wa_number = %s", (wa_number,))
+                row = cursor.fetchone()
+                chat_id = row[0] if row else None
+            cursor.execute("""
+                INSERT INTO shop_orders (reference, customer_name, company, phone, email,
+                                         delivery_address, channel, wa_number, chat_id, notes,
+                                         item_count, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                RETURNING id
+            """, (reference, customer.get("name"), customer.get("company"), customer.get("phone"),
+                  customer.get("email"), customer.get("delivery_address"), channel,
+                  wa_number, chat_id, customer.get("notes"),
+                  sum(item["qty"] for item in cart)))
+            order_id = cursor.fetchone()[0]
+            for item in cart:
+                cursor.execute("""
+                    INSERT INTO shop_order_items (order_id, product, pack_size, quantity, created_at)
+                    VALUES (%s, %s, %s, %s, NOW())
+                """, (order_id, item["name"], item["size"], item["qty"]))
+            connection.commit()
+    except Exception as e:
+        print(f"order save error: {e}")
+        return None
+    return reference
+
+
+# ------------------------------------------------------------------ navigation --
+# Customers can always step back one menu or jump straight to the main menu.
+SHOP_BACK_WORDS = ("b", "back", "previous", "previous menu", "go back", "return")
+SHOP_MENU_WORDS = ("m", "menu", "main menu", "mainmenu", "home", "reset", "start", "restart", "0")
+
+
+def _shop_render(step, ctx, cart, customer=None, staff=False):
+    """Rebuild the prompt for a step without consuming input (used by Back)."""
+    ctx = ctx or {}
+    customer = customer or {}
+    if step == "category":
+        return [_shop_category_list()]
+    if step == "product":
+        return [_shop_product_list(min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1))]
+    if step == "size":
+        index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
+        return [_shop_size_list(BRILLIANT_PRODUCTS[index], index)]
+    if step == "qty":
+        index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
+        product = BRILLIANT_PRODUCTS[index]
+        size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
+        return [_shop_text(f"📦 *{product['name']}* — {size}\n\nHow many units would you like?")]
+    if step == "search":
+        return [_shop_search_prompt()]
+    if step == "search_results":
+        _, new_ctx, messages = _shop_search_results(cart, ctx.get("query", ""))
+        return messages
+    if step == "cart":
+        return [_shop_cart_message(cart)]
+    if step == "about":
+        return _shop_about()
+    if step == "support":
+        return _shop_support()
+    if step == "support_msg":
+        return [_shop_text(
+            "✍️ Type your message and our sales team will get back to you. Include your name, "
+            "company and contact number so we can respond quickly.")]
+    if step == "order_name":
+        return [_shop_text("📝 Let's set up your order enquiry.\n\nWhat is your *full name*?")]
+    if step == "order_company":
+        return [_shop_text("Which *company* are you ordering for? (Type *none* if you are buying for yourself.)")]
+    if step == "order_phone":
+        return [_shop_text("What is the best *phone number* to reach you on?")]
+    if step == "order_address":
+        return [_shop_text("What is the *delivery address* for this order?")]
+    if step == "order_confirm":
+        return _shop_order_confirmation(cart, customer)
+    return [shop_greeting(cart, staff)]
+
+
+def _shop_order_confirmation(cart, customer):
+    summary = _shop_cart_summary(cart) or "—"
+    return [_shop_options(
+        "✅ *Please confirm your order enquiry*\n\n"
+        f"*Name:* {customer.get('name', '')}\n"
+        f"*Company:* {customer.get('company', '')}\n"
+        f"*Phone:* {customer.get('phone', '')}\n"
+        f"*Delivery:* {customer.get('delivery_address', '')}\n\n"
+        f"*Items:*\n{summary}\n\n"
+        "Submit this order enquiry now?",
+        [("confirm_order", "Yes, submit"), ("cart", "Back to cart")],
+    )]
+
+
+def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None, display_name=None):
+    """Advance the shopping assistant one step.
+
+    Returns (state, messages, actions). The state carries a short history so
+    every reply can offer "back one menu" and "main menu".
+    """
+    state = dict(state or {})
+    cart = list(state.get("cart") or [])
+    ctx = dict(state.get("ctx") or {})
+    step = state.get("step") or "menu"
+    customer = dict(state.get("customer") or {})
+    history = [entry for entry in (state.get("history") or []) if isinstance(entry, dict)][-12:]
+    # Set when the number also belongs to a member of staff, so the customer
+    # menu can always offer a way back to the staff assistant.
+    staff = bool(state.get("staff"))
+
+    def greet():
+        return shop_greeting(cart, staff)
+
+    command = (button_id or raw_input or "").strip()
+
+    # Option numbers come from the choices on the previous prompt only, so the
+    # navigation shortcuts can never be shadowed by a number.
+    previous_options = ctx.get("last_options") or []
+    unmatched_number = False
+    if command.isdigit() and previous_options:
+        pick = int(command)
+        if 1 <= pick <= len(previous_options):
+            command = previous_options[pick - 1]
+        else:
+            unmatched_number = True
+    low = command.lower()
+
+    def finish(new_step, messages, actions=None, new_ctx=None, new_customer=None, new_history=None):
+        state["step"] = new_step
+        state["cart"] = cart
+        state["ctx"] = ctx if new_ctx is None else new_ctx
+        state["ctx"]["last_options"] = shop_option_ids(messages)
+        state["customer"] = customer if new_customer is None else new_customer
+        kept = history if new_history is None else list(new_history)
+        state["history"] = kept[-12:]
+        state["nav"] = {"back": bool(state["history"]), "menu": new_step != "menu"}
+        return state, messages, actions or []
+
+    def result(new_step, messages, actions=None, new_ctx=None, new_customer=None, new_history=None):
+        if new_history is not None:
+            return finish(new_step, messages, actions, new_ctx, new_customer, new_history)
+        pushed = list(history)
+        if new_step != step:
+            pushed.append({"step": step, "ctx": ctx})
+        return finish(new_step, messages, actions, new_ctx, new_customer, pushed)
+
+    def index_of(value, count, prefix=None):
+        value = (value or "").strip().lower()
+        if prefix and value.startswith(prefix):
+            try:
+                number = int(value.split(":", 1)[1])
+            except (IndexError, ValueError):
+                return None
+            return number if 0 <= number < count else None
+        return None
+
+    # ------------------------------------------------------- navigation keys
+    if low in SHOP_MENU_WORDS:
+        return finish("menu", [greet()], new_history=[])
+
+    if low in SHOP_BACK_WORDS:
+        if not history:
+            return finish("menu", [greet()], new_history=[])
+        previous = history[-1]
+        restored = previous.get("step") or "menu"
+        restored_ctx = previous.get("ctx") or {}
+        if restored == "menu":
+            return finish("menu", [greet()], new_history=[])
+        return finish(restored, _shop_render(restored, restored_ctx, cart, customer),
+                      new_ctx=restored_ctx, new_history=history[:-1])
+
+    # --------------------------------------------------------- global commands
+    if low in ("shop", "shop now", "addmore", "shop more"):
+        return result("category", [_shop_category_list()])
+
+    if low in ("search", "search products"):
+        return result("search", [_shop_search_prompt()])
+
+    if low in ("cart", "view cart", "viewcart"):
+        return result("cart", [_shop_cart_message(cart)])
+
+    if low in ("support", "talk to support", "help"):
+        return result("support", _shop_support())
+
+    if low in ("about", "about us", "aboutus", "company", "who are you"):
+        return result("about", _shop_about())
+
+    if staff and low in ("switch_staff", "staff", "switch to staff", "back to staff"):
+        return finish("menu", [_shop_text("✅ Switching you back to the staff assistant…")],
+                      actions=[{"type": "switch_staff"}], new_history=[])
+
+    if low in ("support_call", "call"):
+        phones = " or ".join(COMPANY_SYSTEM_CONTACT["phones"])
+        return result("support", [_shop_options(
+            f"📞 Call Brilliant Chemicals on {phones}.\n\n"
+            f"Office hours: {COMPANY_SYSTEM_CONTACT['hours']}.\n"
+            f"Email: {COMPANY_SYSTEM_CONTACT['email']}",
+            [("support_msg", "Message Brilliant Chemicals instead")])])
+
+    if low in ("support_msg", "message"):
+        return result("support_msg", [_shop_text(
+            "✍️ Type your message and our sales team will get back to you. Include your name, "
+            "company and contact number so we can respond quickly.")])
+
+    if low in ("clear", "empty cart"):
+        cart = []
+        return result("cart", [_shop_text("🧺 Your cart has been emptied."), _shop_cart_message(cart)])
+
+    if low in ("checkout", "order"):
+        if not cart:
+            return result("cart", [_shop_cart_message(cart)])
+        return result("order_name", [_shop_text("📝 Let's set up your order enquiry.\n\nWhat is your *full name*?")])
+
+    # A number that is not on the current menu should never silently jump levels.
+    if unmatched_number and step in ("category", "product", "size", "search_results", "cart", "about", "support"):
+        prompt = _shop_render(step, ctx, cart, customer, staff)
+        return finish(step, prompt + [_shop_text(
+            f"🤔 *{command}* is not one of the options above. Please choose from the list, "
+            "or use *B* to go back and *M* for the main menu.")])
+
+    # ------------------------------------------------------------------ steps
+    if step == "category":
+        chosen = index_of(command, len(BRILLIANT_PRODUCTS), "cat")
+        if chosen is None:
+            return result("category", [_shop_category_list()])
+        return result("product", [_shop_product_list(chosen)], new_ctx={"product": chosen})
+
+    if step == "product":
+        if low.startswith("prod:"):
+            chosen = index_of(command, len(BRILLIANT_PRODUCTS), "prod")
+            if chosen is not None:
+                return result("size", [_shop_size_list(BRILLIANT_PRODUCTS[chosen], chosen)],
+                              new_ctx={"product": chosen})
+        return result("category", [_shop_category_list()])
+
+    if step == "size":
+        product_index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
+        product = BRILLIANT_PRODUCTS[product_index]
+        chosen = index_of(command, len(product["sizes"]), "size")
+        if chosen is None:
+            return result("size", [_shop_size_list(product, product_index)])
+        return result("qty", [_shop_text(
+            f"📦 *{product['name']}* — {product['sizes'][chosen]}\n\nHow many units would you like?"
+        )], new_ctx={"product": product_index, "size": chosen})
+
+    if step == "qty":
+        product_index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
+        product = BRILLIANT_PRODUCTS[product_index]
+        size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
+        if not command.isdigit() or int(command) <= 0:
+            return result("qty", [_shop_text("Please reply with the number of units you need, for example *10*.")])
+        quantity = int(command)
+        existing = next((item for item in cart if item["id"] == product["id"] and item["size"] == size), None)
+        if existing:
+            existing["qty"] += quantity
+        else:
+            cart.append({"id": product["id"], "name": product["name"], "size": size, "qty": quantity})
+        return result("cart", [
+            _shop_text(f"✅ Added {quantity} × {product['name']} ({size}) to your cart."),
+            _shop_cart_message(cart),
+        ])
+
+    if step == "search":
+        query = (raw_input or "").strip()
+        if not query:
+            return result("search", [_shop_search_prompt()])
+        new_step, new_ctx, messages = _shop_search_results(cart, query)
+        return result(new_step, messages, new_ctx=new_ctx)
+
+    if step == "search_results":
+        if low.startswith("prod:"):
+            chosen = index_of(command, len(BRILLIANT_PRODUCTS), "prod")
+            if chosen is not None:
+                return result("size", [_shop_size_list(BRILLIANT_PRODUCTS[chosen], chosen)],
+                              new_ctx={"product": chosen})
+        if low in ("shop",):
+            return result("category", [_shop_category_list()])
+        query = (raw_input or "").strip()
+        if query:
+            new_step, new_ctx, messages = _shop_search_results(cart, query)
+            return result(new_step, messages, new_ctx=new_ctx)
+        return result("search", [_shop_search_prompt()])
+
+    if step == "cart":
+        if low.startswith("rm:"):
+            try:
+                cart.pop(int(low.split(":", 1)[1]))
+            except (ValueError, IndexError):
+                pass
+            return result("cart", [_shop_cart_message(cart)])
+        if low.startswith("qty:"):
+            try:
+                return result("cart_qty", [_shop_text("How many units would you like?")],
+                              new_ctx={"edit": int(low.split(":", 1)[1])})
+            except ValueError:
+                return result("cart", [_shop_cart_message(cart)])
+        if not cart:
+            typed = (raw_input or "").strip()
+            if typed and not typed.isdigit():
+                new_step, new_ctx, messages = _shop_search_results(cart, typed)
+                return result(new_step, messages, new_ctx=new_ctx)
+        return result("cart", [_shop_cart_message(cart)])
+
+    if step == "cart_qty":
+        if command.isdigit() and int(command) > 0 and "edit" in ctx:
+            try:
+                cart[ctx["edit"]]["qty"] = int(command)
+            except (ValueError, IndexError):
+                pass
+            return result("cart", [_shop_cart_message(cart)])
+        return result("cart", [_shop_cart_message(cart)])
+
+    if step == "support_msg":
+        message = (raw_input or "").strip()
+        if not message:
+            return result("support_msg", [_shop_text("Please type your message so our sales team can help you.")])
+        return result("menu", [
+            _shop_text("✅ Thank you — your message has been passed to our sales team. 🙏 "
+                       "Someone will come back to you shortly."),
+            greet(),
+        ], actions=[{"type": "escalate", "reason": "Customer requested support", "message": message}],
+            new_history=[])
+
+    if step == "order_name":
+        customer["name"] = (raw_input or "").strip()
+        if not customer["name"]:
+            return result("order_name", [_shop_text("Please type your full name so we can process your order.")])
+        return result("order_company", [
+            _shop_text("Which *company* are you ordering for? (Type *none* if you are buying for yourself.)")])
+
+    if step == "order_company":
+        customer["company"] = (raw_input or "").strip()
+        return result("order_phone", [_shop_text("What is the best *phone number* to reach you on?")])
+
+    if step == "order_phone":
+        customer["phone"] = (raw_input or "").strip()
+        return result("order_address", [_shop_text("What is the *delivery address* for this order?")])
+
+    if step == "order_address":
+        customer["delivery_address"] = (raw_input or "").strip()
+        return result("order_confirm", _shop_order_confirmation(cart, customer))
+
+    if step == "order_confirm":
+        if low in ("confirm_order", "yes", "y", "confirm", "ok"):
+            reference = _shop_save_order(state, channel, wa_number, customer)
+            if not reference:
+                return result("order_confirm", [_shop_text(
+                    "😕 Sorry, we could not save your order just now. Please try once more, or call "
+                    f"{COMPANY_SYSTEM_CONTACT['phones'][0]}.")])
+            cart = []
+            ctx = {}
+            return result("menu", [
+                _shop_text(
+                    "🎉 *Order enquiry received*\n\n"
+                    f"Thank you {customer.get('name', '')}! Your reference is *{reference}*.\n\n"
+                    "Our sales team will confirm pricing and delivery within one working day.\n\n"
+                    f"Any questions? Call {COMPANY_SYSTEM_CONTACT['phones'][0]} or email "
+                    f"{COMPANY_SYSTEM_CONTACT['email']}."),
+                greet(),
+            ], actions=[{"type": "escalate", "reason": f"New order enquiry {reference}"}],
+                new_ctx=ctx, new_history=[])
+        if low in ("cart", "back"):
+            return result("cart", [_shop_cart_message(cart)])
+        return result("order_confirm", _shop_order_confirmation(cart, customer))
+
+    return finish("menu", [greet()], new_history=[])
+
+
+def shop_nav_block(nav):
+    """The navigation footer appended to every customer reply."""
+    if not nav or not (nav.get("back") or nav.get("menu")):
+        return ""
+    lines = []
+    if nav.get("back"):
+        lines.append("↩️  *B* — back to the previous menu")
+    if nav.get("menu"):
+        lines.append("🏠  *M* — main menu")
+    return "━━━━━━━━━━━━━━━\n" + "\n".join(lines)
+
+
+def shop_messages_to_text(messages, nav=None):
+    """Flatten assistant messages into WhatsApp-friendly text."""
+    parts = []
+    for message in messages:
+        text = message.get("text", "")
+        options = message.get("options") or []
+        if options:
+            text = f"{text}\n\n" + "\n".join(
+                f"{index}. {option['label']}" for index, option in enumerate(options, start=1))
+        parts.append(text)
+    body = "\n\n".join(part for part in parts if part)
+    nav_text = shop_nav_block(nav)
+    if nav_text:
+        body = f"{body}\n\n{nav_text}"
+    return body
+
+
+def shop_option_ids(messages):
+    """Choice ids offered by the last prompt — never the navigation shortcuts."""
+    for message in reversed(messages):
+        options = message.get("options") or []
+        if options:
+            return [option["id"] for option in options]
+    return []
+
+
+_CUSTOMER_HUMAN_KEYWORDS = (
+    "human", "agent", "representative", "talk to someone", "speak to someone",
+    "customer care", "talk to a person",
+)
+
+
+def crm_chat_is_muted(wa_number):
+    """True when the assistant should stay silent for this conversation."""
+    try:
+        ensure_crm_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT status FROM whatsapp_chats WHERE wa_number = %s",
+                           (str(wa_number)[-15:],))
+            row = cursor.fetchone()
+        return bool(row and row[0] in ("escalated", "human"))
+    except Exception as e:
+        print(f"CRM mute lookup error: {e}")
+        return False
+
+
+def crm_escalate_chat(wa_number, reason, channel=None, display_name=None):
+    """Raise an unattended enquiry for the CRM team and mute the assistant."""
+    crm_record_message(wa_number, "inbound", "system", reason, "system",
+                       display_name=display_name, company_reg=COMPANY_SYSTEM_PREFIX,
+                       escalate=True, reason=reason, channel=channel)
+    try:
+        ensure_crm_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE whatsapp_chats
+                SET status = 'escalated', unattended = TRUE, handoff_reason = %s, updated_at = NOW()
+                WHERE wa_number = %s
+            """, (reason, str(wa_number)[-15:]))
+            connection.commit()
+    except Exception as e:
+        print(f"CRM escalate error: {e}")
+
+
+def _wa_inbound_preview(message):
+    """Return (readable_text, message_type, reply_id) for an inbound message."""
+    mtype = message.get("type")
+    if mtype == "text":
+        text = (message.get("text") or {}).get("body", "")
+        return text, "text", text.strip()
+    if mtype == "interactive":
+        interactive = message.get("interactive") or {}
+        kind = interactive.get("type")
+        if kind == "button_reply":
+            reply = interactive.get("button_reply") or {}
+            return reply.get("title", ""), "button", reply.get("id", "")
+        if kind == "list_reply":
+            reply = interactive.get("list_reply") or {}
+            return reply.get("title", ""), "list", reply.get("id", "")
+        if kind == "nfm_reply":
+            return "Form response", "flow", ""
+    labels = {"image": "[image]", "video": "[video]", "audio": "[voice note]",
+              "document": "[document]", "sticker": "[sticker]", "location": "[location]",
+              "contacts": "[contact]"}
+    return labels.get(mtype, f"[{mtype or 'unknown'}]"), mtype or "unknown", ""
+
+
+def _crm_reply(wa_number, text, channel=None, sender="bot"):
+    """Send an assistant reply over WhatsApp and log it either way.
+
+    The transcript is the record of what the customer was told, so the reply is
+    stored even when WhatsApp delivery fails; 'delivered' carries the outcome.
+    """
+    sent, _detail = crm_send_whatsapp(wa_number, text, channel)
+    crm_record_message(wa_number, "outbound", sender, text, "text",
+                       company_reg=COMPANY_SYSTEM_PREFIX, channel=channel, delivered=sent)
+    return sent
+
+
+_number_mode_ready = False
+
+
+def ensure_number_mode_table():
+    """Create the staff/customer mode table the first time it is needed."""
+    global _number_mode_ready
+    if _number_mode_ready:
+        return
+    with get_db() as (cursor, connection):
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS whatsapp_number_modes (
+                wa_number VARCHAR(32) PRIMARY KEY,
+                mode VARCHAR(20) NOT NULL DEFAULT 'staff',
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        connection.commit()
+    _number_mode_ready = True
+
+
+def wa_mode_get(wa_number):
+    """'staff' (the default) or 'customer' for a number that is on the system."""
+    try:
+        ensure_number_mode_table()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT mode FROM whatsapp_number_modes WHERE wa_number = %s",
+                           (str(wa_number)[-15:],))
+            row = cursor.fetchone()
+        return (row[0] if row and row[0] else "staff")
+    except Exception as e:
+        print(f"number mode lookup failed: {e}")
+        return "staff"
+
+
+def wa_mode_set(wa_number, mode):
+    try:
+        ensure_number_mode_table()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO whatsapp_number_modes (wa_number, mode, updated_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (wa_number) DO UPDATE
+                SET mode = EXCLUDED.mode, updated_at = NOW()
+            """, (str(wa_number)[-15:], mode))
+            connection.commit()
+        return True
+    except Exception as e:
+        print(f"number mode save failed: {e}")
+        return False
+
+
+def shop_webhook_turn(sender_id, display_phone_number, message, staff=False):
+    """Run one shopping-assistant turn over WhatsApp.
+
+    Returns the actions still to be handled by the caller. Staff conversations
+    are answered without creating customer records in the CRM inbox.
+    """
+    text, mtype, reply_id = _wa_inbound_preview(message)
+    state_key = f"wa:{str(sender_id)[-15:]}"
+    state = shop_load_state(state_key) or {"step": "menu", "cart": [], "ctx": {},
+                                          "customer": {}, "history": []}
+    state["staff"] = bool(staff)
+
+    new_state, messages, actions = shop_engine(
+        state, raw_input=text, button_id=reply_id,
+        channel="whatsapp-staff" if staff else "whatsapp", wa_number=sender_id)
+    shop_save_state(state_key, new_state)
+
+    # The switch back to the staff assistant is rendered by the caller.
+    if any(action.get("type") == "switch_staff" for action in actions):
+        return actions
+
+    rendered = shop_messages_to_text(messages, new_state.get("nav"))
+    if rendered:
+        if staff:
+            crm_send_whatsapp(sender_id, rendered, display_phone_number)
+        else:
+            _crm_reply(sender_id, rendered, display_phone_number)
+    return actions
+
+
+def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=""):
+    """Run the shopping assistant for a customer (a number that is not staff)."""
+    text, mtype, reply_id = _wa_inbound_preview(message)
+    lowered = (text or "").strip().lower()
+    wants_human = any(keyword in lowered for keyword in _CUSTOMER_HUMAN_KEYWORDS)
+
+    crm_record_message(sender_id, "inbound", "customer", text or f"[{mtype}]", mtype,
+                       display_name=(profile_name or "").strip() or None,
+                       company_reg=COMPANY_SYSTEM_PREFIX, channel=display_phone_number)
+
+    # An agent already owns this conversation — stay quiet and let them answer.
+    if crm_chat_is_muted(sender_id):
+        if wants_human:
+            crm_escalate_chat(sender_id, "Customer requested a human agent", display_phone_number)
+        return
+
+    if wants_human:
+        _crm_reply(sender_id, "Of course — I am connecting you with a member of our sales team. "
+                              "Someone will reply here shortly. 🙏", display_phone_number)
+        crm_escalate_chat(sender_id, "Customer requested a human agent", display_phone_number)
+        return
+
+    actions = shop_webhook_turn(sender_id, display_phone_number, message, staff=False)
+    for action in actions:
+        if action.get("type") == "escalate":
+            crm_escalate_chat(sender_id, action.get("reason") or "Customer enquiry",
+                              display_phone_number)
+
+
+def _safe_scalar(query, params=None, default=0):
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute(query, params or ())
+            row = cursor.fetchone()
+            return row[0] if row and row[0] is not None else default
+    except Exception as e:
+        print(f"count query failed: {e}")
+        return default
+
+
+# ------------------------------------------------------------ portal access --
+COMPANY_MODULES = [
+    {"key": "leave", "title": "Leave Management", "icon": "bi-calendar2-check",
+     "url": "/portal/leave",
+     "description": "Apply for leave, track applications, approve requests, manage balances and export the LMS book."},
+    {"key": "hr", "title": "HR & Payroll", "icon": "bi-wallet2",
+     "url": "/portal/hr-payroll",
+     "description": "Employee records, payroll details, banking information and USD / ZWG currency split configuration."},
+    {"key": "crm", "title": "CRM Portal", "icon": "bi-headset",
+     "url": "/portal/crm",
+     "description": "WhatsApp customer enquiries, unattended conversations and one-click handover to a human agent."},
+    {"key": "access", "title": "User Access Management", "icon": "bi-shield-lock",
+     "url": "/portal/user-access",
+     "description": "Add or remove employees, assign roles and approvers, and control who can open each portal."},
+]
+COMPANY_MODULE_KEYS = [module["key"] for module in COMPANY_MODULES]
+
+_access_tables_ready = False
+
+
+def ensure_access_tables():
+    """Create the per-employee portal access table the first time it is needed."""
+    global _access_tables_ready
+    if _access_tables_ready:
+        return
+    with get_db() as (cursor, connection):
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS company_module_access (
+                id SERIAL PRIMARY KEY,
+                employee_id INTEGER NOT NULL,
+                module VARCHAR(20) NOT NULL,
+                enabled BOOLEAN DEFAULT TRUE,
+                updated_at TIMESTAMP DEFAULT NOW(),
+                updated_by INTEGER,
+                UNIQUE (employee_id, module)
+            );
+        """)
+        connection.commit()
+    _access_tables_ready = True
+
+
+def default_module_access(role):
+    """Administrators get every portal; everyone else starts with leave only."""
+    if str(role or '') == COMPANY_SYSTEM_ADMIN_ROLE:
+        return {key: True for key in COMPANY_MODULE_KEYS}
+    return {key: key == "leave" for key in COMPANY_MODULE_KEYS}
+
+
+def employee_module_access(employee_id, role):
+    """Portal access for one employee: defaults overridden by stored toggles."""
+    access = default_module_access(role)
+    if employee_id is None:
+        return access
+    try:
+        ensure_access_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT module, enabled FROM company_module_access WHERE employee_id = %s",
+                           (int(employee_id),))
+            for module, enabled in cursor.fetchall():
+                if module in access:
+                    access[module] = bool(enabled)
+    except Exception as e:
+        print(f"module access lookup failed: {e}")
+    return access
+
+
+def user_modules(user):
+    """Portal definitions the signed-in user is allowed to open."""
+    access = (user or {}).get("modules") or {}
+    return [module for module in COMPANY_MODULES if access.get(module["key"])]
+
+
+def set_module_access(employee_id, module, enabled, updated_by=None):
+    if module not in COMPANY_MODULE_KEYS:
+        return False
+    try:
+        ensure_access_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO company_module_access (employee_id, module, enabled, updated_by, updated_at)
+                VALUES (%s, %s, %s, %s, NOW())
+                ON CONFLICT (employee_id, module) DO UPDATE
+                SET enabled = EXCLUDED.enabled,
+                    updated_by = EXCLUDED.updated_by,
+                    updated_at = NOW()
+            """, (int(employee_id), module, bool(enabled), updated_by))
+            connection.commit()
+        return True
+    except Exception as e:
+        print(f"module access update failed: {e}")
+        return False
+
+
+def access_matrix():
+    """Every employee with their effective portal access flags."""
+    with get_db() as (cursor, connection):
+        cursor.execute(f"""
+            SELECT id, firstname, surname, role, department
+            FROM {COMPANY_SYSTEM_TABLE}
+            ORDER BY firstname, surname
+        """)
+        employees = cursor.fetchall()
+        cursor.execute("SELECT employee_id, module, enabled FROM company_module_access")
+        overrides = {}
+        for employee_id, module, enabled in cursor.fetchall():
+            overrides.setdefault(employee_id, {})[module] = bool(enabled)
+
+    matrix = []
+    for employee_id, firstname, surname, role, department in employees:
+        access = default_module_access(role)
+        access.update(overrides.get(employee_id, {}))
+        matrix.append({
+            "id": employee_id,
+            "name": f"{firstname or ''} {surname or ''}".strip() or f"Employee {employee_id}",
+            "role": role or "",
+            "department": department or "",
+            "modules": access,
+        })
+    return matrix
+
+
+def company_system_user():
+    """Return the signed-in company system user with portal access, or None."""
+    if not session.get("company_system"):
+        return None
+    firstname = session.get("cs_firstname") or ""
+    surname = session.get("cs_surname") or ""
+    role = session.get("cs_role", "")
+    return {
+        "id": session.get("empid"),
+        "firstname": firstname,
+        "surname": surname,
+        "role": role,
+        "email": session.get("cs_email", ""),
+        "initials": (firstname[:1] + surname[:1]).upper() or "BC",
+        "company_name": COMPANY_SYSTEM_NAME,
+        "modules": employee_module_access(session.get("empid"), role),
+    }
+
+
+def company_system_guard(module=None):
+    """Return (user, None) when allowed, otherwise (None, redirect response)."""
+    user = company_system_user()
+    if not user:
+        return None, redirect(url_for('company_login_page'))
+    if module and not user["modules"].get(module):
+        return None, redirect(url_for('company_system', denied=module))
+    return user, None
+
+
+def portal_api_user(module=None):
+    """Return (user, None) when allowed, otherwise (None, JSON error response)."""
+    user = company_system_user()
+    if not user:
+        return None, (jsonify({'success': False, 'message': 'Unauthorized'}), 401)
+    if module and not user["modules"].get(module):
+        return None, (jsonify({'success': False, 'message': 'You cannot open this portal.'}), 403)
+    return user, None
+
+
+def company_system_stats():
+    """Headline numbers shown on the portal hub cards."""
+    pending_table = f"{COMPANY_SYSTEM_PREFIX}appspendingapproval"
+    return {
+        "stat_employees": _safe_scalar(f"SELECT COUNT(*) FROM {COMPANY_SYSTEM_TABLE}"),
+        "stat_pending_leave": _safe_scalar(f"SELECT COUNT(*) FROM {pending_table}"),
+        "stat_roles": _safe_scalar(f"SELECT COUNT(DISTINCT role) FROM {COMPANY_SYSTEM_TABLE}"),
+        "stat_unattended": _safe_scalar(
+            "SELECT COUNT(*) FROM whatsapp_chats WHERE company_reg = %s AND unattended = TRUE AND status <> 'closed'",
+            (COMPANY_SYSTEM_PREFIX,)),
+        "stat_open_chats": _safe_scalar(
+            "SELECT COUNT(*) FROM whatsapp_chats WHERE company_reg = %s AND status <> 'closed'",
+            (COMPANY_SYSTEM_PREFIX,)),
+        "stat_human_chats": _safe_scalar(
+            "SELECT COUNT(*) FROM whatsapp_chats WHERE company_reg = %s AND status = 'human'",
+            (COMPANY_SYSTEM_PREFIX,)),
+    }
+
+
+def _crm_chats(filter_key="all"):
+    where = ["company_reg = %s"]
+    params = [COMPANY_SYSTEM_PREFIX]
+    if filter_key == "unattended":
+        where.append("unattended = TRUE AND status <> 'closed'")
+    elif filter_key == "human":
+        where.append("status = 'human'")
+    elif filter_key == "bot":
+        where.append("status = 'bot'")
+    elif filter_key == "closed":
+        where.append("status = 'closed'")
+    else:
+        where.append("status <> 'closed'")
+    query = f"""
+        SELECT id, wa_number, display_name, status, unattended, handoff_reason,
+               unread_count, last_message, last_message_at, assigned_to
+        FROM whatsapp_chats
+        WHERE {' AND '.join(where)}
+        ORDER BY COALESCE(last_message_at, created_at) DESC
+        LIMIT 100
+    """
+    with get_db() as (cursor, connection):
+        cursor.execute(query, tuple(params))
+        rows = cursor.fetchall()
+    chats = []
+    for row in rows:
+        chats.append({
+            "id": row[0],
+            "wa_number": row[1],
+            "display_name": row[2] or f"+{row[1]}",
+            "status": row[3],
+            "unattended": bool(row[4]),
+            "handoff_reason": row[5],
+            "unread_count": row[6] or 0,
+            "last_message": row[7],
+            "last_message_at": row[8].strftime("%d %b %Y %H:%M") if row[8] else "",
+            "last_message_iso": row[8].isoformat() if row[8] else "",
+            "assigned_to": row[9] or "",
+        })
+    return chats
+
+
+@app.route('/company-login', methods=['GET', 'POST'])
+def company_login_page():
+    if request.method == 'POST':
+        email = (request.form.get('email') or '').strip()
+        password = (request.form.get('password') or '').strip()
+
+        if not email or not password:
+            return jsonify({'success': False, 'message': 'Email and password are required.'}), 400
+
+        try:
+            with get_db() as (cursor, connection):
+                cursor.execute(f"SELECT * FROM {COMPANY_SYSTEM_TABLE} WHERE email = %s", (email,))
+                row = cursor.fetchone()
+
+            if not row:
+                return jsonify({'success': False, 'message': 'This email is not registered with the company system.'}), 404
+
+            if str(row[6]) != password:
+                return jsonify({'success': False, 'message': 'Incorrect password.'}), 401
+
+            role = str(row[8] or '')
+            access = employee_module_access(int(row[0]), role)
+            if not any(access.values()):
+                return jsonify({
+                    'success': False,
+                    'message': 'Your account does not have access to any company system portal yet. '
+                               'Please contact your company administrator.'
+                }), 403
+
+            session.clear()
+            session.permanent = True
+            session['user_uuid'] = str(uuid.uuid4())
+            session['table_name'] = COMPANY_SYSTEM_TABLE
+            session['empid'] = int(row[0])
+            session['company_system'] = True
+            session['cs_firstname'] = row[1]
+            session['cs_surname'] = row[2]
+            session['cs_role'] = role
+            session['cs_email'] = email
+            user_sessions[email] = {'uuid': session['user_uuid'], 'email': email}
+
+            return jsonify({'success': True, 'redirect': url_for('company_system')})
+
+        except Exception as e:
+            print(f"Company login error: {e}")
+            return jsonify({'success': False, 'message': 'Unable to sign in right now. Please try again.'}), 500
+
+    if company_system_user():
+        return redirect(url_for('company_system'))
+    return render_template('company_login.html', company_name=COMPANY_SYSTEM_NAME,
+                           channel_number=company_system_channel_label())
+
+
+@app.route('/company-logout')
+def company_logout():
+    session.clear()
+    return redirect(url_for('company_login_page'))
+
+
+@app.route('/company-system')
+def company_system():
+    user = company_system_user()
+    if not user:
+        return redirect(url_for('company_login_page'))
+    denied = request.args.get('denied', '')
+    denied_title = next((module['title'] for module in COMPANY_MODULES if module['key'] == denied), '')
+    return render_template('company_portal.html', user=user, active_nav='hub',
+                           nav_modules=user_modules(user),
+                           modules=COMPANY_MODULES,
+                           denied_title=denied_title,
+                           channel_number=company_system_channel_label(), **company_system_stats())
+
+
+@app.route('/portal/leave')
+def portal_leave():
+    user, denied = company_system_guard('leave')
+    if denied:
+        return denied
+    return redirect(url_for('Dashboard'))
+
+
+@app.route('/portal/hr-payroll')
+def portal_hr_payroll():
+    user, denied = company_system_guard('hr')
+    if denied:
+        return denied
+    try:
+        results = run1(COMPANY_SYSTEM_TABLE, user['id'])
+    except Exception as e:
+        print(f"HR & Payroll data error: {e}")
+        results = {}
+    return render_template('hr_payroll.html', user=user, active_nav='hr',
+                           nav_modules=user_modules(user), **results)
+
+
+@app.route('/portal/user-access')
+def portal_user_access():
+    user, denied = company_system_guard('access')
+    if denied:
+        return denied
+    try:
+        results = run1(COMPANY_SYSTEM_TABLE, user['id'])
+    except Exception as e:
+        print(f"User access data error: {e}")
+        results = {}
+    return render_template('user_access.html', user=user, active_nav='access',
+                           nav_modules=user_modules(user),
+                           **results, **company_system_stats())
+
+
+@app.route('/portal/crm')
+def portal_crm():
+    user, denied = company_system_guard('crm')
+    if denied:
+        return denied
+    try:
+        chats = _crm_chats('all')
+    except Exception as e:
+        print(f"CRM data error: {e}")
+        chats = []
+    return render_template('crm_portal.html', user=user, active_nav='crm',
+                           nav_modules=user_modules(user),
+                           chats=chats, channel_number=company_system_channel_label(),
+                           **company_system_stats())
+
+
+@app.route('/api/access/matrix')
+def access_matrix_api():
+    user = company_system_user()
+    if not user:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    if not user['modules'].get('access'):
+        return jsonify({'success': False, 'message': 'You cannot manage user access.'}), 403
+    try:
+        employees = access_matrix()
+    except Exception as e:
+        print(f"access matrix error: {e}")
+        return jsonify({'success': False, 'message': 'Unable to load the access matrix.'}), 500
+    return jsonify({
+        'success': True,
+        'employees': employees,
+        'modules': [{'key': module['key'], 'title': module['title']} for module in COMPANY_MODULES],
+    })
+
+
+@app.route('/api/access/toggle', methods=['POST'])
+def access_toggle_api():
+    user = company_system_user()
+    if not user:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    if not user['modules'].get('access'):
+        return jsonify({'success': False, 'message': 'You cannot manage user access.'}), 403
+
+    payload = request.get_json(silent=True) or {}
+    employee_id = payload.get('employee_id')
+    module = (payload.get('module') or '').strip()
+    enabled = bool(payload.get('enabled'))
+
+    if employee_id is None or module not in COMPANY_MODULE_KEYS:
+        return jsonify({'success': False, 'message': 'Unknown employee or portal.'}), 400
+
+    if int(employee_id) == int(user['id']) and module == 'access' and not enabled:
+        return jsonify({'success': False,
+                        'message': 'You cannot remove your own user access management permission.'}), 400
+
+    if not set_module_access(employee_id, module, enabled, user['id']):
+        return jsonify({'success': False, 'message': 'Could not update access. Please try again.'}), 500
+
+    return jsonify({'success': True})
+
+
+@app.route('/api/crm/summary')
+def crm_summary():
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    return jsonify({'success': True,
+                    'chats': _crm_chats(request.args.get('filter', 'all')),
+                    'stats': company_system_stats()})
+
+
+@app.route('/api/crm/chats/<int:chat_id>/messages')
+def crm_chat_messages(chat_id):
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    with get_db() as (cursor, connection):
+        cursor.execute("SELECT wa_number, display_name FROM whatsapp_chats WHERE id = %s", (chat_id,))
+        chat = cursor.fetchone()
+        if not chat:
+            return jsonify({'success': False, 'message': 'Conversation not found.'}), 404
+        cursor.execute("""
+            SELECT direction, sender, message_type, body, created_at
+            FROM whatsapp_messages WHERE chat_id = %s ORDER BY id ASC LIMIT 500
+        """, (chat_id,))
+        rows = cursor.fetchall()
+    return jsonify({
+        'success': True,
+        'wa_number': chat[0],
+        'display_name': chat[1] or f"+{chat[0]}",
+        'messages': [
+            {
+                'direction': row[0],
+                'sender': row[1],
+                'type': row[2],
+                'body': row[3],
+                'at': row[4].strftime('%d %b, %H:%M') if row[4] else '',
+            }
+            for row in rows
+        ],
+    })
+
+
+@app.route('/api/crm/chats/<int:chat_id>/mode', methods=['POST'])
+def crm_chat_mode(chat_id):
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    mode = (request.get_json(silent=True) or {}).get('mode', 'bot')
+    if mode not in ('bot', 'human', 'closed'):
+        return jsonify({'success': False, 'message': 'Unknown mode.'}), 400
+    agent = f"{user['firstname']} {user['surname']}".strip()
+    if not crm_set_chat_mode(chat_id, mode, agent):
+        return jsonify({'success': False, 'message': 'Could not update the conversation.'}), 500
+
+    if mode in ('human', 'closed'):
+        notice = ("An agent has joined the conversation and will assist you from here."
+                  if mode == 'human' else "This conversation has been closed. Thank you for reaching out.")
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT wa_number, channel FROM whatsapp_chats WHERE id = %s", (chat_id,))
+            row = cursor.fetchone()
+        if row and mode == 'human':
+            sent, _ = crm_send_whatsapp(row[0], notice, row[1])
+            if sent:
+                crm_record_message(row[0], 'outbound', 'system', notice, 'text', channel=row[1])
+    return jsonify({'success': True})
+
+
+@app.route('/api/crm/chats/<int:chat_id>/reply', methods=['POST'])
+def crm_chat_reply(chat_id):
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    body = ((request.get_json(silent=True) or {}).get('message') or '').strip()
+    if not body:
+        return jsonify({'success': False, 'message': 'Type a reply first.'}), 400
+
+    with get_db() as (cursor, connection):
+        cursor.execute("SELECT wa_number, channel FROM whatsapp_chats WHERE id = %s", (chat_id,))
+        row = cursor.fetchone()
+    if not row:
+        return jsonify({'success': False, 'message': 'Conversation not found.'}), 404
+
+    agent = f"{user['firstname']} {user['surname']}".strip()
+    sent, detail = crm_send_whatsapp(row[0], body, row[1])
+    crm_record_message(row[0], 'outbound', 'agent', body, 'text',
+                       display_name=agent, channel=row[1])
+    response = {'success': True, 'delivered': sent}
+    if not sent:
+        response['message'] = f"Saved to the conversation, but WhatsApp delivery failed: {detail}"
+    return jsonify(response)
+
 
 @app.route('/logout')
 def logout():

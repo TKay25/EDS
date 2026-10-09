@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company System | Brilliant Chemicals</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+</head>
+<body class="ps-body">
+
+{% include 'components/eds_portal_nav.html' %}
+{% set mods = user.modules | default({}) %}
+
+<main class="ps-shell">
+    <header class="ps-hero">
+        <span class="ps-eyebrow"><i class="bi bi-buildings-fill"></i> Brilliant Chemicals (Pvt) Ltd</span>
+        <h1>Welcome back, {{ user.firstname }}.</h1>
+        <p>
+            {% if nav_modules | length == 1 %}
+            You have access to {{ nav_modules[0].title }}.
+            {% else %}
+            Everything your team has given you access to — {{ nav_modules | map(attribute='title') | join(', ') }}.
+            {% endif %}
+        </p>
+    </header>
+
+    {% if denied_title %}
+    <div class="ps-alert is-error">
+        <i class="bi bi-shield-exclamation"></i>
+        <span>You do not have access to {{ denied_title }}. Ask a company administrator to enable it for you.</span>
+    </div>
+    {% endif %}
+
+    <section class="ps-stats">
+        {% if mods.leave %}
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-people-fill"></i> Employees</div>
+            <div class="ps-stat-value" data-stat="stat_employees">{{ stat_employees }}</div>
+            <div class="ps-stat-note">Registered on the company system</div>
+        </div>
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-hourglass-split"></i> Leave pending</div>
+            <div class="ps-stat-value" data-stat="stat_pending_leave">{{ stat_pending_leave }}</div>
+            <div class="ps-stat-note">Awaiting an approver decision</div>
+        </div>
+        {% endif %}
+        {% if mods.crm %}
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-inbox-fill"></i> Unattended enquiries</div>
+            <div class="ps-stat-value" data-stat="stat_unattended">{{ stat_unattended }}</div>
+            <div class="ps-stat-note">Customer chats waiting for an agent</div>
+        </div>
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-chat-dots-fill"></i> Open conversations</div>
+            <div class="ps-stat-value" data-stat="stat_open_chats">{{ stat_open_chats }}</div>
+            <div class="ps-stat-note">{{ stat_human_chats }} with an agent live</div>
+        </div>
+        {% endif %}
+    </section>
+
+    <h2 class="ps-section-title"><i class="bi bi-grid-1x2-fill"></i> Your portals</h2>
+
+    <section class="ps-grid">
+        {% if mods.leave %}
+        <a class="ps-card" href="/portal/leave">
+            <div class="ps-card-icon"><i class="bi bi-calendar2-check"></i></div>
+            <h3>Leave Management</h3>
+            <p>Apply for leave, track applications, approve requests, manage balances and export the LMS book.</p>
+            <div class="ps-card-foot">
+                <span class="ps-chip"><i class="bi bi-people"></i> <strong>{{ stat_employees }}</strong> employees</span>
+                <span class="ps-chip {% if stat_pending_leave %}is-warn{% endif %}">
+                    <i class="bi bi-hourglass"></i> <strong>{{ stat_pending_leave }}</strong> pending
+                </span>
+                <span class="ps-card-cta">Open <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if mods.hr %}
+        <a class="ps-card" href="/portal/hr-payroll">
+            <div class="ps-card-icon is-info"><i class="bi bi-wallet2"></i></div>
+            <h3>HR &amp; Payroll</h3>
+            <p>Employee records, payroll details, banking information and USD / ZWG currency split configuration.</p>
+            <div class="ps-card-foot">
+                <span class="ps-chip"><i class="bi bi-person-vcard"></i> Payroll register</span>
+                <span class="ps-chip"><i class="bi bi-currency-exchange"></i> Currency settings</span>
+                <span class="ps-card-cta">Open <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if mods.crm %}
+        <a class="ps-card" href="/portal/crm">
+            <div class="ps-card-icon is-accent"><i class="bi bi-headset"></i></div>
+            <h3>CRM Portal</h3>
+            <p>WhatsApp customer enquiries, unattended conversations and one-click handover to a human agent.</p>
+            <div class="ps-card-foot">
+                <span class="ps-chip {% if stat_unattended %}is-warn{% endif %}">
+                    <i class="bi bi-exclamation-circle"></i> <strong>{{ stat_unattended }}</strong> unattended
+                </span>
+                <span class="ps-chip"><i class="bi bi-chat"></i> <strong>{{ stat_open_chats }}</strong> open</span>
+                <span class="ps-card-cta">Open <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if mods.access %}
+        <a class="ps-card" href="/portal/user-access">
+            <div class="ps-card-icon is-ok"><i class="bi bi-shield-lock"></i></div>
+            <h3>User Access Management</h3>
+            <p>Add or remove employees, assign roles and approvers, and control who can open each portal.</p>
+            <div class="ps-card-foot">
+                <span class="ps-chip"><i class="bi bi-person-badge"></i> <strong>{{ stat_roles }}</strong> roles</span>
+                <span class="ps-chip"><i class="bi bi-people"></i> <strong>{{ stat_employees }}</strong> users</span>
+                <span class="ps-card-cta">Open <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </a>
+        {% endif %}
+    </section>
+
+    {% if mods.crm %}
+    <h2 class="ps-section-title"><i class="bi bi-whatsapp"></i> Customer channel</h2>
+
+    <section class="ps-panel">
+        <div class="ps-panel-head">
+            <h3><i class="bi bi-broadcast"></i> Brilliant Chemicals WhatsApp assistant</h3>
+            <div class="ps-panel-actions">
+                <span class="ps-chip is-ok"><i class="bi bi-telephone-inbound"></i> <strong>+{{ channel_number }}</strong></span>
+                <a class="ps-btn ps-btn-ghost ps-btn-sm" href="/portal/crm"><i class="bi bi-inbox"></i> Open CRM inbox</a>
+            </div>
+        </div>
+        <div class="ps-panel-body">
+            <ul class="ps-list">
+                <li><i class="bi bi-check-circle-fill"></i> Staff numbers open the leave management assistant and can switch to the
+                    customer assistant at any time with <strong>Switch to Customer</strong>.</li>
+                <li><i class="bi bi-check-circle-fill"></i> In customer mode the assistant keeps checking the number and offers
+                    <strong>Switch to Staff</strong> to return.</li>
+                <li><i class="bi bi-check-circle-fill"></i> Every other number is treated as a customer and answered by the
+                    Knockout shopping assistant.</li>
+                <li><i class="bi bi-exclamation-circle-fill"></i> Customer chats that need a person are flagged as unattended
+                    enquiries in the CRM portal. Staff conversations are not logged as customer enquiries.</li>
+            </ul>
+            <p class="ps-muted ps-mt" style="font-size:0.8rem;">
+                Customer conversations are answered on +{{ channel_number }} and appear in the
+                <a href="/portal/crm">CRM inbox</a> where an agent can take over.
+            </p>
+        </div>
+    </section>
+    {% endif %}
+</main>
+
+<script src="{{ url_for('static', filename='js/portal.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Access Management | Brilliant Chemicals</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+</head>
+<body class="ps-body">
+
+{% include 'components/eds_portal_nav.html' %}
+
+<main class="ps-shell">
+    <header class="ps-hero">
+        <span class="ps-eyebrow"><i class="bi bi-shield-lock"></i> User Access Management</span>
+        <h1>Who can do what</h1>
+        <p>Add and remove employees, assign roles and approvers, and control leave day balances.</p>
+    </header>
+
+    <section class="ps-stats">
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-people-fill"></i> Employees</div>
+            <div class="ps-stat-value">{{ total_employees | default(0) }}</div>
+            <div class="ps-stat-note">With a company system account</div>
+        </div>
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-shield-check"></i> Roles</div>
+            <div class="ps-stat-value">{{ stat_roles | default(0) }}</div>
+            <div class="ps-stat-note">Administrators and ordinary users</div>
+        </div>
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-hourglass-split"></i> Pending leave</div>
+            <div class="ps-stat-value">{{ open_requests | default(0) }}</div>
+            <div class="ps-stat-note">Awaiting approval decisions</div>
+        </div>
+    </section>
+
+    <section class="ps-panel">
+        <div class="ps-panel-head">
+            <h3><i class="bi bi-person-badge"></i> Employee access</h3>
+            <div class="ps-panel-actions">
+                <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="openAddEmployee">
+                    <i class="bi bi-person-plus-fill"></i> Add employee
+                </button>
+                <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="openRemoveEmployee">
+                    <i class="bi bi-person-dash"></i> Remove employees
+                </button>
+            </div>
+        </div>
+        <div class="ps-table-wrap">
+            {% if table_employees_html %}
+                {{ table_employees_html | safe }}
+            {% else %}
+                <div class="ps-empty">
+                    <i class="bi bi-inbox"></i>
+                    <h4>No employees yet</h4>
+                    <p>Add the first employee to get started.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <h2 class="ps-section-title"><i class="bi bi-toggles"></i> Portal access</h2>
+
+    <section class="ps-panel">
+        <div class="ps-panel-head">
+            <h3><i class="bi bi-shield-check"></i> Who can open which portal</h3>
+            <div class="ps-panel-actions">
+                <span class="ps-chip"><i class="bi bi-info-circle"></i> Applies from the employee's next sign in</span>
+                <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="refreshAccessMatrix">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="ps-panel-body">
+            <div class="ps-access-legend">
+                <span><i class="bi bi-person-badge"></i> Administrators start with every portal enabled</span>
+                <span><i class="bi bi-person"></i> Other employees start with Leave Management only</span>
+                <span><i class="bi bi-lock"></i> You cannot remove your own access management permission</span>
+            </div>
+            <div class="ps-table-wrap" style="max-height:560px;">
+                <table class="ps-table" id="accessMatrixTable">
+                    <thead id="accessMatrixHead">
+                        <tr><th>Employee</th><th>Role</th><th>Department</th></tr>
+                    </thead>
+                    <tbody id="accessMatrixBody">
+                        <tr><td class="ps-muted" colspan="3">Loading portal access…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="accessAlert" class="ps-alert" style="display:none;">
+                <i class="bi bi-info-circle-fill"></i><span id="accessAlertText"></span>
+            </div>
+        </div>
+    </section>
+
+    <p class="ps-muted ps-mt" style="font-size:0.8rem;">
+        Bulk approver, balance and accumulator changes are available in the
+        <a href="/portal/leave">Leave Management workspace</a>.
+    </p>
+</main>
+
+<!-- ===== Add employee ===== -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus-fill"></i> Add employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addEmployeeForm">
+                <div class="modal-body">
+                    <div class="ps-grid-2">
+                        <div class="ps-field">
+                            <label for="addFirstname">First name</label>
+                            <input class="ps-input" type="text" id="addFirstname" required>
+                        </div>
+                        <div class="ps-field">
+                            <label for="addSurname">Surname</label>
+                            <input class="ps-input" type="text" id="addSurname" required>
+                        </div>
+                        <div class="ps-field">
+                            <label for="addWhatsapp">WhatsApp number (without leading zero)</label>
+                            <input class="ps-input" type="text" id="addWhatsapp" inputmode="numeric" required>
+                        </div>
+                        <div class="ps-field">
+                            <label for="addEmail">Email address</label>
+                            <input class="ps-input" type="email" id="addEmail" required>
+                        </div>
+                        <div class="ps-field">
+                            <label for="addRole">Role</label>
+                            <select class="ps-select" id="addRole" required>
+                                <option value="Ordinary User">Ordinary User</option>
+                                <option value="Administrator">Administrator</option>
+                            </select>
+                        </div>
+                        <div class="ps-field">
+                            <label for="addDepartment">Department</label>
+                            <select class="ps-select" id="addDepartment" required>
+                                <option value="" disabled selected>Select department</option>
+                                <option value="Human Resources and Administration">Human Resources and Administration</option>
+                                <option value="Finance and Accounting">Finance and Accounting</option>
+                                <option value="Sales and Marketing">Sales and Marketing</option>
+                                <option value="Sales and Distribution">Sales and Distribution</option>
+                                <option value="Workshop and Maintenance">Workshop and Maintenance</option>
+                                <option value="Operations and Production">Operations and Production</option>
+                                <option value="Procurement and Purchasing">Procurement and Purchasing</option>
+                                <option value="Customer Service and Support">Customer Service and Support</option>
+                                <option value="IT and Digital Infrastructure">IT and Digital Infrastructure</option>
+                                <option value="Risk Management">Risk Management</option>
+                                <option value="Legal and Compliance">Legal and Compliance</option>
+                                <option value="Health, Safety and Environment">Health, Safety and Environment</option>
+                                <option value="Research, Analytics and Reporting">Research, Analytics and Reporting</option>
+                            </select>
+                        </div>
+                        <div class="ps-field">
+                            <label for="addApprover">Leave approver</label>
+                            <select class="ps-select" id="addApprover" required>
+                                <option value="" disabled selected>Select approver</option>
+                                {% for employee in employees_list | default([]) %}
+                                <option value="{{ employee }}">{{ employee.split('--')[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="ps-field">
+                            <label for="addBalance">Current leave days balance</label>
+                            <input class="ps-input" type="number" step="0.5" id="addBalance" required>
+                        </div>
+                        <div class="ps-field">
+                            <label for="addAccumulation">Monthly accumulation</label>
+                            <input class="ps-input" type="number" step="0.5" id="addAccumulation" required>
+                        </div>
+                    </div>
+                    <div id="addEmployeeAlert" class="ps-alert" style="display:none;">
+                        <i class="bi bi-info-circle-fill"></i><span id="addEmployeeAlertText"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="ps-btn ps-btn-primary"><i class="bi bi-check2"></i> Add employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Remove employees ===== -->
+<div class="modal fade" id="removeEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-dash"></i> Remove employees</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="ps-muted" style="font-size:0.84rem;">
+                    Select the employees to remove from the company system. This cannot be undone.
+                </p>
+                <div class="ps-table-wrap" style="max-height:340px;">
+                    {% if table_rememployees_html %}
+                        {{ table_rememployees_html | safe }}
+                    {% else %}
+                        <p class="ps-muted">No employees available.</p>
+                    {% endif %}
+                </div>
+                <div id="removeEmployeeAlert" class="ps-alert" style="display:none;">
+                    <i class="bi bi-info-circle-fill"></i><span id="removeEmployeeAlertText"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="ps-btn ps-btn-primary" id="confirmRemoveEmployees">
+                    <i class="bi bi-trash3"></i> Remove selected
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Role ===== -->
+<div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-badge"></i> Change role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="roleCurrentId">
+                <div class="ps-field">
+                    <label for="roleSelect">Role</label>
+                    <select class="ps-select" id="roleSelect">
+                        <option value="Ordinary User">Ordinary User</option>
+                        <option value="Administrator">Administrator</option>
+                    </select>
+                </div>
+                <div id="roleAlert" class="ps-alert" style="display:none;">
+                    <i class="bi bi-info-circle-fill"></i><span id="roleAlertText"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="ps-btn ps-btn-primary" id="saveRole"><i class="bi bi-check2"></i> Save role</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Department ===== -->
+<div class="modal fade" id="departmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-diagram-3"></i> Change department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="departmentCurrentId">
+                <div class="ps-field">
+                    <label for="departmentSelect">Department</label>
+                    <select class="ps-select" id="departmentSelect">
+                        <option value="Human Resources and Administration">Human Resources and Administration</option>
+                        <option value="Finance and Accounting">Finance and Accounting</option>
+                        <option value="Sales and Marketing">Sales and Marketing</option>
+                        <option value="Sales and Distribution">Sales and Distribution</option>
+                        <option value="Workshop and Maintenance">Workshop and Maintenance</option>
+                        <option value="Operations and Production">Operations and Production</option>
+                        <option value="Procurement and Purchasing">Procurement and Purchasing</option>
+                        <option value="Customer Service and Support">Customer Service and Support</option>
+                        <option value="IT and Digital Infrastructure">IT and Digital Infrastructure</option>
+                        <option value="Risk Management">Risk Management</option>
+                        <option value="Legal and Compliance">Legal and Compliance</option>
+                        <option value="Health, Safety and Environment">Health, Safety and Environment</option>
+                        <option value="Research, Analytics and Reporting">Research, Analytics and Reporting</option>
+                    </select>
+                </div>
+                <div id="departmentAlert" class="ps-alert" style="display:none;">
+                    <i class="bi bi-info-circle-fill"></i><span id="departmentAlertText"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="ps-btn ps-btn-primary" id="saveDepartment"><i class="bi bi-check2"></i> Save department</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Approver ===== -->
+<div class="modal fade" id="approverModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-bounding-box"></i> Change leave approver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="approverCurrentId">
+                <div class="ps-field">
+                    <label for="approverSelect">Approver</label>
+                    <select class="ps-select" id="approverSelect">
+                        <option value="" disabled selected>Select approver</option>
+                        {% for employee in employees_list | default([]) %}
+                        <option value="{{ employee }}">{{ employee.split('--')[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="approverAlert" class="ps-alert" style="display:none;">
+                    <i class="bi bi-info-circle-fill"></i><span id="approverAlertText"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="ps-btn ps-btn-primary" id="saveApprover"><i class="bi bi-check2"></i> Save approver</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Balance ===== -->
+<div class="modal fade" id="balanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-123"></i> Edit leave days balance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="balanceCurrentId">
+                <div class="ps-field">
+                    <label for="balanceInput">Leave days balance</label>
+                    <input class="ps-input" type="number" step="0.5" id="balanceInput">
+                </div>
+                <div id="balanceAlert" class="ps-alert" style="display:none;">
+                    <i class="bi bi-info-circle-fill"></i><span id="balanceAlertText"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="ps-btn ps-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="ps-btn ps-btn-primary" id="saveBalance"><i class="bi bi-check2"></i> Save balance</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/portal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/user-access.js') }}"></script>
+</body>
+</html>

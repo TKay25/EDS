@@ -1,0 +1,64 @@
+<!-- ===== EDS Company System Navigation ===== -->
+{% set current = active_nav | default('') %}
+{% set allowed = nav_modules | default([]) %}
+<nav class="ps-nav">
+    <a class="ps-nav-brand" href="/company-system">
+        <span class="ps-nav-brand-mark">BC</span>
+        <span>
+            Brilliant Chemicals
+            <small>Company System</small>
+        </span>
+    </a>
+
+    <div class="ps-nav-links">
+        <a class="ps-nav-link {% if current == 'hub' %}is-active{% endif %}" href="/company-system">
+            <i class="bi bi-grid-1x2-fill"></i> Home
+        </a>
+        {% for module in allowed %}
+        <a class="ps-nav-link {% if current == module.key %}is-active{% endif %}" href="{{ module.url }}">
+            <i class="bi {{ module.icon }}"></i> {{ module.title }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="ps-nav-right">
+        <div class="ps-usermenu" id="psUserMenu">
+            <button class="ps-usermenu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                <span class="ps-nav-avatar">{{ user.initials | default('BC') }}</span>
+                <span class="ps-usermenu-text">
+                    <span class="ps-nav-user-name">{{ user.firstname }} {{ user.surname }}</span>
+                    <span class="ps-nav-user-role">{{ user.role }}</span>
+                </span>
+                <i class="bi bi-chevron-down ps-usermenu-caret"></i>
+            </button>
+
+            <div class="ps-usermenu-panel" role="menu">
+                <div class="ps-usermenu-head">
+                    <span class="ps-usermenu-head-avatar">{{ user.initials | default('BC') }}</span>
+                    <span>
+                        Signed in as
+                        <strong>{{ user.email or (user.firstname ~ ' ' ~ user.surname) }}</strong>
+                        <small>{{ user.role }}</small>
+                    </span>
+                </div>
+
+                <div class="ps-usermenu-label">Switch portal</div>
+                <a class="ps-usermenu-item {% if current == 'hub' %}is-current{% endif %}" role="menuitem"
+                   href="/company-system">
+                    <i class="bi bi-grid-1x2-fill"></i> Company home
+                </a>
+                {% for module in allowed %}
+                <a class="ps-usermenu-item {% if current == module.key %}is-current{% endif %}" role="menuitem"
+                   href="{{ module.url }}">
+                    <i class="bi {{ module.icon }}"></i> Switch to {{ module.title }}
+                </a>
+                {% endfor %}
+
+                <div class="ps-usermenu-divider"></div>
+                <a class="ps-usermenu-item is-danger" role="menuitem" href="/company-logout">
+                    <i class="bi bi-box-arrow-right"></i> Log out
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

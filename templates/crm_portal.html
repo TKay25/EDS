@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Portal | Brilliant Chemicals</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+</head>
+<body class="ps-body">
+
+{% include 'components/eds_portal_nav.html' %}
+
+<main class="ps-shell" id="crmInbox" data-filter="all">
+    <header class="ps-hero">
+        <span class="ps-eyebrow"><i class="bi bi-headset"></i> CRM Portal</span>
+        <h1>Customer conversations</h1>
+        <p>Every customer message on the Brilliant Chemicals WhatsApp channel, with one-click handover to a human agent.</p>
+    </header>
+
+    <section class="ps-banner">
+        <div class="ps-banner-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="ps-banner-text">
+            <h3><span data-stat="stat_unattended">{{ stat_unattended }}</span> unattended enquir{{ 'y' if stat_unattended == 1 else 'ies' }}</h3>
+            <p>These customers asked for a person, or need a human follow-up. Switch a conversation to human to reply directly.</p>
+        </div>
+        <div class="ps-banner-actions">
+            <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" data-crm-filter="unattended">
+                <i class="bi bi-funnel"></i> Show unattended
+            </button>
+            <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="all">
+                <i class="bi bi-collection"></i> All conversations
+            </button>
+        </div>
+    </section>
+
+    <section class="ps-stats">
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-chat-dots-fill"></i> Open conversations</div>
+            <div class="ps-stat-value" data-stat="stat_open_chats">{{ stat_open_chats }}</div>
+            <div class="ps-stat-note">Customer chats not yet resolved</div>
+        </div>
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-person-check-fill"></i> Agent live</div>
+            <div class="ps-stat-value" data-stat="stat_human_chats">{{ stat_human_chats }}</div>
+            <div class="ps-stat-note">Handled by a person right now</div>
+        </div>
+        <div class="ps-stat">
+            <div class="ps-stat-label"><i class="bi bi-telephone-inbound"></i> Channel</div>
+            <div class="ps-stat-value" style="font-size:1.1rem;">+{{ channel_number }}</div>
+            <div class="ps-stat-note">Brilliant Chemicals WhatsApp line</div>
+        </div>
+    </section>
+
+    <h2 class="ps-section-title"><i class="bi bi-whatsapp"></i> WhatsApp inbox</h2>
+
+    <section class="ps-inbox">
+        <div class="ps-panel">
+            <div class="ps-panel-head">
+                <h3><i class="bi bi-inbox-fill"></i> Conversations</h3>
+                <div class="ps-panel-actions">
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="all">All</button>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="escalated">Unattended</button>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="human">Agent live</button>
+                </div>
+            </div>
+            <div class="ps-chat-list" id="crmChatList">
+                {% if chats %}
+                    {% for chat in chats %}
+                    <div class="ps-chat-item" data-chat-id="{{ chat.id }}">
+                        <div class="ps-chat-avatar">{{ (chat.display_name or 'C')[:2] | upper }}</div>
+                        <div class="ps-chat-meta">
+                            <div class="ps-chat-name">
+                                {{ chat.display_name }}
+                                {% if chat.unread_count %}<span class="ps-badge">{{ chat.unread_count }}</span>{% endif %}
+                            </div>
+                            <div class="ps-chat-preview">{{ chat.last_message or 'No messages yet' }}</div>
+                            <div class="ps-chat-time">{{ chat.last_message_at }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="ps-empty">
+                        <i class="bi bi-chat-square-text"></i>
+                        <h4>No conversations yet</h4>
+                        <p>Customer messages on the company WhatsApp channel appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="ps-panel">
+            <div class="ps-thread">
+                <div class="ps-thread-head">
+                    <div class="ps-chat-avatar" id="crmChatAvatar"><i class="bi bi-person"></i></div>
+                    <div>
+                        <div class="ps-chat-name">
+                            <span id="crmChatName">Select a conversation</span>
+                            <span id="crmChatStatus"></span>
+                        </div>
+                        <div class="ps-chat-preview" id="crmChatNumber"></div>
+                        <div class="ps-chat-preview" id="crmChatReason" style="color:#B45309;"></div>
+                    </div>
+                    <div class="ps-panel-actions" id="crmChatActions"></div>
+                </div>
+
+                <div class="ps-thread-body" id="crmThread" style="display:none;"></div>
+
+                <div class="ps-thread-body" id="crmEmpty">
+                    <div class="ps-empty">
+                        <i class="bi bi-chat-dots"></i>
+                        <h4>No conversation selected</h4>
+                        <p>Choose a chat on the left to read the history and take over.</p>
+                    </div>
+                </div>
+
+                <form class="ps-composer" id="crmComposer" style="display:none;">
+                    <input class="ps-input" type="text" id="crmReplyInput"
+                           placeholder="Type your reply to the customer…" autocomplete="off">
+                    <button class="ps-btn ps-btn-primary" type="submit"><i class="bi bi-send-fill"></i> Send</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/portal.js') }}"></script>
+</body>
+</html>

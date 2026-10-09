@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Sign In | Brilliant Chemicals</title>
+    <meta name="description" content="Sign in to the Brilliant Chemicals company system — leave management, HR and payroll, CRM and user access.">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/eds blue.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+</head>
+<body class="ps-body">
+
+<div class="ps-auth">
+    <aside class="ps-auth-aside">
+        <div class="ps-auth-logo">
+            <span class="ps-auth-logo-mark">BC</span>
+            <span>
+                Brilliant Chemicals (Pvt) Ltd
+                <small>Company System</small>
+            </span>
+        </div>
+
+        <div class="ps-auth-copy">
+            <h1>One place to run the company.</h1>
+            <p>Leave management, HR and payroll, customer enquiries and user access — secured for Brilliant Chemicals staff only.</p>
+            <ul class="ps-auth-points">
+                <li><i class="bi bi-calendar2-check"></i> Leave applications, approvals and balances</li>
+                <li><i class="bi bi-wallet2"></i> HR records, payroll and currency configuration</li>
+                <li><i class="bi bi-headset"></i> CRM inbox for WhatsApp customer enquiries</li>
+                <li><i class="bi bi-shield-lock"></i> Roles, approvers and access control</li>
+            </ul>
+        </div>
+
+        <p class="ps-auth-foot">&copy; {{ now_year | default('2026') }} Brilliant Chemicals (Pvt) Ltd. Operated on the Echelon Digital Solutions platform.</p>
+    </aside>
+
+    <main class="ps-auth-main">
+        <div class="ps-auth-card">
+            <span class="ps-auth-badge"><i class="bi bi-shield-check"></i> Secure company access</span>
+            <h2>Sign in to the company system</h2>
+            <p>Use the email address and password registered on the Brilliant Chemicals system. You will only see the portals your company administrator has enabled for you.</p>
+
+            <div id="companyLoginAlert" class="ps-alert is-error" style="display:none;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span id="companyLoginAlertText"></span>
+            </div>
+
+            <form id="companyLoginForm" autocomplete="on" novalidate>
+                <div class="ps-field">
+                    <label for="companyEmail">Work email address</label>
+                    <input class="ps-input" type="email" id="companyEmail" name="email"
+                           placeholder="you@brilliantchemicals.co.zw" required>
+                </div>
+
+                <div class="ps-field">
+                    <label for="companyPassword">Password</label>
+                    <input class="ps-input" type="password" id="companyPassword" name="password"
+                           placeholder="Enter your password" required>
+                </div>
+
+                <button class="ps-btn ps-btn-primary ps-btn-block" type="submit" id="companyLoginSubmit">
+                    <span class="ps-spinner"></span>
+                    <i class="bi bi-box-arrow-in-right"></i> Sign in
+                </button>
+            </form>
+
+            <a class="ps-auth-back" href="/"><i class="bi bi-arrow-left"></i> Back to the Echelon Digital Solutions website</a>
+        </div>
+    </main>
+</div>
+
+<script>
+    var form = document.getElementById('companyLoginForm');
+    var alertBox = document.getElementById('companyLoginAlert');
+    var alertText = document.getElementById('companyLoginAlertText');
+    var submitBtn = document.getElementById('companyLoginSubmit');
+
+    function showError(message) {
+        alertText.textContent = message;
+        alertBox.style.display = 'flex';
+    }
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        alertBox.style.display = 'none';
+        submitBtn.classList.add('is-loading');
+        submitBtn.disabled = true;
+
+        fetch('/company-login', {
+            method: 'POST',
+            body: new FormData(form)
+        })
+            .then(function (response) {
+                return response.json().then(function (payload) {
+                    return { ok: response.ok, payload: payload };
+                });
+            })
+            .then(function (result) {
+                if (result.payload && result.payload.success) {
+                    window.location.href = result.payload.redirect;
+                    return;
+                }
+                showError((result.payload && result.payload.message) || 'Unable to sign in. Please try again.');
+            })
+            .catch(function () {
+                showError('Unable to reach the server. Please check your connection and try again.');
+            })
+            .finally(function () {
+                submitBtn.classList.remove('is-loading');
+                submitBtn.disabled = false;
+            });
+    });
+</script>
+</body>
+</html>
