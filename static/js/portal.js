@@ -33,6 +33,7 @@
     var searchEl = document.getElementById('crmChatSearch');
     var searchClearEl = document.getElementById('crmChatSearchClear');
     var searchHintEl = document.getElementById('crmSearchHint');
+    var filterSelect = document.getElementById('crmFilterSelect');
 
     var activeId = null;
     var activeStatus = 'bot';
@@ -237,15 +238,21 @@
       });
     }
 
-    Array.prototype.forEach.call(document.querySelectorAll('[data-crm-filter]'), function (button) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-crm-preset]'), function (button) {
       button.addEventListener('click', function () {
-        Array.prototype.forEach.call(document.querySelectorAll('[data-crm-filter]'), function (other) {
-          other.classList.toggle('is-active', other === button);
-        });
-        root.setAttribute('data-filter', button.getAttribute('data-crm-filter'));
+        var value = button.getAttribute('data-crm-preset');
+        if (filterSelect) filterSelect.value = value;
+        root.setAttribute('data-filter', value);
         refresh(true);
       });
     });
+
+    if (filterSelect) {
+      filterSelect.addEventListener('change', function () {
+        root.setAttribute('data-filter', filterSelect.value);
+        refresh(true);
+      });
+    }
 
     if (searchEl) {
       // Debounced so typing does not fire a request per keystroke.

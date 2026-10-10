@@ -1,5 +1,5 @@
-/* ==========================================================================
-   CRM portal — tabs, sales analytics, catalogue and chat thread
+﻿/* ==========================================================================
+   CRM portal â€” tabs, sales analytics, catalogue and chat thread
    Layered on top of portal.css so shared tokens and components are reused.
    ========================================================================== */
 
@@ -26,14 +26,14 @@
   background: transparent;
   color: var(--ps-text-soft);
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.crm-tab i { font-size: 0.95rem; }
+.crm-tab i { font-size: 0.88rem; }
 .crm-tab:hover { color: var(--ps-text); background: var(--ps-surface-alt); }
 
 .crm-tab.is-active {
@@ -52,7 +52,7 @@
   border-radius: 999px;
   background: var(--ps-accent-soft);
   color: var(--ps-accent);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -67,31 +67,74 @@
 }
 
 /* ------------------------------------------------------- inbox proportions
-   The shared .ps-inbox grid gives the conversation list a fixed 280–360px and
+   The shared .ps-inbox grid gives the conversation list a fixed 280â€“360px and
    the thread the rest. In the CRM that leaves the thread with a lot of dead
    space on a wide screen, so the split leans a little more towards the list
    and the two panels are matched in height. */
+/* ------------------------------------------------------- inbox proportions
+   The page should not scroll: the inbox fills the height left under the nav,
+   the hero and the tabs, and the two panels scroll inside it. The grid needs an
+   explicit height so its children can resolve flex heights, and the list and
+   the thread each own their own scrollbar. */
 .crm-view[data-crm-view="inbox"] .ps-inbox {
   grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
   gap: 18px;
   align-items: stretch;
+  /* Measured chrome above the inbox is ~595px (nav, hero, tabs, banner, stats,
+     section title and their margins). The subtraction also covers the shell's
+     bottom padding, which keeps the whole inbox on screen without page scroll.
+     The floor is deliberately low so the calculation wins on short viewports. */
+  height: clamp(260px, calc(100vh - 700px), 720px);
+  min-height: 260px;
 }
 
-.crm-view[data-crm-view="inbox"] .ps-panel { display: flex; flex-direction: column; }
+.crm-view[data-crm-view="inbox"] .ps-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
 
-/* Let the thread follow the list's height instead of a fixed 640px, and cap
-   it so a very long list cannot push the composer off the screen. */
+/* The thread fills its panel; the message body inside it scrolls. */
 .crm-view[data-crm-view="inbox"] .ps-thread {
-  height: clamp(520px, calc(100vh - 260px), 820px);
+  height: 100%;
+  min-height: 0;
 }
 
-.crm-view[data-crm-view="inbox"] .ps-chat-list { flex: 1; }
+/* The list keeps its header, search box and hint pinned, and scrolls the rows. */
+.crm-view[data-crm-view="inbox"] .ps-chat-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 
-/* Give the "no conversation selected" state real presence rather than one
-   small label floating in a large empty panel. */
-.crm-view[data-crm-view="inbox"] .ps-thread-body .ps-empty { padding: 96px 24px; }
+.crm-view[data-crm-view="inbox"] .ps-thread-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Give the empty thread state presence in the taller panel. */
+.crm-view[data-crm-view="inbox"] .ps-thread-body .ps-empty { padding: 72px 24px; }
 
 .crm-empty-actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+
+/* ----------------------------------------------------- other tab heights
+   Analytics and catalogue content can be long. Cap those panel bodies and let
+   them scroll internally for the same reason as the inbox: the page keeps a
+   stable frame instead of becoming one very long scroll. */
+.crm-view[data-crm-view="analytics"] #crmRecentOrders,
+.crm-view[data-crm-view="analytics"] .crm-table-wrap,
+.crm-view[data-crm-view="products"] .crm-product-grid {
+  max-height: min(62vh, 640px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.crm-view[data-crm-view="products"] .crm-product-grid { padding-top: 4px; }
 
 /* -------------------------------------------------------- inbox search box */
 .crm-search {
@@ -104,7 +147,7 @@
 .crm-search-icon {
   position: absolute;
   left: 13px;
-  font-size: 0.86rem;
+  font-size: 0.76rem;
   color: var(--ps-text-soft);
   pointer-events: none;
 }
@@ -113,7 +156,7 @@
   width: 100%;
   padding: 10px 38px 10px 36px;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: var(--ps-text);
   background: var(--ps-surface-alt);
   border: 1px solid var(--ps-line);
@@ -145,7 +188,7 @@
   border-radius: 50%;
   background: transparent;
   color: var(--ps-text-soft);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   cursor: pointer;
 }
 
@@ -154,7 +197,7 @@
 
 .crm-search-hint {
   margin: 0 16px 10px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--ps-text-soft);
 }
@@ -171,7 +214,7 @@
 .crm-filters .ps-input {
   padding: 9px 34px 9px 12px;
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: 0.79rem;
   color: var(--ps-text);
   background-color: var(--ps-surface);
   border: 1px solid var(--ps-line);
@@ -212,7 +255,7 @@
 .ps-bubble small { font-weight: 500; letter-spacing: 0.02em; }
 
 .crm-composer-note {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #B45309;
   min-height: 0;
@@ -234,7 +277,7 @@
 .crm-field { display: flex; flex-direction: column; gap: 5px; min-width: 150px; }
 
 .crm-field > span {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -263,7 +306,7 @@ select.ps-input {
   margin-bottom: 22px;
 }
 
-.crm-empty-note { margin: 0; font-size: 0.82rem; }
+.crm-empty-note { margin: 0; font-size: 0.78rem; }
 
 .crm-top-items { display: flex; flex-direction: column; gap: 12px; }
 
@@ -274,11 +317,11 @@ select.ps-input {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 
 .crm-top-head strong { color: var(--ps-text); font-weight: 600; }
-.crm-top-head span { color: var(--ps-text-soft); font-size: 0.74rem; font-weight: 600; }
+.crm-top-head span { color: var(--ps-text-soft); font-size: 0.76rem; font-weight: 600; }
 
 .crm-bar {
   height: 8px;
@@ -310,14 +353,14 @@ select.ps-input {
 
 .crm-order-row-main strong {
   display: block;
-  font-size: 0.84rem;
+  font-size: 0.79rem;
   color: var(--ps-text);
   font-weight: 600;
 }
 
 .crm-order-row-main small {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--ps-text-soft);
   margin-top: 2px;
 }
@@ -325,12 +368,12 @@ select.ps-input {
 /* ---------------------------------------------------------------- tables */
 .crm-table-wrap { overflow-x: auto; }
 
-.crm-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.crm-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
 
 .crm-table th {
   text-align: left;
   padding: 12px 18px;
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -354,7 +397,7 @@ select.ps-input {
   text-align: center;
   padding: 34px 18px;
   color: var(--ps-text-soft);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 
 .crm-ref {
@@ -364,7 +407,7 @@ select.ps-input {
   color: var(--ps-text);
 }
 
-.crm-sub { display: block; font-size: 0.72rem; color: var(--ps-text-soft); margin-top: 2px; }
+.crm-sub { display: block; font-size: 0.75rem; color: var(--ps-text-soft); margin-top: 2px; }
 
 .crm-pill {
   display: inline-flex;
@@ -372,7 +415,7 @@ select.ps-input {
   gap: 5px;
   padding: 3px 9px;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -392,7 +435,7 @@ select.ps-input {
   border-radius: 999px;
   padding: 4px 11px;
   font-family: inherit;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.16s ease;
@@ -402,7 +445,7 @@ select.ps-input {
 .crm-mini-btn.is-active { background: var(--ps-accent-soft); color: var(--ps-accent); border-color: rgba(220, 20, 60, 0.3); }
 
 /* ------------------------------------------------------------- catalogue */
-.crm-hint { margin: 0; font-size: 0.84rem; line-height: 1.55; }
+.crm-hint { margin: 0; font-size: 0.79rem; line-height: 1.55; }
 
 .crm-product-grid {
   display: grid;
@@ -438,13 +481,13 @@ select.ps-input {
 
 .crm-product-base {
   margin-top: 5px;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ps-text-soft);
 }
 
-.crm-product-summary { resize: vertical; font-size: 0.82rem; line-height: 1.5; }
+.crm-product-summary { resize: vertical; font-size: 0.78rem; line-height: 1.5; }
 
 .crm-price-grid {
   display: grid;
@@ -455,13 +498,13 @@ select.ps-input {
 .crm-price { display: flex; flex-direction: column; gap: 5px; }
 
 .crm-price > span {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--ps-text-soft);
   letter-spacing: 0.02em;
 }
 
-.crm-price .ps-input { padding: 8px 10px; font-size: 0.82rem; }
+.crm-price .ps-input { padding: 8px 10px; font-size: 0.78rem; }
 
 .crm-product-foot {
   display: flex;
@@ -471,7 +514,7 @@ select.ps-input {
   padding-top: 4px;
 }
 
-.crm-save-note { font-size: 0.74rem; font-weight: 600; color: var(--ps-text-soft); }
+.crm-save-note { font-size: 0.77rem; font-weight: 600; color: var(--ps-text-soft); }
 .crm-save-note.is-ok { color: #047857; }
 .crm-save-note.is-error { color: #B91C1C; }
 
@@ -531,7 +574,7 @@ select.ps-input {
 }
 
 .crm-modal-head h2 i { color: var(--ps-accent-light); }
-.crm-modal-head p { margin: 0; font-size: 0.8rem; color: rgba(255, 255, 255, 0.68); }
+.crm-modal-head p { margin: 0; font-size: 0.76rem; color: rgba(255, 255, 255, 0.68); }
 
 .crm-modal-close {
   border: 0;
@@ -595,7 +638,7 @@ select.ps-input {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   background: var(--ps-surface-alt);
   color: var(--ps-text-soft);
 }
@@ -620,7 +663,7 @@ select.ps-input {
 
 .crm-log-summary {
   margin: 3px 0 0;
-  font-size: 0.84rem;
+  font-size: 0.79rem;
   color: var(--ps-text);
   line-height: 1.5;
 }
@@ -630,11 +673,11 @@ select.ps-input {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--ps-text-soft);
 }
 
-.crm-log-when { margin-left: auto; font-size: 0.72rem; color: var(--ps-text-soft); white-space: nowrap; }
+.crm-log-when { margin-left: auto; font-size: 0.75rem; color: var(--ps-text-soft); white-space: nowrap; }
 
 .crm-log-quote {
   margin-top: 6px;
@@ -642,7 +685,7 @@ select.ps-input {
   border-left: 3px solid var(--ps-line);
   background: var(--ps-surface-alt);
   border-radius: 0 6px 6px 0;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--ps-text-soft);
   white-space: pre-wrap;
   word-break: break-word;
@@ -660,18 +703,134 @@ select.ps-input {
   .crm-modal-backdrop, .crm-modal { animation: none; }
 }
 
-/* -------------------------------------------------------------- responsive */
-@media (max-width: 1024px) {
+/* --------------------------------------------------------- type floors
+   The shared portal styles run slightly small for a dense inbox. Nudge the
+   components the CRM leans on so nothing sits below ~12px, without touching
+   the other portals that reuse the same classes. */
+.crm-view[data-crm-view="inbox"] .ps-chat-preview { font-size: 0.75rem; }
+.crm-view[data-crm-view="inbox"] .ps-chat-time { font-size: 0.75rem; }
+
+#crmInbox .ps-stat-label { font-size: 0.75rem; }
+#crmInbox .ps-stat-note { font-size: 0.75rem; }
+
+/* ------------------------------------------------------ filter dropdown */
+.crm-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crm-select-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ps-text-soft);
+}
+
+select.crm-select {
+  width: auto;
+  min-width: 168px;
+  padding: 7px 32px 7px 11px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ps-text);
+  background-color: var(--ps-surface);
+  border: 1px solid var(--ps-line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+select.crm-select:hover { border-color: rgba(220, 20, 60, 0.3); }
+
+select.crm-select:focus {
+  outline: none;
+  border-color: rgba(220, 20, 60, 0.42);
+  box-shadow: 0 0 0 3px var(--ps-accent-soft);
+}
+
+/* -------------------------------------------------------------- responsive
+   The portal is used on phones in the field as much as on desktop, so the
+   layout collapses to a single column with a usable tap target size. */
+@media (max-width: 900px) {
+  .crm-tabs {
+    border-radius: var(--ps-radius-sm);
+    padding: 5px;
+    gap: 4px;
+  }
+
+  .crm-tab {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 0.76rem;
+  }
+
+  .crm-tab-action { margin-left: 0; }
+
+  /* One column: list above thread. The two panels cannot both be fixed height
+     on a phone without forcing a page scroll, so the list keeps a bounded
+     scroll area and the thread flows naturally below it. */
+  .crm-view[data-crm-view="inbox"] .ps-inbox {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .crm-view[data-crm-view="inbox"] .ps-panel {
+    overflow: visible;
+  }
+
+  .crm-view[data-crm-view="inbox"] .ps-thread {
+    height: auto;
+    min-height: 340px;
+  }
+
+  .crm-view[data-crm-view="inbox"] .ps-thread-body {
+    max-height: 56vh;
+  }
+
+  .crm-view[data-crm-view="inbox"] .ps-chat-list {
+    flex: 0 0 auto;
+    max-height: min(38vh, 300px);
+  }
+
+  .crm-filters .crm-field { flex: 1 1 150px; min-width: 0; }
+
+  .crm-modal-filters .crm-field { flex: 1 1 140px; }
+
+  .crm-product-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+  .crm-log-when { margin-left: 0; }
+
   .crm-grid-2 { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 620px) {
+  .crm-select-wrap { width: 100%; }
+  select.crm-select { flex: 1; min-width: 0; }
+
+  .crm-tab { flex: 1 1 100%; justify-content: flex-start; }
+
   .crm-tabs { border-radius: var(--ps-radius-sm); }
-  .crm-tab { padding: 8px 13px; font-size: 0.78rem; }
-  .crm-filters { margin-left: 0; width: 100%; }
-  .crm-field { flex: 1 1 130px; min-width: 0; }
-  .crm-product-grid { grid-template-columns: 1fr; padding: 0 16px 16px; }
+
+  .crm-filters { gap: 10px; }
+  .crm-filters .crm-field { flex: 1 1 100%; }
+
+  .crm-product-grid { grid-template-columns: 1fr; padding: 0 14px 14px; }
+
+  .crm-modal { border-radius: 0; }
+  .crm-modal-head { padding: 16px; }
+  .crm-modal-head h2 { font-size: 0.88rem; }
+  .crm-date-range { flex-direction: column; gap: 10px; }
+  .crm-date-range .crm-field { min-width: 0; }
+
+  .crm-log-row { gap: 10px; }
+  .crm-log-icon { width: 32px; height: 32px; font-size: 0.8rem; }
+  .crm-log-summary { font-size: 0.79rem; }
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   .crm-view.is-active { animation: none; }

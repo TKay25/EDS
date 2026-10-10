@@ -23,9 +23,24 @@
         .eds-hero-carousel .owl-dot span { width: 12px; height: 12px; margin: 0 6px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-block; transition: all var(--eds-transition-normal); }
         .eds-hero-carousel .owl-dot.active span { background: var(--eds-accent); width: 30px; border-radius: 6px; box-shadow: var(--eds-shadow-accent); }
         .eds-hero-carousel .owl-nav { display: none; }
-        .hero-slide { padding: 160px 0 100px; min-height: 72vh; display: flex; align-items: center; }
-        .hero-slide h1 { font-size: clamp(2rem, 3.2vw + 1rem, 3.4rem); }
-        @media (max-width: 768px) { .hero-slide h1 { font-size: 2rem; } .hero-slide { padding: 130px 0 60px; } }
+        .hero-slide { padding: 140px 0 84px; min-height: 68vh; display: flex; align-items: center; }
+        .hero-slide h1 { font-size: clamp(1.65rem, 2.2vw + 0.75rem, 2.55rem); }
+        @media (max-width: 768px) { .hero-slide h1 { font-size: 1.6rem; } .hero-slide { padding: 116px 0 52px; } }
+
+        /* ===== TYPOGRAPHY SCALE (landing page only) =====
+           The landing page reads better with slightly tighter type than the
+           shared app scale. Scoped here so the portals are unaffected. */
+        body { font-size: 0.95rem; }
+        .eds-hero p, .eds-hero .lead { font-size: 0.98rem; line-height: 1.65; }
+        .eds-features h2, .eds-features-dark h2, .eds-cta h2 { font-size: 1.45rem; }
+        .eds-features p, .eds-features-dark p { font-size: 0.92rem; }
+        .eds-feature-card h4, .eds-feature-card-dark h4 { font-size: 1rem; }
+        .eds-feature-card p, .eds-feature-card-dark p { font-size: 0.86rem; line-height: 1.6; }
+        .eds-about .lead, .about-text p { font-size: 0.92rem; }
+        .solution-tab-content p { font-size: 0.9rem; }
+        .eds-landing-footer { font-size: 0.88rem; }
+        .eds-landing-footer h5, .eds-landing-footer h6 { font-size: 0.95rem; }
+        .eds-section-eyebrow, .eds-eyebrow { font-size: 0.72rem; }
 
         /* Hero background image + overlay */
         .eds-hero-overlay {
@@ -115,20 +130,21 @@
           -webkit-backdrop-filter: blur(12px);
           backdrop-filter: blur(12px);
           border-bottom: 1px solid rgba(13,27,42,0.06);
-          padding: 14px 0;
+          padding: 10px 0;
           transition: padding var(--eds-transition-normal), box-shadow var(--eds-transition-normal), background var(--eds-transition-normal);
         }
         .eds-navbar.scrolled {
-          padding: 8px 0;
+          padding: 6px 0;
           background: rgba(255,255,255,0.97) !important;
           box-shadow: 0 6px 24px rgba(13,27,42,0.08);
         }
-        .eds-nav { gap: 4px; align-items: center; }
+        .eds-nav { gap: 2px; align-items: center; }
+        .eds-navbar .navbar-brand { font-size: 0.95rem; }
         .eds-nav .nav-link.eds-nav-link {
           font-weight: 600;
-          font-size: 0.9rem;
+          font-size: 0.83rem;
           color: var(--eds-primary);
-          padding: 8px 16px;
+          padding: 7px 12px;
           border-radius: var(--eds-radius-md);
           transition: all var(--eds-transition-fast);
         }
@@ -289,6 +305,27 @@
           overflow: hidden;
           isolation: isolate;
         }
+
+        /* Landing buttons: trimmed down from the original 14px/32px so the hero
+           calls to action sit in proportion with the reduced heading size. */
+        .eds-hero-btn-primary,
+        .eds-hero-btn-secondary {
+          padding: 10px 24px;
+          font-size: 0.83rem;
+          gap: 7px;
+          line-height: 1.35;
+        }
+
+        .eds-hero-btn-primary i,
+        .eds-hero-btn-secondary i { font-size: 0.9rem; }
+
+        .eds-hero-badge {
+          padding: 5px 13px;
+          font-size: 0.7rem;
+        }
+
+        .eds-cta .eds-hero-btn-primary,
+        .eds-cta .eds-hero-btn-secondary { padding: 10px 24px; font-size: 0.83rem; }
         .eds-hero-btn-primary::after, .eds-btn-primary::after {
           content: '';
           position: absolute;
