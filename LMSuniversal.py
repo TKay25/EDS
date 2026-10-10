@@ -20927,9 +20927,25 @@ def paynow_configured():
     return bool(PAYNOW_INTEGRATION_ID and PAYNOW_INTEGRATION_KEY)
 
 
+def _shop_price_book():
+    """Selling prices saved in the CRM portal, keyed product|pack size.
+
+    Reads the catalogue cache rather than the database so a price edit takes
+    effect for the very next customer message without an extra query.
+    """
+    return _shop_catalog()["prices"]
+
+
 def shop_price(item):
-    """Price for one cart line, or None when the business has not set one."""
-    value = SHOP_PRICES.get(f"{item.get('id')}|{item.get('size')}")
+    """Price for one cart line, or None when the business has not set one.
+
+    A price edited in the CRM portal beats the SHOP_PRICES environment
+    variable, so the business can reprice without a redeploy.
+    """
+    key = f"{item.get('id')}|{item.get('size')}"
+    value = _shop_price_book().get(key)
+    if value is None:
+        value = SHOP_PRICES.get(key)
     if value is None:
         return None
     try:
@@ -21059,6 +21075,34 @@ def ensure_shop_tables():
                 payload TEXT,
                 created_at TIMESTAMP DEFAULT NOW()
             );
+        """)
+        # Catalogue overrides edited from the CRM portal. Rows are sparse: a
+        # product with no row keeps the name and summary shipped in code.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_products (
+                product_id VARCHAR(80) PRIMARY KEY,
+                display_name VARCHAR(200),
+                summary TEXT,
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        # Selling prices per pack size, editable from the CRM portal. These win
+        # over the SHOP_PRICES environment variable.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_product_prices (
+                product_id VARCHAR(80),
+                pack_size VARCHAR(100),
+                price NUMERIC(12, 2),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                PRIMARY KEY (product_id, pack_size)
+            );
+        """)
+        cursor.execute("""
+            ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS delivery_method VARCHAR(24)
+            DEFAULT 'delivery';
+        """)
+        cursor.execute("""
+            ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS fulfilled_at TIMESTAMP;
         """)
         # Bring installs created before these columns existed up to date.
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS wa_number VARCHAR(32);")
@@ -21614,6 +21658,48 @@ def _shop_language_options():
 SHOP_LABEL_OVERRIDES = {
     "Toilet Cleaner & Sanitizer": "Toilet Cleaner",
 }
+_shop_catalog_cache = {"loaded": False, "names": {}, "summaries": {}, "prices": {}}
+
+
+def _shop_catalog():
+    """Catalogue loaded from the CRM portal, refreshed on every real turn."""
+    if not _shop_catalog_cache["loaded"]:
+        shop_refresh_catalog()
+    return _shop_catalog_cache
+
+
+def shop_refresh_catalog():
+    """Reload product names, summaries and prices edited in the CRM portal."""
+    global _shop_catalog_cache
+    names, summaries, prices = {}, {}, {}
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT product_id, display_name, summary FROM shop_products")
+            for row in cursor.fetchall():
+                if row[1]:
+                    names[row[0]] = str(row[1]).strip()
+                if row[2]:
+                    summaries[row[0]] = str(row[2]).strip()
+            cursor.execute("SELECT product_id, pack_size, price FROM shop_product_prices")
+            for row in cursor.fetchall():
+                if row[2] is not None:
+                    prices[f"{row[0]}|{row[1]}"] = float(row[2])
+    except Exception as e:
+        print(f"catalog load error: {e}")
+    _shop_catalog_cache = {"loaded": True, "names": names, "summaries": summaries,
+                           "prices": prices}
+    return _shop_catalog_cache
+
+
+def _shop_product(category_index):
+    """The catalogue product at a position, with CRM overrides applied."""
+    product = dict(BRILLIANT_PRODUCTS[category_index])
+    product["base_name"] = product["name"]
+    catalog = _shop_catalog()
+    product["name"] = catalog["names"].get(product["id"]) or product["name"]
+    product["summary"] = catalog["summaries"].get(product["id"]) or product["summary"]
+    return product
 
 
 def _shop_short_name(name):
@@ -21644,8 +21730,8 @@ def shop_greeting(cart=None, staff=False):
 
 
 def _shop_category_list():
-    options = [(f"cat:{index}", _shop_short_name(product["name"]))
-               for index, product in enumerate(BRILLIANT_PRODUCTS)]
+    options = [(f"cat:{index}", _shop_short_name(_shop_product(index)["name"]))
+               for index in range(len(BRILLIANT_PRODUCTS))]
     return _shop_options(
         f"🛍️ *Browse Products*\n{BRAND_NAME} — household, cleaning and personal care.\n\n"
         "Select a category to browse:",
@@ -21654,7 +21740,7 @@ def _shop_category_list():
 
 
 def _shop_product_list(category_index):
-    product = BRILLIANT_PRODUCTS[category_index]
+    product = _shop_product(category_index)
     return _shop_options(
         f"🧴 *{product['name']}*\n\n{product['summary']}\n\n"
         f"Available pack sizes: {', '.join(product['sizes'])}",
@@ -21663,6 +21749,7 @@ def _shop_product_list(category_index):
 
 
 def _shop_size_list(product, category_index):
+    product = _shop_product(category_index)
     return _shop_options(
         f"📦 *{product['name']}*\n\nWhich pack size would you like?",
         [(f"size:{index}", size) for index, size in enumerate(product["sizes"])],
@@ -21716,7 +21803,8 @@ def _shop_search_results(cart, query):
             f"😕 I could not find anything for “{query}”.\n\nTry another keyword, or browse the full range."),
             _shop_options("You can also:", [("shop", "Browse all categories")])]
         return "search", {}, messages
-    options = [(f"prod:{BRILLIANT_PRODUCTS.index(product)}", _shop_short_name(product["name"]))
+    options = [(f"prod:{BRILLIANT_PRODUCTS.index(product)}", _shop_short_name(_shop_product(
+        BRILLIANT_PRODUCTS.index(product))["name"]))
                for product in matches]
     messages = [_shop_options(
         f"🔎 *Search results for “{query}”* — {len(matches)} product"
@@ -21813,7 +21901,7 @@ def _shop_render(step, ctx, cart, customer=None, staff=False):
         return [_shop_size_list(BRILLIANT_PRODUCTS[index], index)]
     if step == "qty":
         index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
-        product = BRILLIANT_PRODUCTS[index]
+        product = _shop_product(index)
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
         return [_shop_text(f"📦 *{product['name']}* — {size}\n\nHow many units would you like?")]
     if step == "search":
@@ -22056,7 +22144,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "size":
         product_index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
-        product = BRILLIANT_PRODUCTS[product_index]
+        product = _shop_product(product_index)
         chosen = index_of(command, len(product["sizes"]), "size")
         if chosen is None:
             return result("size", [_shop_size_list(product, product_index)])
@@ -22066,7 +22154,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "qty":
         product_index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
-        product = BRILLIANT_PRODUCTS[product_index]
+        product = _shop_product(product_index)
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
         if not command.isdigit() or int(command) <= 0:
             return result("qty", [_shop_text("Please reply with the number of units you need, for example *10*.")])
@@ -22580,7 +22668,11 @@ _CUSTOMER_HUMAN_KEYWORDS = (
 
 
 def crm_chat_is_muted(wa_number):
-    """True when the assistant should stay silent for this conversation."""
+    """True when the assistant must stay silent for this conversation.
+
+    Escalated chats and chats taken over by a human agent are both muted: the
+    bot never talks over a person.
+    """
     try:
         ensure_crm_tables()
         with get_db() as (cursor, connection):
@@ -23156,7 +23248,6 @@ def portal_user_access():
 
 
 @app.route('/portal/crm')
-def crm_portal_placeholder_removed():
 def portal_crm():
     user, denied = company_system_guard('crm')
     if denied:
@@ -23166,9 +23257,21 @@ def portal_crm():
     except Exception as e:
         print(f"CRM data error: {e}")
         chats = []
+    try:
+        orders = orders_overview('today', 'all')
+    except Exception as e:
+        print(f"CRM order error: {e}")
+        orders = []
+    try:
+        catalog = crm_catalog()
+    except Exception as e:
+        print(f"CRM catalogue error: {e}")
+        catalog = []
     return render_template('crm_portal.html', user=user, active_nav='crm',
                            nav_modules=user_modules(user),
-                           chats=chats, channel_number=company_system_channel_label(),
+                           chats=chats, orders=orders,
+                           catalog=catalog,
+                           channel_number=company_system_channel_label(),
                            **company_system_stats())
 
 
@@ -23233,25 +23336,330 @@ def crm_summary():
                     'stats': company_system_stats()})
 
 
+# --------------------------------------------------------------- order analytics
+ORDER_PERIODS = {
+    # key: (label, interval used to bound created_at)
+    "today": ("Today", "1 day"),
+    "yesterday": ("Yesterday", "2 days"),
+    "this_week": ("This week", "7 days"),
+    "last_week": ("Last week", "14 days"),
+    "this_month": ("This month", "31 days"),
+    "last_month": ("Last month", "62 days"),
+    "all": ("All time", None),
+}
+ORDER_PERIOD_WHERE = {
+    "today": "created_at::date = CURRENT_DATE",
+    "yesterday": "created_at::date = CURRENT_DATE - INTERVAL '1 day'",
+    "this_week": "created_at >= date_trunc('week', CURRENT_DATE)",
+    "last_week": ("created_at >= date_trunc('week', CURRENT_DATE) - INTERVAL '7 days' "
+                  "AND created_at < date_trunc('week', CURRENT_DATE)"),
+    "this_month": "created_at >= date_trunc('month', CURRENT_DATE)",
+    "last_month": ("created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '1 month' "
+                   "AND created_at < date_trunc('month', CURRENT_DATE)"),
+}
+PAYMENT_FILTERS = {
+    "all": "1 = 1",
+    "paid": "payment_status = 'paid'",
+    "unpaid": "COALESCE(payment_status, 'unpaid') <> 'paid'",
+}
+FULFILMENT_FILTERS = {
+    "all": "1 = 1",
+    "delivery": "COALESCE(delivery_method, 'delivery') = 'delivery'",
+    "collection": "delivery_method = 'collection'",
+    "pending": "fulfilled_at IS NULL AND status <> 'closed'",
+    "fulfilled": "fulfilled_at IS NOT NULL OR status = 'closed'",
+}
+
+
+def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
+    """Order rows for the CRM dashboard, filtered by period and status."""
+    ensure_shop_tables()
+    where = ["1 = 1"]
+    params = []
+    if period in ORDER_PERIOD_WHERE:
+        where.append(ORDER_PERIOD_WHERE[period])
+    where.append(PAYMENT_FILTERS.get(payment) or PAYMENT_FILTERS["all"])
+    where.append(FULFILMENT_FILTERS.get(fulfilment) or FULFILMENT_FILTERS["all"])
+    query = f"""
+        SELECT reference, customer_name, company, phone, delivery_address, item_count,
+               payment_method, COALESCE(payment_status, 'unpaid'), payment_amount,
+               COALESCE(delivery_method, 'delivery'), status, created_at, wa_number
+        FROM shop_orders
+        WHERE {' AND '.join(where)}
+        ORDER BY created_at DESC
+        LIMIT {int(limit)}
+    """
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute(query, tuple(params))
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"order overview error: {e}")
+        return []
+    orders = []
+    for row in rows:
+        orders.append({
+            "reference": row[0],
+            "customer_name": row[1] or "",
+            "company": row[2] or "",
+            "phone": row[3] or "",
+            "address": row[4] or "",
+            "items": row[5] or 0,
+            "method": row[6] or "later",
+            "payment_status": row[7] or "unpaid",
+            "amount": float(row[8]) if row[8] is not None else None,
+            "delivery_method": row[9] or "delivery",
+            "status": row[10] or "new",
+            "created_at": row[11].strftime("%d %b %Y %H:%M") if row[11] else "",
+            "wa_number": row[12] or "",
+        })
+    return orders
+
+
+def orders_analytics(period="today", payment="all", fulfilment="all"):
+    """Headline sales numbers for the selected period and status filters."""
+    ensure_shop_tables()
+    where = ["1 = 1"]
+    if period in ORDER_PERIOD_WHERE:
+        where.append(ORDER_PERIOD_WHERE[period])
+    where.append(PAYMENT_FILTERS.get(payment) or PAYMENT_FILTERS["all"])
+    where.append(FULFILMENT_FILTERS.get(fulfilment) or FULFILMENT_FILTERS["all"])
+    clause = " AND ".join(where)
+    totals = {
+        "orders": _safe_scalar(f"SELECT COUNT(*) FROM shop_orders WHERE {clause}"),
+        "units": _safe_scalar(
+            f"SELECT COALESCE(SUM(item_count), 0) FROM shop_orders WHERE {clause}"),
+        "value": _safe_scalar(
+            f"SELECT COALESCE(SUM(COALESCE(payment_amount, 0)), 0) FROM shop_orders WHERE {clause}"),
+        "paid": _safe_scalar(
+            f"SELECT COUNT(*) FROM shop_orders WHERE {clause} AND payment_status = 'paid'"),
+        "paid_value": _safe_scalar(
+            f"SELECT COALESCE(SUM(COALESCE(payment_amount, 0)), 0) FROM shop_orders "
+            f"WHERE {clause} AND payment_status = 'paid'"),
+        "delivery": _safe_scalar(
+            f"SELECT COUNT(*) FROM shop_orders WHERE {clause} "
+            f"AND COALESCE(delivery_method, 'delivery') = 'delivery'"),
+        "collection": _safe_scalar(
+            f"SELECT COUNT(*) FROM shop_orders WHERE {clause} AND delivery_method = 'collection'"),
+    }
+    top_items = []
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute(f"""
+                SELECT items.product, COALESCE(SUM(items.quantity), 0) AS units
+                FROM shop_order_items items
+                JOIN shop_orders orders ON orders.id = items.order_id
+                WHERE {clause.replace('created_at', 'orders.created_at')
+                             .replace('payment_status', 'orders.payment_status')
+                             .replace('delivery_method', 'orders.delivery_method')
+                             .replace('fulfilled_at', 'orders.fulfilled_at')
+                             .replace('status', 'orders.status')}
+                GROUP BY items.product
+                ORDER BY units DESC
+                LIMIT 6
+            """)
+            top_items = [{"product": row[0], "units": int(row[1] or 0)}
+                         for row in cursor.fetchall()]
+    except Exception as e:
+        print(f"top items error: {e}")
+    totals["top_items"] = top_items
+    totals["currency"] = PAYNOW_CURRENCY
+    return totals
+
+
+def crm_catalog():
+    """Every product with its editable name, summary and pack prices."""
+    ensure_shop_tables()
+    catalog = _shop_catalog()
+    rows = []
+    for index, base in enumerate(BRILLIANT_PRODUCTS):
+        product = _shop_product(index)
+        sizes = [{
+            "size": size,
+            "price": catalog["prices"].get(f"{base['id']}|{size}"),
+        } for size in base["sizes"]]
+        rows.append({
+            "index": index,
+            "id": base["id"],
+            "name": product["name"],
+            "base_name": base["name"],
+            "summary": product["summary"],
+            "base_summary": base["summary"],
+            "sizes": sizes,
+            "priced": all(item["price"] is not None for item in sizes),
+        })
+    return rows
+
+
+def crm_save_product(product_id, display_name=None, summary=None):
+    """Rename a product and rewrite its customer-facing description."""
+    if not any(base["id"] == product_id for base in BRILLIANT_PRODUCTS):
+        return False
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_products (product_id, display_name, summary, updated_at)
+                VALUES (%s, %s, %s, NOW())
+                ON CONFLICT (product_id) DO UPDATE
+                SET display_name = EXCLUDED.display_name, summary = EXCLUDED.summary,
+                    updated_at = NOW()
+            """, (product_id, display_name, summary))
+            connection.commit()
+        shop_refresh_catalog()
+        return True
+    except Exception as e:
+        print(f"catalog save error: {e}")
+        return False
+
+
+def crm_save_price(product_id, pack_size, price):
+    """Set or clear the selling price of one pack size."""
+    if not any(base["id"] == product_id and pack_size in base["sizes"]
+               for base in BRILLIANT_PRODUCTS):
+        return False
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            if price in (None, ""):
+                cursor.execute("DELETE FROM shop_product_prices WHERE product_id = %s AND pack_size = %s",
+                               (product_id, pack_size))
+            else:
+                cursor.execute("""
+                    INSERT INTO shop_product_prices (product_id, pack_size, price, updated_at)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (product_id, pack_size) DO UPDATE
+                    SET price = EXCLUDED.price, updated_at = NOW()
+                """, (product_id, pack_size, round(float(price), 2)))
+            connection.commit()
+        shop_refresh_catalog()
+        return True
+    except Exception as e:
+        print(f"price save error: {e}")
+        return False
+
+
+@app.route('/api/crm/analytics')
+def crm_analytics_api():
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    period = request.args.get('period', 'today')
+    payment = request.args.get('payment', 'all')
+    fulfilment = request.args.get('fulfilment', 'all')
+    return jsonify({
+        'success': True,
+        'periods': [{'key': key, 'label': value[0]} for key, value in ORDER_PERIODS.items()],
+        'analytics': orders_analytics(period, payment, fulfilment),
+        'orders': orders_overview(period, payment, fulfilment),
+    })
+
+
+@app.route('/api/crm/catalog')
+def crm_catalog_api():
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    return jsonify({'success': True, 'products': crm_catalog(),
+                    'currency': PAYNOW_CURRENCY})
+
+
+@app.route('/api/crm/products/<product_id>', methods=['POST'])
+def crm_product_save_api(product_id):
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    name = (payload.get('name') or '').strip()
+    summary = (payload.get('summary') or '').strip()
+    if not name:
+        return jsonify({'success': False, 'message': 'A product needs a name.'}), 400
+    if not crm_save_product(product_id, name, summary):
+        return jsonify({'success': False, 'message': 'Could not save the product.'}), 500
+    return jsonify({'success': True, 'products': crm_catalog()})
+
+
+@app.route('/api/crm/products/<product_id>/prices', methods=['POST'])
+def crm_price_save_api(product_id):
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    pack_size = (payload.get('size') or '').strip()
+    raw_price = payload.get('price')
+    if not pack_size:
+        return jsonify({'success': False, 'message': 'Choose a pack size.'}), 400
+    price = None
+    if raw_price not in (None, ''):
+        try:
+            price = float(raw_price)
+        except (TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'Enter a number for the price.'}), 400
+        if price < 0:
+            return jsonify({'success': False, 'message': 'A price cannot be negative.'}), 400
+    if not crm_save_price(product_id, pack_size, price):
+        return jsonify({'success': False, 'message': 'Could not save that price.'}), 500
+    return jsonify({'success': True, 'products': crm_catalog(),
+                    'currency': PAYNOW_CURRENCY})
+
+
+@app.route('/api/crm/orders/<reference>/fulfilment', methods=['POST'])
+def crm_order_fulfilment_api(reference):
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    method = payload.get('delivery_method')
+    fulfilled = payload.get('fulfilled')
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            if method in ('delivery', 'collection'):
+                cursor.execute("UPDATE shop_orders SET delivery_method = %s WHERE reference = %s",
+                               (method, reference))
+            if fulfilled is True:
+                cursor.execute("UPDATE shop_orders SET fulfilled_at = NOW(), status = 'closed' "
+                               "WHERE reference = %s", (reference,))
+            elif fulfilled is False:
+                cursor.execute("UPDATE shop_orders SET fulfilled_at = NULL, status = 'new' "
+                               "WHERE reference = %s", (reference,))
+            connection.commit()
+    except Exception as e:
+        print(f"order fulfilment error: {e}")
+        return jsonify({'success': False, 'message': 'Could not update that order.'}), 500
+    period = request.args.get('period', 'today')
+    return jsonify({'success': True,
+                    'analytics': orders_analytics(period,
+                                                  request.args.get('payment', 'all'),
+                                                  request.args.get('fulfilment', 'all')),
+                    'orders': orders_overview(period,
+                                              request.args.get('payment', 'all'),
+                                              request.args.get('fulfilment', 'all'))})
+
+
 @app.route('/api/crm/chats/<int:chat_id>/messages')
 def crm_chat_messages(chat_id):
     user, error = portal_api_user('crm')
     if error:
         return error
     with get_db() as (cursor, connection):
-        cursor.execute("SELECT wa_number, display_name FROM whatsapp_chats WHERE id = %s", (chat_id,))
+        cursor.execute("SELECT wa_number, display_name, status FROM whatsapp_chats WHERE id = %s",
+                       (chat_id,))
         chat = cursor.fetchone()
         if not chat:
             return jsonify({'success': False, 'message': 'Conversation not found.'}), 404
+        # Newest first: the thread reads like a normal messaging app, with the
+        # latest exchange at the bottom of the panel.
         cursor.execute("""
             SELECT direction, sender, message_type, body, created_at
-            FROM whatsapp_messages WHERE chat_id = %s ORDER BY id ASC LIMIT 500
+            FROM whatsapp_messages WHERE chat_id = %s ORDER BY id DESC LIMIT 500
         """, (chat_id,))
         rows = cursor.fetchall()
     return jsonify({
         'success': True,
         'wa_number': chat[0],
         'display_name': chat[1] or f"+{chat[0]}",
+        'status': chat[2] or 'bot',
         'messages': [
             {
                 'direction': row[0],

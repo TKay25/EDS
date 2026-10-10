@@ -28,9 +28,8 @@
     var reasonEl = document.getElementById('crmChatReason');
     var actionsEl = document.getElementById('crmChatActions');
     var composerEl = document.getElementById('crmComposer');
+    var composerNoteEl = document.getElementById('crmComposerNote');
     var replyInput = document.getElementById('crmReplyInput');
-    var attachEl = document.getElementById('crmAttach');
-    var composerEl = document.getElementById('crmComposer');
 
     var activeId = null;
     var activeStatus = 'bot';
@@ -79,6 +78,13 @@
       return 'ps-bubble ps-bubble-out';
     }
 
+    function senderLabel(message) {
+      if (message.direction === 'inbound') return 'Customer';
+      if (message.sender === 'agent') return 'Agent';
+      if (message.sender === 'system') return 'System';
+      return 'Assistant';
+    }
+
     function renderActions() {
       var buttons = [];
       if (activeStatus === 'human') {
@@ -95,6 +101,15 @@
           setMode(button.getAttribute('data-mode'));
         });
       });
+      // While an agent owns the chat the assistant stays silent, so say so
+      // plainly instead of letting a reply look like it reached a bot.
+      if (composerNoteEl) {
+        composerNoteEl.textContent = activeStatus === 'human'
+          ? 'You are replying as an agent. The auto-assistant is paused for this chat.'
+          : (activeStatus === 'closed'
+              ? 'This conversation is closed. Sending a reply reopens it for the customer.'
+              : 'The assistant answers automatically. Switch to human to reply yourself.');
+      }
     }
 
     function openChat(chatId) {
@@ -113,13 +128,21 @@
           if (!payload.success) return;
           emptyEl.style.display = 'none';
           threadEl.style.display = 'block';
-          if (attachEl) attachEl.style.display = 'block';
           if (composerEl) composerEl.style.display = 'flex';
           nameEl.textContent = payload.display_name;
           numberEl.textContent = '+' + payload.wa_number;
+          if (payload.status) {
+            activeStatus = payload.status;
+            statusEl.innerHTML = statusChip(payload.status, payload.status === 'escalated');
+            renderActions();
+          }
+          // Newest first, exactly like every messaging app: the latest exchange
+          // sits at the bottom of the panel and the oldest scrolls off the top.
           threadEl.innerHTML = payload.messages.length
             ? payload.messages.map(function (message) {
-                return '<div class="' + bubbleClass(message) + '">' + escapeHtml(message.body) +
+                return '<div class="' + bubbleClass(message) + '">' +
+                  '<small class="crm-bubble-sender">' + escapeHtml(senderLabel(message)) + '</small>' +
+                  escapeHtml(message.body) +
                   '<small>' + escapeHtml(message.at) + '</small></div>';
               }).join('')
             : '<div class="ps-empty"><p>No messages yet.</p></div>';

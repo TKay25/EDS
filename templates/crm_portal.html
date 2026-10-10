@@ -10,18 +10,35 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crm.css') }}">
 </head>
 <body class="ps-body">
 
 {% include 'components/eds_portal_nav.html' %}
 
-<main class="ps-shell" id="crmInbox" data-filter="all">
+<main class="ps-shell" id="crmInbox" data-filter="all"
+      data-currency="{{ PAYNOW_CURRENCY if PAYNOW_CURRENCY is defined else 'USD' }}">
+
     <header class="ps-hero">
         <span class="ps-eyebrow"><i class="bi bi-headset"></i> CRM Portal</span>
-        <h1>Customer conversations</h1>
-        <p>Every customer message on the Brilliant Chemicals WhatsApp channel, with one-click handover to a human agent.</p>
+        <h1>Sales desk</h1>
+        <p>Conversations, catalogue and sales performance for the Brilliant Chemicals WhatsApp channel.</p>
     </header>
 
+    <nav class="crm-tabs" role="tablist">
+        <button class="crm-tab is-active" type="button" data-crm-tab="inbox" role="tab">
+            <i class="bi bi-chat-dots-fill"></i> Inbox
+            <span class="crm-tab-count" data-stat="stat_unattended">{{ stat_unattended }}</span>
+        </button>
+        <button class="crm-tab" type="button" data-crm-tab="analytics" role="tab">
+            <i class="bi bi-graph-up-arrow"></i> Sales analytics
+        </button>
+        <button class="crm-tab" type="button" data-crm-tab="products" role="tab">
+            <i class="bi bi-box-seam-fill"></i> Products &amp; pricing
+        </button>
+    </nav>
+
+    <section class="crm-view is-active" data-crm-view="inbox">
     <section class="ps-banner">
         <div class="ps-banner-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
         <div class="ps-banner-text">
@@ -64,9 +81,10 @@
                 <h3><i class="bi bi-inbox-fill"></i> Conversations</h3>
                 <div class="ps-panel-actions">
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="all">All</button>
-                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="escalated">Unattended</button>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="unattended">Unattended</button>
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="human">Agent live</button>
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="staff">Staff</button>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="closed">Closed</button>
                 </div>
             </div>
             <div class="ps-chat-list" id="crmChatList">
@@ -99,18 +117,18 @@
             <div class="ps-thread">
                 <div class="ps-thread-head">
                     <div class="ps-chat-avatar" id="crmChatAvatar"><i class="bi bi-person"></i></div>
-                    <div>
+                    <div class="crm-thread-title">
                         <div class="ps-chat-name">
                             <span id="crmChatName">Select a conversation</span>
                             <span id="crmChatStatus"></span>
                         </div>
                         <div class="ps-chat-preview" id="crmChatNumber"></div>
-                        <div class="ps-chat-preview" id="crmChatReason" style="color:#B45309;"></div>
+                        <div class="ps-chat-preview crm-reason" id="crmChatReason"></div>
                     </div>
                     <div class="ps-panel-actions" id="crmChatActions"></div>
                 </div>
 
-                <div class="ps-thread-body" id="crmThread" style="display:none;"></div>
+                <div class="ps-thread-body crm-thread-body" id="crmThread" style="display:none;"></div>
 
                 <div class="ps-thread-body" id="crmEmpty">
                     <div class="ps-empty">
@@ -121,15 +139,188 @@
                 </div>
 
                 <form class="ps-composer" id="crmComposer" style="display:none;">
-                    <input class="ps-input" type="text" id="crmReplyInput"
-                           placeholder="Type your reply to the customer…" autocomplete="off">
-                    <button class="ps-btn ps-btn-primary" type="submit"><i class="bi bi-send-fill"></i> Send</button>
+                    <div class="crm-composer-note" id="crmComposerNote"></div>
+                    <div class="crm-composer-row">
+                        <input class="ps-input" type="text" id="crmReplyInput"
+                               placeholder="Type your reply to the customer…" autocomplete="off">
+                        <button class="ps-btn ps-btn-primary" type="submit">
+                            <i class="bi bi-send-fill"></i> Send
+                        </button>
+                    </div>
                 </form>
+            </div>
+        </div>
+    </section>
+    </section>
+
+    <!-- ======================================================== analytics -->
+    <section class="crm-view" data-crm-view="analytics">
+        <div class="ps-panel">
+            <div class="ps-panel-head">
+                <h3><i class="bi bi-funnel-fill"></i> Filters</h3>
+                <div class="crm-filters">
+                    <label class="crm-field">
+                        <span>Period</span>
+                        <select class="ps-input" id="crmPeriod">
+                            <option value="today" selected>Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="this_week">This week</option>
+                            <option value="last_week">Last week</option>
+                            <option value="this_month">This month</option>
+                            <option value="last_month">Last month</option>
+                            <option value="all">All time</option>
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span>Payment</span>
+                        <select class="ps-input" id="crmPayment">
+                            <option value="all" selected>Paid &amp; will pay</option>
+                            <option value="paid">Paid</option>
+                            <option value="unpaid">Will pay</option>
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span>Fulfilment</span>
+                        <select class="ps-input" id="crmFulfilment">
+                            <option value="all" selected>Everything</option>
+                            <option value="delivery">Delivered home</option>
+                            <option value="collection">Collected from shop</option>
+                            <option value="pending">Awaiting fulfilment</option>
+                            <option value="fulfilled">Fulfilled</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <section class="ps-stats" id="crmAnalyticsStats">
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-receipt"></i> Orders</div>
+                <div class="ps-stat-value" data-an="orders">0</div>
+                <div class="ps-stat-note"><span data-an="units">0</span> units ordered</div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-cash-coin"></i> Order value</div>
+                <div class="ps-stat-value" data-an="value">0.00</div>
+                <div class="ps-stat-note"><span data-an="currency">USD</span> across priced orders</div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-check2-circle"></i> Paid</div>
+                <div class="ps-stat-value" data-an="paid">0</div>
+                <div class="ps-stat-note">Settled value <span data-an="paid_value">0.00</span></div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-truck"></i> Delivered home</div>
+                <div class="ps-stat-value" data-an="delivery">0</div>
+                <div class="ps-stat-note"><span data-an="collection">0</span> collected from shop</div>
+            </div>
+        </section>
+
+        <div class="crm-grid-2">
+            <div class="ps-panel">
+                <div class="ps-panel-head"><h3><i class="bi bi-trophy-fill"></i> Top products</h3></div>
+                <div class="ps-panel-body">
+                    <div class="crm-top-items" id="crmTopItems">
+                        <p class="ps-muted crm-empty-note">No orders in this period yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ps-panel">
+                <div class="ps-panel-head"><h3><i class="bi bi-clock-history"></i> Recent orders</h3></div>
+                <div class="ps-panel-body crm-order-list" id="crmRecentOrders">
+                    <p class="ps-muted crm-empty-note">No orders in this period yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="ps-panel">
+            <div class="ps-panel-head">
+                <h3><i class="bi bi-table"></i> Orders in view</h3>
+                <div class="ps-panel-actions">
+                    <span class="ps-chip"><strong data-an="orders">0</strong> orders</span>
+                </div>
+            </div>
+            <div class="crm-table-wrap">
+                <table class="crm-table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Payment</th>
+                            <th>Amount</th>
+                            <th>Fulfilment</th>
+                            <th>Placed</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crmOrdersBody">
+                        <tr><td colspan="7" class="crm-empty-cell">No orders match these filters.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================= products -->
+    <section class="crm-view" data-crm-view="products">
+        <div class="ps-panel">
+            <div class="ps-panel-head">
+                <h3><i class="bi bi-box-seam-fill"></i> Product catalogue</h3>
+                <div class="ps-panel-actions">
+                    <span class="ps-chip">Your prices override <code>SHOP_PRICES</code></span>
+                </div>
+            </div>
+            <div class="ps-panel-body">
+                <p class="ps-muted crm-hint">
+                    Rename a product or change a selling price and the WhatsApp assistant uses it straight away —
+                    no redeploy needed. Clear a price to keep that pack as an enquiry-only line.
+                </p>
+            </div>
+            <div class="crm-product-grid" id="crmProductGrid">
+                {% for product in catalog %}
+                <article class="crm-product" data-product-id="{{ product.id }}">
+                    <header class="crm-product-head">
+                        <div class="crm-product-title">
+                            <input class="ps-input crm-product-name" type="text"
+                                   value="{{ product.name }}" data-role="name"
+                                   aria-label="Product name">
+                            <div class="crm-product-base">Code name: {{ product.base_name }}</div>
+                        </div>
+                        <span class="ps-chip {{ 'is-ok' if product.priced else 'is-warn' }}">
+                            {{ 'Priced' if product.priced else 'Enquiry only' }}
+                        </span>
+                    </header>
+                    <label class="crm-field crm-field-wide">
+                        <span>Customer description</span>
+                        <textarea class="ps-input crm-product-summary" rows="2"
+                                  data-role="summary">{{ product.summary }}</textarea>
+                    </label>
+                    <div class="crm-price-grid">
+                        {% for size in product.sizes %}
+                        <label class="crm-price">
+                            <span>{{ size.size }}</span>
+                            <input class="ps-input" type="number" step="0.01" min="0"
+                                   placeholder="—" data-role="price"
+                                   data-size="{{ size.size }}"
+                                   value="{{ '%.2f'|format(size.price) if size.price is not none else '' }}">
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <footer class="crm-product-foot">
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" data-role="save">
+                            <i class="bi bi-save2"></i> Save product
+                        </button>
+                        <span class="crm-save-note" data-role="note"></span>
+                    </footer>
+                </article>
+                {% endfor %}
             </div>
         </div>
     </section>
 </main>
 
 <script src="{{ url_for('static', filename='js/portal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/crm.js') }}"></script>
 </body>
 </html>
