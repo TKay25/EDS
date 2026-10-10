@@ -20811,15 +20811,76 @@ def push_notify_staff(title, body, url="/portal/crm", tag="bc-crm"):
 
 
 def register_wa_channel(display_phone_number, access_token, phone_number_id):
-    """Remember the Meta credentials a webhook request arrived on."""
+    """Remember the Meta credentials a webhook request arrived on.
+
+    The reply is sent from a later request that may be served by another worker,
+    so the credentials are written to the database and read back by whoever
+    needs to send.
+    """
     try:
         if display_phone_number and access_token and phone_number_id:
             _wa_channels[str(display_phone_number)] = {
                 "token": access_token,
                 "phone_id": str(phone_number_id),
             }
+            # The table may not exist yet on a fresh deployment, and losing the
+            # credentials here is what makes agent replies undeliverable later.
+            ensure_crm_tables()
+            with get_db() as (cursor, connection):
+                cursor.execute("""
+                    INSERT INTO whatsapp_channels
+                        (display_phone_number, phone_number_id, access_token, updated_at)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (display_phone_number) DO UPDATE
+                        SET phone_number_id = EXCLUDED.phone_number_id,
+                            access_token = EXCLUDED.access_token,
+                            updated_at = NOW()
+                """, (str(display_phone_number), str(phone_number_id), access_token))
+                connection.commit()
     except Exception as e:
         print(f"register_wa_channel failed: {e}")
+
+
+def wa_outbound_credentials(channel=None):
+    """The Meta credentials to send from, or None.
+
+    The environment is checked first because it is the deliberate override an
+    operator sets; failing that the channels remembered from webhooks are used,
+    so a worker that has never received one can still deliver a reply.
+    """
+    token = os.getenv("WHATSAPP_ACCESS_TOKEN")
+    phone_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+    if token and phone_id:
+        return {"token": token, "phone_id": str(phone_id)}
+    creds = _wa_channels.get(str(channel)) if channel else None
+    if creds is None:
+        # Another worker may have handled every webhook so far.
+        wa_load_channels()
+        creds = _wa_channels.get(str(channel)) if channel else None
+    if creds is None and _wa_channels:
+        creds = list(_wa_channels.values())[-1]
+    return creds
+
+
+def wa_load_channels():
+    """Reload the remembered channels from the database.
+
+    Returns the number of channels held. The read is cheap and the result is
+    cached in this process, so it is called whenever a send finds nothing.
+    """
+    try:
+        ensure_crm_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT display_phone_number, phone_number_id, access_token
+                FROM whatsapp_channels
+            """)
+            for row in cursor.fetchall():
+                if row[1] and row[2]:
+                    _wa_channels[str(row[0])] = {"token": row[2], "phone_id": str(row[1])}
+    except Exception as e:
+        print(f"channel load error: {e}")
+    return len(_wa_channels)
 
 
 def ensure_crm_tables():
@@ -20859,6 +20920,18 @@ def ensure_crm_tables():
                 body TEXT,
                 delivered BOOLEAN,
                 created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        # The Meta credentials an outbound reply needs. They arrive on the
+        # webhook request, but the reply is sent from a different request that
+        # may land on another worker, so they are kept in the database rather
+        # than only in this process.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS whatsapp_channels (
+                display_phone_number VARCHAR(40) PRIMARY KEY,
+                phone_number_id VARCHAR(40),
+                access_token TEXT,
+                updated_at TIMESTAMP DEFAULT NOW()
             );
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS whatsapp_messages_chat_idx ON whatsapp_messages (chat_id, id);")
@@ -21107,20 +21180,15 @@ def wa_error_from_response(response):
 
 def crm_send_whatsapp(wa_number, text, channel=None):
     """Send a WhatsApp text from the company channel. Returns (ok, detail)."""
-    creds = _wa_channels.get(str(channel)) if channel else None
+    creds = wa_outbound_credentials(channel)
     if creds is None:
-        token = os.getenv("WHATSAPP_ACCESS_TOKEN")
-        phone_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
-        if token and phone_id:
-            creds = {"token": token, "phone_id": str(phone_id)}
-    if creds is None and _wa_channels:
-        creds = list(_wa_channels.values())[-1]
-    if creds is None:
-        return False, "WhatsApp delivery is not configured on this deployment."
+        return False, ("WhatsApp delivery is not configured on this deployment — open the "
+                       "inbox once so the channel credentials are registered.")
     try:
         response = requests.post(
             f"https://graph.facebook.com/v18.0/{creds['phone_id']}/messages",
-            headers={"Authorization": f"Bearer {creds['token']}", "Content-Type": "application/json"},
+            headers={"Authorization": "Bearer " + str(creds['token']),
+                     "Content-Type": "application/json"},
             json={"messaging_product": "whatsapp", "to": wa_number,
                   "type": "text", "text": {"body": text}},
             timeout=20,
@@ -21137,16 +21205,10 @@ def crm_send_whatsapp(wa_number, text, channel=None):
 
 def crm_send_whatsapp_payload(wa_number, payload, channel=None):
     """Send one raw WhatsApp message payload from the company channel."""
-    creds = _wa_channels.get(str(channel)) if channel else None
+    creds = wa_outbound_credentials(channel)
     if creds is None:
-        token = os.getenv("WHATSAPP_ACCESS_TOKEN")
-        phone_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
-        if token and phone_id:
-            creds = {"token": token, "phone_id": str(phone_id)}
-    if creds is None and _wa_channels:
-        creds = list(_wa_channels.values())[-1]
-    if creds is None:
-        return False, "WhatsApp delivery is not configured on this deployment."
+        return False, ("WhatsApp delivery is not configured on this deployment — open the "
+                       "inbox once so the channel credentials are registered.")
     body = dict(payload)
     body["messaging_product"] = "whatsapp"
     body["to"] = wa_number
@@ -21390,6 +21452,17 @@ def ensure_shop_tables():
                 pack_size VARCHAR(100),
                 position INTEGER DEFAULT 0,
                 PRIMARY KEY (product_id, pack_size)
+            );
+        """)
+        # Products removed from the portal. The seeder checks this so a product
+        # deleted on purpose is not restored from the code defaults on the next
+        # worker start.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_product_removed (
+                product_id VARCHAR(80) PRIMARY KEY,
+                display_name VARCHAR(200),
+                removed_by VARCHAR(200),
+                removed_at TIMESTAMP DEFAULT NOW()
             );
         """)
         # Selling prices per pack size, editable from the CRM portal. These win
@@ -22030,6 +22103,7 @@ def shop_refresh_catalog():
     global _shop_catalog_cache
     names, summaries, prices = {}, {}, {}
     sizes, custom = {}, []
+    removed = set()
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
@@ -22067,12 +22141,17 @@ def shop_refresh_catalog():
             """)
             for row in cursor.fetchall():
                 sizes.setdefault(str(row[0]), []).append(str(row[1]))
+            # Removals are part of the catalogue state: the customer's list must
+            # honour them, not just the editor.
+            cursor.execute("SELECT product_id FROM shop_product_removed")
+            removed = {str(row[0]) for row in cursor.fetchall()}
     except Exception as e:
         print(f"catalog load error: {e}")
     for product in custom:
         product["sizes"] = sizes.get(product["id"], [])
     _shop_catalog_cache = {"loaded": True, "names": names, "summaries": summaries,
-                           "prices": prices, "sizes": sizes, "custom": custom}
+                           "prices": prices, "sizes": sizes, "custom": custom,
+                           "removed": removed}
     return _shop_catalog_cache
 
 
@@ -22098,8 +22177,12 @@ def shop_seed_catalog():
         known.update(catalog.get("sizes") or {})
         known.update(product["id"] for product in (catalog.get("custom") or []))
         with get_db() as (cursor, connection):
+            # A product removed on purpose must stay removed, so the code default
+            # is not copied back on the next start.
+            cursor.execute("SELECT product_id FROM shop_product_removed")
+            removed = {str(row[0]) for row in cursor.fetchall()}
             for position, base in enumerate(BRILLIANT_PRODUCTS):
-                if base["id"] in known:
+                if base["id"] in known or base["id"] in removed:
                     continue
                 cursor.execute("""
                     INSERT INTO shop_products (product_id, display_name, summary,
@@ -22137,8 +22220,14 @@ def shop_all_products():
     names = catalog.get("names") or {}
     summaries = catalog.get("summaries") or {}
     sizes = catalog.get("sizes") or {}
+    removed = catalog.get("removed") or set()
     products = []
     for index, base in enumerate(BRILLIANT_PRODUCTS):
+        if base["id"] in removed:
+            # Deleted in the portal. The code default must not reappear in the
+            # customer's list, otherwise a removal would only last until the
+            # next worker start.
+            continue
         products.append({
             "id": base["id"],
             "index": index,
@@ -22151,11 +22240,18 @@ def shop_all_products():
             "sizes": list(sizes[base["id"]]) if base["id"] in sizes else list(base["sizes"]),
             "custom": False,
         })
+    seen = {product["id"] for product in products}
     for product in (catalog.get("custom") or []):
         if not product.get("name") or not product.get("sizes"):
             # A product with no name or no pack size cannot be ordered, so it is
             # kept out of the customer's list until the CRM finishes setting it up.
             continue
+        if product["id"] in seen:
+            # A row can exist in the portal under an id that has since shipped in
+            # code. Emitting it twice would show the customer the same product
+            # twice and quietly consume one of the ten browse rows.
+            continue
+        seen.add(product["id"])
         products.append({
             "id": product["id"],
             "index": None,
@@ -24142,6 +24238,12 @@ def portal_crm():
     if denied:
         return denied
     try:
+        # Warm the outbound credentials so the first reply is not sent from a
+        # worker that has yet to see a webhook.
+        wa_load_channels()
+    except Exception as e:
+        print(f"channel warmup skipped: {e}")
+    try:
         chats = _crm_chats('all')
     except Exception as e:
         print(f"CRM data error: {e}")
@@ -24156,10 +24258,16 @@ def portal_crm():
     except Exception as e:
         print(f"CRM catalogue error: {e}")
         catalog = []
+    try:
+        removed = crm_removed_products()
+    except Exception as e:
+        print(f"CRM removed products error: {e}")
+        removed = []
     return render_template('crm_portal.html', user=user, active_nav='crm',
                            nav_modules=user_modules(user),
                            chats=chats, orders=orders,
                            catalog=catalog,
+                           removed=removed,
                            limits=catalog_limits(),
                            channel_number=company_system_channel_label(),
                            **company_system_stats())
@@ -24718,16 +24826,40 @@ def crm_add_product(display_name, summary=None, sizes=None, prices=None):
         return False, "The product could not be saved just now."
 
 
-def crm_delete_product(product_id):
-    """Remove a product that was added from the portal."""
+def crm_delete_product(product_id, user=None):
+    """Remove a product from the catalogue.
+
+    Works for any product, including the ones seeded from the code defaults. A
+    record is kept in shop_product_removed so the seeder does not restore it on
+    the next worker start — a deletion has to be as durable as an edit.
+    """
     try:
         ensure_shop_tables()
+        catalog = _shop_catalog()
+        known = (any(base["id"] == product_id for base in BRILLIANT_PRODUCTS)
+                 or product_id in (catalog.get("names") or {})
+                 or product_id in (catalog.get("sizes") or {})
+                 or any(product["id"] == product_id
+                        for product in (catalog.get("custom") or [])))
         with get_db() as (cursor, connection):
-            cursor.execute("SELECT is_custom FROM shop_products WHERE product_id = %s",
+            cursor.execute("SELECT display_name FROM shop_products WHERE product_id = %s",
                            (product_id,))
             row = cursor.fetchone()
-            if not row or not row[0]:
-                return False, "Only products added here can be removed."
+            name = (row[0] if row and row[0] else product_id)
+            if not row and not known:
+                return False, "That product is no longer in the catalogue."
+            # The tombstone is written before the delete so an interrupted run
+            # cannot leave a product that is deleted but still seedable.
+            cursor.execute("""
+                INSERT INTO shop_product_removed (product_id, display_name, removed_by, removed_at)
+                VALUES (%s, %s, %s, NOW())
+                ON CONFLICT (product_id) DO UPDATE
+                SET display_name = EXCLUDED.display_name,
+                    removed_by = EXCLUDED.removed_by,
+                    removed_at = NOW()
+            """, (product_id, name,
+                  f"{(user or {}).get('firstname', '')} {(user or {}).get('surname', '')}".strip()
+                  or None))
             cursor.execute("DELETE FROM shop_product_prices WHERE product_id = %s", (product_id,))
             cursor.execute("DELETE FROM shop_product_sizes WHERE product_id = %s", (product_id,))
             cursor.execute("DELETE FROM shop_products WHERE product_id = %s", (product_id,))
@@ -24737,6 +24869,49 @@ def crm_delete_product(product_id):
     except Exception as e:
         print(f"product delete error: {e}")
         return False, "The product could not be removed."
+
+
+def crm_restore_product(product_id):
+    """Undo a removal so the product can be seeded again.
+
+    Returns (ok, message). Nothing is re-created here: clearing the record lets
+    the seeder copy the code default back on the next read.
+    """
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT product_id FROM shop_product_removed WHERE product_id = %s",
+                           (product_id,))
+            if cursor.fetchone() is None:
+                return False, "That product has not been removed."
+            cursor.execute("DELETE FROM shop_product_removed WHERE product_id = %s", (product_id,))
+            connection.commit()
+        # Let the seeder run again for this id.
+        global _catalog_seeded
+        _catalog_seeded = False
+        shop_ensure_seeded()
+        shop_refresh_catalog()
+        return True, ""
+    except Exception as e:
+        print(f"product restore error: {e}")
+        return False, "The product could not be restored."
+
+
+def crm_removed_products():
+    """Products removed from the catalogue, newest first."""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT product_id, display_name, removed_by, removed_at
+                FROM shop_product_removed ORDER BY removed_at DESC
+            """)
+            return [{"id": row[0], "name": row[1] or row[0], "removed_by": row[2] or "",
+                     "removed_at": row[3].strftime("%d %b %Y %H:%M") if row[3] else ""}
+                    for row in cursor.fetchall()]
+    except Exception as e:
+        print(f"removed products error: {e}")
+        return []
 
 
 def crm_save_product(product_id, display_name=None, summary=None):
@@ -24921,19 +25096,37 @@ def crm_product_add_api():
 
 @app.route('/api/crm/products/<product_id>/delete', methods=['POST'])
 def crm_product_delete_api(product_id):
-    """Remove a product that was added from the portal."""
+    """Remove a product from the catalogue."""
     user, error = portal_api_user('crm')
     if error:
         return error
     name = next((product['name'] for product in crm_catalog()
                  if product['id'] == product_id), product_id)
-    ok, message = crm_delete_product(product_id)
+    ok, message = crm_delete_product(product_id, user)
     if not ok:
         return jsonify({'success': False, 'message': message,
                         'products': crm_catalog()}), 400
     log_activity("removed_product", "catalogue", f"Removed the product “{name}”",
                  target=name, details={"product_id": product_id}, user=user)
     return jsonify({'success': True, 'products': crm_catalog(),
+                    'removed': crm_removed_products(),
+                    'limits': catalog_limits()})
+
+
+@app.route('/api/crm/products/<product_id>/restore', methods=['POST'])
+def crm_product_restore_api(product_id):
+    """Put a removed product back into the catalogue."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    ok, message = crm_restore_product(product_id)
+    if not ok:
+        return jsonify({'success': False, 'message': message}), 400
+    log_activity("restored_product", "catalogue",
+                 f"Restored a product ({product_id}) to the catalogue",
+                 target=product_id, details={"product_id": product_id}, user=user)
+    return jsonify({'success': True, 'products': crm_catalog(),
+                    'removed': crm_removed_products(),
                     'limits': catalog_limits()})
 
 

@@ -1163,6 +1163,62 @@ select.crm-select:focus {
 .crm-price-grid + .crm-field { margin-top: 10px; }
 .crm-product-foot [data-role="delete"] { color: #B91C1C; }
 
+/* -------------------------------------------------------- removed products -- */
+.crm-removed {
+  margin: 0 18px 18px;
+  border: 1px solid var(--ps-line);
+  border-radius: 12px;
+  background: var(--ps-surface-alt);
+  overflow: hidden;
+}
+.crm-removed > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  list-style: none;
+}
+.crm-removed > summary::-webkit-details-marker { display: none; }
+.crm-removed > summary::after {
+  content: "\F282";
+  font-family: "bootstrap-icons";
+  margin-left: auto;
+  transition: transform 0.18s ease;
+  opacity: 0.6;
+}
+.crm-removed[open] > summary::after { transform: rotate(180deg); }
+.crm-removed-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.crm-removed > p { margin: 0; padding: 0 14px 10px; font-size: 0.75rem; }
+.crm-removed-list { list-style: none; margin: 0; padding: 0 14px 14px; display: grid; gap: 8px; }
+.crm-removed-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-line);
+  font-size: 0.78rem;
+}
+.crm-removed-name { font-weight: 700; }
+.crm-removed-meta { color: var(--ps-text-soft); font-size: 0.72rem; }
+.crm-removed-list li button { margin-left: auto; }
+
 /* --------------------------------------------------- inbox fills the screen -- */
 /* The list and the thread are the tallest things on the tab, and both scroll
    internally so the page itself stays put.

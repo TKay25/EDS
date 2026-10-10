@@ -527,7 +527,11 @@
       var deleteButton = product.querySelector('[data-role="delete"]');
       if (deleteButton) {
         deleteButton.addEventListener('click', function () {
-          if (!window.confirm('Remove this product from the catalogue?')) return;
+          var productName = product.querySelector('[data-role="name"]').value.trim();
+          if (!window.confirm('Remove “' + productName + '” from the catalogue?\n\n' +
+                              'The assistant will stop offering it. You can restore it afterwards.')) {
+            return;
+          }
           deleteButton.disabled = true;
           postJson('/api/crm/products/' + encodeURIComponent(id) + '/delete', {})
             .then(function (result) {
@@ -537,8 +541,10 @@
                 toast(result.message || 'Could not remove the product.', 'error');
                 return;
               }
-              toast('Removed from the catalogue.', 'ok');
+              toast('Removed “' + productName + '”.', 'ok',
+                    'It is listed under Removed products if you need it back.');
               product.parentNode.removeChild(product);
+              renderRemoved(result.removed, true);
               if (result.limits) applyLimits(result.limits);
               applyLimits(null);
               // A freed slot may make the add button usable again.
@@ -554,6 +560,60 @@
         });
       }
     });
+
+    // ------------------------------------------------------- removed products --
+    // Kept in the UI so a removal is reversible without a deploy, and so nobody
+    // has to wonder whether a product was removed or never existed.
+    var removedWrap = document.getElementById('crmRemovedWrap');
+    var removedList = document.getElementById('crmRemovedList');
+    var removedCount = document.getElementById('crmRemovedCount');
+
+    function renderRemoved(items, open) {
+      if (!removedWrap || !removedList) return;
+      var entries = items || [];
+      if (!entries.length) {
+        removedWrap.hidden = true;
+        removedList.innerHTML = '';
+        if (removedCount) removedCount.textContent = '0';
+        return;
+      }
+      removedWrap.hidden = false;
+      if (open) removedWrap.open = true;
+      if (removedCount) removedCount.textContent = String(entries.length);
+      removedList.innerHTML = entries.map(function (item) {
+        return '<li data-product-id="' + escapeHtml(item.id) + '">' +
+          '<span class="crm-removed-name">' + escapeHtml(item.name) + '</span>' +
+          '<span class="crm-removed-meta">' + escapeHtml(item.removed_by || 'Unknown') +
+          (item.removed_at ? ' · ' + escapeHtml(item.removed_at) : '') + '</span>' +
+          '<button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-role="restore">' +
+          '<i class="bi bi-arrow-counterclockwise"></i> Restore</button></li>';
+      }).join('');
+      Array.prototype.forEach.call(
+        removedList.querySelectorAll('[data-role="restore"]'),
+        function (button) {
+          button.addEventListener('click', function () {
+            var row = button.closest('li');
+            var restoreId = row.getAttribute('data-product-id');
+            button.disabled = true;
+            postJson('/api/crm/products/' + encodeURIComponent(restoreId) + '/restore', {})
+              .then(function (result) {
+                if (!result.success) {
+                  button.disabled = false;
+                  toast(result.message || 'Could not restore it.', 'error');
+                  return;
+                }
+                toast('Restored to the catalogue.', 'ok',
+                      'Reloading so the product appears with its saved details.');
+                window.setTimeout(function () { window.location.reload(); }, 700);
+              })
+              .catch(function () {
+                button.disabled = false;
+                toast('Could not restore the product.', 'error');
+              });
+          });
+        });
+    }
+    renderRemoved(window.__crmRemoved || [], false);
 
     // A product name becomes a WhatsApp list row title, so the remaining
     // characters are shown live on every card as well as the add form.

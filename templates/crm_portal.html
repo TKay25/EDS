@@ -370,8 +370,7 @@
                 </div>
             </form>
 
-            <div class="crm-product-grid" id="crmProductGrid">
-                {% for product in catalog %}
+            <div class="crm-product-grid" id="crmProductGrid">                {% for product in catalog %}
                 <article class="crm-product" data-product-id="{{ product.id }}"
                          data-custom="{{ 'true' if product.custom else 'false' }}">
                     <header class="crm-product-head">
@@ -385,7 +384,7 @@
                                 {% if product.custom %}
                                 Added in the portal
                                 {% else %}
-                                Code name: {{ product.base_name }}
+                                Shipped with the assistant · code name {{ product.base_name }}
                                 {% endif %}
                                 <em class="crm-name-count" data-role="namecount"></em>
                             </div>
@@ -424,16 +423,42 @@
                         <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" data-role="save">
                             <i class="bi bi-save2"></i> Save product
                         </button>
-                        {% if product.custom %}
+                        {# Every product can be removed now that the catalogue is the
+                           source of truth, including the ones seeded from code. #}
                         <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-role="delete">
                             <i class="bi bi-trash3"></i> Remove
                         </button>
-                        {% endif %}
                         <span class="crm-save-note" data-role="note"></span>
                     </footer>
                 </article>
                 {% endfor %}
             </div>
+
+            {# Removals are listed so a mistake is visible and reversible rather than
+               silently changing what the assistant can sell. #}
+            <details class="crm-removed" id="crmRemovedWrap" {% if not removed %}hidden{% endif %}>
+                <summary>
+                    <i class="bi bi-archive"></i> Removed products
+                    <span class="crm-removed-count" id="crmRemovedCount">{{ removed | length }}</span>
+                </summary>
+                <p class="ps-muted">
+                    These are hidden from the assistant. Restoring one puts it back into the
+                    catalogue with the details it shipped with.
+                </p>
+                <ul class="crm-removed-list" id="crmRemovedList">
+                    {% for item in removed %}
+                    <li data-product-id="{{ item.id }}">
+                        <span class="crm-removed-name">{{ item.name }}</span>
+                        <span class="crm-removed-meta">
+                            {{ item.removed_by or 'Unknown' }}{% if item.removed_at %} · {{ item.removed_at }}{% endif %}
+                        </span>
+                        <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-role="restore">
+                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </details>
         </div>
     </section>
 </main>
@@ -441,6 +466,11 @@
 {# The limits the editor enforces, as data the script can read. Rendered rather
    than fetched so the counters are correct before any API call returns. #}
 <div class="ps-shell" id="crmLimits" hidden>{{ limits | tojson }}</div>
+<script>
+  // The removed products the page already listed, so the restore buttons work
+  // before any API response arrives.
+  window.__crmRemoved = {{ removed | tojson }};
+</script>
 
 {# Toasts report the outcome of a catalogue edit without stealing focus, so a
    rejected save is visible wherever the agent happens to be looking. #}
