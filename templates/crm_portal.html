@@ -44,41 +44,35 @@
     </nav>
 
     <section class="crm-view is-active" data-crm-view="inbox">
-    <section class="ps-banner">
+    {# One compact bar carries the unattended count, the filter and the two
+       presets, so the conversation list and thread get the height instead. #}
+    <section class="ps-banner crm-banner-tight">
         <div class="ps-banner-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
         <div class="ps-banner-text">
-            <h3><span data-stat="stat_unattended">{{ stat_unattended }}</span> unattended enquir{{ 'y' if stat_unattended == 1 else 'ies' }}</h3>
-            <p>These customers asked for a person, or need a human follow-up. Switch a conversation to human to reply directly.</p>
+            <h3><span data-stat="stat_unattended">{{ stat_unattended }}</span> unattended
+                <span class="crm-banner-hint">— customers waiting for a person</span></h3>
         </div>
         <div class="ps-banner-actions">
+            <span class="crm-banner-stat" title="Open conversations">
+                <i class="bi bi-chat-dots-fill"></i> <span data-stat="stat_open_chats">{{ stat_open_chats }}</span>
+            </span>
+            <span class="crm-banner-stat" title="Handled by a person right now">
+                <i class="bi bi-person-check-fill"></i> <span data-stat="stat_human_chats">{{ stat_human_chats }}</span>
+            </span>
             <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" data-crm-preset="unattended">
-                <i class="bi bi-funnel"></i> Show unattended
+                <i class="bi bi-funnel"></i> Unattended
             </button>
             <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-preset="all">
-                <i class="bi bi-collection"></i> All conversations
+                <i class="bi bi-collection"></i> All
+            </button>
+            <button class="ps-btn ps-btn-ghost ps-btn-sm crm-notify-btn" type="button" id="crmNotifyToggle"
+                    title="Get a notification on this device when a customer needs a person"
+                    aria-pressed="false" hidden>
+                <i class="bi bi-bell"></i> <span id="crmNotifyLabel">Notify me</span>
             </button>
         </div>
     </section>
-
-    <section class="ps-stats">
-        <div class="ps-stat">
-            <div class="ps-stat-label"><i class="bi bi-chat-dots-fill"></i> Open conversations</div>
-            <div class="ps-stat-value" data-stat="stat_open_chats">{{ stat_open_chats }}</div>
-            <div class="ps-stat-note">Customer chats not yet resolved</div>
-        </div>
-        <div class="ps-stat">
-            <div class="ps-stat-label"><i class="bi bi-person-check-fill"></i> Agent live</div>
-            <div class="ps-stat-value" data-stat="stat_human_chats">{{ stat_human_chats }}</div>
-            <div class="ps-stat-note">Handled by a person right now</div>
-        </div>
-        <div class="ps-stat">
-            <div class="ps-stat-label"><i class="bi bi-telephone-inbound"></i> Channel</div>
-            <div class="ps-stat-value" style="font-size:1.1rem;">+{{ channel_number }}</div>
-            <div class="ps-stat-note">Brilliant Chemicals WhatsApp line</div>
-        </div>
-    </section>
-
-    <h2 class="ps-section-title"><i class="bi bi-whatsapp"></i> WhatsApp inbox</h2>
+    <p class="crm-notify-note" id="crmNotifyNote" hidden></p>
 
     <section class="ps-inbox">
         <div class="ps-panel">

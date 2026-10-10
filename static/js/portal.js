@@ -308,8 +308,7 @@
     });
 
     if (filterSelect) {
-      filterSelect.addEventListener('change', function () {
-        root.setAttribute('data-filter', filterSelect.value);
+      filterSelect.addEventListener('change', function () {        root.setAttribute('data-filter', filterSelect.value);
         refresh(true);
       });
     }
@@ -413,9 +412,59 @@
     });
   }
 
+  // ------------------------------------------------------------- notifications --
+  // Staff opt in per device. The button is only revealed when the deployment has
+  // VAPID keys and the browser supports push, so nobody sees a control that
+  // cannot work.
+  function initNotifications() {
+    var button = document.getElementById('crmNotifyToggle');
+    var label = document.getElementById('crmNotifyLabel');
+    var note = document.getElementById('crmNotifyNote');
+    if (!button || !window.edsPush) return;
+
+    function say(text) {
+      if (!note) {
+        if (text) window.alert(text);
+        return;
+      }
+      note.textContent = text || '';
+      note.hidden = !text;
+    }
+
+    function paint(subscribed) {
+      button.hidden = false;
+      button.setAttribute('aria-pressed', subscribed ? 'true' : 'false');
+      button.classList.toggle('is-on', subscribed);
+      label.textContent = subscribed ? 'Notifications on' : 'Notify me';
+      var icon = button.querySelector('i');
+      if (icon) icon.className = subscribed ? 'bi bi-bell-fill' : 'bi bi-bell';
+    }
+
+    window.edsPush.config().then(function (config) {
+      if (!config || !config.enabled || !window.edsPush.supported()) return;
+      window.edsPush.status().then(paint);
+    });
+
+    button.addEventListener('click', function () {
+      button.disabled = true;
+      say('');
+      var wasSubscribed = button.getAttribute('aria-pressed') === 'true';
+      var action = wasSubscribed ? window.edsPush.unsubscribe() : window.edsPush.subscribe();
+      action.then(function (result) {
+        button.disabled = false;
+        paint(Boolean(result && result.subscribed));
+        say(result && result.message ? result.message : '');
+      }).catch(function () {
+        button.disabled = false;
+        say('Notifications could not be changed on this device.');
+      });
+    });
+  }
+
   function boot() {
     initUserMenu();
     initCrm();
+    initNotifications();
     initNavigation();
   }
 

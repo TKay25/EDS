@@ -32,7 +32,7 @@ import re
 from paynow import Paynow
 import time
 import random
-#import threading
+import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
@@ -20600,6 +20600,172 @@ def company_system_channel_label():
 _wa_channels = {}
 _crm_tables_ready = False
 
+# ------------------------------------------------------------------ web push --
+# Staff devices subscribe once and are then alerted by the server whenever a
+# customer asks for a person, even if the CRM tab is closed. The VAPID key pair
+# is supplied by the deployment environment; nothing is hard-coded here, because
+# the private key is what authorises a push to every subscribed device.
+VAPID_PUBLIC_KEY = (os.getenv("VAPID_PUBLIC_KEY") or "").strip()
+VAPID_PRIVATE_KEY = (os.getenv("VAPID_PRIVATE_KEY") or "").strip()
+VAPID_SUBJECT = (os.getenv("VAPID_SUBJECT") or "mailto:admin@brilliantchemicals.co.zw").strip()
+
+_push_ready = False
+_push_lib = None
+_push_tables_ready = False
+
+
+def push_configured():
+    """True when the deployment has a usable VAPID key pair."""
+    return bool(VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY)
+
+
+def _push_library():
+    """Import pywebpush lazily so a missing package never breaks startup."""
+    global _push_lib, _push_ready
+    if _push_ready:
+        return _push_lib
+    _push_ready = True
+    try:
+        from pywebpush import webpush, WebPushException
+        _push_lib = {"webpush": webpush, "WebPushException": WebPushException}
+    except Exception as e:
+        print(f"web push unavailable: {e}")
+        _push_lib = None
+    return _push_lib
+
+
+def ensure_push_tables():
+    """Create the push subscription table the first time it is needed."""
+    global _push_tables_ready
+    if _push_tables_ready:
+        return
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS push_subscriptions (
+                    id SERIAL PRIMARY KEY,
+                    endpoint TEXT UNIQUE,
+                    p256dh TEXT,
+                    auth TEXT,
+                    user_email VARCHAR(200),
+                    user_name VARCHAR(200),
+                    user_agent VARCHAR(300),
+                    last_seen_at TIMESTAMP DEFAULT NOW(),
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """)
+            connection.commit()
+        _push_tables_ready = True
+    except Exception as e:
+        print(f"push table error: {e}")
+
+
+def push_save_subscription(subscription, user=None):
+    """Store or refresh one device subscription. Returns True when saved."""
+    if not isinstance(subscription, dict):
+        return False
+    endpoint = (subscription.get("endpoint") or "").strip()
+    keys = subscription.get("keys") or {}
+    p256dh = (keys.get("p256dh") or "").strip()
+    auth = (keys.get("auth") or "").strip()
+    if not (endpoint and p256dh and auth):
+        return False
+    user = user or {}
+    try:
+        ensure_push_tables()
+        with get_db() as (cursor, connection):
+            # A device that subscribes again gets refreshed rather than duplicated,
+            # so the endpoint stays unique and staff changes are picked up.
+            cursor.execute("""
+                INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_email,
+                                                user_name, user_agent, last_seen_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (endpoint) DO UPDATE SET
+                    p256dh = EXCLUDED.p256dh,
+                    auth = EXCLUDED.auth,
+                    user_email = COALESCE(EXCLUDED.user_email, push_subscriptions.user_email),
+                    user_name = COALESCE(EXCLUDED.user_name, push_subscriptions.user_name),
+                    user_agent = COALESCE(EXCLUDED.user_agent, push_subscriptions.user_agent),
+                    last_seen_at = NOW()
+            """, (endpoint, p256dh, auth,
+                  (user.get("email") or "").strip() or None,
+                  f"{user.get('firstname', '')} {user.get('surname', '')}".strip() or None,
+                  (subscription.get("user_agent") or "")[:300] or None))
+            connection.commit()
+        return True
+    except Exception as e:
+        print(f"push subscribe error: {e}")
+        return False
+
+
+def push_remove_subscription(endpoint):
+    """Forget a device, e.g. when the browser reports the subscription is gone."""
+    endpoint = (endpoint or "").strip()
+    if not endpoint:
+        return False
+    try:
+        ensure_push_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("DELETE FROM push_subscriptions WHERE endpoint = %s", (endpoint,))
+            connection.commit()
+        return True
+    except Exception as e:
+        print(f"push unsubscribe error: {e}")
+        return False
+
+
+def _push_list_subscriptions():
+    try:
+        ensure_push_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT endpoint, p256dh, auth FROM push_subscriptions")
+            return cursor.fetchall()
+    except Exception as e:
+        print(f"push list error: {e}")
+        return []
+
+
+def push_notify_staff(title, body, url="/portal/crm", tag="bc-crm"):
+    """Alert every subscribed staff device.
+
+    Returns (sent, failed). Dead subscriptions are pruned so a device that has
+    been wiped stops being retried forever. Never raises: a notification failing
+    must not take down the webhook that triggered it.
+    """
+    library = _push_library()
+    if library is None or not push_configured():
+        return 0, 0
+    payload = json.dumps({"title": title, "body": body, "url": url, "tag": tag})
+    sent = 0
+    failed = 0
+    gone = []
+    for endpoint, p256dh, auth in _push_list_subscriptions():
+        subscription = {"endpoint": endpoint, "keys": {"p256dh": p256dh, "auth": auth}}
+        try:
+            library["webpush"](
+                subscription_info=subscription,
+                data=payload,
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": VAPID_SUBJECT},
+                timeout=10,
+            )
+            sent += 1
+        except library["WebPushException"] as e:
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            if status in (404, 410):
+                # The browser threw the subscription away; stop retrying it.
+                gone.append(endpoint)
+            else:
+                failed += 1
+        except Exception as e:
+            print(f"push send error: {e}")
+            failed += 1
+    for endpoint in gone:
+        push_remove_subscription(endpoint)
+    if sent or failed or gone:
+        print(f"push notify: {sent} sent, {failed} failed, {len(gone)} pruned")
+    return sent, len(gone) + failed
+
 
 def register_wa_channel(display_phone_number, access_token, phone_number_id):
     """Remember the Meta credentials a webhook request arrived on."""
@@ -22951,6 +23117,28 @@ def crm_escalate_chat(wa_number, reason, channel=None, display_name=None):
             connection.commit()
     except Exception as e:
         print(f"CRM escalate error: {e}")
+    _push_alert_unattended(wa_number, reason, display_name)
+
+
+def _push_alert_unattended(wa_number, reason, display_name=None):
+    """Notify subscribed staff devices that a customer needs a person.
+
+    Runs in its own thread so a slow push service never delays the WhatsApp
+    webhook, which Meta expects to answer promptly.
+    """
+    if not push_configured():
+        return
+    who = (display_name or "").strip() or f"+{str(wa_number)[-15:]}"
+    title = f"{who} needs a person"
+    body = (reason or "A customer is waiting for a reply").strip()
+
+    def worker():
+        try:
+            push_notify_staff(title, body[:180], url="/portal/crm")
+        except Exception as e:
+            print(f"push alert error: {e}")
+
+    threading.Thread(target=worker, daemon=True).start()
 
 
 def _wa_inbound_preview(message):
@@ -23782,6 +23970,52 @@ def crm_summary():
                     'chats': _crm_chats(request.args.get('filter', 'all'),
                                         request.args.get('search')),
                     'stats': company_system_stats()})
+
+
+# ------------------------------------------------------------------- web push --
+@app.route('/api/push/config')
+def push_config():
+    """Tell the browser whether notifications can be enabled on this deployment."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    return jsonify({'success': True,
+                    'enabled': push_configured(),
+                    'public_key': VAPID_PUBLIC_KEY,
+                    'subscribed': len(_push_list_subscriptions()) if push_configured() else 0})
+
+
+@app.route('/api/push/subscribe', methods=['POST'])
+def push_subscribe():
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    if not push_configured():
+        return jsonify({'success': False,
+                        'message': 'Notifications are not configured on this deployment yet.'}), 503
+    payload = request.get_json(silent=True) or {}
+    subscription = dict(payload.get('subscription') or {})
+    subscription['user_agent'] = (request.headers.get('User-Agent') or '')[:300]
+    if not push_save_subscription(subscription, user):
+        return jsonify({'success': False,
+                        'message': 'That subscription could not be saved.'}), 400
+    log_activity("enabled_notifications", "chat",
+                 "Turned on WhatsApp notifications for this device",
+                 target="notifications", user=user)
+    return jsonify({'success': True})
+
+
+@app.route('/api/push/unsubscribe', methods=['POST'])
+def push_unsubscribe():
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    push_remove_subscription(payload.get('endpoint'))
+    log_activity("disabled_notifications", "chat",
+                 "Turned off WhatsApp notifications for this device",
+                 target="notifications", user=user)
+    return jsonify({'success': True})
 
 
 # --------------------------------------------------------------- order analytics
