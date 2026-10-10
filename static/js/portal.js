@@ -30,10 +30,15 @@
     var composerEl = document.getElementById('crmComposer');
     var composerNoteEl = document.getElementById('crmComposerNote');
     var replyInput = document.getElementById('crmReplyInput');
+    var searchEl = document.getElementById('crmChatSearch');
+    var searchClearEl = document.getElementById('crmChatSearchClear');
+    var searchHintEl = document.getElementById('crmSearchHint');
 
     var activeId = null;
     var activeStatus = 'bot';
     var timer = null;
+    var searchTerm = '';
+    var searchTimer = null;
 
     function statusChip(status, unattended) {
       var label = { bot: 'Assistant', escalated: 'Needs agent', human: 'Agent live', closed: 'Closed' }[status] || status;
@@ -43,9 +48,14 @@
 
     function renderList(chats) {
       if (!chats.length) {
-        listEl.innerHTML = '<div class="ps-empty"><i class="bi bi-chat-square-text"></i>' +
-          '<h4>No conversations yet</h4><p>Every message on the company WhatsApp channel appears here, ' +
-          'from customers and staff alike.</p></div>';
+        var searching = searchTerm !== '';
+        listEl.innerHTML = '<div class="ps-empty"><i class="bi bi-' +
+          (searching ? 'search' : 'chat-square-text') + '"></i>' +
+          '<h4>' + (searching ? 'No matching conversations' : 'No conversations yet') + '</h4>' +
+          '<p>' + (searching
+            ? 'Nothing matched “' + escapeHtml(searchTerm) + '”. Try a name, a phone number or a product.'
+            : 'Every message on the company WhatsApp channel appears here, from customers and staff alike.') +
+          '</p></div>';
         return;
       }
       listEl.innerHTML = chats.map(function (chat) {
@@ -69,6 +79,21 @@
           openChat(item.getAttribute('data-chat-id'));
         });
       });
+    }
+
+    function updateSearchChrome(count) {
+      if (!searchClearEl) return;
+      searchClearEl.hidden = searchTerm === '';
+      if (searchHintEl) {
+        if (searchTerm === '') {
+          searchHintEl.hidden = true;
+          searchHintEl.textContent = '';
+        } else {
+          searchHintEl.hidden = false;
+          searchHintEl.textContent = count + (count === 1 ? ' conversation matches' : ' conversations match') +
+            ' “' + searchTerm + '”';
+        }
+      }
     }
 
     function bubbleClass(message) {
@@ -174,11 +199,14 @@
 
     function refresh(silent) {
       var filter = root.getAttribute('data-filter') || 'all';
-      fetch('/api/crm/summary?filter=' + encodeURIComponent(filter))
+      var url = '/api/crm/summary?filter=' + encodeURIComponent(filter);
+      if (searchTerm) url += '&search=' + encodeURIComponent(searchTerm);
+      fetch(url)
         .then(function (response) { return response.json(); })
         .then(function (payload) {
           if (!payload.success) return;
           renderList(payload.chats || []);
+          updateSearchChrome((payload.chats || []).length);
           var stats = payload.stats || {};
           Object.keys(stats).forEach(function (key) {
             var node = document.querySelector('[data-stat="' + key + '"]');
@@ -219,9 +247,38 @@
       });
     });
 
+    if (searchEl) {
+      // Debounced so typing does not fire a request per keystroke.
+      searchEl.addEventListener('input', function () {
+        searchTerm = searchEl.value.trim();
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(function () { refresh(true); }, 300);
+      });
+
+      searchEl.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          searchEl.value = '';
+          searchTerm = '';
+          refresh(true);
+        }
+      });
+    }
+
+    if (searchClearEl) {
+      searchClearEl.addEventListener('click', function () {
+        searchEl.value = '';
+        searchTerm = '';
+        searchEl.focus();
+        refresh(true);
+      });
+    }
+
     refresh(false);
     timer = window.setInterval(function () { refresh(true); if (activeId) loadMessages(true); }, 20000);
-    window.addEventListener('beforeunload', function () { window.clearInterval(timer); });
+    window.addEventListener('beforeunload', function () {
+      window.clearInterval(timer);
+      window.clearTimeout(searchTimer);
+    });
   }
 
   /* ----------------------------------------------------------- user menu */

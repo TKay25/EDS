@@ -90,6 +90,19 @@
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="closed">Closed</button>
                 </div>
             </div>
+
+            <div class="crm-search">
+                <i class="bi bi-search crm-search-icon"></i>
+                <input class="crm-search-input" type="search" id="crmChatSearch"
+                       placeholder="Search name, phone number or product enquiry…"
+                       autocomplete="off" aria-label="Search conversations">
+                <button class="crm-search-clear" type="button" id="crmChatSearchClear"
+                        aria-label="Clear search" hidden>
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="crm-search-hint" id="crmSearchHint" hidden></div>
+
             <div class="ps-chat-list" id="crmChatList">
                 {% if chats %}
                     {% for chat in chats %}

@@ -93,6 +93,74 @@
 
 .crm-empty-actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
 
+/* -------------------------------------------------------- inbox search box */
+.crm-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 16px 12px;
+}
+
+.crm-search-icon {
+  position: absolute;
+  left: 13px;
+  font-size: 0.86rem;
+  color: var(--ps-text-soft);
+  pointer-events: none;
+}
+
+.crm-search-input {
+  width: 100%;
+  padding: 10px 38px 10px 36px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  color: var(--ps-text);
+  background: var(--ps-surface-alt);
+  border: 1px solid var(--ps-line);
+  border-radius: 999px;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.crm-search-input::placeholder { color: #93A1B2; }
+
+.crm-search-input:focus {
+  outline: none;
+  background: var(--ps-surface);
+  border-color: rgba(220, 20, 60, 0.42);
+  box-shadow: 0 0 0 3px var(--ps-accent-soft);
+}
+
+/* The browser's own clear button duplicates ours. */
+.crm-search-input::-webkit-search-cancel-button { display: none; }
+
+.crm-search-clear {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ps-text-soft);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.crm-search-clear:hover { background: var(--ps-line); color: var(--ps-text); }
+.crm-search-clear[hidden] { display: none; }
+
+.crm-search-hint {
+  margin: 0 16px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ps-text-soft);
+}
+
+.crm-search-hint[hidden] { display: none; }
+
 /* ----------------------------------------------------------- analytics head
    Three selects plus labels do not fit on one line at tablet width, and the
    labels were taller than the fields, causing a ragged wrap. */

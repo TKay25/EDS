@@ -23291,7 +23291,13 @@ def company_system_stats():
     }
 
 
-def _crm_chats(filter_key="all"):
+def _crm_chats(filter_key="all", search=None):
+    """Conversations for the CRM inbox.
+
+    `search` matches the customer's name, their WhatsApp number, or the text of
+    any message in the conversation — so an agent can find a chat by the product
+    a customer asked about, not just by who they are or what they last said.
+    """
     ensure_company_system_tables()
     where = ["company_reg = %s"]
     params = [COMPANY_SYSTEM_PREFIX]
@@ -23309,10 +23315,28 @@ def _crm_chats(filter_key="all"):
         where.append("is_staff = FALSE")
     else:
         where.append("status <> 'closed'")
+
+    search = " ".join(str(search or "").split()).strip()
+    if search:
+        like = f"%{search}%"
+        digits = "".join(character for character in search if character.isdigit())
+        # Match the customer's name, their number, or any message in the chat.
+        clauses = ["display_name ILIKE %s", "wa_profile_name ILIKE %s"]
+        params.append(like)
+        params.append(like)
+        if digits:
+            clauses.append("wa_number LIKE %s")
+            params.append(f"%{digits}%")
+        clauses.append("EXISTS (SELECT 1 FROM whatsapp_messages messages "
+                       "WHERE messages.chat_id = chats.id AND messages.body ILIKE %s)")
+        params.append(like)
+        where.append("(" + " OR ".join(clauses) + ")")
+
     query = f"""
         SELECT id, wa_number, display_name, status, unattended, handoff_reason,
-               unread_count, last_message, last_message_at, assigned_to, is_staff
-        FROM whatsapp_chats
+               unread_count, last_message, last_message_at, assigned_to, is_staff,
+               COALESCE(wa_profile_name, display_name)
+        FROM whatsapp_chats chats
         WHERE {' AND '.join(where)}
         ORDER BY COALESCE(last_message_at, created_at) DESC
         LIMIT 100
@@ -23554,7 +23578,8 @@ def crm_summary():
     if error:
         return error
     return jsonify({'success': True,
-                    'chats': _crm_chats(request.args.get('filter', 'all')),
+                    'chats': _crm_chats(request.args.get('filter', 'all'),
+                                        request.args.get('search')),
                     'stats': company_system_stats()})
 
 
