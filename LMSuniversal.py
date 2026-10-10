@@ -21109,6 +21109,506 @@ def _shop_options(text, options):
     return {"type": "options", "text": text, "options": [{"id": o[0], "label": o[1]} for o in options]}
 
 
+SHOP_LANGUAGE_NAMES = {"en": "English", "sn": "Shona", "nd": "Ndebele"}
+
+SHOP_TRANSLATIONS = {
+    "sn": {
+        "Welcome to Brilliant Chemicals Online Shopping Bot! 👋":
+            "Mauya kuBrilliant Chemicals! 👋",
+        "I can help you browse our Knockout range, build an order and reach our sales team. "
+        "Choose an option below to continue:":
+            "Ndinogona kukubatsira kuona zvigadzirwa zveKnockout, kugadzira odha uye kutaura neboka redu "
+            "rekutengesa. Sarudza zviri pasi apa kuti uenderere mberi:",
+        "High foaming, berry bubbly foam bath enriched with glycerine, avocado and aloe vera extracts.":
+            "Furo rekugeza rinobudisa furo rakawanda, rine hwema hwema berries uye glycerine, avocado nealoe vera.",
+        "High foaming lemon degreasing dishwashing liquid, available in 750ml and 1 Litre.":
+            "Mvura yekusuka ndiro yelemon inobudisa furo rakawanda uye inobvisa mafuta; inowanikwa mu750ml ne1 Litre.",
+        "Removes stubborn stains and germs and leaves a fresh pine or lavender scent.":
+            "Inobvisa mavara akaoma neutachiona uye inosiyira hwema hwepine kana lavender.",
+        "Restores white surfaces and lifts grease, oil and stains from stoves, fridges and tiles.":
+            "Inodzoreredza kuchena uye inobvisa mafuta nemavara pazvitofu, mafiriji nemataira.",
+        "Clears encrusted deposits from pots and pans and removes rust from tools.":
+            "Inobvisa tsvina yakanamira pamapoto nemapani uye ngura pazvishandiso.",
+        "Skin care jelly for minor scrapes, dryness and everyday moisture.":
+            "Jelly yekuchengetedza ganda kubva kumakwara madiki nekuoma uye inoita kuti rirambe rakanyorova.",
+        "Strong, non-abrasive disinfectant cleaner for floors, counters, sinks and bathrooms.":
+            "Chinoyeresa chine simba, chisingakwenyi, chekuuraya utachiona pasi, pamatafura, masinki nemudzimba dzekugezera.",
+        "Multipurpose thick bleach that lifts stains and odours and kills 99.9% of germs.":
+            "Bleach gobvu rinoshandiswa pazvinhu zvakawanda, rinobvisa mavara nehwema uye rinouraya 99.9% yehutachiona.",
+        "Select a language:": "Sarudza mutauro:",
+        "Browse Products": "Ongorora Zvigadzirwa",
+        "household, cleaning and personal care.": "zvemumba, zvekuchenesa uye zvekuzvitarisira.",
+        "Select a category to browse:": "Sarudza chikamu kuti uone zvigadzirwa:",
+        "Available pack sizes:": "Saizi dzemapakiti aripo:",
+        "Which pack size would you like?": "Ndeipi saizi yepakiti yaunoda?",
+        "Your cart is empty": "Ngoro yako haina chinhu",
+        "Add a few Knockout products and they will show up here. "
+        "You can also type a product name to search for it.":
+            "Wedzera zvigadzirwa zveKnockout mungoro yako. Unogonawo kunyora zita rechigadzirwa kuti utsvage.",
+        "Your Cart": "Ngoro Yako",
+        " items": " zvinhu",
+        " item": " chinhu",
+        "Add more products": "Wedzera zvimwe zvigadzirwa",
+        "Submit order enquiry": "Tumira chikumbiro cheodha",
+        "Empty the cart": "Bvisa zvose mungoro",
+        "Change quantity — ": "Chinja huwandu — ",
+        "Remove — ": "Bvisa — ",
+        "Pricing is confirmed by our sales team on quotation. What would you like to do?":
+            "Mutengo uchasimbiswa neboka redu rekutengesa. Chii chaungade kuita?",
+        "Search Products": "Tsvaga Zvigadzirwa",
+        "Type a product name or keyword — for example *bleach*, *jelly*, *pine* or *dish*.":
+            "Nyora zita rechigadzirwa kana izwi rekutsvaga — semuenzaniso *bleach*, *jelly*, *pine* kana *dish*.",
+        "I could not find anything for ": "Handina kuwana chinhu che",
+        ".\n\nTry another keyword, or browse the full range.": ".\n\nEdza rimwe izwi kana kutarisa zvigadzirwa zvose.",
+        "You can also:": "Unogonawo:",
+        "Search results for ": "Zvakawanikwa pakutsvaga ",
+        " product found:": " chigadzirwa chawanikwa:",
+        " products found:": " zvigadzirwa zvawanikwa:",
+        "Customer Support": "Rubatsiro rweVatengi",
+        "How would you like to contact Brilliant Chemicals Sales?":
+            "Ungada kubata sei neboka rekutengesa reBrilliant Chemicals?",
+        "Call Brilliant Chemicals on ": "Fonera Brilliant Chemicals pa",
+        "Office hours:": "Nguva dzebasa:",
+        "Monday to Friday, 8:00 AM - 5:00 PM": "Muvhuro kusvika Chishanu, 8:00 mangwanani - 5:00 manheru",
+        "Email:": "Email:",
+        "Message Brilliant Chemicals instead": "Tumira meseji kuBrilliant Chemicals",
+        "About Brilliant Chemicals (Pvt) Ltd": "NezveBrilliant Chemicals (Pvt) Ltd",
+        "We are a Zimbabwean company, registered as *Vivid Chemicals*, that manufactures, markets and ":
+            "Tiri kambani yekuZimbabwe yakanyoreswa se *Vivid Chemicals*, inogadzira nekutengesa ",
+        "distributes high quality domestic household and personal care products under our brand *":
+            "uye inoparadzira zvigadzirwa zvemumba nezvekuzvitarisira zvemhando yepamusoro pasi pechiratidzo chedu *",
+        "• *Brand:* ": "• *Chiratidzo:* ",
+        " — a registered trademark, proudly SAZ approved": " — chiratidzo chakanyoreswa uye chakabvumidzwa neSAZ",
+        "• *Vision:* To improve the quality of life in all households of all nations by providing high "
+        "quality household and personal care products at affordable prices":
+            "• *Chiono:* Kuvandudza hupenyu mudzimba dzemarudzi ose nekupa zvigadzirwa zvemumba nezvekuzvitarisira "
+            "zvemhando yepamusoro nemitengo inokwanisika",
+        "• *Quality:* Supplier rating, incoming raw material inspection and finished goods inspection, so "
+        "our products are consistently of high quality and always meet customer needs":
+            "• *Hunhu:* Tinoyera vatengesi, kuongorora zvinogadzirwa nazvo uye zvigadzirwa zvapera kuitira kuti "
+            "zvigadzirwa zvedu zvigare zviri zvemhando yepamusoro uye zvizadzise zvinodiwa nevatengi",
+        "• *Strengths:* A lean and efficient structure, modern high capacity production, and an "
+        "experienced and energetic leadership team":
+            "• *Simba redu:* Chimiro chinoshanda nemazvo, kugadzirwa kwemazuva ano kwakakura uye boka revatungamiri "
+            "rine ruzivo nesimba",
+        "• *Values:* Passion for customers, trust and respect for individuals, uncompromising integrity, "
+        "results through teamwork, and speed and agility":
+            "• *Tsika dzedu:* Kuzvipira kune vatengi, kuvimbana nekuremekedzana, kutendeseka, kubudirira "
+            "kuburikidza nekushanda pamwe chete uye kukurumidza kuita zvinhu",
+        "*Visit us:* Number ": "*Tishanyirei:* Nhamba ",
+        " (8:00 AM – 5:00 PM)": " (8:00 mangwanani – 5:00 manheru)",
+        "*Call:* ": "*Foni:* ",
+        "*Email:* ": "*Email:* ",
+        "Let's set up your order enquiry.": "Ngatigadzirirei chikumbiro cheodha yako.",
+        "What is your *full name*?": "Ndeapi *mazita ako ose*?",
+        "Please type your full name so we can process your order.":
+            "Nyora mazita ako ose kuti tikwanise kugadzirisa odha yako.",
+        "Which *company* are you ordering for? (Type *none* if you are buying for yourself.)":
+            "Uri kuodha uchimiririra *kambani* ipi? (Nyora *none* kana uchizvitengera.)",
+        "What is the best *phone number* to reach you on?": "Ndeipi *nhamba yefoni* yatingakubata nayo?",
+        "What is the *delivery address* for this order?": "Ndeipi *kero yekuendesa* odha iyi?",
+        "Please confirm your order enquiry": "Ndapota simbisa chikumbiro cheodha yako",
+        "*Name:*": "*Zita:*",
+        "*Company:*": "*Kambani:*",
+        "*Phone:*": "*Foni:*",
+        "*Delivery:*": "*Kero yekuendesa:*",
+        "*Items:*": "*Zvinhu:*",
+        "Submit this order enquiry now?": "Tumira chikumbiro cheodha ichi izvozvi?",
+        "Sorry, we could not save your order just now. Please try once more, or call ":
+            "Tine urombo, hatina kukwanisa kuchengetedza odha yako. Edza zvakare kana kufonera ",
+        "Order received": "Odha yagamuchirwa",
+        "Thank you ": "Tinokutendai ",
+        "! Your reference is *": "! Nhamba yako yereferensi ndeye *",
+        "Order total:": "Mari yose yeodha:",
+        "How would you like to pay?": "Ungada kubhadhara sei?",
+        "Send the EcoCash prompt to which number?": "EcoCash itumire chikumbiro chekubhadhara kunhamba ipi?",
+        "Reply *yes* to use *": "Pindura *hongu* kuti ushandise *",
+        "*, or type the number to use a different line.": "*, kana kunyora imwe nhamba yaunoda kushandisa.",
+        "That does not look like a Zimbabwean mobile number. "
+        "Please send it like *0771234567*, or reply *B* to change your choice.":
+            "Nhamba iyi haifanani nenhamba yefoni yekuZimbabwe. Nyora zvakaita se *0771234567*, "
+            "kana pindura *B* kuti uchinje sarudzo.",
+        "Check your phone": "Tarisa foni yako",
+        "An EcoCash prompt for *": "Chikumbiro cheEcoCash che *",
+        "* has been sent. Enter your EcoCash PIN to authorise the payment.":
+            "* chatumirwa. Isa PIN yako yeEcoCash kuti ubvumidze kubhadhara.",
+        "The prompt expires after a few minutes. I will confirm here as soon as it clears.":
+            "Chikumbiro ichi chinopera mushure memaminitsi mashoma. Ndichakuzivisa pano kana kubhadhara kwabudirira.",
+        "Once you are done:": "Kana wapedza:",
+        "EcoCash payments are not configured on this deployment.":
+            "Kubhadhara neEcoCash hakuna kugadzirirwa pano.",
+        "We could not reach EcoCash just now.": "Hatina kukwanisa kubata EcoCash izvozvi.",
+        "You can still place the order and pay later.": "Unogona kuisa odha wobhadha gare gare.",
+        "Pay now with EcoCash": "Bhadhara neEcoCash izvozvi",
+        "Place the order and pay later": "Isa odha ubhadhe gare gare",
+        "Try EcoCash again": "Edza EcoCash zvakare",
+        "Pay later instead": "Bhadhara gare gare",
+        "I have authorised it": "Ndabvumidza kubhadhara",
+        "Payment received": "Kubhadhara kwagamuchirwa",
+        "is paid and confirmed.": "yabhadharwa uye yasimbiswa.",
+        "EcoCash reported the payment as *": "EcoCash yaratidza kuti kubhadhara kwacho *",
+        "*. You can try again, or place the order and pay later.":
+            "*. Unogona kuedza zvakare kana kuisa odha wobhadha gare gare.",
+        "EcoCash is still waiting for your PIN. The prompt is on your phone — "
+        "authorise it and then reply *yes*.":
+            "EcoCash ichakamirira PIN yako. Chikumbiro chiri pafoni yako — chibvumidze wozopindura *hongu*.",
+        "Order confirmed": "Odha yasimbiswa",
+        "Order placed": "Odha yaiswa",
+        "Amount due:": "Mari inofanira kubhadharwa:",
+        "Our sales team will confirm delivery and payment details within one working day.":
+            "Boka redu rekutengesa richasimbisa nezvekuendesa uye kubhadhara mukati mezuva rimwe rebasa.",
+        "Our sales team will be in touch about delivery.": "Boka redu rekutengesa richakubata nezvekuendesa.",
+        "Any questions? Call ": "Une mibvunzo here? Fonera ",
+        " or email ": " kana kutumira email ku",
+        "Type your message and our sales team will get back to you. Include your name, "
+        "company and contact number so we can respond quickly.":
+            "Nyora meseji yako uye boka redu rekutengesa richakupindura. Isa zita rako, kambani uye nhamba "
+            "yefoni kuti tikurumidze kukupindura.",
+        "Please type your message so our sales team can help you.":
+            "Nyora meseji yako kuti boka redu rekutengesa rikubatsire.",
+        "Thank you — your message has been passed to our sales team. 🙏 "
+        "Someone will come back to you shortly.":
+            "Tinokutendai — meseji yenyu yaendeswa kuboka redu rekutengesa. 🙏 Muchapindurwa munguva pfupi.",
+        "Your cart has been emptied.": "Ngoro yako yabviswa zvinhu zvose.",
+        "How many units would you like?": "Unoda mayuniti mangani?",
+        "Please reply with the number of units you need, for example *10*.":
+            "Pindura nenhamba yemayuniti aunoda, semuenzaniso *10*.",
+        "Added ": "Wawedzera ",
+        " to your cart.": " mungoro yako.",
+        "is not one of the options above. Please choose from the list, "
+        "or use *B* to go back and *M* for the main menu.":
+            "haisi pakati pesarudzo dziri pamusoro. Sarudza pane zvakanyorwa kana shandisa *B* kudzokera "
+            "uye *M* kuenda kumenyu huru.",
+        "back to the previous menu": "dzokera kumenyu yapfuura",
+        "main menu": "menyu huru",
+        "Language changed to ": "Mutauro wachinjirwa ku",
+        "Switching you back to the staff assistant…": "Ndiri kukudzosera kumubatsiri wevashandi…",
+        "Choose": "Sarudza",
+        "Navigation": "Kufamba",
+        "Choose an option": "Sarudza",
+        "Choose an option:": "Sarudza:",
+        "Reply with a number for the rest:": "Pindura nenhamba kune dzasara:",
+    },
+    "nd": {
+        "Welcome to Brilliant Chemicals Online Shopping Bot! 👋":
+            "Siyanamukela eBrilliant Chemicals! 👋",
+        "I can help you browse our Knockout range, build an order and reach our sales team. "
+        "Choose an option below to continue:":
+            "Ngingakusiza ukubona imikhiqizo yeKnockout, ukwenza i-oda kanye lokuxhumana leqembu lethu "
+            "lezokuthengisa. "
+            "Khetha okukodwa okungezansi ukuze uqhubeke:",
+        "High foaming, berry bubbly foam bath enriched with glycerine, avocado and aloe vera extracts.":
+            "Ubhavu wegwebu elinengi, olomphunga wamaberry futhi ofakwe iglycerine, iavocado lealoe vera.",
+        "High foaming lemon degreasing dishwashing liquid, available in 750ml and 1 Litre.":
+            "Iliquid yokugezisa izitsha yelemon ekhupha amagwebu njalo isusa amafutha; itholakala ngo750ml nango1 Litre.",
+        "Removes stubborn stains and germs and leaves a fresh pine or lavender scent.":
+            "Isusa amabala aqinileyo lamagermu, itshiye iphunga lepine loba lavender.",
+        "Restores white surfaces and lifts grease, oil and stains from stoves, fridges and tiles.":
+            "Ibuyisela ubumhlophe njalo isusa amafutha, uwoyela lamabala eziko, emafrijini lakumathayili.",
+        "Clears encrusted deposits from pots and pans and removes rust from tools.":
+            "Isusa ukungcola okunamathele ezimbizeni lasemapanini njalo isuse ukugqwala emathuluzini.",
+        "Skin care jelly for minor scrapes, dryness and everyday moisture.":
+            "Ijelly yokunakekela isikhumba emikulweni emincane, ekomeni lokusigcina sithambile.",
+        "Strong, non-abrasive disinfectant cleaner for floors, counters, sinks and bathrooms.":
+            "Isihlanzi esilamandla sokubulala amagermu, esingaklwebhi, esokucoca phansi, amatafula, amasinki lezindlu zokugezela.",
+        "Multipurpose thick bleach that lifts stains and odours and kills 99.9% of germs.":
+            "Ibleach eqinileyo esetshenziswa ngezindlela ezinengi, isusa amabala lamaphunga njalo ibulala 99.9% yamagermu.",
+        "Select a language:": "Khetha ulimi:",
+        "Browse Products": "Bona Imikhiqizo",
+        "household, cleaning and personal care.": "eyekhaya, eyokucoca kanye lokuzinakekela.",
+        "Select a category to browse:": "Khetha isigaba ukuze ubone imikhiqizo:",
+        "Available pack sizes:": "Amasayizi amaphakethe akhona:",
+        "Which pack size would you like?": "Ngumuphi umkhulu wephakethe owufunayo?",
+        "Your cart is empty": "Inqola yakho ayilalutho",
+        "Add a few Knockout products and they will show up here. "
+        "You can also type a product name to search for it.":
+            "Faka imikhiqizo yeKnockout enqoleni yakho. Ungabhala ibizo lomkhiqizo ukuze uwudinge.",
+        "Your Cart": "Inqola Yakho",
+        " items": " izinto",
+        " item": " into",
+        "Add more products": "Faka eminye imikhiqizo",
+        "Submit order enquiry": "Thumela isicelo se-oda",
+        "Empty the cart": "Khupha konke enqoleni",
+        "Change quantity — ": "Ntshintsha inani — ",
+        "Remove — ": "Khupha — ",
+        "Pricing is confirmed by our sales team on quotation. What would you like to do?":
+            "Intengo izaqinisekiswa liqembu lethu lezokuthengisa. Ungathanda ukwenzani?",
+        "Search Products": "Dinga Imikhiqizo",
+        "Type a product name or keyword — for example *bleach*, *jelly*, *pine* or *dish*.":
+            "Bhala ibizo lomkhiqizo loba ibala lokudinga — ngokwesibonelo *bleach*, *jelly*, *pine* loba *dish*.",
+        "I could not find anything for ": "Angitholanga lutho ngo",
+        ".\n\nTry another keyword, or browse the full range.": ".\n\nZama elinye ibala loba ubone yonke imikhiqizo.",
+        "You can also:": "Ungaphinda:",
+        "Search results for ": "Imiphumela yokudinga ",
+        " product found:": " umkhiqizo utholakele:",
+        " products found:": " imikhiqizo itholakele:",
+        "Customer Support": "Usizo Lwamakhasimende",
+        "How would you like to contact Brilliant Chemicals Sales?":
+            "Ungathanda ukuxhumana njani leqembu lezokuthengisa leBrilliant Chemicals?",
+        "Call Brilliant Chemicals on ": "Tshayela iBrilliant Chemicals ku",
+        "Office hours:": "Amahora omsebenzi:",
+        "Monday to Friday, 8:00 AM - 5:00 PM": "NgoMvulo kusiya kuLwesihlanu, 8:00 ekuseni - 5:00 ntambama",
+        "Email:": "I-email:",
+        "Message Brilliant Chemicals instead": "Thumela umlayezo kuBrilliant Chemicals",
+        "About Brilliant Chemicals (Pvt) Ltd": "Mayelana leBrilliant Chemicals (Pvt) Ltd",
+        "We are a Zimbabwean company, registered as *Vivid Chemicals*, that manufactures, markets and ":
+            "Siyinkampani yaseZimbabwe ebhaliswe njenge *Vivid Chemicals*, eyenza njalo ithengise ",
+        "distributes high quality domestic household and personal care products under our brand *":
+            "iphinde isabalalise imikhiqizo yasekhaya leyokuzinakekela esezingeni eliphezulu ngaphansi kophawu lwethu *",
+        "• *Brand:* ": "• *Uphawu:* ",
+        " — a registered trademark, proudly SAZ approved": " — luphawu olubhalisiweyo olwamukelwe yiSAZ",
+        "• *Vision:* To improve the quality of life in all households of all nations by providing high "
+        "quality household and personal care products at affordable prices":
+            "• *Umbono:* Ukuthuthukisa impilo emizini yonke ngokunikela ngemikhiqizo yasekhaya leyokuzinakekela "
+            "esezingeni eliphezulu ngentengo efinyelelelekayo",
+        "• *Quality:* Supplier rating, incoming raw material inspection and finished goods inspection, so "
+        "our products are consistently of high quality and always meet customer needs":
+            "• *Umgangatho:* Sihlola abasinika impahla, impahla esetshenziswayo kanye lemikhiqizo eqediweyo ukuze "
+            "imikhiqizo yethu ibe sezingeni eliphezulu njalo ihlangabezane lezidingo zamakhasimende",
+        "• *Strengths:* A lean and efficient structure, modern high capacity production, and an "
+        "experienced and energetic leadership team":
+            "• *Amandla:* Uhlelo olusebenza kuhle, ukukhiqiza okukhulu kwesimanje kanye labakhokheli abalolwazi "
+            "lamandla",
+        "• *Values:* Passion for customers, trust and respect for individuals, uncompromising integrity, "
+        "results through teamwork, and speed and agility":
+            "• *Izimiso:* Ukuzinikela kumakhasimende, ukwethembana lokuhloniphana, ubuqotho, ukuphumelela "
+            "ngokusebenza ndawonye kanye lokusebenza masinyane",
+        "*Visit us:* Number ": "*Sivakashele:* Inombolo ",
+        " (8:00 AM – 5:00 PM)": " (8:00 ekuseni – 5:00 ntambama)",
+        "*Call:* ": "*Ucingo:* ",
+        "*Email:* ": "*I-email:* ",
+        "Let's set up your order enquiry.": "Asilungise isicelo se-oda lakho.",
+        "What is your *full name*?": "Ungubani *ibizo lakho elipheleleyo*?",
+        "Please type your full name so we can process your order.":
+            "Bhala ibizo lakho elipheleleyo ukuze silungise i-oda lakho.",
+        "Which *company* are you ordering for? (Type *none* if you are buying for yourself.)":
+            "Ubhadela *yiphi inkampani*? (Bhala *none* nxa uzithengela wena.)",
+        "What is the best *phone number* to reach you on?": "Yiphi *inombolo yocingo* esingakuthola kuyo?",
+        "What is the *delivery address* for this order?": "Yiphi *ikheli yokuletha* i-oda leli?",
+        "Please confirm your order enquiry": "Sicela uqinisekise isicelo se-oda lakho",
+        "*Name:*": "*Ibizo:*",
+        "*Company:*": "*Inkampani:*",
+        "*Phone:*": "*Ucingo:*",
+        "*Delivery:*": "*Ukuletha:*",
+        "*Items:*": "*Impahla:*",
+        "Submit this order enquiry now?": "Thumela isicelo se-oda leli khathesi?",
+        "Sorry, we could not save your order just now. Please try once more, or call ":
+            "Siyaxolisa, sehlulekile ukugcina i-oda lakho. Zama futhi loba utshayele ",
+        "Order received": "I-oda yamukelwe",
+        "Thank you ": "Siyabonga ",
+        "! Your reference is *": "! Inombolo yerefereyisi yakho ngu *",
+        "Order total:": "Isamba se-oda:",
+        "How would you like to pay?": "Ungathanda ukubhadala njani?",
+        "Send the EcoCash prompt to which number?": "Thumela isicelo seEcoCash kuyiphi inombolo?",
+        "Reply *yes* to use *": "Phendula *yebo* ukuze usebenzise *",
+        "*, or type the number to use a different line.": "*, loba ubhale enye inombolo ofuna ukuyisebenzisa.",
+        "That does not look like a Zimbabwean mobile number. "
+        "Please send it like *0771234567*, or reply *B* to change your choice.":
+            "Le ayifani lenombolo yocingo yaseZimbabwe. Bhala njengale *0771234567*, loba phendula *B* "
+            "ukuze untshintshe okukhethileyo.",
+        "Check your phone": "Khangela ifoni yakho",
+        "An EcoCash prompt for *": "Isicelo seEcoCash sika *",
+        "* has been sent. Enter your EcoCash PIN to authorise the payment.":
+            "* sithunyelwe. Faka iPIN yakho yeEcoCash ukuze uvumele ukubhadala.",
+        "The prompt expires after a few minutes. I will confirm here as soon as it clears.":
+            "Isicelo siphela ngemva kwemizuzu embalwa. Ngizakuqinisekisa lapha nxa ukubhadala sekuphumelele.",
+        "Once you are done:": "Nxa usuqedile:",
+        "EcoCash payments are not configured on this deployment.":
+            "Ukubhadala ngeEcoCash akulungiswanga lapha.",
+        "We could not reach EcoCash just now.": "Sehlulekile ukufinyelela iEcoCash khathesi.",
+        "You can still place the order and pay later.": "Ungafaka i-oda ubhadale ngesikhathi esizayo.",
+        "Pay now with EcoCash": "Bhadala ngeEcoCash khathesi",
+        "Place the order and pay later": "Faka i-oda ubhadale ngesikhathi esizayo",
+        "Try EcoCash again": "Zama futhi ngeEcoCash",
+        "Pay later instead": "Bhadala ngesikhathi esizayo",
+        "I have authorised it": "Sengikuvumelile ukubhadala",
+        "Payment received": "Ukubhadala kwamukelwe",
+        "is paid and confirmed.": "selibhadalwe laqinisekiswa.",
+        "EcoCash reported the payment as *": "IEcoCash itshengisa ukuthi ukubhadala *",
+        "*. You can try again, or place the order and pay later.":
+            "*. Ungazama futhi loba ufake i-oda ubhadale ngesikhathi esizayo.",
+        "EcoCash is still waiting for your PIN. The prompt is on your phone — "
+        "authorise it and then reply *yes*.":
+            "IEcoCash isalindele iPIN yakho. Isicelo sisefonini yakho — sivumele ubusuphendula *yebo*.",
+        "Order confirmed": "I-oda iqinisekisiwe",
+        "Order placed": "I-oda ifakiwe",
+        "Amount due:": "Imali okumele ibhadalwe:",
+        "Our sales team will confirm delivery and payment details within one working day.":
+            "Iqembu lethu lezokuthengisa lizaqinisekisa ngokulethwa lokubhadala phakathi kosuku olulodwa lomsebenzi.",
+        "Our sales team will be in touch about delivery.": "Iqembu lethu lezokuthengisa lizakuxhumana ngokulethwa.",
+        "Any questions? Call ": "Ulemibuzo? Tshayela ",
+        " or email ": " loba uthumele i-email ku",
+        "Type your message and our sales team will get back to you. Include your name, "
+        "company and contact number so we can respond quickly.":
+            "Bhala umlayezo wakho njalo iqembu lethu lezokuthengisa lizakuphendula. Faka ibizo lakho, inkampani "
+            "lenombolo yocingo ukuze siphendule masinyane.",
+        "Please type your message so our sales team can help you.":
+            "Bhala umlayezo wakho ukuze iqembu lethu lezokuthengisa likusize.",
+        "Thank you — your message has been passed to our sales team. 🙏 "
+        "Someone will come back to you shortly.":
+            "Siyabonga — umlayezo wakho usudluliselwe eqenjini lethu lezokuthengisa. 🙏 Sizakuphendula masinyane.",
+        "Your cart has been emptied.": "Inqola yakho isikhutshiwe konke.",
+        "How many units would you like?": "Ufuna amayunithi amangaki?",
+        "Please reply with the number of units you need, for example *10*.":
+            "Phendula ngenani lamayunithi owadingayo, ngokwesibonelo *10*.",
+        "Added ": "Kufakwe ",
+        " to your cart.": " enqoleni yakho.",
+        "is not one of the options above. Please choose from the list, "
+        "or use *B* to go back and *M* for the main menu.":
+            "akukho phakathi kwezinto ezingaphezulu. Khetha ohlwini loba usebenzise u *B* ukubuyela "
+            "lo *M* ukuya kumenyu enkulu.",
+        "back to the previous menu": "buyela kumenyu edluleyo",
+        "main menu": "imenyu enkulu",
+        "Language changed to ": "Ulimi seluntshintshwe lwaba ",
+        "Switching you back to the staff assistant…": "Ngikubuyisela kumsizi wabasebenzi…",
+        "Choose": "Khetha",
+        "Navigation": "Ukuhamba",
+        "Choose an option": "Khetha",
+        "Choose an option:": "Khetha:",
+        "Reply with a number for the rest:": "Phendula ngenombolo kokusele:",
+    },
+}
+
+SHOP_OPTION_TRANSLATIONS = {
+    "sn": {
+        "Shop": "Tenga",
+        "Back": "Dzokera",
+        "Main menu": "Menyu huru",
+        "Search Products": "Tsvaga Zvigadzirwa",
+        "View Cart": "Ona Ngoro",
+        "Talk to Support": "Taura neRubatsiro",
+        "About Us": "Nezvedu",
+        "Switch to Staff": "Dzokera kuvashandi",
+        "Language": "Mutauro",
+        "Browse products": "Ongorora zvigadzirwa",
+        "Search products": "Tsvaga zvigadzirwa",
+        "Choose pack size": "Sarudza saizi yepakiti",
+        "Call Brilliant Chemicals": "Fonera Brilliant Chemicals",
+        "Message Brilliant Chemicals": "Tumira meseji kuBrilliant Chemicals",
+        "Shop our products": "Tenga zvigadzirwa zvedu",
+        "Talk to Support": "Taura neRubatsiro",
+        "Browse all categories": "Ona zvikamu zvose",
+        "Yes, submit": "Hongu, tumira",
+        "Back to cart": "Dzokera kungoro",
+        "Place the order and pay later": "Isa odha ubhadhe gare gare",
+        "Pay now with EcoCash": "Bhadhara neEcoCash izvozvi",
+        "Try EcoCash again": "Edza EcoCash zvakare",
+        "Pay later instead": "Bhadhara gare gare",
+        "I have authorised it": "Ndabvumidza kubhadhara",
+        "Empty the cart": "Bvisa zvose mungoro",
+    },
+    "nd": {
+        "Shop": "Thenga",
+        "Back": "Buyela",
+        "Main menu": "Imenyu enkulu",
+        "Search Products": "Dinga Imikhiqizo",
+        "View Cart": "Bona Inqola",
+        "Talk to Support": "Khuluma Losizo",
+        "About Us": "Mayelana Lathi",
+        "Switch to Staff": "Buyela Kuzisebenzi",
+        "Language": "Ulimi",
+        "Browse products": "Bona imikhiqizo",
+        "Search products": "Dinga imikhiqizo",
+        "Choose pack size": "Khetha umkhulu wephakethe",
+        "Call Brilliant Chemicals": "Tshayela Brilliant Chemicals",
+        "Message Brilliant Chemicals": "Thumela umlayezo kuBrilliant Chemicals",
+        "Shop our products": "Thenga imikhiqizo yethu",
+        "Talk to Support": "Khuluma Losizo",
+        "Browse all categories": "Bona zonke izigaba",
+        "Yes, submit": "Yebo, thumela",
+        "Back to cart": "Buyela enqoleni",
+        "Place the order and pay later": "Faka i-oda ubhadale ngesikhathi esizayo",
+        "Pay now with EcoCash": "Bhadala ngeEcoCash khathesi",
+        "Try EcoCash again": "Zama futhi ngeEcoCash",
+        "Pay later instead": "Bhadala ngesikhathi esizayo",
+        "I have authorised it": "Sengikuvumelile ukubhadala",
+        "Empty the cart": "Khupha konke enqoleni",
+    },
+}
+
+
+def _shop_language_code(value):
+    value = str(value or "en").strip().lower()
+    aliases = {"english": "en", "shona": "sn", "ndebele": "nd", "isindebele": "nd"}
+    value = aliases.get(value, value)
+    return value if value in SHOP_LANGUAGE_NAMES else "en"
+
+
+def _shop_translate_text(text, language):
+    language = _shop_language_code(language)
+    for source, translated in sorted(SHOP_TRANSLATIONS.get(language, {}).items(),
+                                     key=lambda item: len(item[0]), reverse=True):
+        text = text.replace(source, translated)
+    return text
+
+
+def _shop_translate_option(label, language):
+    language = _shop_language_code(language)
+    if language == "en":
+        return label
+    translated = SHOP_OPTION_TRANSLATIONS.get(language, {}).get(label)
+    if translated is not None:
+        return translated
+    if label.startswith("View Cart ("):
+        count, _, _items = label[len("View Cart ("):-1].partition(" ")
+        noun = ("chinhu" if count == "1" else "zvinhu") if language == "sn" else "into"
+        return f"{SHOP_OPTION_TRANSLATIONS[language]['View Cart']} ({count} {noun})"
+    prefixes = {
+        "sn": {
+            "Change quantity — ": "Chinja huwandu — ",
+            "Remove — ": "Bvisa — ",
+            "Pay now with EcoCash — ": "Bhadhara neEcoCash izvozvi — ",
+        },
+        "nd": {
+            "Change quantity — ": "Ntshintsha inani — ",
+            "Remove — ": "Khupha — ",
+            "Pay now with EcoCash — ": "Bhadala ngeEcoCash khathesi — ",
+        },
+    }
+    for source, target in prefixes.get(language, {}).items():
+        if label.startswith(source):
+            return target + label[len(source):]
+    return _shop_translate_text(label, language)
+
+
+def _shop_translate_messages(messages, language, preserve=()):
+    language = _shop_language_code(language)
+    if language == "en":
+        return messages
+    protected = sorted({str(value) for value in preserve
+                        if value is not None and str(value).strip() and not str(value).isdigit()},
+                       key=len, reverse=True)
+    translated_messages = []
+    for message in messages:
+        translated = dict(message)
+        text = translated.get("text")
+        tokens = []
+        if text:
+            for index, value in enumerate(protected):
+                token = f"__SHOP_VALUE_{index}__"
+                if value in text:
+                    text = text.replace(value, token)
+                    tokens.append((token, value))
+            text = _shop_translate_text(text, language)
+            for token, value in tokens:
+                text = text.replace(token, value)
+            translated["text"] = text
+        if translated.get("options"):
+            translated["options"] = [
+                dict(option, label=_shop_translate_option(option["label"], language))
+                for option in translated["options"]
+            ]
+        translated_messages.append(translated)
+    return translated_messages
+
+
+def _shop_language_options():
+    return _shop_options(
+        "🌐 Select a language:",
+        [(f"lang:{code}", label) for code, label in SHOP_LANGUAGE_NAMES.items()],
+    )
+
+
 # WhatsApp list rows are capped at 24 characters, so the brand prefix is
 # dropped from choice labels and anything still too long gets a short form.
 SHOP_LABEL_OVERRIDES = {
@@ -21134,10 +21634,11 @@ def shop_greeting(cart=None, staff=False):
                ("support", "Talk to Support"), ("about", "About Us")]
     if staff:
         options.append(("switch_staff", "Switch to Staff"))
+    options.append(("language", "Language"))
     return _shop_options(
         "Welcome to Brilliant Chemicals Online Shopping Bot! 👋\n\n"
         "I can help you browse our Knockout range, build an order and reach our sales team. "
-        "Reply with an option number:",
+        "Choose an option below to continue:",
         options,
     )
 
@@ -21330,6 +21831,8 @@ def _shop_render(step, ctx, cart, customer=None, staff=False):
         return [_shop_text(
             "✍️ Type your message and our sales team will get back to you. Include your name, "
             "company and contact number so we can respond quickly.")]
+    if step == "language":
+        return [_shop_language_options()]
     if step == "order_name":
         return [_shop_text("📝 Let's set up your order enquiry.\n\nWhat is your *full name*?")]
     if step == "order_company":
@@ -21372,6 +21875,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     # Set when the number also belongs to a member of staff, so the customer
     # menu can always offer a way back to the staff assistant.
     staff = bool(state.get("staff"))
+    language = _shop_language_code(state.get("language"))
 
     def greet():
         return shop_greeting(cart, staff)
@@ -21393,13 +21897,30 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         else:
             unmatched_number = True
     low = command.lower()
+    affirmative_words = {"yes", "y", "confirm", "ok"}
+    negative_words = {"no", "later", "pay later"}
+    if language == "sn":
+        affirmative_words.update(("hongu", "ehe"))
+        negative_words.add("kwete")
+    elif language == "nd":
+        affirmative_words.update(("yebo", "ye"))
+        negative_words.add("hatshi")
 
     def finish(new_step, messages, actions=None, new_ctx=None, new_customer=None, new_history=None):
+        saved_ctx = ctx if new_ctx is None else new_ctx
+        saved_customer = customer if new_customer is None else new_customer
+        preserve = [command]
+        preserve.extend((saved_customer or {}).values())
+        preserve.extend((saved_ctx or {}).values())
+        for item in cart:
+            preserve.extend((item.get("name"), item.get("size")))
+        messages = _shop_translate_messages(messages, language, preserve)
         state["step"] = new_step
         state["cart"] = cart
-        state["ctx"] = ctx if new_ctx is None else new_ctx
+        state["ctx"] = saved_ctx
         state["ctx"]["last_options"] = shop_option_ids(messages)
-        state["customer"] = customer if new_customer is None else new_customer
+        state["customer"] = saved_customer
+        state["language"] = language
         kept = history if new_history is None else list(new_history)
         state["history"] = kept[-12:]
         state["nav"] = {"back": bool(state["history"]), "menu": new_step != "menu"}
@@ -21424,10 +21945,15 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         return None
 
     # ------------------------------------------------------- navigation keys
-    if low in SHOP_MENU_WORDS:
+    if low in ("language", "change language", "mutauro", "ulimi"):
+        return result("language", [_shop_language_options()], new_ctx={})
+
+    if low in SHOP_MENU_WORDS or (
+            low in ({"menyu huru"} if language == "sn" else {"imenyu enkulu"} if language == "nd" else set())):
         return finish("menu", [greet()], new_history=[])
 
-    if low in SHOP_BACK_WORDS:
+    if low in SHOP_BACK_WORDS or (
+            low in ({"dzokera", "kudzokera"} if language == "sn" else {"buyela", "emuva"} if language == "nd" else set())):
         if not history:
             return finish("menu", [greet()], new_history=[])
         previous = history[-1]
@@ -21439,6 +21965,27 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                       new_ctx=restored_ctx, new_history=history[:-1])
 
     # --------------------------------------------------------- global commands
+    if step == "language":
+        language_choices = {f"lang:{code}": code for code in SHOP_LANGUAGE_NAMES}
+        language_choices.update({name.lower(): code for code, name in SHOP_LANGUAGE_NAMES.items()})
+        selected_language = language_choices.get(low)
+        if selected_language:
+            language = selected_language
+            previous = history[-1] if history else {"step": "menu", "ctx": {}}
+            restored_step = previous.get("step") or "menu"
+            restored_ctx = previous.get("ctx") or {}
+            restored_messages = ([greet()] if restored_step == "menu" else
+                                 _shop_render(restored_step, restored_ctx, cart, customer, staff))
+            restored_history = [] if restored_step == "menu" else history[:-1]
+            return finish(
+                restored_step,
+                [_shop_text(f"Language changed to {SHOP_LANGUAGE_NAMES[language]}."),
+                 *restored_messages],
+                new_ctx=restored_ctx,
+                new_history=restored_history,
+            )
+        return result("language", [_shop_language_options()])
+
     if low in ("shop", "shop now", "addmore", "shop more"):
         return result("category", [_shop_category_list()])
 
@@ -21470,6 +22017,11 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         return result("support_msg", [_shop_text(
             "✍️ Type your message and our sales team will get back to you. Include your name, "
             "company and contact number so we can respond quickly.")])
+
+    if low in ("shona", "ndebele", "english") and step != "language":
+        # Language names typed outside the selector open it rather than changing
+        # the conversation unexpectedly.
+        return result("language", [_shop_language_options()], new_ctx={})
 
     if low in ("clear", "empty cart"):
         cart = []
@@ -21610,7 +22162,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         return result("order_confirm", _shop_order_confirmation(cart, customer))
 
     if step == "order_confirm":
-        if low in ("confirm_order", "yes", "y", "confirm", "ok"):
+        if low == "confirm_order" or low in affirmative_words:
             total = shop_cart_total(cart)
             can_pay = total is not None and paynow_configured()
             reference = _shop_save_order(state, channel, wa_number, customer,
@@ -21643,7 +22195,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         return result("order_confirm", _shop_order_confirmation(cart, customer))
 
     if step == "payment":
-        if low in ("paylater", "later", "pay later", "no"):
+        if low in ("paylater", "later", "pay later") or low in negative_words:
             reference = ctx.get("reference")
             cart = []
             return result("menu", _shop_order_placed(reference, customer, ctx.get("amount"),
@@ -21651,7 +22203,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                           actions=[{"type": "escalate",
                                     "reason": f"New order enquiry {reference}"}],
                           new_history=[])
-        if low in ("paynow", "pay", "ecocash", "yes"):
+        if low in ("paynow", "pay", "ecocash") or low in affirmative_words:
             phone = str(customer.get("phone") or "").strip() or str(wa_number or "")
             return result("pay_phone", [_shop_text(
                 f"📱 Send the EcoCash prompt to which number?\n\n"
@@ -21665,7 +22217,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "pay_phone":
         typed = (raw_input or "").strip()
-        phone = ctx.get("phone") if low in ("yes", "y", "confirm", "ok") else typed
+        phone = ctx.get("phone") if low in affirmative_words else typed
         phone = re.sub(r"[^0-9]", "", str(phone or ""))
         if phone.startswith("263"):
             phone = "0" + phone[3:]
@@ -21707,7 +22259,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                            f"Reference *{reference}* is paid and confirmed."),
                 greet(),
             ], new_history=[])
-        if low in ("paylater", "later", "pay later"):
+        if low in ("paylater", "later", "pay later") or low in negative_words:
             shop_payment_update(reference, "pay_later")
             cart = []
             return result("menu", _shop_order_placed(reference, customer, amount, paid=False,
@@ -21858,7 +22410,7 @@ def shop_order_payment(reference):
         return (None, None, None, None)
 
 
-def shop_nav_block(nav):
+def shop_nav_block(nav, language="en"):
     """The navigation footer appended to every customer reply."""
     if not nav or not (nav.get("back") or nav.get("menu")):
         return ""
@@ -21867,16 +22419,16 @@ def shop_nav_block(nav):
         lines.append("↩️  *B* — back to the previous menu")
     if nav.get("menu"):
         lines.append("🏠  *M* — main menu")
-    return "━━━━━━━━━━━━━━━\n" + "\n".join(lines)
+    return "━━━━━━━━━━━━━━━\n" + _shop_translate_text("\n".join(lines), language)
 
 
-def shop_nav_options(nav):
+def shop_nav_options(nav, language="en"):
     """Navigation choices offered alongside every prompt."""
     options = []
     if nav and nav.get("back"):
-        options.append({"id": "b", "label": "Back"})
+        options.append({"id": "b", "label": _shop_translate_option("Back", language)})
     if nav and nav.get("menu"):
-        options.append({"id": "m", "label": "Main menu"})
+        options.append({"id": "m", "label": _shop_translate_option("Main menu", language)})
     return options
 
 
@@ -21919,19 +22471,19 @@ def _wa_button_payload(body, options):
     }
 
 
-def _wa_list_payload(body, options, nav_count=0):
+def _wa_list_payload(body, options, nav_count=0, language="en"):
     content = options[:len(options) - nav_count] if nav_count else options
     sections = []
     if content:
         sections.append({
-            "title": "Choose",
+            "title": _shop_translate_text("Choose", language),
             "rows": [{"id": option["id"],
                       "title": _wa_clip(option["label"], WA_LIST_ROW_TITLE_LIMIT)}
                      for option in content],
         })
     if nav_count:
         sections.append({
-            "title": "Navigation",
+            "title": _shop_translate_text("Navigation", language),
             "rows": [{"id": option["id"],
                       "title": _wa_clip(option["label"], WA_LIST_ROW_TITLE_LIMIT)}
                      for option in options[len(options) - nav_count:]],
@@ -21941,12 +22493,13 @@ def _wa_list_payload(body, options, nav_count=0):
         "interactive": {
             "type": "list",
             "body": {"text": body},
-            "action": {"button": "Choose an option", "sections": sections},
+            "action": {"button": _shop_translate_text("Choose an option", language),
+                       "sections": sections},
         },
     }
 
 
-def shop_whatsapp_payloads(messages, nav=None):
+def shop_whatsapp_payloads(messages, nav=None, language="en"):
     """Render one assistant turn as WhatsApp buttons or a list.
 
     Buttons are used when the whole prompt fits in three replies, a list when it
@@ -21970,7 +22523,7 @@ def shop_whatsapp_payloads(messages, nav=None):
         parts.append(choice_text)
 
     content_options = list((choice or {}).get("options") or [])
-    nav_options = shop_nav_options(nav)
+    nav_options = shop_nav_options(nav, language)
     options = content_options + nav_options
     body = "\n\n".join(parts)
 
@@ -21978,22 +22531,23 @@ def shop_whatsapp_payloads(messages, nav=None):
         return [_wa_text_payload(body)] if body else []
 
     if len(options) <= WA_BUTTON_LIMIT:
-        prompt = body or "Choose an option:"
+        prompt = body or _shop_translate_text("Choose an option:", language)
         if len(prompt) > WA_BUTTON_BODY_LIMIT:
-            return [_wa_text_payload(prompt), _wa_button_payload("Choose an option:", options)]
+            return [_wa_text_payload(prompt), _wa_button_payload(
+                _shop_translate_text("Choose an option:", language), options)]
         return [_wa_button_payload(prompt, options)]
 
     capacity = WA_LIST_ROWS_MAX - len(nav_options)
     if len(content_options) > capacity:
         hidden = content_options[capacity:]
-        body = body + "\n\nReply with a number for the rest:\n" + "\n".join(
+        body = body + "\n\n" + _shop_translate_text("Reply with a number for the rest:", language) + "\n" + "\n".join(
             f"{index}. {option['label']}"
             for index, option in enumerate(hidden, start=capacity + 1))
         options = content_options[:capacity] + nav_options
-    return [_wa_list_payload(body, options, len(nav_options))]
+    return [_wa_list_payload(body, options, len(nav_options), language)]
 
 
-def shop_messages_to_text(messages, nav=None):
+def shop_messages_to_text(messages, nav=None, language="en"):
     """Flatten assistant messages into WhatsApp-friendly text."""
     parts = []
     for message in messages:
@@ -22004,7 +22558,7 @@ def shop_messages_to_text(messages, nav=None):
                 f"{index}. {option['label']}" for index, option in enumerate(options, start=1))
         parts.append(text)
     body = "\n\n".join(part for part in parts if part)
-    nav_text = shop_nav_block(nav)
+    nav_text = shop_nav_block(nav, language)
     if nav_text:
         body = f"{body}\n\n{nav_text}"
     return body
@@ -22168,18 +22722,18 @@ def shop_webhook_turn(sender_id, display_phone_number, message, staff=False):
         return actions
 
     shop_send_whatsapp(sender_id, messages, new_state.get("nav"), display_phone_number,
-                       staff=staff)
+                       staff=staff, language=new_state.get("language", "en"))
     return actions
 
 
-def shop_send_whatsapp(wa_number, messages, nav, channel=None, staff=False):
+def shop_send_whatsapp(wa_number, messages, nav, channel=None, staff=False, language="en"):
     """Deliver one assistant turn as WhatsApp buttons/lists, then log it.
 
     The transcript keeps the full readable prompt — including every choice — so
     an agent reading the conversation sees everything the customer was offered.
     """
-    payloads = shop_whatsapp_payloads(messages, nav)
-    readable = shop_messages_to_text(messages, nav)
+    payloads = shop_whatsapp_payloads(messages, nav, language)
+    readable = shop_messages_to_text(messages, nav, language)
     if not payloads and not readable:
         return False
 
@@ -22602,6 +23156,7 @@ def portal_user_access():
 
 
 @app.route('/portal/crm')
+def crm_portal_placeholder_removed():
 def portal_crm():
     user, denied = company_system_guard('crm')
     if denied:
