@@ -62,15 +62,33 @@
       listEl.innerHTML = chats.map(function (chat) {
         var initials = escapeHtml((chat.display_name || 'C').trim().slice(0, 2).toUpperCase());
         var preview = escapeHtml(chat.last_message || 'No messages yet');
+        // Staff (leave management) and shopping conversations share one channel,
+        // so each row is colour-keyed and tagged the same way the server renders
+        // it; otherwise the first refresh would drop the distinction.
+        var kind = chat.kind || (chat.is_staff ? 'inhouse' : 'shopping');
+        var classes = 'ps-chat-item is-' + escapeHtml(kind) +
+          (chat.status === 'human' ? ' is-human' : '') +
+          (String(chat.id) === String(activeId) ? ' is-active' : '');
+        var tags = '';
+        if (chat.is_staff) tags += '<span class="crm-kind-tag">In-house</span>';
+        if (chat.status === 'human') tags += '<span class="crm-kind-tag crm-kind-human">Agent live</span>';
+        if (chat.unattended && chat.status !== 'human') {
+          tags += '<span class="crm-kind-tag crm-kind-needs">Needs human</span>';
+        }
+        if (chat.unread_count) tags += '<span class="ps-badge">' + chat.unread_count + '</span>';
+        var badges = (chat.badges || []).map(function (badge) {
+          return '<span class="crm-chat-badge is-' + escapeHtml(badge.tone) + '">' +
+            escapeHtml(badge.label) + '</span>';
+        }).join('');
         return '' +
-          '<div class="ps-chat-item' + (String(chat.id) === String(activeId) ? ' is-active' : '') +
-          '" data-chat-id="' + chat.id + '">' +
+          '<div class="' + classes + '" data-chat-id="' + chat.id +
+          '" data-kind="' + escapeHtml(kind) + '">' +
           '<div class="ps-chat-avatar">' + initials + '</div>' +
           '<div class="ps-chat-meta">' +
           '<div class="ps-chat-name">' + escapeHtml(chat.display_name || ('+' + chat.wa_number)) +
-          (chat.is_staff ? ' <span class="ps-tag">Staff</span>' : '') +
-          (chat.unread_count ? ' <span class="ps-badge">' + chat.unread_count + '</span>' : '') + '</div>' +
+          tags + '</div>' +
           '<div class="ps-chat-preview">' + preview + '</div>' +
+          (badges ? '<div class="crm-chat-badges">' + badges + '</div>' : '') +
           '<div class="ps-chat-time">' + escapeHtml(chat.last_message_at || '') + '</div>' +
           '</div></div>';
       }).join('');
@@ -97,6 +115,20 @@
       }
     }
 
+    // Delivery problems must stay visible after the send, so they are shown
+    // under the composer rather than in a dialog the agent dismisses blindly.
+    function setComposerNotice(text, isError) {
+      if (!composerNoteEl) return;
+      if (!text) {
+        composerNoteEl.classList.remove('is-error');
+        composerNoteEl.textContent = '';
+        renderActions();
+        return;
+      }
+      composerNoteEl.classList.toggle('is-error', Boolean(isError));
+      composerNoteEl.textContent = text;
+    }
+
     function bubbleClass(message) {
       if (message.sender === 'system') return 'ps-bubble ps-bubble-system';
       if (message.direction === 'inbound') return 'ps-bubble ps-bubble-in';
@@ -106,15 +138,27 @@
 
     function senderLabel(message) {
       if (message.direction === 'inbound') return 'Customer';
-      if (message.sender === 'agent') return 'Agent';
+      if (message.sender === 'agent') {
+        return message.agent ? message.agent : 'Agent';
+      }
       if (message.sender === 'system') return 'System';
+      if (message.sender === 'staff') return 'Staff assistant';
       return 'Assistant';
+    }
+
+    // Every outbound bubble says who wrote it, so an agent can tell at a glance
+    // which replies came from the assistant and which from a colleague.
+    function senderTag(message) {
+      if (message.sender === 'agent') return 'Human';
+      if (message.sender === 'system') return 'System';
+      if (message.direction === 'outbound') return 'Bot';
+      return '';
     }
 
     function renderActions() {
       var buttons = [];
       if (activeStatus === 'human') {
-        buttons.push('<button class="ps-btn ps-btn-ghost ps-btn-sm" data-mode="bot"><i class="bi bi-robot"></i> Return to assistant</button>');
+        buttons.push('<button class="ps-btn ps-btn-ghost ps-btn-sm" data-mode="bot"><i class="bi bi-robot"></i> Return to bot</button>');
       } else {
         buttons.push('<button class="ps-btn ps-btn-ok ps-btn-sm" data-mode="human"><i class="bi bi-person-check"></i> Switch to human</button>');
       }
@@ -129,12 +173,14 @@
       });
       // While an agent owns the chat the assistant stays silent, so say so
       // plainly instead of letting a reply look like it reached a bot.
-      if (composerNoteEl) {
+      // A live delivery error outranks this hint and must survive the refresh
+      // that follows a send.
+      if (composerNoteEl && !composerNoteEl.classList.contains('is-error')) {
         composerNoteEl.textContent = activeStatus === 'human'
-          ? 'You are replying as an agent. The auto-assistant is paused for this chat.'
+          ? 'You are replying as an agent. The bot is paused for this chat.'
           : (activeStatus === 'closed'
               ? 'This conversation is closed. Sending a reply reopens it for the customer.'
-              : 'The assistant answers automatically. Switch to human to reply yourself.');
+              : 'The bot answers automatically. Switch to human to reply yourself.');
       }
     }
 
@@ -169,10 +215,19 @@
           var ordered = payload.messages.slice().reverse();
           threadEl.innerHTML = ordered.length
             ? ordered.map(function (message) {
+                var failed = message.failed && message.direction === 'outbound'
+                  ? '<small class="crm-bubble-failed"><i class="bi bi-exclamation-triangle"></i>' +
+                    ' Not delivered — WhatsApp\'s 24-hour window closed. The customer must message first.</small>'
+                  : '';
+                var tag = senderTag(message);
+                var tagHtml = tag
+                  ? '<span class="crm-bubble-tag is-' + tag.toLowerCase() + '">' + escapeHtml(tag) + '</span>'
+                  : '';
                 return '<div class="' + bubbleClass(message) + '">' +
-                  '<small class="crm-bubble-sender">' + escapeHtml(senderLabel(message)) + '</small>' +
+                  '<small class="crm-bubble-sender">' + tagHtml +
+                  escapeHtml(senderLabel(message)) + '</small>' +
                   escapeHtml(message.body) +
-                  '<small>' + escapeHtml(message.at) + '</small></div>';
+                  '<small>' + escapeHtml(message.at) + '</small>' + failed + '</div>';
               }).join('')
             : '<div class="ps-empty"><p>No messages yet.</p></div>';
           threadEl.scrollTop = threadEl.scrollHeight;
@@ -223,6 +278,7 @@
         var value = replyInput.value.trim();
         if (!value || !activeId) return;
         replyInput.value = '';
+        setComposerNotice('');
         fetch('/api/crm/chats/' + activeId + '/reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -230,11 +286,15 @@
         })
           .then(function (response) { return response.json(); })
           .then(function (payload) {
-            if (payload.message) window.alert(payload.message);
+            if (payload && payload.delivered === false) {
+              setComposerNotice(payload.message || 'WhatsApp did not accept that message.', true);
+            }
             loadMessages(true);
             refresh(true);
           })
-          .catch(function () { window.alert('Could not send the reply. Please try again.'); });
+          .catch(function () {
+            setComposerNotice('Could not send the reply. Please try again.', true);
+          });
       });
     }
 
@@ -315,9 +375,48 @@
     });
   }
 
+  /* -------------------------------------------------- instant navigation
+     The portals are separate pages, so make the handover feel seamless:
+     prefetch the destinations so they are warm in the browser cache, and fade
+     the shell out on click so the swap does not flash white. */
+  function initNavigation() {
+    var links = document.querySelectorAll('a.ps-nav-link, a.ps-card, a.ps-usermenu-item');
+
+    Array.prototype.forEach.call(links, function (link) {
+      var href = link.getAttribute('href');
+      if (!href || href.charAt(0) === '#' || link.target === '_blank') return;
+
+      // Warm the cache on hover/focus so the next page is ready before the click.
+      var prefetched = false;
+      function prefetch() {
+        if (prefetched) return;
+        prefetched = true;
+        var tag = document.createElement('link');
+        tag.rel = 'prefetch';
+        tag.href = href;
+        document.head.appendChild(tag);
+      }
+      link.addEventListener('mouseenter', prefetch);
+      link.addEventListener('focus', prefetch);
+
+      link.addEventListener('click', function (event) {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+        event.preventDefault();
+        document.body.classList.add('ps-leaving');
+        var next = href;
+        // Navigate on the next frame: the fade starts immediately, but the
+        // request is not held back, so the switch stays as fast as a normal link.
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(function () { window.location.href = next; });
+        });
+      });
+    });
+  }
+
   function boot() {
     initUserMenu();
     initCrm();
+    initNavigation();
   }
 
   if (document.readyState === 'loading') {

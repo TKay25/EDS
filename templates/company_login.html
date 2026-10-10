@@ -11,6 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+    {% include 'components/eds_pwa.html' %}
 </head>
 <body class="ps-body">
 
@@ -35,7 +36,7 @@
             </ul>
         </div>
 
-        <p class="ps-auth-foot">&copy; {{ now_year | default('2026') }} Brilliant Chemicals (Pvt) Ltd. Operated on the Echelon Digital Solutions platform.</p>
+        <p class="ps-auth-foot">&copy; {{ now_year | default('2026') }} Brilliant Chemicals (Pvt) Ltd.</p>
     </aside>
 
     <main class="ps-auth-main">
@@ -56,10 +57,14 @@
                            placeholder="you@brilliantchemicals.co.zw" required>
                 </div>
 
-                <div class="ps-field">
+                <div class="ps-field ps-field-password">
                     <label for="companyPassword">Password</label>
                     <input class="ps-input" type="password" id="companyPassword" name="password"
                            placeholder="Enter your password" required>
+                    <button class="ps-field-reveal" type="button" id="companyPasswordReveal"
+                            aria-label="Show password" aria-pressed="false">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
 
                 <button class="ps-btn ps-btn-primary ps-btn-block" type="submit" id="companyLoginSubmit">
@@ -68,7 +73,9 @@
                 </button>
             </form>
 
-            <a class="ps-auth-back" href="/"><i class="bi bi-arrow-left"></i> Back to the Echelon Digital Solutions website</a>
+            <p class="ps-auth-trust">
+                <i class="bi bi-shield-check"></i> Encrypted sign-in. Access is limited to Brilliant Chemicals staff.
+            </p>
         </div>
     </main>
 </div>
@@ -78,6 +85,17 @@
     var alertBox = document.getElementById('companyLoginAlert');
     var alertText = document.getElementById('companyLoginAlertText');
     var submitBtn = document.getElementById('companyLoginSubmit');
+    var passwordInput = document.getElementById('companyPassword');
+    var revealBtn = document.getElementById('companyPasswordReveal');
+
+    revealBtn.addEventListener('click', function () {
+        var showing = passwordInput.type === 'text';
+        passwordInput.type = showing ? 'password' : 'text';
+        revealBtn.setAttribute('aria-pressed', showing ? 'false' : 'true');
+        revealBtn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+        revealBtn.querySelector('i').className = showing ? 'bi bi-eye' : 'bi bi-eye-slash';
+        passwordInput.focus();
+    });
 
     function showError(message) {
         alertText.textContent = message;
@@ -110,10 +128,10 @@
                 showError('Unable to reach the server. Please check your connection and try again.');
             })
             .finally(function () {
-                submitBtn.classList.remove('is-loading');
-                submitBtn.disabled = false;
+                        submitBtn.classList.remove('is-loading');
+                        submitBtn.disabled = false;
+                    });
             });
-    });
 </script>
 </body>
 </html>

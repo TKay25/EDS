@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/eds-app.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/crm.css') }}">
+    {% include 'components/eds_pwa.html' %}
 </head>
 <body class="ps-body">
 
@@ -19,10 +20,11 @@
 <main class="ps-shell" id="crmInbox" data-filter="all"
       data-currency="{{ PAYNOW_CURRENCY if PAYNOW_CURRENCY is defined else 'USD' }}">
 
-    <header class="ps-hero">
-        <span class="ps-eyebrow"><i class="bi bi-headset"></i> CRM Portal</span>
-        <h1>Sales desk</h1>
-        <p>Conversations, catalogue and sales performance for the Brilliant Chemicals WhatsApp channel.</p>
+    <header class="ps-hero ps-hero-compact">
+        <div class="ps-hero-inline">
+            <span class="ps-eyebrow"><i class="bi bi-headset"></i> CRM Portal</span>
+            <h1>Sales desk<span class="ps-hero-sep">·</span><span class="ps-hero-sub">Conversations, catalogue and sales performance</span></h1>
+        </div>
     </header>
 
     <nav class="crm-tabs" role="tablist">
@@ -111,15 +113,26 @@
             <div class="ps-chat-list" id="crmChatList">
                 {% if chats %}
                     {% for chat in chats %}
-                    <div class="ps-chat-item" data-chat-id="{{ chat.id }}">
+                    <div class="ps-chat-item is-{{ chat.kind | default('shopping') }}{% if chat.status == 'human' %} is-human{% endif %}"
+                         data-chat-id="{{ chat.id }}"
+                         data-kind="{{ chat.kind | default('shopping') }}">
                         <div class="ps-chat-avatar">{{ (chat.display_name or 'C')[:2] | upper }}</div>
                         <div class="ps-chat-meta">
                             <div class="ps-chat-name">
                                 {{ chat.display_name }}
-                                {% if chat.is_staff %}<span class="ps-tag">Staff</span>{% endif %}
+                                {% if chat.is_staff %}<span class="crm-kind-tag">In-house</span>{% endif %}
+                                {% if chat.status == 'human' %}<span class="crm-kind-tag crm-kind-human">Agent live</span>{% endif %}
+                                {% if chat.unattended and chat.status != 'human' %}<span class="crm-kind-tag crm-kind-needs">Needs human</span>{% endif %}
                                 {% if chat.unread_count %}<span class="ps-badge">{{ chat.unread_count }}</span>{% endif %}
                             </div>
                             <div class="ps-chat-preview">{{ chat.last_message or 'No messages yet' }}</div>
+                            {% if chat.badges %}
+                            <div class="crm-chat-badges">
+                                {% for badge in chat.badges %}
+                                <span class="crm-chat-badge is-{{ badge.tone }}">{{ badge.label }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                             <div class="ps-chat-time">{{ chat.last_message_at }}</div>
                         </div>
                     </div>

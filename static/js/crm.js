@@ -44,6 +44,10 @@
     var views = Array.prototype.slice.call(root.querySelectorAll('[data-crm-view]'));
     if (!tabs.length) return;
 
+    // The inbox manages its own scrolling, so the shell can drop the page-level
+    // bottom padding while it is showing.
+    var shell = document.querySelector('.ps-shell');
+
     function show(name) {
       tabs.forEach(function (tab) {
         tab.classList.toggle('is-active', tab.getAttribute('data-crm-tab') === name);
@@ -52,12 +56,18 @@
       views.forEach(function (view) {
         view.classList.toggle('is-active', view.getAttribute('data-crm-view') === name);
       });
+      if (shell) shell.classList.toggle('ps-shell-tight', name === 'inbox');
       if (name === 'analytics') analytics.load(false);
     }
 
     tabs.forEach(function (tab) {
       tab.addEventListener('click', function () { show(tab.getAttribute('data-crm-tab')); });
     });
+
+    // Apply the initial state: the inbox is the active view on load.
+    var initial = root.querySelector('[data-crm-tab].is-active');
+    if (shell) shell.classList.toggle('ps-shell-tight',
+      !initial || initial.getAttribute('data-crm-tab') === 'inbox');
   }
 
   /* ------------------------------------------------------------- analytics */

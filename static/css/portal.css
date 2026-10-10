@@ -222,6 +222,28 @@ body.ps-body {
 
 .ps-hero p { margin: 0; color: var(--ps-text-soft); font-size: 0.88rem; max-width: 640px; }
 
+/* ---------------------------------------------------- compact page header
+   The hub is a launch pad, so its header is trimmed to one tight block and the
+   space goes to the portal cards. */
+.ps-hero-compact { margin-bottom: 18px; }
+
+.ps-hero-compact h1 { font-size: 1.4rem; margin: 8px 0 6px; }
+.ps-hero-compact p { font-size: 0.82rem; }
+
+/* Four portal cards across on desktop, two on tablet, one on a phone. */
+.ps-grid-tight {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+}
+
+.ps-grid-tight .ps-card { padding: 20px; }
+.ps-grid-tight .ps-card h3 { font-size: 1rem; margin: 12px 0 6px; }
+.ps-grid-tight .ps-card p { font-size: 0.8rem; line-height: 1.5; }
+.ps-grid-tight .ps-card-icon { width: 42px; height: 42px; font-size: 1.1rem; border-radius: 12px; }
+.ps-grid-tight .ps-card-foot { gap: 6px; margin-top: 14px; }
+.ps-grid-tight .ps-chip { font-size: 0.68rem; padding: 4px 9px; }
+
 .ps-section-title {
   display: flex;
   align-items: center;
@@ -691,6 +713,65 @@ table.ps-table tbody tr:hover { background: rgba(220, 20, 60, 0.035); }
 .ps-auth-back { display: block; margin-top: 22px; text-align: center; font-size: 0.8rem; color: var(--ps-text-soft); text-decoration: none; }
 .ps-auth-back:hover { color: var(--ps-accent); }
 
+/* ------------------------------------------------------- login polish --
+   The sign-in card arrives with a short lift so the page does not appear to
+   pop, and the fields get a clearer focus ring for keyboard users. */
+@keyframes psAuthIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ps-auth-card { animation: psAuthIn 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
+.ps-auth-points li { animation: psAuthIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.ps-auth-points li:nth-child(1) { animation-delay: 0.06s; }
+.ps-auth-points li:nth-child(2) { animation-delay: 0.12s; }
+.ps-auth-points li:nth-child(3) { animation-delay: 0.18s; }
+.ps-auth-points li:nth-child(4) { animation-delay: 0.24s; }
+
+/* Password field with a reveal button. */
+.ps-field-password { position: relative; }
+
+.ps-field-password .ps-input { padding-right: 46px; }
+
+.ps-field-reveal {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ps-text-soft);
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ps-field-reveal:hover { background: var(--ps-surface-alt); color: var(--ps-text); }
+.ps-field-reveal:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 1px; }
+
+/* A short trust line under the card. */
+.ps-auth-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 18px;
+  font-size: 0.74rem;
+  color: var(--ps-text-soft);
+}
+
+.ps-auth-trust i { color: var(--ps-ok); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-auth-card, .ps-auth-points li { animation: none; }
+}
+
 .ps-spinner {
   width: 16px;
   height: 16px;
@@ -1072,7 +1153,43 @@ table.ps-table td.ps-access-cell { text-align: center; }
   .ps-panel-body { padding: 16px; }
 }
 
+/* ===== INSTANT-FEEL NAVIGATION =====
+   The portals are separate Flask pages, so a nav click is a real request. These
+   rules make the handover feel immediate rather than a blank reload: the shell
+   fades in on load and fades out on the way to the next portal. */
+@keyframes psShellIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ps-shell { animation: psShellIn 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
+/* Prefetching a portal makes the next page paint sooner. */
+body.ps-leaving .ps-shell {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.ps-nav-link.is-active {
+  position: relative;
+}
+
+.ps-nav-link.is-active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 18px;
+  height: 2px;
+  margin-left: -9px;
+  border-radius: 2px;
+  background: var(--ps-gradient-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .ps-shell { animation: none; }
+  body.ps-leaving .ps-shell { opacity: 1; transform: none; transition: none; }
   .ps-card, .ps-btn, .ps-chip { transition: none !important; }
   .ps-card:hover { transform: none; }
 }

@@ -1,0 +1,34 @@
+{# ===== Company System PWA wiring =====
+   Registered on every portal page so the system is installable and can raise
+   notifications for customer conversations that need a person. #}
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#07101E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Brilliant Chemicals">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='images/eds blue.png') }}">
+
+<script>
+(function () {
+    if (!('serviceWorker' in navigator)) return;
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/static/service-worker.js').catch(function () {});
+    });
+
+    // The CRM raises a local notification when a customer asks for a person,
+    // even if the tab is in the background.
+    window.edsNotify = function (title, body, url) {
+        if (!('Notification' in window)) return;
+        if (Notification.permission !== 'granted') return;
+        var options = { body: body, icon: '/static/images/eds blue.png',
+                        badge: '/static/images/eds blue.png', tag: 'eds-crm' };
+        navigator.serviceWorker.ready.then(function (registration) {
+            if (registration && registration.showNotification) {
+                registration.showNotification(title, options);
+            } else {
+                new Notification(title, options);
+            }
+        }).catch(function () { try { new Notification(title, options); } catch (e) {} });
+    };
+})();
+</script>

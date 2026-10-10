@@ -20655,6 +20655,9 @@ def ensure_crm_tables():
         cursor.execute("CREATE INDEX IF NOT EXISTS whatsapp_messages_chat_idx ON whatsapp_messages (chat_id, id);")
         # Bring installs created before these columns existed up to date.
         cursor.execute("ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS delivered BOOLEAN;")
+        # The name a reply went out under, so the thread can show which member of
+        # staff answered instead of a generic "Agent".
+        cursor.execute("ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS display_name VARCHAR(200);")
         cursor.execute("ALTER TABLE whatsapp_chats ADD COLUMN IF NOT EXISTS is_staff BOOLEAN DEFAULT FALSE;")
         cursor.execute("UPDATE whatsapp_chats SET is_staff = FALSE WHERE is_staff IS NULL;")
         cursor.execute("""
@@ -20666,11 +20669,15 @@ def ensure_crm_tables():
 
 def crm_record_message(wa_number, direction, sender, body, message_type="text",
                        display_name=None, company_reg=None, escalate=False,
-                       reason=None, channel=None, delivered=None, is_staff=False):
+                       reason=None, channel=None, delivered=None, is_staff=False,
+                       sender_name=None):
     """Persist one WhatsApp message and keep the CRM chat index in sync.
 
     Staff conversations are stored too so the inbox is a complete record of the
     channel, but they are flagged and never counted as unattended enquiries.
+
+    `sender_name` names whoever sent this specific message (the staff member who
+    replied), which is kept per-message and never renames the chat.
     """
     if not wa_number or not body:
         return None
@@ -20734,9 +20741,10 @@ def crm_record_message(wa_number, direction, sender, body, message_type="text",
 
             cursor.execute("""
                 INSERT INTO whatsapp_messages (chat_id, wa_number, direction, sender, message_type,
-                                               body, delivered, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-            """, (chat_id, wa_number, direction, sender, message_type, body, delivered))
+                                               body, delivered, display_name, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (chat_id, wa_number, direction, sender, message_type, body, delivered,
+                  sender_name))
             connection.commit()
         return chat_id
     except Exception as e:
@@ -20848,6 +20856,46 @@ def crm_chat_is_human(wa_number):
         return False
 
 
+# Meta error codes that mean "you cannot message this customer right now".
+# 131047 is the 24-hour customer-service window expiring; the others are the
+# same condition phrased for template or re-engagement failures.
+WA_WINDOW_ERROR_CODES = {131047, 131026, 131051}
+
+
+def wa_error_from_response(response):
+    """Return (message, is_window_error) for a rejected WhatsApp send.
+
+    Distinguishing the 24-hour customer-service window from any other failure
+    lets the inbox tell an agent that WhatsApp blocked the reply rather than
+    that the network hiccuped.
+    """
+    detail = "WhatsApp rejected the message."
+    is_window = False
+    try:
+        payload = response.json()
+    except Exception:
+        payload = None
+    error = payload.get("error") if isinstance(payload, dict) else None
+    if isinstance(error, dict):
+        message = error.get("message")
+        if message:
+            detail = str(message)
+        for key in ("code", "error_subcode"):
+            try:
+                if int(error.get(key)) in WA_WINDOW_ERROR_CODES:
+                    is_window = True
+            except (TypeError, ValueError):
+                pass
+    if not is_window:
+        lowered = str(detail).lower()
+        if "24 hour" in lowered or "24-hour" in lowered or "re-engagement" in lowered:
+            is_window = True
+    if is_window:
+        detail = ("WhatsApp's 24-hour window has closed for this customer — they must "
+                  "message you first before you can reply.")
+    return detail, is_window
+
+
 def crm_send_whatsapp(wa_number, text, channel=None):
     """Send a WhatsApp text from the company channel. Returns (ok, detail)."""
     creds = _wa_channels.get(str(channel)) if channel else None
@@ -20869,8 +20917,9 @@ def crm_send_whatsapp(wa_number, text, channel=None):
             timeout=20,
         )
         if response.status_code >= 400:
+            detail, is_window = wa_error_from_response(response)
             print(f"CRM send failed: {response.status_code} {response.text}")
-            return False, "WhatsApp rejected the message."
+            return False, detail
         return True, ""
     except Exception as e:
         print(f"CRM send error: {e}")
@@ -20901,8 +20950,9 @@ def crm_send_whatsapp_payload(wa_number, payload, channel=None):
             timeout=20,
         )
         if response.status_code >= 400:
+            detail, is_window = wa_error_from_response(response)
             print(f"CRM send failed: {response.status_code} {response.text}")
-            return False, "WhatsApp rejected the message."
+            return False, detail
         return True, ""
     except Exception as e:
         print(f"CRM send error: {e}")
@@ -21295,6 +21345,13 @@ SHOP_TRANSLATIONS = {
             "Uri kuodha uchimiririra *kambani* ipi? (Nyora *none* kana uchizvitengera.)",
         "What is the best *phone number* to reach you on?": "Ndeipi *nhamba yefoni* yatingakubata nayo?",
         "What is the *delivery address* for this order?": "Ndeipi *kero yekuendesa* odha iyi?",
+        "How would you like to receive this order?": "Unoda kuti odha iyi iende sei?",
+        "Please choose how you would like to receive this order.":
+            "Sarudza kuti unoda kugamuchira odha iyi sei.",
+        "📍 What is the *delivery address* for this order?\n\n"
+        "Please include the suburb and any landmark that helps our driver find you.":
+            "📍 Ndeipi *kero yekuendesa* odha iyi?\n\n"
+            "Ndapota sanganisira sabhabhu nechiratidzo chingabatsira mutyairi kukuwana.",
         "Please confirm your order enquiry": "Ndapota simbisa chikumbiro cheodha yako",
         "*Name:*": "*Zita:*",
         "*Company:*": "*Kambani:*",
@@ -21484,6 +21541,13 @@ SHOP_TRANSLATIONS = {
             "Ubhadela *yiphi inkampani*? (Bhala *none* nxa uzithengela wena.)",
         "What is the best *phone number* to reach you on?": "Yiphi *inombolo yocingo* esingakuthola kuyo?",
         "What is the *delivery address* for this order?": "Yiphi *ikheli yokuletha* i-oda leli?",
+        "How would you like to receive this order?": "Ungathanda ukuthi i-oda leli lithathwe njani?",
+        "Please choose how you would like to receive this order.":
+            "Khetha ukuthi ungathanda ukwamukela i-oda leli njani.",
+        "📍 What is the *delivery address* for this order?\n\n"
+        "Please include the suburb and any landmark that helps our driver find you.":
+            "📍 Yiphi *ikheli yokuletha* i-oda leli?\n\n"
+            "Sicela ufake isigaba sendawo kanye lesibonakalayo esizasiza umshayeli ukukuthola.",
         "Please confirm your order enquiry": "Sicela uqinisekise isicelo se-oda lakho",
         "*Name:*": "*Ibizo:*",
         "*Company:*": "*Inkampani:*",
@@ -21576,6 +21640,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "Search Products": "Tsvaga Zvigadzirwa",
         "View Cart": "Ona Ngoro",
         "Talk to Support": "Taura neRubatsiro",
+        "Talk to a human": "Taura nemunhu",
         "About Us": "Nezvedu",
         "Switch to Staff": "Dzokera kuvashandi",
         "Language": "Mutauro",
@@ -21588,6 +21653,8 @@ SHOP_OPTION_TRANSLATIONS = {
         "Talk to Support": "Taura neRubatsiro",
         "Browse all categories": "Ona zvikamu zvose",
         "Yes, submit": "Hongu, tumira",
+        "Deliver to my address": "Ndiunzire kwaunogara",
+        "Collect from the shop": "Ndichitora kuchitoro",
         "Back to cart": "Dzokera kungoro",
         "Place the order and pay later": "Isa odha ubhadhe gare gare",
         "Pay now with EcoCash": "Bhadhara neEcoCash izvozvi",
@@ -21603,6 +21670,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "Search Products": "Dinga Imikhiqizo",
         "View Cart": "Bona Inqola",
         "Talk to Support": "Khuluma Losizo",
+        "Talk to a human": "Khuluma lomuntu",
         "About Us": "Mayelana Lathi",
         "Switch to Staff": "Buyela Kuzisebenzi",
         "Language": "Ulimi",
@@ -21615,6 +21683,8 @@ SHOP_OPTION_TRANSLATIONS = {
         "Talk to Support": "Khuluma Losizo",
         "Browse all categories": "Bona zonke izigaba",
         "Yes, submit": "Yebo, thumela",
+        "Deliver to my address": "Ngilethela ekhabeni",
+        "Collect from the shop": "Ngizothatha esitolo",
         "Back to cart": "Buyela enqoleni",
         "Place the order and pay later": "Faka i-oda ubhadale ngesikhathi esizayo",
         "Pay now with EcoCash": "Bhadala ngeEcoCash khathesi",
@@ -21795,7 +21865,8 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en"):
     if count:
         cart_label = f"View Cart ({count} item{'s' if count != 1 else ''})"
     options = [("shop", "Shop"), ("search", "Search Products"), ("cart", cart_label),
-               ("support", "Talk to Support"), ("about", "About Us")]
+               ("support", "Talk to Support"), ("about", "About Us"),
+               ("support_human", "Talk to a human")]
     if staff:
         options.append(("switch_staff", "Switch to Staff"))
     options.append(("language", "Language"))
@@ -21812,7 +21883,7 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en"):
         "🛍️ Browse our range and build an order\n"
         "🔎 Search for a product by name\n"
         "🛒 Review your cart and check out\n"
-        "☎️ Reach our sales team in one tap\n\n"
+        "🙋 Talk to a human whenever you prefer\n\n"
         "How can I help you today?"
     )
     return _shop_options(body, options)
@@ -21905,7 +21976,9 @@ def _shop_search_results(cart, query):
 def _shop_support():
     return [_shop_options(
         "☎️ *Customer Support*\n\nHow would you like to contact Brilliant Chemicals Sales?",
-        [("support_call", "Call Brilliant Chemicals"), ("support_msg", "Message Brilliant Chemicals")],
+        [("support_call", "Call Brilliant Chemicals"),
+         ("support_msg", "Message Brilliant Chemicals"),
+         ("support_human", "Talk to a human")],
     )]
 
 
@@ -21932,13 +22005,16 @@ def _shop_about():
 
 
 def _shop_save_order(state, channel, wa_number=None, customer=None, payment_method=None,
-                     amount=None, payment_status="unpaid"):
+                     amount=None, payment_status="unpaid", delivery_method=None):
     cart = state.get("cart") or []
     if not cart:
         return None
     customer = customer or {}
     reference = f"BC-{datetime.now().strftime('%y%m%d')}-{random.randint(1000, 9999)}"
     wa_number = str(wa_number)[-15:] if wa_number else None
+    # Collection orders have no address, so the delivery column must be set even
+    # when the customer never typed one.
+    method = delivery_method or customer.get("delivery_method") or "collection"
     try:
         # The order needs its own tables plus the conversation index it links to;
         # both are created here so a fresh worker can still take an order.
@@ -21952,18 +22028,20 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
         chat_id = crm_chat_id(wa_number,
                               display_name=typed_name or customer.get("company"),
                               channel=channel) if wa_number else None
+        address = (customer.get("delivery_address") or "").strip() or None
         with get_db() as (cursor, connection):
             cursor.execute("""
                 INSERT INTO shop_orders (reference, customer_name, company, phone, email,
                                          delivery_address, channel, wa_number, chat_id, notes,
                                          item_count, payment_method, payment_status, payment_amount,
-                                         created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                                         delivery_method, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 RETURNING id
             """, (reference, typed_name or None, customer.get("company"), customer.get("phone"),
-                  customer.get("email"), customer.get("delivery_address"), channel,
+                  customer.get("email"), address if method == "delivery" else None, channel,
                   wa_number, chat_id, customer.get("notes"),
-                  sum(item["qty"] for item in cart), payment_method, payment_status, amount))
+                  sum(item["qty"] for item in cart), payment_method, payment_status, amount,
+                  method))
             order_id = cursor.fetchone()[0]
             for item in cart:
                 cursor.execute("""
@@ -22022,8 +22100,13 @@ def _shop_render(step, ctx, cart, customer=None, staff=False):
         return [_shop_text("Which *company* are you ordering for? (Type *none* if you are buying for yourself.)")]
     if step == "order_phone":
         return [_shop_text("What is the best *phone number* to reach you on?")]
+    if step == "order_fulfilment":
+        return [_shop_options("How would you like to receive this order?",
+                              [("delivery", "Deliver to my address"),
+                               ("collection", "Collect from the shop")])]
     if step == "order_address":
-        return [_shop_text("What is the *delivery address* for this order?")]
+        return [_shop_text("📍 What is the *delivery address* for this order?\n\n"
+                           "Please include the suburb and any landmark that helps our driver find you.")]
     if step == "order_confirm":
         return _shop_order_confirmation(cart, customer)
     return [shop_greeting(cart, staff, display_name, language)]
@@ -22031,16 +22114,20 @@ def _shop_render(step, ctx, cart, customer=None, staff=False):
 
 def _shop_order_confirmation(cart, customer):
     summary = _shop_cart_summary(cart) or "—"
-    return [_shop_options(
-        "✅ *Please confirm your order enquiry*\n\n"
-        f"*Name:* {customer.get('name', '')}\n"
-        f"*Company:* {customer.get('company', '')}\n"
-        f"*Phone:* {customer.get('phone', '')}\n"
-        f"*Delivery:* {customer.get('delivery_address', '')}\n\n"
-        f"*Items:*\n{summary}\n\n"
-        "Submit this order enquiry now?",
-        [("confirm_order", "Yes, submit"), ("cart", "Back to cart")],
-    )]
+    delivering = (customer.get("delivery_method") or "collection") == "delivery"
+    lines = [
+        "✅ *Please confirm your order enquiry*",
+        "",
+        f"*Name:* {customer.get('name', '')}",
+        f"*Company:* {customer.get('company', '')}",
+        f"*Phone:* {customer.get('phone', '')}",
+        f"*Receive by:* {'Delivery to your address' if delivering else 'Collection from our shop'}",
+    ]
+    if delivering:
+        lines.append(f"*Delivery address:* {customer.get('delivery_address', '')}")
+    lines += ["", f"*Items:*\n{summary}", "", "Submit this order enquiry now?"]
+    return [_shop_options("\n".join(lines),
+                          [("confirm_order", "Yes, submit"), ("cart", "Back to cart")])]
 
 
 def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None, display_name=None):
@@ -22211,6 +22298,19 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             "✍️ Type your message and our sales team will get back to you. Include your name, "
             "company and contact number so we can respond quickly.")])
 
+    if low in ("support_human", "human", "talk to a human", "speak to a human"):
+        # Hand the conversation to a person: the caller escalates it and the
+        # assistant stays silent until an agent hands it back.
+        return result("menu", [
+            _shop_text(
+                "🙋 *Connecting you to a person*\n\n"
+                "A member of our sales team has been notified and will reply here shortly.\n\n"
+                "You can keep browsing in the meantime — the assistant will stay quiet "
+                "while an agent is with you."),
+            greet(),
+        ], actions=[{"type": "escalate", "reason": "Customer asked for a human agent"}],
+            new_history=[])
+
     if low in ("shona", "ndebele", "english") and step != "language":
         # Language names typed outside the selector open it rather than changing
         # the conversation unexpectedly.
@@ -22348,7 +22448,26 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "order_phone":
         customer["phone"] = (raw_input or "").strip()
-        return result("order_address", [_shop_text("What is the *delivery address* for this order?")])
+        # How the order reaches the customer changes what we still need to ask,
+        # so ask it before the address rather than after.
+        return result("order_fulfilment", [_shop_options(
+            "How would you like to receive this order?",
+            [("delivery", "Deliver to my address"), ("collection", "Collect from the shop")])])
+
+    if step == "order_fulfilment":
+        if low in ("delivery", "deliver", "1") or "deliver" in low:
+            customer["delivery_method"] = "delivery"
+            return result("order_address", [_shop_text(
+                "📍 What is the *delivery address* for this order?\n\n"
+                "Please include the suburb and any landmark that helps our driver find you.")])
+        if low in ("collection", "collect", "pickup", "pick up", "2") or "collect" in low:
+            # No address to collect: the customer comes to us.
+            customer["delivery_method"] = "collection"
+            customer["delivery_address"] = ""
+            return result("order_confirm", _shop_order_confirmation(cart, customer))
+        return result("order_fulfilment", [_shop_options(
+            "Please choose how you would like to receive this order.",
+            [("delivery", "Deliver to my address"), ("collection", "Collect from the shop")])])
 
     if step == "order_address":
         customer["delivery_address"] = (raw_input or "").strip()
@@ -22359,7 +22478,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             total = shop_cart_total(cart)
             can_pay = total is not None and paynow_configured()
             reference = _shop_save_order(state, channel, wa_number, customer,
-                                         payment_method="ecocash" if can_pay else "later")
+                                         payment_method="ecocash" if can_pay else "later",
+                                         delivery_method=customer.get("delivery_method"))
             if not reference:
                 return result("order_confirm", [_shop_text(
                     "😕 Sorry, we could not save your order just now. Please try once more, or call "
@@ -22492,16 +22612,37 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
 def _shop_order_placed(reference, customer, amount=None, paid=False, staff=False, display_name=None,
                        language="en"):
-    """The confirmation shown once an order exists, paid or not."""
+    """The confirmation shown once an order exists, paid or not.
+
+    An unpaid order still has to be collectable, so the customer is told exactly
+    what to do with the reference depending on how they asked to receive it.
+    """
+    delivering = (customer.get("delivery_method") or "collection") == "delivery"
     lines = ["🎉 *Order confirmed*" if paid else "✅ *Order placed*",
              "",
              f"Thank you {customer.get('name', '')}! Your reference is *{reference}*."]
     if amount is not None and not paid:
         lines.append(f"Amount due: *{PAYNOW_CURRENCY} {float(amount):.2f}*")
     lines.append("")
-    lines.append("Our sales team will confirm delivery and payment details within one working day."
-                 if not paid else
-                 "Our sales team will be in touch about delivery.")
+    if not paid:
+        # The reference is the only thing tying this customer to their order when
+        # they arrive, so spell out what to do with it.
+        lines.append(f"*Keep this reference:* *{reference}*")
+        if delivering:
+            lines.append(f"Quote it to the deliverer when they bring your order, and pay "
+                         f"*{PAYNOW_CURRENCY} {float(amount or 0):.2f}* on delivery.")
+        else:
+            lines.append(f"Bring it with you to collect from our shop"
+                         + (f", and pay *{PAYNOW_CURRENCY} {float(amount or 0):.2f}* there."
+                            if amount is not None else "."))
+        lines.append("")
+        lines.append(f"Our sales team will confirm "
+                     + ("delivery arrangements" if delivering else "when your order is ready")
+                     + " within one working day.")
+    else:
+        lines.append(f"*Reference:* *{reference}*")
+        lines.append("Our sales team will be in touch about "
+                     + ("delivery." if delivering else "collection."))
     lines.append("")
     lines.append(f"Any questions? Call {COMPANY_SYSTEM_CONTACT['phones'][0]} or email "
                  f"{COMPANY_SYSTEM_CONTACT['email']}.")
@@ -22843,7 +22984,8 @@ def _crm_reply(wa_number, text, channel=None, sender="bot"):
     """
     sent, _detail = crm_send_whatsapp(wa_number, text, channel)
     crm_record_message(wa_number, "outbound", sender, text, "text",
-                       company_reg=COMPANY_SYSTEM_PREFIX, channel=channel, delivered=sent)
+                       company_reg=COMPANY_SYSTEM_PREFIX, channel=channel, delivered=sent,
+                       sender_name="Assistant" if sender == "bot" else "")
     return sent
 
 
@@ -22962,7 +23104,8 @@ def shop_send_whatsapp(wa_number, messages, nav, channel=None, staff=False, lang
     if readable:
         crm_record_message(wa_number, "outbound", "staff" if staff else "bot", readable,
                            kind, company_reg=COMPANY_SYSTEM_PREFIX, channel=channel,
-                           delivered=ok, is_staff=staff)
+                           delivered=ok, is_staff=staff,
+                           sender_name="Assistant" if not staff else "")
     return ok
 
 
@@ -23344,6 +23487,7 @@ def _crm_chats(filter_key="all", search=None):
     with get_db() as (cursor, connection):
         cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
+        badges = _crm_chat_badges([row[1] for row in rows] if rows else [])
     chats = []
     for row in rows:
         chats.append({
@@ -23359,8 +23503,65 @@ def _crm_chats(filter_key="all", search=None):
             "last_message_iso": row[8].isoformat() if row[8] else "",
             "assigned_to": row[9] or "",
             "is_staff": bool(row[10]),
+            "kind": "inhouse" if row[10] else "shopping",
+            "badges": badges.get(str(row[1]), []),
         })
     return chats
+
+
+def _crm_chat_badges(wa_numbers):
+    """Sales context per chat, for the tags shown on each inbox card.
+
+    Reports whether the customer has placed an order, whether any of it is paid
+    (and via EcoCash specifically), and whether the last send to them bounced off
+    WhatsApp's 24-hour window. Keyed by wa_number.
+    """
+    context = {}
+    numbers = [str(number)[-15:] for number in wa_numbers or [] if number]
+    if not numbers:
+        return context
+    for number in numbers:
+        context[number] = []
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT wa_number, COUNT(*),
+                       SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END),
+                       SUM(CASE WHEN payment_status = 'paid'
+                                 AND COALESCE(payment_method, '') ILIKE '%%ecocash%%'
+                                THEN 1 ELSE 0 END)
+                FROM shop_orders
+                WHERE wa_number = ANY(%s)
+                GROUP BY wa_number
+            """, (numbers,))
+            for row in cursor.fetchall():
+                key = str(row[0])[-15:]
+                tags = context.setdefault(key, [])
+                if row[1]:
+                    tags.append({"label": f"{row[1]} order(s)" if row[1] > 1 else "Order placed",
+                                 "tone": "order"})
+                if row[3]:
+                    tags.append({"label": "Paid via EcoCash", "tone": "paid"})
+                elif row[2]:
+                    tags.append({"label": "Paid", "tone": "paid"})
+
+            cursor.execute("""
+                SELECT chats.wa_number, messages.delivered
+                FROM whatsapp_chats chats
+                LEFT JOIN LATERAL (
+                    SELECT delivered FROM whatsapp_messages
+                    WHERE chat_id = chats.id AND direction = 'outbound'
+                    ORDER BY id DESC LIMIT 1
+                ) messages ON TRUE
+                WHERE chats.wa_number = ANY(%s)
+            """, (numbers,))
+            for row in cursor.fetchall():
+                if row[1] is False:
+                    context.setdefault(str(row[0])[-15:], []).append(
+                        {"label": "Outside 24h window", "tone": "window"})
+    except Exception as e:
+        print(f"CRM badge lookup error: {e}")
+    return context
 
 
 @app.route('/company-login', methods=['GET', 'POST'])
@@ -24082,7 +24283,7 @@ def crm_chat_messages(chat_id):
         # Newest first: the thread reads like a normal messaging app, with the
         # latest exchange at the bottom of the panel.
         cursor.execute("""
-            SELECT direction, sender, message_type, body, created_at
+            SELECT direction, sender, message_type, body, created_at, delivered, display_name
             FROM whatsapp_messages WHERE chat_id = %s ORDER BY id DESC LIMIT 500
         """, (chat_id,))
         rows = cursor.fetchall()
@@ -24098,6 +24299,10 @@ def crm_chat_messages(chat_id):
                 'type': row[2],
                 'body': row[3],
                 'at': row[4].strftime('%d %b, %H:%M') if row[4] else '',
+                'failed': row[5] is False,
+                # The name the reply went out under, so the thread can show which
+                # member of staff answered rather than a generic "Agent".
+                'agent': row[6] or '',
             }
             for row in rows
         ],
@@ -24153,7 +24358,7 @@ def crm_chat_reply(chat_id):
     agent = f"{user['firstname']} {user['surname']}".strip()
     sent, detail = crm_send_whatsapp(row[0], body, row[1])
     crm_record_message(row[0], 'outbound', 'agent', body, 'text',
-                       display_name=agent, channel=row[1])
+                       channel=row[1], delivered=sent, sender_name=agent)
     log_activity("replied_to_customer", "chat",
                  f"Replied to +{row[0]}",
                  target=f"+{row[0]}",

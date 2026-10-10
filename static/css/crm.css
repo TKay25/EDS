@@ -3,6 +3,47 @@
    Layered on top of portal.css so shared tokens and components are reused.
    ========================================================================== */
 
+/* --------------------------------------------------- compact page header
+   The CRM is a working screen, not a landing page. The hero is reduced to a
+   single line so the inbox gets the vertical space instead of a description. */
+.ps-hero-compact { margin-bottom: 14px; }
+
+/* The shared shell reserves 90px at the bottom for page-level scrolling, which
+   the CRM does not need now that the inbox scrolls inside its own panel. The
+   class is set from crm.js so this does not depend on :has() support. */
+.ps-shell.ps-shell-tight { padding-bottom: 22px; }
+
+.ps-hero-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ps-hero-inline h1 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.ps-hero-sep { color: var(--ps-line); font-weight: 400; }
+
+.ps-hero-sub {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--ps-text-soft);
+  letter-spacing: 0;
+}
+
+@media (max-width: 720px) {
+  .ps-hero-sep, .ps-hero-sub { display: none; }
+}
+
 /* ------------------------------------------------------------------- tabs */
 .crm-tabs {
   display: flex;
@@ -80,12 +121,11 @@
   grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
   gap: 18px;
   align-items: stretch;
-  /* Measured chrome above the inbox is ~595px (nav, hero, tabs, banner, stats,
-     section title and their margins). The subtraction also covers the shell's
-     bottom padding, which keeps the whole inbox on screen without page scroll.
-     The floor is deliberately low so the calculation wins on short viewports. */
-  height: clamp(260px, calc(100vh - 700px), 720px);
-  min-height: 260px;
+  /* Chrome above the inbox is now ~475px after the header was compacted
+     (nav, tabs, banner, stats, section title and their margins). The
+     subtraction also covers the shell's bottom padding so nothing scrolls. */
+  height: clamp(300px, calc(100vh - 620px), 900px);
+  min-height: 300px;
 }
 
 .crm-view[data-crm-view="inbox"] .ps-panel {
@@ -832,7 +872,98 @@ select.crm-select:focus {
 }
 
 
-@media (prefers-reduced-motion: reduce) {
-  .crm-view.is-active { animation: none; }
-  .crm-product:hover { transform: none; }
+/* --------------------------------------------- inbox tags and highlighting -- */
+/* Staff (leave management) conversations and customer shopping conversations
+   arrive on the same channel, so each list row is colour-keyed to tell them
+   apart at a glance before opening the chat. */
+.crm-view[data-crm-view="inbox"] .ps-chat-item.is-inhouse {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.07), transparent 60%);
+  box-shadow: inset 3px 0 0 #2563EB;
+}
+.crm-view[data-crm-view="inbox"] .ps-chat-item.is-shopping {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.07), transparent 60%);
+  box-shadow: inset 3px 0 0 #10B981;
+}
+.crm-view[data-crm-view="inbox"] .ps-chat-item.is-human {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent 60%);
+  box-shadow: inset 3px 0 0 #F59E0B;
+}
+.crm-view[data-crm-view="inbox"] .ps-chat-item.is-active {
+  box-shadow: inset 3px 0 0 var(--ps-accent);
+  background: var(--ps-accent-soft);
+}
+
+.crm-kind-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1D4ED8;
+  white-space: nowrap;
+}
+.crm-kind-human { background: rgba(16, 185, 129, 0.14); color: #047857; }
+.crm-kind-needs { background: rgba(245, 158, 11, 0.18); color: #B45309; }
+
+.crm-chat-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+.crm-chat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.61rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.crm-chat-badge.is-order { background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.28); color: #4338CA; }
+.crm-chat-badge.is-paid { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #047857; }
+.crm-chat-badge.is-window { background: rgba(239, 68, 68, 0.09); border-color: rgba(239, 68, 68, 0.3); color: #B91C1C; }
+
+/* A send WhatsApp refused must not look like a delivered message. */
+.crm-bubble-failed {
+  display: block;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(239, 68, 68, 0.45);
+  color: #FCA5A5;
+  font-size: 0.66rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.ps-bubble-out .crm-bubble-failed,
+.ps-bubble-agent .crm-bubble-failed { color: #FECACA; }
+
+/* Every outbound bubble is tagged so an agent can see at a glance whether the
+   assistant or a colleague wrote it. */
+.crm-bubble-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  margin-right: 6px;
+  border-radius: 5px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.crm-bubble-tag.is-bot { background: rgba(37, 99, 235, 0.16); color: #BFDBFE; }
+.crm-bubble-tag.is-human { background: rgba(16, 185, 129, 0.2); color: #A7F3D0; }
+.crm-bubble-tag.is-system { background: rgba(148, 163, 184, 0.2); color: #E2E8F0; }
+.ps-bubble-out .crm-bubble-tag.is-bot { background: rgba(37, 99, 235, 0.14); color: #1D4ED8; }
+
+#crmComposerNote.is-error {
+  color: #B91C1C;
+  font-weight: 600;
 }
