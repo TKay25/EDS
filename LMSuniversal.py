@@ -22014,10 +22014,13 @@ def _shop_catalog():
 
     The first read seeds the table from the products shipped in code, so the
     assistant and the portal both work from the catalogue rather than from two
-    separate sources.
+    separate sources. `shop_ensure_seeded` is looked up defensively because this
+    function is also exercised in isolation without the surrounding module.
     """
     if not _shop_catalog_cache["loaded"]:
-        shop_ensure_seeded()
+        seeder = globals().get("shop_ensure_seeded")
+        if seeder is not None:
+            seeder()
         shop_refresh_catalog()
     return _shop_catalog_cache
 
