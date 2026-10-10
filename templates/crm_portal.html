@@ -138,6 +138,14 @@
                         <i class="bi bi-chat-dots"></i>
                         <h4>No conversation selected</h4>
                         <p>Choose a chat on the left to read the history and take over.</p>
+                        <div class="crm-empty-actions">
+                            <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="unattended">
+                                <i class="bi bi-exclamation-triangle"></i> Needs a person
+                            </button>
+                            <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-crm-filter="human">
+                                <i class="bi bi-person-check"></i> With your team
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -161,6 +169,8 @@
         <div class="ps-panel">
             <div class="ps-panel-head">
                 <h3><i class="bi bi-funnel-fill"></i> Filters</h3>
+            </div>
+            <div class="ps-panel-body crm-filters-panel">
                 <div class="crm-filters">
                     <label class="crm-field">
                         <span>Period</span>
@@ -271,7 +281,7 @@
             <div class="ps-panel-head">
                 <h3><i class="bi bi-box-seam-fill"></i> Product catalogue</h3>
                 <div class="ps-panel-actions">
-                    <span class="ps-chip">Your prices override <code>SHOP_PRICES</code></span>
+                    <span class="ps-chip">Your prices override the <code>SHOP_PRICES</code> setting</span>
                 </div>
             </div>
             <div class="ps-panel-body">

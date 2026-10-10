@@ -136,10 +136,13 @@
             statusEl.innerHTML = statusChip(payload.status, payload.status === 'escalated');
             renderActions();
           }
-          // Newest first, exactly like every messaging app: the latest exchange
-          // sits at the bottom of the panel and the oldest scrolls off the top.
-          threadEl.innerHTML = payload.messages.length
-            ? payload.messages.map(function (message) {
+          // The API returns newest first so an agent always sees the latest
+          // exchange without scrolling. The thread then reverses that so the
+          // newest message sits at the bottom, which is how every messaging
+          // app reads, and the view is scrolled there on load.
+          var ordered = payload.messages.slice().reverse();
+          threadEl.innerHTML = ordered.length
+            ? ordered.map(function (message) {
                 return '<div class="' + bubbleClass(message) + '">' +
                   '<small class="crm-bubble-sender">' + escapeHtml(senderLabel(message)) + '</small>' +
                   escapeHtml(message.body) +

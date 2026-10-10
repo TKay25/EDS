@@ -66,6 +66,52 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ------------------------------------------------------- inbox proportions
+   The shared .ps-inbox grid gives the conversation list a fixed 280–360px and
+   the thread the rest. In the CRM that leaves the thread with a lot of dead
+   space on a wide screen, so the split leans a little more towards the list
+   and the two panels are matched in height. */
+.crm-view[data-crm-view="inbox"] .ps-inbox {
+  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.crm-view[data-crm-view="inbox"] .ps-panel { display: flex; flex-direction: column; }
+
+/* Let the thread follow the list's height instead of a fixed 640px, and cap
+   it so a very long list cannot push the composer off the screen. */
+.crm-view[data-crm-view="inbox"] .ps-thread {
+  height: clamp(520px, calc(100vh - 260px), 820px);
+}
+
+.crm-view[data-crm-view="inbox"] .ps-chat-list { flex: 1; }
+
+/* Give the "no conversation selected" state real presence rather than one
+   small label floating in a large empty panel. */
+.crm-view[data-crm-view="inbox"] .ps-thread-body .ps-empty { padding: 96px 24px; }
+
+.crm-empty-actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+
+/* ----------------------------------------------------------- analytics head
+   Three selects plus labels do not fit on one line at tablet width, and the
+   labels were taller than the fields, causing a ragged wrap. */
+.crm-filters { align-items: flex-end; }
+
+.crm-filters .crm-field { min-width: 168px; }
+
+.crm-filters .ps-input {
+  padding: 9px 34px 9px 12px;
+  font-family: inherit;
+  font-size: 0.84rem;
+  color: var(--ps-text);
+  background-color: var(--ps-surface);
+  border: 1px solid var(--ps-line);
+  border-radius: var(--ps-radius-sm);
+  cursor: pointer;
+}
+
+
 /* ----------------------------------------------------------- chat thread */
 .crm-thread-title { min-width: 0; }
 
@@ -113,8 +159,9 @@
   display: flex;
   gap: 14px;
   flex-wrap: wrap;
-  margin-left: auto;
 }
+
+.crm-filters-panel .crm-filters { align-items: flex-end; }
 
 .crm-field { display: flex; flex-direction: column; gap: 5px; min-width: 150px; }
 
