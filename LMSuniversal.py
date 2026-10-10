@@ -6894,6 +6894,16 @@ def webhook():
                                                         )
                                                     except Exception as crm_error:
                                                         print(f"CRM enquiry error: {crm_error}")
+                                                        # Never leave a customer without a reply.
+                                                        try:
+                                                            send_whatsapp_message(
+                                                                sender_id,
+                                                                "Sorry, something went wrong on our side just now. "
+                                                                "Please send your message again, or call us on "
+                                                                f"{COMPANY_SYSTEM_CONTACT['phones'][0]}."
+                                                            )
+                                                        except Exception as fallback_error:
+                                                            print(f"customer fallback failed: {fallback_error}")
 
                                                     return jsonify({"status": "received"}), 200
 
@@ -21371,6 +21381,10 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     # Option numbers come from the choices on the previous prompt only, so the
     # navigation shortcuts can never be shadowed by a number.
     previous_options = ctx.get("last_options") or []
+    if not previous_options and step == "menu":
+        # A brand new conversation opens on the greeting, whose choices have not
+        # been stored yet; seed them so a typed number still selects something.
+        previous_options = shop_option_ids([shop_greeting(cart, staff)])
     unmatched_number = False
     if command.isdigit() and previous_options:
         pick = int(command)
@@ -21619,7 +21633,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 ], new_ctx=ctx)
 
             cart = []
-            return result("menu", _shop_order_placed(reference, customer, total), actions=[
+            return result("menu", _shop_order_placed(reference, customer, total, staff=staff),
+                          actions=[
                 {"type": "escalate", "reason": f"New order enquiry {reference}"}],
                 new_ctx=ctx, new_history=[])
 
@@ -21629,11 +21644,12 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "payment":
         if low in ("paylater", "later", "pay later", "no"):
+            reference = ctx.get("reference")
             cart = []
-            return result("menu", _shop_order_placed(ctx.get("reference"), customer,
-                                                     ctx.get("amount"), paid=False),
+            return result("menu", _shop_order_placed(reference, customer, ctx.get("amount"),
+                                                     staff=staff),
                           actions=[{"type": "escalate",
-                                    "reason": f"New order enquiry {ctx.get('reference')}"}],
+                                    "reason": f"New order enquiry {reference}"}],
                           new_history=[])
         if low in ("paynow", "pay", "ecocash", "yes"):
             phone = str(customer.get("phone") or "").strip() or str(wa_number or "")
@@ -21694,7 +21710,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         if low in ("paylater", "later", "pay later"):
             shop_payment_update(reference, "pay_later")
             cart = []
-            return result("menu", _shop_order_placed(reference, customer, amount, paid=False),
+            return result("menu", _shop_order_placed(reference, customer, amount, paid=False,
+                                                     staff=staff),
                           new_history=[])
         ok, paynow_status, _payload = paynow_poll(poll_url)
         if ok and paynow_status == "paid":
@@ -21725,7 +21742,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     return finish("menu", [greet()], new_history=[])
 
 
-def _shop_order_placed(reference, customer, amount=None, paid=False):
+def _shop_order_placed(reference, customer, amount=None, paid=False, staff=False):
     """The confirmation shown once an order exists, paid or not."""
     lines = ["🎉 *Order confirmed*" if paid else "✅ *Order placed*",
              "",
@@ -21739,7 +21756,7 @@ def _shop_order_placed(reference, customer, amount=None, paid=False):
     lines.append("")
     lines.append(f"Any questions? Call {COMPANY_SYSTEM_CONTACT['phones'][0]} or email "
                  f"{COMPANY_SYSTEM_CONTACT['email']}.")
-    return [_shop_text("\n".join(lines)), greet()]
+    return [_shop_text("\n".join(lines)), shop_greeting(None, staff)]
 
 
 def _shop_payment_event(reference, event, status, payload=""):
@@ -22169,10 +22186,20 @@ def shop_send_whatsapp(wa_number, messages, nav, channel=None, staff=False):
     kind = "text"
     ok = True
     for payload in payloads:
-        sent, _detail = crm_send_whatsapp_payload(wa_number, payload, channel)
-        ok = ok and sent
+        sent, detail = crm_send_whatsapp_payload(wa_number, payload, channel)
         if payload.get("type") == "interactive":
             kind = (payload.get("interactive") or {}).get("type") or "interactive"
+            if not sent:
+                # Never leave a customer without a reply: if WhatsApp rejects the
+                # rich message, send the same prompt as plain text.
+                print(f"interactive send failed, falling back to text: {detail}")
+                retry, retry_detail = crm_send_whatsapp(wa_number, readable or "", channel)
+                if retry:
+                    kind = "text"
+                    sent = True
+                else:
+                    print(f"text fallback failed: {retry_detail}")
+        ok = ok and sent
 
     if readable:
         crm_record_message(wa_number, "outbound", "staff" if staff else "bot", readable,
