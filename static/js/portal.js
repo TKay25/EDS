@@ -199,7 +199,9 @@
         .then(function (payload) {
           if (!payload.success) return;
           emptyEl.style.display = 'none';
-          threadEl.style.display = 'block';
+          // Must stay a flex column: the bubble sides are driven by align-self,
+          // which 'block' silently disables and flattens every message left.
+          threadEl.style.display = 'flex';
           if (composerEl) composerEl.style.display = 'flex';
           nameEl.textContent = payload.display_name;
           numberEl.textContent = '+' + payload.wa_number;

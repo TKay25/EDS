@@ -6809,15 +6809,29 @@ def webhook():
                                             tables = cursor.fetchall()
 
                                             found = False
+                                            # Set only when an employee row matches. Initialised
+                                            # here so the staff-only branches further down can
+                                            # never read an unbound name on a customer message.
+                                            role_foc_8 = None
+                                            company_reg = None
 
                                             for table in tables:
                                                 table_name = table[0]  
 
                                                 print(table_name)
                                                 print(sender_number)
-                                                
+
+                                                # Only employee tables carry a whatsapp column.
+                                                # A table with a password column but no whatsapp
+                                                # column (such as `users`) used to raise here, and
+                                                # the surrounding handler turned that into an error
+                                                # reply instead of treating the sender as a customer.
+                                                if not identifier_has_column(cursor, table_name, "whatsapp"):
+                                                    continue
+
+                                                # A quoted identifier keeps odd table names valid SQL.
                                                 query = f"""
-                                                    SELECT * FROM {table_name}
+                                                    SELECT * FROM "{table_name}"
                                                     WHERE whatsapp::TEXT LIKE %s
                                                 """
                                                 cursor.execute(query, (f"%{sender_number}",))
@@ -20599,6 +20613,35 @@ def company_system_channel_label():
 
 _wa_channels = {}
 _crm_tables_ready = False
+
+_column_cache = {}
+
+
+def identifier_has_column(cursor, table_name, column_name):
+    """True when `table_name` really has `column_name`.
+
+    The customer channel discovers employee tables by looking for a `password`
+    column, which also matches tables that have no `whatsapp` column at all.
+    Querying one of those raises, so every candidate is checked first. Results
+    are cached because this runs per inbound WhatsApp message.
+    """
+    key = (str(table_name), str(column_name))
+    if key in _column_cache:
+        return _column_cache[key]
+    try:
+        cursor.execute("""
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = %s AND column_name = %s
+            LIMIT 1
+        """, (str(table_name), str(column_name)))
+        present = cursor.fetchone() is not None
+    except Exception as e:
+        print(f"column check failed for {table_name}.{column_name}: {e}")
+        # Do not cache a failure: a transient database problem must not make a
+        # table permanently invisible to the employee lookup.
+        return False
+    _column_cache[key] = present
+    return present
 
 # ------------------------------------------------------------------ web push --
 # Staff devices subscribe once and are then alerted by the server whenever a

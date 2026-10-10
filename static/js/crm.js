@@ -58,6 +58,26 @@
       });
       if (shell) shell.classList.toggle('ps-shell-tight', name === 'inbox');
       if (name === 'analytics') analytics.load(false);
+      if (name === 'inbox') sizeInbox();
+    }
+
+    // The inbox takes whatever the viewport has left after the chrome above it.
+    // The CSS fallback already expresses this; the measurement only corrects it
+    // when a deployment's chrome differs, and it is skipped rather than guessed
+    // when layout is not yet resolved.
+    function sizeInbox() {
+      var view = root.querySelector('[data-crm-view="inbox"]');
+      var box = view ? view.querySelector('.ps-inbox') : null;
+      if (!box) return;
+      box.style.removeProperty('--crm-inbox-height');
+      var top = box.getBoundingClientRect().top;
+      if (!top || top < 100) return;
+      var available = window.innerHeight - top - 12;
+      // Only trust the measurement when it would actually give more room than
+      // the stylesheet's own figure, so a stale container cannot shrink the panel.
+      var fromCss = window.innerHeight - 305;
+      if (available <= fromCss) return;
+      box.style.setProperty('--crm-inbox-height', Math.round(available) + 'px');
     }
 
     tabs.forEach(function (tab) {
@@ -68,6 +88,28 @@
     var initial = root.querySelector('[data-crm-tab].is-active');
     if (shell) shell.classList.toggle('ps-shell-tight',
       !initial || initial.getAttribute('data-crm-tab') === 'inbox');
+
+    // Measure once the browser has laid the page out; measuring mid-init reads
+    // a not-yet-laid-out box and would size the inbox wrongly on first paint.
+    function scheduledSize() {
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(sizeInbox);
+      });
+    }
+
+    scheduledSize();
+    if (document.fonts && document.fonts.ready) {
+      // Web fonts change the chrome's height, so re-measure once they land.
+      document.fonts.ready.then(scheduledSize).catch(function () {});
+    }
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(function () {
+        var active = root.querySelector('[data-crm-view].is-active');
+        if (!active || active.getAttribute('data-crm-view') === 'inbox') sizeInbox();
+      }, 120);
+    });
   }
 
   /* ------------------------------------------------------------- analytics */

@@ -338,7 +338,12 @@
     <button id="btn-employee-profiles" class="btn">Employee Profiles</button>
     <button id="btn-employee-profiles" class="btn">Company Info</button>
     <button id="btn-employee-profiles" class="btn">Log Query</button>
-    <button onclick="window.location.href='/logout_HR_admin'" class="btn btn-danger">Logout</button>
+    <!-- Leave management lives inside the company system, so the way back to the
+         portal hub belongs on this page alongside sign out. -->
+    <button onclick="window.location.href='/company-system'" class="btn btn-light">
+        <i class="bi bi-grid-1x2-fill"></i> Company Home
+    </button>
+    <button onclick="window.location.href='/company-logout'" class="btn btn-danger">Logout</button>
 </div>
 
 <main class="main-content">

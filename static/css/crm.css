@@ -6,12 +6,12 @@
 /* --------------------------------------------------- compact page header
    The CRM is a working screen, not a landing page. The hero is reduced to a
    single line so the inbox gets the vertical space instead of a description. */
-.ps-hero-compact { margin-bottom: 14px; }
+.ps-hero-compact { margin-bottom: 8px; padding-top: 4px; padding-bottom: 4px; }
 
 /* The shared shell reserves 90px at the bottom for page-level scrolling, which
    the CRM does not need now that the inbox scrolls inside its own panel. The
    class is set from crm.js so this does not depend on :has() support. */
-.ps-shell.ps-shell-tight { padding-bottom: 22px; }
+.ps-shell.ps-shell-tight { padding-bottom: 10px; }
 
 .ps-hero-inline {
   display: flex;
@@ -121,11 +121,6 @@
   grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
   gap: 18px;
   align-items: stretch;
-  /* Chrome above the inbox is now ~475px after the header was compacted
-     (nav, tabs, banner, stats, section title and their margins). The
-     subtraction also covers the shell's bottom padding so nothing scrolls. */
-  height: clamp(300px, calc(100vh - 620px), 900px);
-  min-height: 300px;
 }
 
 .crm-view[data-crm-view="inbox"] .ps-panel {
@@ -150,14 +145,30 @@
   overscroll-behavior: contain;
 }
 
-.crm-view[data-crm-view="inbox"] .ps-thread-body {
+/* The message body only. Scoped with .crm-thread-body so the empty-state
+   sibling, which shares .ps-thread-body, keeps its own display. */
+.crm-view[data-crm-view="inbox"] .ps-thread-body.crm-thread-body {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
+  /* The flex column is what lets each bubble pick its own side. Each is forced
+     with !important because this element's display is also set inline by the
+     thread renderer; if that inline value is ever 'block' the bubbles would all
+     stretch to full width and every message would read as left-aligned. */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px;
 }
 
 /* Give the empty thread state presence in the taller panel. */
 .crm-view[data-crm-view="inbox"] .ps-thread-body .ps-empty { padding: 72px 24px; }
+
+/* The empty state and the message body share a slot in the thread, and only one
+   may take up space. Once the renderer has populated the message body the empty
+   state is hidden; keying off that keeps the messages full height even if the
+   two writes ever race. */
+.crm-view[data-crm-view="inbox"] .crm-thread-body:not(:empty) ~ #crmEmpty { display: none !important; }
 
 .crm-empty-actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
 
@@ -828,7 +839,7 @@ select.crm-select:focus {
   }
 
   .crm-view[data-crm-view="inbox"] .ps-thread-body {
-    max-height: 56vh;
+    max-height: 68vh;
   }
 
   .crm-view[data-crm-view="inbox"] .ps-chat-list {
@@ -982,7 +993,6 @@ select.crm-select:focus {
 
 /* The whole chrome block must never crowd out the conversation area. */
 .crm-view[data-crm-view="inbox"] .crm-banner-tight { flex: 0 0 auto; }
-.crm-view[data-crm-view="inbox"] .ps-inbox { flex: 1 1 auto; min-height: 0; }
 
 .crm-notify-btn.is-on {
   background: rgba(16, 185, 129, 0.12);
@@ -1002,11 +1012,26 @@ select.crm-select:focus {
 
 /* --------------------------------------------------- inbox fills the screen -- */
 /* The list and the thread are the tallest things on the tab, and both scroll
-   internally so the page itself stays put. */
+   internally so the page itself stays put.
+
+   The subtraction is the chrome above this box: nav 72px, hero 51px, tabs 55px,
+   banner 57px, panel head 46px and their margins ~14px, plus the shell's own
+   10px bottom padding. On a desktop the value is trimmed further so a taller
+   run of messages is visible before the thread needs scrolling; crm.js
+   re-measures and overrides it with --crm-inbox-height on any screen size. */
 .crm-view[data-crm-view="inbox"] .ps-inbox {
   align-items: stretch;
-  height: calc(100vh - 232px);
-  min-height: 420px;
+  height: var(--crm-inbox-height, calc(100vh - 305px));
+  min-height: 360px;
+}
+
+@media (min-width: 901px) {
+  /* Deliberately the full remainder: on a desktop the thread is the working
+     area, so it takes everything under the chrome and the run of visible
+     messages is as long as the screen allows. */
+  .crm-view[data-crm-view="inbox"] .ps-inbox {
+    height: var(--crm-inbox-height, calc(100vh - 303px));
+  }
 }
 .crm-view[data-crm-view="inbox"] .ps-inbox > .ps-panel {
   display: flex;
@@ -1044,7 +1069,57 @@ select.crm-select:focus {
 .crm-bubble-tag.is-system { background: rgba(148, 163, 184, 0.2); color: #E2E8F0; }
 .ps-bubble-out .crm-bubble-tag.is-bot { background: rgba(37, 99, 235, 0.14); color: #1D4ED8; }
 
+/* ------------------------------------------------------ thread head & composer
+   The head is one tidy row and the composer keeps its status line beneath the
+   input, so neither competes with the messages for height. */
+.crm-view[data-crm-view="inbox"] .ps-thread-head {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  gap: 10px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.ps-thread-head .crm-thread-title { min-width: 0; flex: 1 1 auto; }
+.ps-thread-head .ps-chat-name { gap: 6px; }
+.ps-thread-head .crm-reason:empty { display: none; }
+.ps-thread-head .ps-chat-preview {
+  margin-top: 1px;
+  font-size: 0.72rem;
+}
+.crm-view[data-crm-view="inbox"] .ps-thread-head .ps-panel-actions {
+  flex: 0 0 auto;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.crm-view[data-crm-view="inbox"] .ps-composer {
+  flex: 0 0 auto;
+  padding: 8px 14px 10px;
+  gap: 6px;
+}
+.ps-composer .crm-composer-row { gap: 8px; }
+.crm-composer-note {
+  font-size: 0.71rem;
+  line-height: 1.35;
+  color: var(--ps-text-soft);
+}
+.crm-composer-note:empty { display: none; }
+.crm-composer-note.is-error {
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.26);
+}
+
+/* Give the messages as much room as the panel allows on a desktop. */
+@media (min-width: 901px) {
+  .crm-view[data-crm-view="inbox"] .ps-thread-body { padding: 14px 16px; }
+  .crm-view[data-crm-view="inbox"] .ps-bubble { max-width: 72%; }
+}
+
 #crmComposerNote.is-error {
   color: #B91C1C;
   font-weight: 600;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.26);
 }
