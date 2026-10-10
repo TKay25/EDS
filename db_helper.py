@@ -4,7 +4,10 @@ Provides context manager for safe database connection handling
 """
 
 from contextlib import contextmanager
+import atexit
+import threading
 import psycopg2
+import psycopg2.pool
 import os
 
 # Get database URL from environment or fallback to default
@@ -14,111 +17,126 @@ external_database_url = os.getenv(
 )
 
 
+
+# The database is remote, so opening a connection costs more than the query it
+# carries (measured at ~1.7s from Zimbabwe to Render's Oregon region). A pool
+# means that handshake is paid once per process instead of once per call.
+_POOL_MIN = int(os.getenv('DB_POOL_MIN', '1'))
+_POOL_MAX = int(os.getenv('DB_POOL_MAX', '8'))
+
+_pool = None
+_pool_lock = threading.Lock()
+
+
+def _get_pool():
+    """The shared connection pool, created on first use.
+
+    One pool per process: psycopg2 connections cannot be shared across
+    processes, and gunicorn pre-forks its workers.
+    """
+    global _pool
+    if _pool is not None:
+        return _pool
+    with _pool_lock:
+        if _pool is None:
+            _pool = psycopg2.pool.ThreadedConnectionPool(
+                _POOL_MIN, _POOL_MAX, external_database_url
+            )
+    return _pool
+
+
+def _close_pool():
+    """Close every pooled connection at interpreter exit."""
+    global _pool
+    if _pool is not None:
+        try:
+            _pool.closeall()
+        except Exception:
+            pass
+        _pool = None
+
+
+atexit.register(_close_pool)
+
+
+def _discard(connection, pool):
+    """Drop a connection that may be broken rather than returning it."""
+    try:
+        pool.putconn(connection, close=True)
+    except Exception:
+        try:
+            connection.close()
+        except Exception:
+            pass
+
+
 @contextmanager
 def get_db():
     """
     Context manager for database connections.
-    
-    Automatically opens a connection, yields a cursor, and ensures
-    proper cleanup (commit/rollback) and connection closure.
-    
+
+    Yields a cursor on a pooled connection. The connection is handed back to the
+    pool afterwards instead of being closed, so the next caller skips the
+    connection handshake.
+
     Usage:
         with get_db() as (cursor, connection):
             cursor.execute("SELECT * FROM table WHERE id = %s", (123,))
             result = cursor.fetchone()
             connection.commit()
-    
+
     Guarantees:
-    - Connection is closed after use (finally block)
-    - Cursor is closed after use (finally block)
+    - The connection is returned to the pool (finally block)
+    - The cursor is closed after use (finally block)
     - No connection leaks on exceptions
+    - An uncommitted transaction is rolled back before reuse
     """
     connection = None
     cursor = None
+    pool = None
     try:
-        connection = psycopg2.connect(external_database_url)
+        pool = _get_pool()
+        connection = pool.getconn()
         cursor = connection.cursor()
         yield cursor, connection
-    except Exception as e:
+    except Exception:
         if connection:
-            connection.rollback()
-        raise e
+            try:
+                connection.rollback()
+            except Exception:
+                if pool:
+                    _discard(connection, pool)
+                    connection = None
+        raise
     finally:
         if cursor:
             try:
                 cursor.close()
             except Exception:
                 pass  # Ignore errors during cursor close
-        if connection:
+        if connection and pool:
             try:
-                connection.close()
+                # A pooled connection may still hold an open transaction, so it
+                # is rolled back before the next caller receives it. Anything the
+                # caller wanted kept was already committed by the caller.
+                if connection.get_transaction_status() != psycopg2.extensions.TRANSACTION_STATUS_IDLE:
+                    connection.rollback()
+                pool.putconn(connection)
             except Exception:
-                pass  # Ignore errors during connection close
+                _discard(connection, pool)
 
 
 @contextmanager
 def get_db_cursor_only():
     """
     Simplified context manager that yields only cursor.
-    
+
     Usage:
         with get_db_cursor_only() as cursor:
             cursor.execute("SELECT * FROM table")
             results = cursor.fetchall()
-    
+
     Note: Remember to manually commit if doing writes!
     """
-    connection = None
-    cursor = None
-    try:
-        connection = psycopg2.connect(external_database_url)
-        cursor = connection.cursor()
+    with get_db() as (cursor, _connection):
         yield cursor
-    except Exception as e:
-        if connection:
-            connection.rollback()
-        raise e
-    finally:
-        if cursor:
-            try:
-                cursor.close()
-            except Exception:
-                pass
-        if connection:
-            try:
-                connection.close()
-            except Exception:
-                pass
-
-
-def execute_query(query, params=None, fetch_one=False, fetch_all=False, commit=False):
-    """
-    Helper function for single queries (non-context-based).
-    
-    Args:
-        query: SQL query string
-        params: Tuple of parameters for the query
-        fetch_one: If True, returns one result
-        fetch_all: If True, returns all results
-        commit: If True, commits the transaction
-    
-    Returns:
-        Query result or None depending on fetch flags
-    
-    Example:
-        result = execute_query("SELECT * FROM users WHERE id = %s", (1,), fetch_one=True)
-    """
-    with get_db() as (cursor, connection):
-        cursor.execute(query, params or ())
-        
-        if fetch_one:
-            result = cursor.fetchone()
-        elif fetch_all:
-            result = cursor.fetchall()
-        else:
-            result = None
-        
-        if commit:
-            connection.commit()
-        
-        return result
