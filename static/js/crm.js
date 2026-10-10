@@ -307,6 +307,172 @@
     });
   }
 
+  /* --------------------------------------------------------- activity log */
+  function initActivityLog() {
+    var modal = document.getElementById('crmActivityModal');
+    var openButton = document.getElementById('crmOpenActivity');
+    if (!modal || !openButton) return;
+
+    var bodyEl = document.getElementById('crmActivityBody');
+    var summaryEl = document.getElementById('crmActivitySummary');
+    var periodEl = document.getElementById('crmActivityPeriod');
+    var customEl = document.getElementById('crmActivityCustom');
+    var fromEl = document.getElementById('crmActivityFrom');
+    var toEl = document.getElementById('crmActivityTo');
+    var categoryEl = document.getElementById('crmActivityCategory');
+    var employeeEl = document.getElementById('crmActivityEmployee');
+
+    var CATEGORY_ICONS = {
+      auth: 'bi-box-arrow-in-right',
+      catalogue: 'bi-tag-fill',
+      chat: 'bi-chat-dots-fill',
+      order: 'bi-receipt',
+      access: 'bi-shield-lock-fill',
+      hr: 'bi-people-fill',
+    };
+
+    var categoriesLoaded = false;
+
+    function filters() {
+      var state = {
+        period: periodEl.value,
+        category: categoryEl.value,
+        employee: employeeEl.value.trim(),
+      };
+      // A custom range supersedes the named period on the server too.
+      if (state.period === 'custom') {
+        state.from = fromEl.value;
+        state.to = toEl.value;
+      }
+      return state;
+    }
+
+    function query() {
+      var state = filters();
+      var parts = ['period=' + encodeURIComponent(state.period),
+                   'category=' + encodeURIComponent(state.category)];
+      if (state.employee) parts.push('employee=' + encodeURIComponent(state.employee));
+      if (state.from) parts.push('from=' + encodeURIComponent(state.from));
+      if (state.to) parts.push('to=' + encodeURIComponent(state.to));
+      return parts.join('&');
+    }
+
+    function escape(value) {
+      return String(value === null || value === undefined ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function render(entries) {
+      if (!entries.length) {
+        bodyEl.innerHTML = '<div class="ps-empty"><i class="bi bi-inbox"></i>' +
+          '<h4>No activity in this period</h4>' +
+          '<p>Sign-ins, price changes, handovers and manual replies will appear here as they happen.</p></div>';
+        return;
+      }
+      bodyEl.innerHTML = '<div class="crm-log-list">' + entries.map(function (entry) {
+        var icon = CATEGORY_ICONS[entry.category] || 'bi-activity';
+        var meta = [];
+        if (entry.employee_role) meta.push(escape(entry.employee_role));
+        if (entry.target) meta.push('Target: ' + escape(entry.target));
+        if (entry.ip_address) meta.push('From ' + escape(entry.ip_address));
+        return '<div class="crm-log-row">' +
+          '<div class="crm-log-icon cat-' + escape(entry.category) + '"><i class="bi ' + icon + '"></i></div>' +
+          '<div class="crm-log-main">' +
+          '<div class="crm-log-top"><strong>' + escape(entry.employee_name) + '</strong>' +
+          '<span class="crm-pill">' + escape(entry.category_label) + '</span>' +
+          '<span class="crm-log-when">' + escape(entry.created_at) + '</span></div>' +
+          '<p class="crm-log-summary">' + escape(entry.summary) + '</p>' +
+          (meta.length ? '<div class="crm-log-meta">' + meta.join(' · ') + '</div>' : '') +
+          '</div></div>';
+      }).join('') + '</div>';
+    }
+
+    function load(silent) {
+      bodyEl.style.opacity = '0.55';
+      fetch('/api/crm/activity?' + query())
+        .then(function (response) { return response.json(); })
+        .then(function (payload) {
+          bodyEl.style.opacity = '';
+          if (!payload.success) {
+            bodyEl.innerHTML = '<p class="crm-empty-cell">Could not load the activity log.</p>';
+            return;
+          }
+          render(payload.entries || []);
+          summaryEl.textContent = (payload.entries || []).length + ' entries · ' +
+            (payload.period_label || '');
+          if (!categoriesLoaded && payload.categories) {
+            payload.categories.forEach(function (item) {
+              var option = document.createElement('option');
+              option.value = item.key;
+              option.textContent = item.label;
+              categoryEl.appendChild(option);
+            });
+            categoriesLoaded = true;
+          }
+        })
+        .catch(function () {
+          bodyEl.style.opacity = '';
+          if (!silent) bodyEl.innerHTML = '<p class="crm-empty-cell">Could not load the activity log.</p>';
+        });
+    }
+
+    function open() {
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      load(false);
+    }
+
+    function close() {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+      window.clearTimeout(searchTimer);
+    }
+
+    openButton.addEventListener('click', open);
+    document.getElementById('crmActivityClose').addEventListener('click', close);
+    document.getElementById('crmActivityRefresh').addEventListener('click', function () { load(false); });
+
+    document.getElementById('crmActivityExport').addEventListener('click', function () {
+      // The PDF is generated from the same filters the modal is showing.
+      window.location.href = '/api/crm/activity.pdf?' + query();
+    });
+
+    // Auto-load as soon as the scope changes, which is how the period buttons
+    // are expected to feel.
+    periodEl.addEventListener('change', function () {
+      var custom = periodEl.value === 'custom';
+      customEl.hidden = !custom;
+      if (custom) {
+        if (!fromEl.value) fromEl.value = new Date().toISOString().slice(0, 10);
+        if (!toEl.value) toEl.value = fromEl.value;
+      } else {
+        load(true);
+      }
+    });
+
+    [fromEl, toEl].forEach(function (el) {
+      el.addEventListener('change', function () { load(true); });
+    });
+
+    categoryEl.addEventListener('change', function () { load(true); });
+
+    var searchTimer = null;
+    employeeEl.addEventListener('input', function () {
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(function () { load(true); }, 350);
+    });
+
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal) close();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !modal.hidden) close();
+    });
+  }
+
   initTabs();
   initCatalog();
+  initActivityLog();
 })();

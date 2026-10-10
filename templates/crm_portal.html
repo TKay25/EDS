@@ -36,6 +36,9 @@
         <button class="crm-tab" type="button" data-crm-tab="products" role="tab">
             <i class="bi bi-box-seam-fill"></i> Products &amp; pricing
         </button>
+        <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity">
+            <i class="bi bi-clock-history"></i> Activity log
+        </button>
     </nav>
 
     <section class="crm-view is-active" data-crm-view="inbox">
@@ -319,6 +322,74 @@
         </div>
     </section>
 </main>
+
+<!-- ========================================================= activity log -->
+<div class="crm-modal-backdrop" id="crmActivityModal" hidden>
+    <div class="crm-modal" role="dialog" aria-modal="true" aria-labelledby="crmActivityTitle">
+        <header class="crm-modal-head">
+            <div>
+                <h2 id="crmActivityTitle"><i class="bi bi-clock-history"></i> Staff activity log</h2>
+                <p>Every change made inside the portal by {{ user.company_name }} staff.</p>
+            </div>
+            <button class="crm-modal-close" type="button" id="crmActivityClose" aria-label="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </header>
+
+        <div class="crm-modal-filters">
+            <label class="crm-field">
+                <span>Period</span>
+                <select class="ps-input" id="crmActivityPeriod">
+                    <option value="today" selected>Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="this_week">This week</option>
+                    <option value="last_week">Last week</option>
+                    <option value="this_month">This month</option>
+                    <option value="last_month">Last month</option>
+                    <option value="all">All time</option>
+                    <option value="custom">Custom range…</option>
+                </select>
+            </label>
+            <div class="crm-date-range" id="crmActivityCustom" hidden>
+                <label class="crm-field">
+                    <span>From</span>
+                    <input class="ps-input" type="date" id="crmActivityFrom">
+                </label>
+                <label class="crm-field">
+                    <span>To</span>
+                    <input class="ps-input" type="date" id="crmActivityTo">
+                </label>
+            </div>
+            <label class="crm-field">
+                <span>Category</span>
+                <select class="ps-input" id="crmActivityCategory">
+                    <option value="all" selected>All activity</option>
+                </select>
+            </label>
+            <label class="crm-field">
+                <span>Staff member</span>
+                <input class="ps-input" type="search" id="crmActivityEmployee"
+                       placeholder="Name or email…" autocomplete="off">
+            </label>
+        </div>
+
+        <div class="crm-modal-status">
+            <span class="ps-chip" id="crmActivitySummary">Loading…</span>
+            <div class="crm-modal-actions">
+                <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmActivityRefresh">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+                <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmActivityExport">
+                    <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+
+        <div class="crm-modal-body" id="crmActivityBody">
+            <p class="ps-muted crm-empty-note">Loading activity…</p>
+        </div>
+    </div>
+</div>
 
 <script src="{{ url_for('static', filename='js/portal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/crm.js') }}"></script>

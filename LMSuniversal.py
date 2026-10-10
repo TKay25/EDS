@@ -20657,6 +20657,9 @@ def ensure_crm_tables():
         cursor.execute("ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS delivered BOOLEAN;")
         cursor.execute("ALTER TABLE whatsapp_chats ADD COLUMN IF NOT EXISTS is_staff BOOLEAN DEFAULT FALSE;")
         cursor.execute("UPDATE whatsapp_chats SET is_staff = FALSE WHERE is_staff IS NULL;")
+        cursor.execute("""
+            ALTER TABLE whatsapp_chats ADD COLUMN IF NOT EXISTS wa_profile_name VARCHAR(200);
+        """)
         connection.commit()
     _crm_tables_ready = True
 
@@ -20684,13 +20687,13 @@ def crm_record_message(wa_number, direction, sender, body, message_type="text",
                     INSERT INTO whatsapp_chats (wa_number, display_name, company_reg, channel,
                                                 status, unattended, handoff_reason, unread_count,
                                                 last_message, last_message_at, last_message_direction,
-                                                is_staff, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, 'bot', %s, %s, %s, %s, NOW(), %s, %s, NOW(), NOW())
+                                                is_staff, wa_profile_name, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, 'bot', %s, %s, %s, %s, NOW(), %s, %s, %s, NOW(), NOW())
                     RETURNING id
                 """, (wa_number, display_name, company_reg, channel,
                       bool(escalate) and not is_staff, reason,
                       0 if is_staff else (1 if direction == "inbound" else 0),
-                      body, direction, is_staff))
+                      body, direction, is_staff, display_name))
                 chat_id = cursor.fetchone()[0]
             else:
                 chat_id = row[0]
@@ -20701,6 +20704,7 @@ def crm_record_message(wa_number, direction, sender, body, message_type="text",
                             unattended = CASE WHEN %s THEN TRUE WHEN %s THEN FALSE ELSE unattended END,
                             handoff_reason = COALESCE(%s, handoff_reason),
                             display_name = COALESCE(%s, display_name),
+                            wa_profile_name = COALESCE(%s, wa_profile_name),
                             company_reg = COALESCE(%s, company_reg),
                             channel = COALESCE(%s, channel),
                             is_staff = is_staff OR %s,
@@ -20710,8 +20714,8 @@ def crm_record_message(wa_number, direction, sender, body, message_type="text",
                             updated_at = NOW()
                         WHERE id = %s
                     """, (is_staff, bool(escalate) and not is_staff, is_staff,
-                          None if is_staff else reason, display_name, company_reg, channel,
-                          is_staff, body, chat_id))
+                          None if is_staff else reason, display_name, display_name, company_reg,
+                          channel, is_staff, body, chat_id))
                 elif sender == "agent":
                     cursor.execute("""
                         UPDATE whatsapp_chats
@@ -20737,6 +20741,29 @@ def crm_record_message(wa_number, direction, sender, body, message_type="text",
         return chat_id
     except Exception as e:
         print(f"CRM log error: {e}")
+        return None
+
+
+def crm_best_display_name(wa_number):
+    """The best name known for a WhatsApp number.
+
+    Prefers the customer's WhatsApp profile name, falling back to whatever the
+    chat was first titled with. Used so an order or analytics row shows a real
+    name even when the buyer never typed one at checkout.
+    """
+    if not wa_number:
+        return None
+    try:
+        ensure_crm_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT COALESCE(wa_profile_name, display_name)
+                FROM whatsapp_chats WHERE wa_number = %s
+            """, (str(wa_number)[-15:],))
+            row = cursor.fetchone()
+        return (row[0] or None) if row else None
+    except Exception as e:
+        print(f"display name lookup error: {e}")
         return None
 
 
@@ -21356,7 +21383,7 @@ SHOP_TRANSLATIONS = {
         "👋 Welcome to *": "👋 Siyanamukela ku*",
         "👋 Hello *": "👋 Sawubona *",
         ", welcome to *": ", siyanamukela ku*",
-        "*!\nI am the ": "*!\nNgingu",
+        "*!\nI am the ": "*!\nNgingu ",
         " shopping assistant for ": " umsizi wokuthengisa we",
         ".\n\n🛍️ Browse our range and build an order\n🔎 Search for a product by name\n"
         "🛒 Review your cart and check out\n☎️ Reach our sales team in one tap\n\n"
@@ -21917,7 +21944,13 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
         # both are created here so a fresh worker can still take an order.
         ensure_shop_tables()
         ensure_crm_tables()
-        chat_id = crm_chat_id(wa_number, display_name=customer.get("name") or customer.get("company"),
+        # A customer who never typed a name still has a WhatsApp profile name;
+        # fall back to it so the order and the CRM row are not just a number.
+        typed_name = (customer.get("name") or "").strip()
+        if not typed_name:
+            typed_name = crm_best_display_name(wa_number) or ""
+        chat_id = crm_chat_id(wa_number,
+                              display_name=typed_name or customer.get("company"),
                               channel=channel) if wa_number else None
         with get_db() as (cursor, connection):
             cursor.execute("""
@@ -21927,7 +21960,7 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
                                          created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 RETURNING id
-            """, (reference, customer.get("name"), customer.get("company"), customer.get("phone"),
+            """, (reference, typed_name or None, customer.get("company"), customer.get("phone"),
                   customer.get("email"), customer.get("delivery_address"), channel,
                   wa_number, chat_id, customer.get("notes"),
                   sum(item["qty"] for item in cart), payment_method, payment_status, amount))
@@ -23016,6 +23049,91 @@ def ensure_access_tables():
     _access_tables_ready = True
 
 
+_audit_tables_ready = False
+
+
+def ensure_audit_tables():
+    """Create the staff activity log the first time it is needed."""
+    global _audit_tables_ready
+    if _audit_tables_ready:
+        return
+    with get_db() as (cursor, connection):
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS company_activity_log (
+                id SERIAL PRIMARY KEY,
+                employee_id INTEGER,
+                employee_name VARCHAR(200),
+                employee_role VARCHAR(120),
+                employee_email VARCHAR(200),
+                action VARCHAR(60) NOT NULL,
+                category VARCHAR(40) NOT NULL,
+                summary TEXT,
+                target VARCHAR(200),
+                details TEXT,
+                ip_address VARCHAR(64),
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS company_activity_created_idx
+            ON company_activity_log (created_at DESC);
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS company_activity_category_idx
+            ON company_activity_log (category, created_at DESC);
+        """)
+        connection.commit()
+    _audit_tables_ready = True
+
+
+# Every action a staff member can take that is worth recording. Keeping the
+# labels here means the portal and the log can never drift apart.
+AUDIT_CATEGORIES = {
+    "auth": "Sign in",
+    "catalogue": "Products & pricing",
+    "chat": "Conversations",
+    "order": "Orders",
+    "access": "User access",
+    "hr": "HR & Payroll",
+}
+
+
+def log_activity(action, category, summary, target=None, details=None, user=None):
+    """Record one staff action for the CRM activity log.
+
+    Never raises: an audit failure must not break the action being audited.
+    """
+    if category not in AUDIT_CATEGORIES:
+        category = "auth"
+    try:
+        ensure_audit_tables()
+        user = user or {}
+        employee_name = (user.get('name')
+                         or f"{user.get('firstname', '')} {user.get('surname', '')}".strip()
+                         or 'Unknown')
+        try:
+            ip_address = (request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+                          or request.remote_addr or '')
+        except Exception:
+            ip_address = ''
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO company_activity_log (employee_id, employee_name, employee_role,
+                                                  employee_email, action, category, summary,
+                                                  target, details, ip_address, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (user.get('id'), employee_name, user.get('role'), user.get('email'),
+                  str(action)[:60], category, str(summary or '')[:1000],
+                  (str(target)[:200] if target else None),
+                  (json.dumps(details)[:4000] if details is not None else None),
+                  ip_address[:64]))
+            connection.commit()
+        return True
+    except Exception as e:
+        print(f"activity log error: {e}")
+        return False
+
+
 def ensure_company_system_tables():
     """Create every company system table.
 
@@ -23026,7 +23144,7 @@ def ensure_company_system_tables():
     successful run is remembered for the lifetime of the process.
     """
     for ensure in (ensure_crm_tables, ensure_shop_tables, ensure_access_tables,
-                   ensure_number_mode_table):
+                   ensure_audit_tables, ensure_number_mode_table):
         try:
             ensure()
         except Exception as e:
@@ -23262,6 +23380,14 @@ def company_login_page():
             session['cs_email'] = email
             user_sessions[email] = {'uuid': session['user_uuid'], 'email': email}
 
+            log_activity("signed_in", "auth",
+                         f"{row[1]} {row[2]} signed in".strip(),
+                         target=email,
+                         details={"role": role,
+                                  "portals": sorted(k for k, v in access.items() if v)},
+                         user={"id": int(row[0]), "firstname": row[1], "surname": row[2],
+                               "role": role, "email": email})
+
             return jsonify({'success': True, 'redirect': url_for('company_system')})
 
         except Exception as e:
@@ -23276,6 +23402,13 @@ def company_login_page():
 
 @app.route('/company-logout')
 def company_logout():
+    user = company_system_user()
+    if user:
+        log_activity("signed_out", "auth",
+                     f"{user.get('firstname', '')} {user.get('surname', '')}".strip() + " signed out",
+                     target=user.get('email', ''),
+                     user={"id": user.get('id'), "name": user.get('name'),
+                           "role": user.get('role'), "email": user.get('email')})
     session.clear()
     return redirect(url_for('company_login_page'))
 
@@ -23403,6 +23536,15 @@ def access_toggle_api():
     if not set_module_access(employee_id, module, enabled, user['id']):
         return jsonify({'success': False, 'message': 'Could not update access. Please try again.'}), 500
 
+    target_name = next((employee.get('name') for employee in access_matrix()
+                        if str(employee.get('id')) == str(employee_id)), str(employee_id))
+    module_title = next((item['title'] for item in COMPANY_MODULES if item['key'] == module), module)
+    log_activity("granted_access" if enabled else "revoked_access", "access",
+                 f"{'Granted' if enabled else 'Revoked'} {module_title} access for {target_name}",
+                 target=target_name,
+                 details={"employee_id": employee_id, "module": module, "enabled": enabled},
+                 user=user)
+
     return jsonify({'success': True})
 
 
@@ -23461,12 +23603,15 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
     where.append(PAYMENT_FILTERS.get(payment) or PAYMENT_FILTERS["all"])
     where.append(FULFILMENT_FILTERS.get(fulfilment) or FULFILMENT_FILTERS["all"])
     query = f"""
-        SELECT reference, customer_name, company, phone, delivery_address, item_count,
-               payment_method, COALESCE(payment_status, 'unpaid'), payment_amount,
-               COALESCE(delivery_method, 'delivery'), status, created_at, wa_number
-        FROM shop_orders
+        SELECT orders.reference, orders.customer_name, orders.company, orders.phone,
+               orders.delivery_address, orders.item_count, orders.payment_method,
+               COALESCE(orders.payment_status, 'unpaid'), orders.payment_amount,
+               COALESCE(orders.delivery_method, 'delivery'), orders.status, orders.created_at,
+               orders.wa_number, COALESCE(chats.wa_profile_name, chats.display_name)
+        FROM shop_orders orders
+        LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
         WHERE {' AND '.join(where)}
-        ORDER BY created_at DESC
+        ORDER BY orders.created_at DESC
         LIMIT {int(limit)}
     """
     try:
@@ -23480,7 +23625,7 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
     for row in rows:
         orders.append({
             "reference": row[0],
-            "customer_name": row[1] or "",
+            "customer_name": row[1] or row[13] or "",
             "company": row[2] or "",
             "phone": row[3] or "",
             "address": row[4] or "",
@@ -23492,6 +23637,7 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
             "status": row[10] or "new",
             "created_at": row[11].strftime("%d %b %Y %H:%M") if row[11] else "",
             "wa_number": row[12] or "",
+            "profile_name": row[13] or "",
         })
     return orders
 
@@ -23545,6 +23691,94 @@ def orders_analytics(period="today", payment="all", fulfilment="all"):
     totals["top_items"] = top_items
     totals["currency"] = PAYNOW_CURRENCY
     return totals
+
+
+ACTIVITY_PERIODS = {
+    "today": ("Today", "created_at::date = CURRENT_DATE"),
+    "yesterday": ("Yesterday", "created_at::date = CURRENT_DATE - INTERVAL '1 day'"),
+    "this_week": ("This week", "created_at >= date_trunc('week', CURRENT_DATE)"),
+    "last_week": ("Last week",
+                  "created_at >= date_trunc('week', CURRENT_DATE) - INTERVAL '7 days' "
+                  "AND created_at < date_trunc('week', CURRENT_DATE)"),
+    "this_month": ("This month", "created_at >= date_trunc('month', CURRENT_DATE)"),
+    "last_month": ("Last month",
+                   "created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '1 month' "
+                   "AND created_at < date_trunc('month', CURRENT_DATE)"),
+    "all": ("All time", None),
+}
+
+
+def activity_log_entries(period="today", category="all", employee=None,
+                         date_from=None, date_to=None, limit=500):
+    """Staff activity rows for the CRM activity log and its PDF export.
+
+    A custom range wins over the named period, so the date pickers and the
+    quick period buttons can share one code path.
+    """
+    ensure_audit_tables()
+    where = ["1 = 1"]
+    params = []
+    if date_from or date_to:
+        if date_from:
+            where.append("created_at >= %s::date")
+            params.append(date_from)
+        if date_to:
+            # Inclusive of the whole end day.
+            where.append("created_at < (%s::date + INTERVAL '1 day')")
+            params.append(date_to)
+    elif period in ACTIVITY_PERIODS and ACTIVITY_PERIODS[period][1]:
+        where.append(ACTIVITY_PERIODS[period][1])
+    if category and category != "all":
+        if category not in AUDIT_CATEGORIES:
+            return []
+        where.append("category = %s")
+        params.append(category)
+    if employee:
+        where.append("(employee_name ILIKE %s OR employee_email ILIKE %s)")
+        params.extend([f"%{employee}%", f"%{employee}%"])
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute(f"""
+                SELECT id, employee_name, employee_role, employee_email, action, category,
+                       summary, target, details, ip_address, created_at
+                FROM company_activity_log
+                WHERE {' AND '.join(where)}
+                ORDER BY created_at DESC, id DESC
+                LIMIT {int(limit)}
+            """, tuple(params))
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"activity log read error: {e}")
+        return []
+    entries = []
+    for row in rows:
+        entries.append({
+            "id": row[0],
+            "employee_name": row[1] or "Unknown",
+            "employee_role": row[2] or "",
+            "employee_email": row[3] or "",
+            "action": row[4],
+            "category": row[5],
+            "category_label": AUDIT_CATEGORIES.get(row[5], row[5]),
+            "summary": row[6] or "",
+            "target": row[7] or "",
+            "details": row[8] or "",
+            "ip_address": row[9] or "",
+            "created_at": row[10].strftime("%d %b %Y %H:%M") if row[10] else "",
+            "created_iso": row[10].isoformat() if row[10] else "",
+        })
+    return entries
+
+
+def activity_period_label(period, date_from=None, date_to=None):
+    """A readable description of the window being exported."""
+    if date_from or date_to:
+        if date_from and date_to:
+            return f"{date_from} to {date_to}"
+        if date_from:
+            return f"From {date_from}"
+        return f"Up to {date_to}"
+    return ACTIVITY_PERIODS.get(period, ("All time", None))[0]
 
 
 def crm_catalog():
@@ -23644,6 +23878,70 @@ def crm_catalog_api():
                     'currency': PAYNOW_CURRENCY})
 
 
+@app.route('/api/crm/activity')
+def crm_activity_api():
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    period = request.args.get('period', 'today')
+    date_from = (request.args.get('from') or '').strip() or None
+    date_to = (request.args.get('to') or '').strip() or None
+    entries = activity_log_entries(
+        period=period,
+        category=request.args.get('category', 'all'),
+        employee=(request.args.get('employee') or '').strip() or None,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    return jsonify({
+        'success': True,
+        'entries': entries,
+        'period_label': activity_period_label(period, date_from, date_to),
+        'categories': [{'key': key, 'label': label}
+                       for key, label in AUDIT_CATEGORIES.items()],
+    })
+
+
+@app.route('/api/crm/activity.pdf')
+def crm_activity_pdf():
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    period = request.args.get('period', 'today')
+    date_from = (request.args.get('from') or '').strip() or None
+    date_to = (request.args.get('to') or '').strip() or None
+    category = request.args.get('category', 'all')
+    employee = (request.args.get('employee') or '').strip() or None
+    entries = activity_log_entries(period=period, category=category, employee=employee,
+                                   date_from=date_from, date_to=date_to)
+    if not entries:
+        return jsonify({'success': False,
+                        'message': 'There is nothing to export for that period.'}), 400
+    html = render_template(
+        'activity_log_pdf.html',
+        entries=entries,
+        period_label=activity_period_label(period, date_from, date_to),
+        category_label=(AUDIT_CATEGORIES.get(category, 'All activity')
+                        if category != 'all' else 'All activity'),
+        employee_filter=employee or '',
+        generated_by=f"{user.get('firstname', '')} {user.get('surname', '')}".strip(),
+        generated_at=datetime.now().strftime('%d %B %Y, %H:%M'),
+        company_name=COMPANY_SYSTEM_NAME,
+        company_contact=COMPANY_SYSTEM_CONTACT,
+    )
+    try:
+        pdf = HTML(string=html).write_pdf()
+    except Exception as e:
+        print(f"activity pdf error: {e}")
+        return jsonify({'success': False, 'message': 'Could not build the PDF.'}), 500
+    stamp = datetime.now().strftime('%Y%m%d-%H%M')
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = \
+        f'attachment; filename=brilliant_chemicals_activity_log_{stamp}.pdf'
+    return response
+
+
 @app.route('/api/crm/products/<product_id>', methods=['POST'])
 def crm_product_save_api(product_id):
     user, error = portal_api_user('crm')
@@ -23656,6 +23954,17 @@ def crm_product_save_api(product_id):
         return jsonify({'success': False, 'message': 'A product needs a name.'}), 400
     if not crm_save_product(product_id, name, summary):
         return jsonify({'success': False, 'message': 'Could not save the product.'}), 500
+    before = next((product for product in crm_catalog() if product['id'] == product_id), {})
+    action = "updated_product"
+    summary = f"Updated the details for “{name}”"
+    if before.get('name') and before['name'] != name:
+        action = "renamed_product"
+        summary = f"Renamed “{before['name']}” to “{name}”"
+    log_activity(action, "catalogue", summary, target=name,
+                 details={"name": name, "summary": summary,
+                          "previous": {"name": before.get('name', ''),
+                                       "summary": before.get('summary', '')}},
+                 user=user)
     return jsonify({'success': True, 'products': crm_catalog()})
 
 
@@ -23679,6 +23988,15 @@ def crm_price_save_api(product_id):
             return jsonify({'success': False, 'message': 'A price cannot be negative.'}), 400
     if not crm_save_price(product_id, pack_size, price):
         return jsonify({'success': False, 'message': 'Could not save that price.'}), 500
+    product_name = next((product['name'] for product in crm_catalog()
+                         if product['id'] == product_id), product_id)
+    log_activity("changed_price", "catalogue",
+                 (f"Set the {pack_size} price of “{product_name}” to {PAYNOW_CURRENCY} {price:.2f}"
+                  if price is not None
+                  else f"Cleared the {pack_size} price of “{product_name}”"),
+                 target=product_name,
+                 details={"pack_size": pack_size, "price": price},
+                 user=user)
     return jsonify({'success': True, 'products': crm_catalog(),
                     'currency': PAYNOW_CURRENCY})
 
@@ -23707,6 +24025,14 @@ def crm_order_fulfilment_api(reference):
     except Exception as e:
         print(f"order fulfilment error: {e}")
         return jsonify({'success': False, 'message': 'Could not update that order.'}), 500
+    if method in ('delivery', 'collection'):
+        log_activity("set_fulfilment", "order",
+                     f"Marked {reference} as {'delivered to the customer' if method == 'delivery' else 'collected from the shop'}",
+                     target=reference, details={"delivery_method": method}, user=user)
+    if fulfilled is not None:
+        log_activity("marked_fulfilled" if fulfilled else "reopened_order", "order",
+                     f"Marked {reference} as {'fulfilled' if fulfilled else 'not yet fulfilled'}",
+                     target=reference, details={"fulfilled": bool(fulfilled)}, user=user)
     period = request.args.get('period', 'today')
     return jsonify({'success': True,
                     'analytics': orders_analytics(period,
@@ -23775,6 +24101,12 @@ def crm_chat_mode(chat_id):
             sent, _ = crm_send_whatsapp(row[0], notice, row[1])
             if sent:
                 crm_record_message(row[0], 'outbound', 'system', notice, 'text', channel=row[1])
+
+    mode_labels = {'human': 'human agent', 'bot': 'the assistant', 'closed': 'closed'}
+    counterpart = (f"+{row[0]}" if row and row[0] else f"chat #{chat_id}")
+    log_activity(f"switched_to_{mode}", "chat",
+                 f"Switched {counterpart} to {mode_labels.get(mode, mode)}",
+                 target=counterpart, details={"mode": mode, "chat_id": chat_id}, user=user)
     return jsonify({'success': True})
 
 
@@ -23797,6 +24129,11 @@ def crm_chat_reply(chat_id):
     sent, detail = crm_send_whatsapp(row[0], body, row[1])
     crm_record_message(row[0], 'outbound', 'agent', body, 'text',
                        display_name=agent, channel=row[1])
+    log_activity("replied_to_customer", "chat",
+                 f"Replied to +{row[0]}",
+                 target=f"+{row[0]}",
+                 details={"message": body[:500], "delivered": bool(sent)},
+                 user=user)
     response = {'success': True, 'delivered': sent}
     if not sent:
         response['message'] = f"Saved to the conversation, but WhatsApp delivery failed: {detail}"

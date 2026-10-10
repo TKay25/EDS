@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Activity Log | {{ company_name }}</title>
+    <style>
+        /* ------------------------------------------------------------------
+           Page setup. The margins leave room for a running header and a
+           footer that repeat on every page of a long log.
+           ------------------------------------------------------------------ */
+        @page {
+            size: A4;
+            margin: 20mm 14mm 16mm 14mm;
+
+            @top-left {
+                content: "{{ company_name }} — Staff Activity Log";
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                color: #8593A5;
+                letter-spacing: 0.02em;
+                vertical-align: bottom;
+                padding-bottom: 4mm;
+            }
+            @top-right {
+                content: "{{ period_label }}";
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                color: #8593A5;
+                letter-spacing: 0.02em;
+                vertical-align: bottom;
+                padding-bottom: 4mm;
+            }
+            @bottom-left {
+                content: "Generated {{ generated_at }}{% if generated_by %} by {{ generated_by }}{% endif %}";
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                color: #9AA7B6;
+                vertical-align: top;
+                padding-top: 3mm;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                color: #9AA7B6;
+                vertical-align: top;
+                padding-top: 3mm;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #16283F;
+            font-size: 9pt;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* --------------------------------------------------------------- cover */
+        .masthead {
+            border-bottom: 2.5pt solid #DC143C;
+            padding-bottom: 5mm;
+            margin-bottom: 6mm;
+        }
+
+        .doc-kicker {
+            margin: 0 0 2mm;
+            font-size: 7.5pt;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+
+        .brand {
+            font-size: 21pt;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #16283F;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand em { font-style: normal; color: #DC143C; }
+
+        .doc-title {
+            margin: 1.5mm 0 0;
+            font-size: 15pt;
+            font-weight: 600;
+            color: #16283F;
+            letter-spacing: -0.01em;
+        }
+
+        /* --------------------------------------------------------- headline */
+        table.summary {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 3mm 0;
+            margin: 0 0 6mm;
+        }
+
+        table.summary td {
+            width: 25%;
+            background: #F4F7FA;
+            border-top: 2pt solid #16283F;
+            padding: 3.5mm 3mm;
+            vertical-align: top;
+        }
+
+        .k {
+            display: block;
+            font-size: 6.5pt;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #7A8899;
+            margin-bottom: 1.5mm;
+        }
+
+        .v {
+            display: block;
+            font-size: 14pt;
+            font-weight: 700;
+            color: #16283F;
+            line-height: 1.15;
+        }
+
+        .v.small { font-size: 9.5pt; font-weight: 600; }
+
+        /* ---------------------------------------------------------- filters */
+        .scope {
+            border: 0.5pt solid #DCE3EB;
+            border-left: 2.5pt solid #DC143C;
+            background: #FBFCFD;
+            padding: 3.5mm 4mm;
+            margin-bottom: 6mm;
+        }
+
+        .scope table { width: 100%; border-collapse: collapse; }
+
+        .scope td {
+            vertical-align: top;
+            padding: 0 4mm 0 0;
+            font-size: 8pt;
+        }
+
+        .scope .value { font-weight: 600; color: #16283F; }
+
+        /* -------------------------------------------------------------- log */
+        table.log {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.log thead { display: table-header-group; }
+
+        table.log thead th {
+            background: #16283F;
+            color: #FFFFFF;
+            text-align: left;
+            padding: 3mm;
+            font-size: 6.8pt;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border: 0;
+        }
+
+        table.log tbody td {
+            padding: 3mm;
+            border-bottom: 0.5pt solid #E8EDF2;
+            vertical-align: top;
+            font-size: 8.4pt;
+        }
+
+        /* Zebra striping keeps a long log readable without heavy rules. */
+        table.log tbody tr:nth-child(even) td { background: #FAFCFD; }
+
+        /* Keep one entry's content together across a page break. */
+        table.log tbody tr { page-break-inside: avoid; }
+
+        .when {
+            white-space: nowrap;
+            font-size: 7.8pt;
+            color: #5A6B7D;
+        }
+
+        .when strong {
+            display: block;
+            color: #16283F;
+            font-weight: 600;
+            font-size: 8.4pt;
+        }
+
+        .who-name { font-weight: 700; color: #16283F; }
+
+        .who-role {
+            display: block;
+            font-size: 7.2pt;
+            color: #8593A5;
+            margin-top: 0.6mm;
+        }
+
+        /* Colour-coded chips make a long log scannable at a glance. */
+        .chip {
+            display: inline-block;
+            padding: 0.8mm 2.2mm;
+            border-radius: 6pt;
+            font-size: 6.8pt;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .chip-auth      { background: #E3EBFB; color: #1D4ED8; }
+        .chip-catalogue { background: #FDF0E1; color: #B45309; }
+        .chip-chat      { background: #E1F5EC; color: #047857; }
+        .chip-order     { background: #ECE8FC; color: #6D28D9; }
+        .chip-access    { background: #FDE7EE; color: #BE123C; }
+        .chip-hr        { background: #E4F4FA; color: #0E7490; }
+
+        .action { color: #16283F; line-height: 1.45; }
+
+        .detail {
+            display: block;
+            margin-top: 1.2mm;
+            font-size: 7.4pt;
+            color: #7A8899;
+        }
+
+        .detail b { color: #5A6B7D; font-weight: 600; }
+
+        /* --------------------------------------------------------------- misc */
+        .empty {
+            border: 1pt dashed #CBD5E1;
+            border-radius: 2mm;
+            padding: 18mm 10mm;
+            text-align: center;
+            color: #7A8899;
+        }
+
+        .empty strong {
+            display: block;
+            font-size: 11pt;
+            color: #16283F;
+            margin-bottom: 2mm;
+        }
+
+        .signoff {
+            margin-top: 9mm;
+            padding-top: 4mm;
+            border-top: 0.5pt solid #DCE3EB;
+            font-size: 7.4pt;
+            color: #8593A5;
+            line-height: 1.6;
+        }
+
+        .conf {
+            display: block;
+            margin-top: 2.5mm;
+            font-size: 6.8pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #A7B2BF;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="masthead">
+        <p class="doc-kicker">Internal audit record</p>
+        <p class="brand">Brilliant<em> Chemicals</em></p>
+        <p class="doc-title">Staff activity log</p>
+    </div>
+
+    <!-- Headline numbers for the selected scope. -->
+    <table class="summary">
+        <tr>
+            <td>
+                <span class="k">Entries</span>
+                <span class="v">{{ entries | length }}</span>
+            </td>
+            <td>
+                <span class="k">Staff involved</span>
+                <span class="v">{{ entries | map(attribute='employee_name') | unique | list | length }}</span>
+            </td>
+            <td>
+                <span class="k">First entry</span>
+                <span class="v small">{{ entries[-1].created_at if entries else '—' }}</span>
+            </td>
+            <td>
+                <span class="k">Latest entry</span>
+                <span class="v small">{{ entries[0].created_at if entries else '—' }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Exactly which slice of the log this document covers. -->
+    <div class="scope">
+        <table>
+            <tr>
+                <td style="width:26%;">
+                    <span class="k">Period</span>
+                    <span class="value">{{ period_label }}</span>
+                </td>
+                <td style="width:24%;">
+                    <span class="k">Category</span>
+                    <span class="value">{{ category_label }}</span>
+                </td>
+                <td style="width:26%;">
+                    <span class="k">Staff filter</span>
+                    <span class="value">{{ employee_filter if employee_filter else 'All staff' }}</span>
+                </td>
+                <td style="width:24%;">
+                    <span class="k">Records</span>
+                    <span class="value">{{ entries | length }} {{ 'entry' if entries | length == 1 else 'entries' }}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {% if entries %}
+    <table class="log">
+        <thead>
+            <tr>
+                <th style="width:15%;">When</th>
+                <th style="width:20%;">Staff member</th>
+                <th style="width:14%;">Category</th>
+                <th style="width:51%;">Activity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td class="when">
+                    {{ entry.created_at }}
+                </td>
+                <td>
+                    <span class="who-name">{{ entry.employee_name }}</span>
+                    {% if entry.employee_role %}<span class="who-role">{{ entry.employee_role }}</span>{% endif %}
+                </td>
+                <td>
+                    <span class="chip chip-{{ entry.category }}">{{ entry.category_label }}</span>
+                </td>
+                <td>
+                    <span class="action">{{ entry.summary }}</span>
+                    {% if entry.target %}<span class="detail"><b>Target:</b> {{ entry.target }}</span>{% endif %}
+                    {% if entry.ip_address and entry.category == 'auth' %}
+                    <span class="detail"><b>Source:</b> {{ entry.ip_address }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+        <strong>No activity recorded</strong>
+        Nothing was logged by {{ company_name }} staff for the selected period and filters.
+    </div>
+    {% endif %}
+
+    <div class="signoff">
+        This document is generated automatically from the {{ company_name }} portal audit trail. It records
+        sign-ins and sign-outs, catalogue and pricing edits, conversation handovers between the assistant
+        and staff, manual replies to customers, order fulfilment updates and user access changes.
+        Entries are listed most recent first.
+        {% if company_contact and company_contact.email %}
+        Queries: {{ company_contact.email }}{% if company_contact.phones %} · {{ company_contact.phones[0] }}{% endif %}.
+        {% endif %}
+        <span class="conf">Confidential — for internal use only</span>
+    </div>
+
+</body>
+</html>
