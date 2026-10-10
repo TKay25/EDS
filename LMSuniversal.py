@@ -6838,6 +6838,10 @@ def webhook():
                                                     role_foc_8 = result[8]
                                                     days_days_balance = result[13]
                                                     company_reg = table_name[:-4]  
+                                                    # Greet the employee by name in the
+                                                    # staff assistant, matching the
+                                                    # customer greeting.
+                                                    staff_display_name = f"{first_name} {last_name}".strip()
 
                                                     print(id_user)
                                                     print(first_name)
@@ -6961,7 +6965,8 @@ def webhook():
                                             if not switch_back:
                                                 try:
                                                     actions = shop_webhook_turn(
-                                                        sender_id, display_phone_number, message, staff=True)
+                                                        sender_id, display_phone_number, message, staff=True,
+                                                        display_name=staff_display_name)
                                                 except Exception as shop_error:
                                                     print(f"staff shop assistant error: {shop_error}")
                                                     actions = []
@@ -20965,6 +20970,7 @@ def shop_cart_total(cart):
     return round(total, 2)
 
 COMPANY_SYSTEM_CONTACT = {
+    "name": "Brilliant Chemicals",
     "email": "sales@brilliantchemicals.co.zw",
     "phones": ["+263 737 066 415", "+263 772 801 892"],
     "address": "Number 7529, Tynwald South, Harare, Zimbabwe",
@@ -21159,6 +21165,17 @@ SHOP_TRANSLATIONS = {
     "sn": {
         "Welcome to Brilliant Chemicals Online Shopping Bot! 👋":
             "Mauya kuBrilliant Chemicals! 👋",
+        "👋 Welcome to *": "👋 Mauya ku*",
+        "👋 Hello *": "👋 Mhoro *",
+        ", welcome to *": ", mauya ku*",
+        "*!\nI am the ": "*!\nNdini ",
+        " shopping assistant for ": " mubatsiri wekutengesa we",
+        ".\n\n🛍️ Browse our range and build an order\n🔎 Search for a product by name\n"
+        "🛒 Review your cart and check out\n☎️ Reach our sales team in one tap\n\n"
+        "How can I help you today?":
+            ".\n\n🛍️ Ongorora zvigadzirwa uye gadzira odha\n🔎 Tsvaga chigadzirwa nezita\n"
+            "🛒 Ona ngoro yako uye ubhadhare\n☎️ Bata boka redu rekutengesa\n\n"
+            "Ndingakubatsirei nhasi?",
         "I can help you browse our Knockout range, build an order and reach our sales team. "
         "Choose an option below to continue:":
             "Ndinogona kukubatsira kuona zvigadzirwa zveKnockout, kugadzira odha uye kutaura neboka redu "
@@ -21336,6 +21353,17 @@ SHOP_TRANSLATIONS = {
     "nd": {
         "Welcome to Brilliant Chemicals Online Shopping Bot! 👋":
             "Siyanamukela eBrilliant Chemicals! 👋",
+        "👋 Welcome to *": "👋 Siyanamukela ku*",
+        "👋 Hello *": "👋 Sawubona *",
+        ", welcome to *": ", siyanamukela ku*",
+        "*!\nI am the ": "*!\nNgingu",
+        " shopping assistant for ": " umsizi wokuthengisa we",
+        ".\n\n🛍️ Browse our range and build an order\n🔎 Search for a product by name\n"
+        "🛒 Review your cart and check out\n☎️ Reach our sales team in one tap\n\n"
+        "How can I help you today?":
+            ".\n\n🛍️ Bona imikhiqizo njalo wakhe i-oda\n🔎 Dinga umkhiqizo ngebizo\n"
+            "🛒 Bona inqola yakho bese ubhadala\n☎️ Xhumana leqembu lethu lezokuthengisa\n\n"
+            "Ngingakusiza ngani lamuhla?",
         "I can help you browse our Knockout range, build an order and reach our sales team. "
         "Choose an option below to continue:":
             "Ngingakusiza ukubona imikhiqizo yeKnockout, ukwenza i-oda kanye lokuxhumana leqembu lethu "
@@ -21711,7 +21739,30 @@ def _shop_short_name(name):
     return name[len(prefix):] if name.startswith(prefix) else name
 
 
-def shop_greeting(cart=None, staff=False):
+def _shop_first_name(display_name):
+    """The part of a WhatsApp profile name to greet someone by.
+
+    Meta returns whatever the person typed into their own profile, so it can be
+    a full name, a business name or an emoji-laden alias. Only the first token
+    is used, and anything that is not a name falls back to a neutral greeting.
+    """
+    name = " ".join(str(display_name or "").split()).strip()
+    if not name:
+        return ""
+    # Drop trailing decorations such as "(Sales)" or "- Harare".
+    for separator in ("(", "[", "{", "|", ",", "/"):
+        if separator in name:
+            name = name.split(separator, 1)[0].strip()
+    if not name:
+        return ""
+    first = name.split(" ")[0]
+    # A greeting needs letters, not digits or punctuation only.
+    if not any(character.isalpha() for character in first):
+        return ""
+    return first[:40]
+
+
+def shop_greeting(cart=None, staff=False, display_name=None, language="en"):
     count = sum(item["qty"] for item in (cart or []))
     cart_label = "View Cart"
     if count:
@@ -21721,12 +21772,23 @@ def shop_greeting(cart=None, staff=False):
     if staff:
         options.append(("switch_staff", "Switch to Staff"))
     options.append(("language", "Language"))
-    return _shop_options(
-        "Welcome to Brilliant Chemicals Online Shopping Bot! 👋\n\n"
-        "I can help you browse our Knockout range, build an order and reach our sales team. "
-        "Choose an option below to continue:",
-        options,
+
+    first_name = _shop_first_name(display_name)
+    if first_name:
+        opening = f"👋 Hello *{first_name}*, welcome to *{BRAND_NAME}*!"
+    else:
+        opening = f"👋 Welcome to *{BRAND_NAME}*!"
+
+    body = (
+        f"{opening}\n"
+        f"I am the {BRAND_NAME} shopping assistant for {COMPANY_SYSTEM_CONTACT['name']}.\n\n"
+        "🛍️ Browse our range and build an order\n"
+        "🔎 Search for a product by name\n"
+        "🛒 Review your cart and check out\n"
+        "☎️ Reach our sales team in one tap\n\n"
+        "How can I help you today?"
     )
+    return _shop_options(body, options)
 
 
 def _shop_category_list():
@@ -21931,7 +21993,7 @@ def _shop_render(step, ctx, cart, customer=None, staff=False):
         return [_shop_text("What is the *delivery address* for this order?")]
     if step == "order_confirm":
         return _shop_order_confirmation(cart, customer)
-    return [shop_greeting(cart, staff)]
+    return [shop_greeting(cart, staff, display_name, language)]
 
 
 def _shop_order_confirmation(cart, customer):
@@ -21964,9 +22026,17 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     # menu can always offer a way back to the staff assistant.
     staff = bool(state.get("staff"))
     language = _shop_language_code(state.get("language"))
+    # The WhatsApp profile name is remembered on the session so every later
+    # greeting (after a support message, an order or a language change) still
+    # addresses the customer by name.
+    if display_name is None:
+        display_name = state.get("display_name")
+    display_name = " ".join(str(display_name or "").split()).strip() or None
+    if display_name:
+        state["display_name"] = display_name
 
     def greet():
-        return shop_greeting(cart, staff)
+        return shop_greeting(cart, staff, display_name, language)
 
     command = (button_id or raw_input or "").strip()
 
@@ -21976,7 +22046,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if not previous_options and step == "menu":
         # A brand new conversation opens on the greeting, whose choices have not
         # been stored yet; seed them so a typed number still selects something.
-        previous_options = shop_option_ids([shop_greeting(cart, staff)])
+        previous_options = shop_option_ids([greet()])
     unmatched_number = False
     if command.isdigit() and previous_options:
         pick = int(command)
@@ -21997,7 +22067,9 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     def finish(new_step, messages, actions=None, new_ctx=None, new_customer=None, new_history=None):
         saved_ctx = ctx if new_ctx is None else new_ctx
         saved_customer = customer if new_customer is None else new_customer
-        preserve = [command]
+        # Never let translation touch anything a person typed or was addressed
+        # by: their name, their order details and the product they picked.
+        preserve = [command, _shop_first_name(display_name)]
         preserve.extend((saved_customer or {}).values())
         preserve.extend((saved_ctx or {}).values())
         for item in cart:
@@ -22273,7 +22345,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 ], new_ctx=ctx)
 
             cart = []
-            return result("menu", _shop_order_placed(reference, customer, total, staff=staff),
+            return result("menu", _shop_order_placed(reference, customer, total, staff=staff,
+                                                     display_name=display_name, language=language),
                           actions=[
                 {"type": "escalate", "reason": f"New order enquiry {reference}"}],
                 new_ctx=ctx, new_history=[])
@@ -22287,7 +22360,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             reference = ctx.get("reference")
             cart = []
             return result("menu", _shop_order_placed(reference, customer, ctx.get("amount"),
-                                                     staff=staff),
+                                                     staff=staff, display_name=display_name,
+                                                     language=language),
                           actions=[{"type": "escalate",
                                     "reason": f"New order enquiry {reference}"}],
                           new_history=[])
@@ -22351,7 +22425,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             shop_payment_update(reference, "pay_later")
             cart = []
             return result("menu", _shop_order_placed(reference, customer, amount, paid=False,
-                                                     staff=staff),
+                                                     staff=staff, display_name=display_name,
+                                                     language=language),
                           new_history=[])
         ok, paynow_status, _payload = paynow_poll(poll_url)
         if ok and paynow_status == "paid":
@@ -22382,7 +22457,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     return finish("menu", [greet()], new_history=[])
 
 
-def _shop_order_placed(reference, customer, amount=None, paid=False, staff=False):
+def _shop_order_placed(reference, customer, amount=None, paid=False, staff=False, display_name=None,
+                       language="en"):
     """The confirmation shown once an order exists, paid or not."""
     lines = ["🎉 *Order confirmed*" if paid else "✅ *Order placed*",
              "",
@@ -22396,7 +22472,7 @@ def _shop_order_placed(reference, customer, amount=None, paid=False, staff=False
     lines.append("")
     lines.append(f"Any questions? Call {COMPANY_SYSTEM_CONTACT['phones'][0]} or email "
                  f"{COMPANY_SYSTEM_CONTACT['email']}.")
-    return [_shop_text("\n".join(lines)), shop_greeting(None, staff)]
+    return [_shop_text("\n".join(lines)), shop_greeting(None, staff, display_name, language)]
 
 
 def _shop_payment_event(reference, event, status, payload=""):
@@ -22789,7 +22865,7 @@ def wa_mode_set(wa_number, mode):
         return False
 
 
-def shop_webhook_turn(sender_id, display_phone_number, message, staff=False):
+def shop_webhook_turn(sender_id, display_phone_number, message, staff=False, display_name=None):
     """Run one shopping-assistant turn over WhatsApp.
 
     Returns the actions still to be handled by the caller. Staff conversations
@@ -22803,10 +22879,13 @@ def shop_webhook_turn(sender_id, display_phone_number, message, staff=False):
     state = shop_load_state(state_key) or {"step": "menu", "cart": [], "ctx": {},
                                           "customer": {}, "history": []}
     state["staff"] = staff
+    if display_name:
+        state["display_name"] = " ".join(str(display_name).split()).strip()
 
     new_state, messages, actions = shop_engine(
         state, raw_input=text, button_id=reply_id,
-        channel="whatsapp-staff" if staff else "whatsapp", wa_number=sender_id)
+        channel="whatsapp-staff" if staff else "whatsapp", wa_number=sender_id,
+        display_name=display_name)
     shop_save_state(state_key, new_state)
 
     # The switch back to the staff assistant is rendered by the caller.
@@ -22877,7 +22956,8 @@ def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=
         crm_escalate_chat(sender_id, "Customer requested a human agent", display_phone_number)
         return
 
-    actions = shop_webhook_turn(sender_id, display_phone_number, message, staff=False)
+    actions = shop_webhook_turn(sender_id, display_phone_number, message, staff=False,
+                               display_name=(profile_name or "").strip() or None)
     for action in actions:
         if action.get("type") == "escalate":
             crm_escalate_chat(sender_id, action.get("reason") or "Customer enquiry",
