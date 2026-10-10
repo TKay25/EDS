@@ -22010,8 +22010,14 @@ _shop_catalog_cache = {"loaded": False, "names": {}, "summaries": {}, "prices": 
 
 
 def _shop_catalog():
-    """Catalogue loaded from the CRM portal, refreshed on every real turn."""
+    """Catalogue loaded from the CRM portal, refreshed on every real turn.
+
+    The first read seeds the table from the products shipped in code, so the
+    assistant and the portal both work from the catalogue rather than from two
+    separate sources.
+    """
     if not _shop_catalog_cache["loaded"]:
+        shop_ensure_seeded()
         shop_refresh_catalog()
     return _shop_catalog_cache
 
@@ -22065,6 +22071,54 @@ def shop_refresh_catalog():
     _shop_catalog_cache = {"loaded": True, "names": names, "summaries": summaries,
                            "prices": prices, "sizes": sizes, "custom": custom}
     return _shop_catalog_cache
+
+
+def shop_seed_catalog():
+    """Copy the products shipped in code into the catalogue tables, once.
+
+    The assistant reads its names, descriptions and unit sizes from the portal,
+    so the products that only existed in code would otherwise be invisible to
+    anyone editing them. A product that already has a catalogue row is left
+    alone, which means edits and deletions survive a later restart.
+
+    Returns the number of products seeded.
+    """
+    seeded = 0
+    try:
+        ensure_shop_tables()
+        # Read the cache directly rather than through _shop_catalog(), which
+        # would call back into this function while it is running.
+        catalog = _shop_catalog_cache if _shop_catalog_cache.get("loaded") \
+            else shop_refresh_catalog()
+        # Anything already managed in the portal, by id.
+        known = set(catalog.get("names") or {})
+        known.update(catalog.get("sizes") or {})
+        known.update(product["id"] for product in (catalog.get("custom") or []))
+        with get_db() as (cursor, connection):
+            for position, base in enumerate(BRILLIANT_PRODUCTS):
+                if base["id"] in known:
+                    continue
+                cursor.execute("""
+                    INSERT INTO shop_products (product_id, display_name, summary,
+                                               is_custom, position, updated_at)
+                    VALUES (%s, %s, %s, FALSE, %s, NOW())
+                    ON CONFLICT (product_id) DO NOTHING
+                """, (base["id"], base["name"], base["summary"], position))
+                for index, size in enumerate(base["sizes"]):
+                    cursor.execute("""
+                        INSERT INTO shop_product_sizes (product_id, pack_size, position)
+                        VALUES (%s, %s, %s)
+                        ON CONFLICT (product_id, pack_size) DO NOTHING
+                    """, (base["id"], size, index))
+                seeded += 1
+            connection.commit()
+        if seeded:
+            # The cache is now stale, so the next turn reads the seeded rows.
+            shop_refresh_catalog()
+            print(f"catalogue seeded with {seeded} product(s) from the code defaults")
+    except Exception as e:
+        print(f"catalog seed error: {e}")
+    return seeded
 
 
 def shop_all_products():
@@ -25232,6 +25286,23 @@ def explore_lms():
 def close_db(error):
     """Close any remaining connections on app shutdown"""
     pass  # No-op now since you're using context managers everywhere   
+
+_catalog_seeded = False
+
+
+def shop_ensure_seeded():
+    """Seed the catalogue from the shipped products the first time it is read.
+
+    Called from the shop's own entry points rather than from a global request
+    hook, so the work happens only when someone actually uses the assistant and
+    never interferes with an unrelated page. Idempotent, and safe to call often.
+    """
+    global _catalog_seeded
+    if _catalog_seeded:
+        return 0
+    _catalog_seeded = True
+    return shop_seed_catalog()
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port = 55, debug = True)
