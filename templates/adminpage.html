@@ -821,7 +821,12 @@
                 </a>
                 {% endif %}
                 <hr class="sidebar-divider">
-                <a class="sidebar-nav-item" href="/logout">
+                <!-- This dashboard is reached from the company system, so give a
+                     way back to the portal hub and keep sign out inside it. -->
+                <a class="sidebar-nav-item" href="/company-system">
+                    <i class="bi bi-grid-1x2-fill"></i> Company Home
+                </a>
+                <a class="sidebar-nav-item" href="/company-logout">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </a>
             </nav>
