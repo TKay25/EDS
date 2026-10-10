@@ -20,28 +20,28 @@
 <main class="ps-shell" id="crmInbox" data-filter="all"
       data-currency="{{ PAYNOW_CURRENCY if PAYNOW_CURRENCY is defined else 'USD' }}">
 
-    <header class="ps-hero ps-hero-compact">
-        <div class="ps-hero-inline">
-            <span class="ps-eyebrow"><i class="bi bi-headset"></i> CRM Portal</span>
-            <h1>Sales desk<span class="ps-hero-sep">·</span><span class="ps-hero-sub">Conversations, catalogue and sales performance</span></h1>
-        </div>
-    </header>
+    {# One row carries the page name and the tabs. The old "Sales desk" heading
+       only repeated what the tabs already say, and the row it cost is worth
+       more to the conversation list. #}
+    <div class="crm-topbar">
+        <span class="ps-eyebrow"><i class="bi bi-headset"></i> CRM Portal</span>
 
-    <nav class="crm-tabs" role="tablist">
-        <button class="crm-tab is-active" type="button" data-crm-tab="inbox" role="tab">
-            <i class="bi bi-chat-dots-fill"></i> Inbox
-            <span class="crm-tab-count" data-stat="stat_unattended">{{ stat_unattended }}</span>
-        </button>
-        <button class="crm-tab" type="button" data-crm-tab="analytics" role="tab">
-            <i class="bi bi-graph-up-arrow"></i> Sales analytics
-        </button>
-        <button class="crm-tab" type="button" data-crm-tab="products" role="tab">
-            <i class="bi bi-box-seam-fill"></i> Products &amp; pricing
-        </button>
-        <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity">
-            <i class="bi bi-clock-history"></i> Activity log
-        </button>
-    </nav>
+        <nav class="crm-tabs" role="tablist">
+            <button class="crm-tab is-active" type="button" data-crm-tab="inbox" role="tab">
+                <i class="bi bi-chat-dots-fill"></i> Inbox
+                <span class="crm-tab-count" data-stat="stat_unattended">{{ stat_unattended }}</span>
+            </button>
+            <button class="crm-tab" type="button" data-crm-tab="analytics" role="tab">
+                <i class="bi bi-graph-up-arrow"></i> Sales analytics
+            </button>
+            <button class="crm-tab" type="button" data-crm-tab="products" role="tab">
+                <i class="bi bi-box-seam-fill"></i> Products &amp; pricing
+            </button>
+            <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity">
+                <i class="bi bi-clock-history"></i> Activity log
+            </button>
+        </nav>
+    </div>
 
     <section class="crm-view is-active" data-crm-view="inbox">
     {# One compact bar carries the unattended count, the filter and the two
@@ -306,7 +306,10 @@
             <div class="ps-panel-head">
                 <h3><i class="bi bi-box-seam-fill"></i> Product catalogue</h3>
                 <div class="ps-panel-actions">
-                    <span class="ps-chip">Your prices override the <code>SHOP_PRICES</code> setting</span>
+                    <span class="ps-chip" id="crmCatalogCount"></span>
+                    <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmAddProductOpen">
+                        <i class="bi bi-plus-lg"></i> Add product
+                    </button>
                 </div>
             </div>
             <div class="ps-panel-body">
@@ -314,23 +317,87 @@
                     Rename a product or change a selling price and the WhatsApp assistant uses it straight away —
                     no redeploy needed. Clear a price to keep that pack as an enquiry-only line.
                 </p>
+                {# WhatsApp renders the browse list as one list message, so the number
+                   of products and the length of each name are hard limits. #}
+                <p class="ps-muted crm-hint" id="crmCatalogLimits">
+                    WhatsApp allows {{ limits.max_products }} products in one browse list, and each
+                    product or pack name must be {{ limits.name_limit }} characters or fewer.
+                </p>
             </div>
+
+            <!-- Only shown when the catalogue is full, so the limit is explained
+                 at the point it actually blocks something. -->
+            <div class="crm-alert is-warn" id="crmCatalogFull" hidden>
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>
+                    The catalogue is at WhatsApp's limit of <strong id="crmCatalogFullCount"></strong>
+                    products. Remove one before adding another.
+                </span>
+            </div>
+
+            <form class="crm-add-product" id="crmAddProductForm" hidden>
+                <div class="crm-add-head">
+                    <h4><i class="bi bi-plus-circle"></i> New product</h4>
+                    <button class="crm-modal-close" type="button" id="crmAddProductCancel" aria-label="Cancel">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="crm-add-grid">
+                    <label class="crm-field">
+                        {# Deliberately no maxlength: silently truncating would hide the
+                           real limit from the agent. The counter below shows the
+                           allowance and the save is refused with a reason. #}
+                        <span>Product name <em id="crmAddNameCount"></em></span>
+                        <input class="ps-input" type="text" id="crmAddName"
+                               placeholder="e.g. Pine Gel" required>
+                    </label>
+                    <label class="crm-field crm-field-wide">
+                        <span>Customer description <em id="crmAddSummaryCount"></em></span>
+                        <textarea class="ps-input" id="crmAddSummary" rows="2"
+                                  placeholder="What the customer sees when they open this product."></textarea>
+                    </label>
+                    <label class="crm-field crm-field-wide">
+                        <span>Unit sizes <em>comma separated, max {{ limits.pack_limit }}</em></span>
+                        <input class="ps-input" type="text" id="crmAddSizes"
+                               placeholder="e.g. 500ml, 1 Litre">
+                    </label>
+                </div>
+                <div class="crm-add-foot">
+                    <button class="ps-btn ps-btn-primary ps-btn-sm" type="submit">
+                        <i class="bi bi-check2"></i> Create product
+                    </button>
+                    <span class="crm-save-note is-error" id="crmAddNote"></span>
+                </div>
+            </form>
+
             <div class="crm-product-grid" id="crmProductGrid">
                 {% for product in catalog %}
-                <article class="crm-product" data-product-id="{{ product.id }}">
+                <article class="crm-product" data-product-id="{{ product.id }}"
+                         data-custom="{{ 'true' if product.custom else 'false' }}">
                     <header class="crm-product-head">
                         <div class="crm-product-title">
+                            {# No maxlength: see the add form. An over-long name must be
+                               refused with a reason rather than silently shortened. #}
                             <input class="ps-input crm-product-name" type="text"
                                    value="{{ product.name }}" data-role="name"
                                    aria-label="Product name">
-                            <div class="crm-product-base">Code name: {{ product.base_name }}</div>
+                            <div class="crm-product-base">
+                                {% if product.custom %}
+                                Added in the portal
+                                {% else %}
+                                Code name: {{ product.base_name }}
+                                {% endif %}
+                                <em class="crm-name-count" data-role="namecount"></em>
+                            </div>
                         </div>
                         <span class="ps-chip {{ 'is-ok' if product.priced else 'is-warn' }}">
                             {{ 'Priced' if product.priced else 'Enquiry only' }}
                         </span>
                     </header>
                     <label class="crm-field crm-field-wide">
-                        <span>Customer description</span>
+                        <span>Customer description <em class="crm-name-count" data-role="sumcount"></em></span>
+                        {# No maxlength: the live counter shows the allowance and an
+                           over-long description is refused with a reason. #}
                         <textarea class="ps-input crm-product-summary" rows="2"
                                   data-role="summary">{{ product.summary }}</textarea>
                     </label>
@@ -345,10 +412,23 @@
                         </label>
                         {% endfor %}
                     </div>
+                    {# Every product's unit sizes are editable here, so the catalogue is
+                       the single source of truth and the assistant offers exactly these. #}
+                    <label class="crm-field crm-field-wide">
+                        <span>Unit sizes <em>comma separated, max {{ limits.pack_limit }}</em>
+                            <em class="crm-name-count" data-role="sizecount"></em></span>
+                        <input class="ps-input crm-product-sizes" type="text" data-role="sizes"
+                               value="{{ product.sizes | map(attribute='size') | join(', ') }}">
+                    </label>
                     <footer class="crm-product-foot">
                         <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" data-role="save">
                             <i class="bi bi-save2"></i> Save product
                         </button>
+                        {% if product.custom %}
+                        <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-role="delete">
+                            <i class="bi bi-trash3"></i> Remove
+                        </button>
+                        {% endif %}
                         <span class="crm-save-note" data-role="note"></span>
                     </footer>
                 </article>
@@ -357,6 +437,14 @@
         </div>
     </section>
 </main>
+
+{# The limits the editor enforces, as data the script can read. Rendered rather
+   than fetched so the counters are correct before any API call returns. #}
+<div class="ps-shell" id="crmLimits" hidden>{{ limits | tojson }}</div>
+
+{# Toasts report the outcome of a catalogue edit without stealing focus, so a
+   rejected save is visible wherever the agent happens to be looking. #}
+<div class="crm-toasts" id="crmToasts" role="status" aria-live="polite"></div>
 
 <!-- ========================================================= activity log -->
 <div class="crm-modal-backdrop" id="crmActivityModal" hidden>

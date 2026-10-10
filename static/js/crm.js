@@ -20,6 +20,44 @@
       .replace(/'/g, '&#39;');
   }
 
+  /* ---------------------------------------------------------------- toasts */
+  // A short-lived message in the corner. Used for catalogue outcomes so a
+  // rejected edit is visible without a dialog the agent has to dismiss.
+  var TOAST_ICONS = {
+    ok: 'bi-check-circle-fill',
+    warn: 'bi-exclamation-triangle-fill',
+    error: 'bi-x-circle-fill',
+    info: 'bi-info-circle-fill',
+  };
+
+  function toast(message, kind, detail) {
+    var host = document.getElementById('crmToasts');
+    if (!host || !message) return;
+    var level = TOAST_ICONS[kind] ? kind : 'info';
+    var node = document.createElement('div');
+    node.className = 'crm-toast is-' + level;
+    node.innerHTML = '<i class="bi ' + TOAST_ICONS[level] + '"></i>' +
+      '<div class="crm-toast-body"><span class="crm-toast-text">' + escapeHtml(message) + '</span>' +
+      (detail ? '<span class="crm-toast-detail">' + escapeHtml(detail) + '</span>' : '') +
+      '</div>' +
+      '<button class="crm-toast-close" type="button" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>';
+
+    function dismiss() {
+      if (!node.parentNode) return;
+      node.classList.add('is-leaving');
+      window.setTimeout(function () {
+        if (node.parentNode) node.parentNode.removeChild(node);
+      }, 200);
+    }
+
+    node.querySelector('.crm-toast-close').addEventListener('click', dismiss);
+    host.appendChild(node);
+    // Errors stay long enough to be read and copied into a fix.
+    window.setTimeout(dismiss, level === 'error' ? 9000 : 5000);
+  }
+
+  window.crmToast = toast;
+
   function money(value) {
     var number = Number(value);
     if (!isFinite(number)) return CURRENCY + ' 0.00';
@@ -289,6 +327,30 @@
     var grid = document.getElementById('crmProductGrid');
     if (!grid) return;
 
+    var limitsEl = document.getElementById('crmCatalogLimits');
+    var countEl = document.getElementById('crmCatalogCount');
+    var fullEl = document.getElementById('crmCatalogFull');
+    var fullCountEl = document.getElementById('crmCatalogFullCount');
+    var form = document.getElementById('crmAddProductForm');
+    var openButton = document.getElementById('crmAddProductOpen');
+    var cancelButton = document.getElementById('crmAddProductCancel');
+    var nameInput = document.getElementById('crmAddName');
+    var nameCount = document.getElementById('crmAddNameCount');
+    var summaryInput = document.getElementById('crmAddSummary');
+    var sizesInput = document.getElementById('crmAddSizes');
+    var addNote = document.getElementById('crmAddNote');
+    // Seed from what the server rendered, so the counters agree with the labels
+    // before any API response arrives.
+    var renderedLimits = document.getElementById('crmLimits');
+    var limits = { max_products: 10, name_limit: 24, summary_limit: 300, pack_limit: 10 };
+    if (renderedLimits) {
+      try {
+        limits = Object.assign(limits, JSON.parse(renderedLimits.textContent));
+      } catch (e) {
+        // Keep the defaults if the payload is unreadable.
+      }
+    }
+
     function note(product, message, kind) {
       var node = product.querySelector('[data-role="note"]');
       if (!node) return;
@@ -300,48 +362,152 @@
       }, 4000);
     }
 
+    // The catalogue count and the add button both depend on WhatsApp's limit, so
+    // they are refreshed from whatever the server last reported.
+    function applyLimits(incoming) {
+      if (incoming) limits = incoming;
+      var count = grid.querySelectorAll('.crm-product').length;
+      if (countEl) countEl.textContent = count + ' of ' + limits.max_products + ' products';
+      if (limitsEl) {
+        limitsEl.textContent = 'WhatsApp allows ' + limits.max_products + ' products in one browse ' +
+          'list, and each product or pack name must be ' + limits.name_limit + ' characters or fewer.';
+      }
+      var full = count >= limits.max_products;
+      if (fullEl) {
+        fullEl.hidden = !full;
+        if (full && fullCountEl) fullCountEl.textContent = String(limits.max_products);
+      }
+      if (openButton) {
+        openButton.disabled = full;
+        openButton.title = full
+          ? 'The catalogue is at WhatsApp\'s limit for one browse list.'
+          : 'Add a new product to the catalogue';
+      }
+    }
+
+    function parseSizes(value) {
+      return String(value || '').split(/[,\n]/)
+        .map(function (part) { return part.trim(); })
+        .filter(function (part) { return part !== ''; });
+    }
+
     Array.prototype.forEach.call(grid.querySelectorAll('.crm-product'), function (product) {
       var id = product.getAttribute('data-product-id');
       var saveButton = product.querySelector('[data-role="save"]');
       if (!saveButton) return;
 
       saveButton.addEventListener('click', function () {
-        var name = product.querySelector('[data-role="name"]').value.trim();
-        var summary = product.querySelector('[data-role="summary"]').value.trim();
+        var nameField = product.querySelector('[data-role="name"]');
+        var name = nameField.value.trim();
+        var description = product.querySelector('[data-role="summary"]').value.trim();
         if (!name) {
           note(product, 'A product needs a name.', 'is-error');
+          toast('A product needs a name.', 'error');
           return;
         }
+        // Refuse locally before the round trip, so the agent sees the limit
+        // problem next to the field they are editing and as a toast.
+        if (name.length > limits.name_limit) {
+          var over = name.length - limits.name_limit;
+          note(product, 'A product name must be ' + limits.name_limit + ' characters or fewer.',
+               'is-error');
+          toast('Product name is ' + over + ' character' + (over === 1 ? '' : 's') + ' too long.',
+                'error',
+                'WhatsApp allows ' + limits.name_limit + ' characters in a list row, and this name ' +
+                'has ' + name.length + '. Shorten it before saving.');
+          nameField.focus();
+          return;
+        }
+        if (description.length > limits.summary_limit) {
+          var overDesc = description.length - limits.summary_limit;
+          note(product, 'The description must be ' + limits.summary_limit + ' characters or fewer.',
+               'is-error');
+          toast('Description is ' + overDesc + ' character' + (overDesc === 1 ? '' : 's') + ' too long.',
+                'error',
+                'WhatsApp fits the description, the product name and the unit sizes into one ' +
+                'message, so the description is limited to ' + limits.summary_limit + ' characters.');
+          return;
+        }
+        // Unit sizes are edited on every product, so the checks run for the
+        // built-in range as well as products added here.
+        var sizesField = product.querySelector('[data-role="sizes"]');
+        if (sizesField) {
+          var wanted = parseSizes(sizesField.value);
+          if (!wanted.length) {
+            note(product, 'Give the product at least one unit size.', 'is-error');
+            toast('A product needs at least one unit size.', 'error',
+                  'Customers choose a unit size before the assistant can take the order.');
+            return;
+          }
+          if (wanted.length > limits.pack_limit) {
+            note(product, 'At most ' + limits.pack_limit + ' unit sizes.', 'is-error');
+            toast('Too many unit sizes: ' + wanted.length + '.', 'error',
+                  'A unit size list is one WhatsApp list, which holds ' + limits.pack_limit +
+                  ' rows. Remove ' + (wanted.length - limits.pack_limit) + ' to save.');
+            return;
+          }
+          var tooLong = wanted.filter(function (size) { return size.length > limits.name_limit; });
+          if (tooLong.length) {
+            note(product, 'A unit size must be ' + limits.name_limit + ' characters or fewer.',
+                 'is-error');
+            toast('Unit size name is too long.', 'error',
+                  '“' + tooLong[0] + '” has ' + tooLong[0].length + ' characters; WhatsApp allows ' +
+                  limits.name_limit + '.');
+            return;
+          }
+        }
         saveButton.disabled = true;
-        postJson('/api/crm/products/' + encodeURIComponent(id), { name: name, summary: summary })
+        postJson('/api/crm/products/' + encodeURIComponent(id), { name: name, summary: description })
           .then(function (result) {
             if (!result.success) {
               note(product, result.message || 'Could not save.', 'is-error');
+              toast(result.message || 'Could not save the product.', 'error');
               saveButton.disabled = false;
               return null;
             }
-            // Prices save in the same action so one click stores the whole card.
-            var inputs = Array.prototype.slice.call(product.querySelectorAll('[data-role="price"]'));
-            return inputs.reduce(function (chain, input) {
-              return chain.then(function (state) {
-                if (state === false) return false;
-                return postJson('/api/crm/products/' + encodeURIComponent(id) + '/prices', {
-                  size: input.getAttribute('data-size'),
-                  price: input.value.trim(),
-                }).then(function (priceResult) {
-                  if (!priceResult.success) {
-                    note(product, priceResult.message || 'Could not save a price.', 'is-error');
+            // Pack sizes are replaced first: removing a size would otherwise
+            // leave a price pointing at a pack that no longer exists.
+            var sizesField = product.querySelector('[data-role="sizes"]');
+            var chain = Promise.resolve(true);
+            if (sizesField) {
+              chain = postJson('/api/crm/products/' + encodeURIComponent(id) + '/sizes',
+                               { sizes: parseSizes(sizesField.value) })
+                .then(function (sizeResult) {
+                  if (!sizeResult.success) {
+                    note(product, sizeResult.message || 'Could not save the pack sizes.', 'is-error');
+                    toast(sizeResult.message || 'Could not save the pack sizes.', 'error');
                     return false;
                   }
                   return true;
                 });
-              });
-            }, Promise.resolve(true));
+            }
+            return chain.then(function (ok) {
+              if (!ok) return false;
+              // Prices save in the same action so one click stores the whole card.
+              var inputs = Array.prototype.slice.call(product.querySelectorAll('[data-role="price"]'));
+              return inputs.reduce(function (priceChain, input) {
+                return priceChain.then(function (state) {
+                  if (state === false) return false;
+                  return postJson('/api/crm/products/' + encodeURIComponent(id) + '/prices', {
+                    size: input.getAttribute('data-size'),
+                    price: input.value.trim(),
+                  }).then(function (priceResult) {
+                    if (!priceResult.success) {
+                      note(product, priceResult.message || 'Could not save a price.', 'is-error');
+                      toast(priceResult.message || 'Could not save a price.', 'error');
+                      return false;
+                    }
+                    return true;
+                  });
+                });
+              }, Promise.resolve(true));
+            });
           })
           .then(function (ok) {
             saveButton.disabled = false;
             if (ok === null || ok === false) return;
             note(product, 'Saved', 'is-ok');
+            toast('Saved “' + name + '”.', 'ok');
             var priced = Array.prototype.slice.call(product.querySelectorAll('[data-role="price"]'))
               .every(function (input) { return input.value.trim() !== ''; });
             var chip = product.querySelector('.crm-product-head .ps-chip');
@@ -354,9 +520,216 @@
           .catch(function () {
             saveButton.disabled = false;
             note(product, 'Could not save the product.', 'is-error');
+            toast('Could not save the product. Check your connection and try again.', 'error');
           });
       });
+
+      var deleteButton = product.querySelector('[data-role="delete"]');
+      if (deleteButton) {
+        deleteButton.addEventListener('click', function () {
+          if (!window.confirm('Remove this product from the catalogue?')) return;
+          deleteButton.disabled = true;
+          postJson('/api/crm/products/' + encodeURIComponent(id) + '/delete', {})
+            .then(function (result) {
+              if (!result.success) {
+                deleteButton.disabled = false;
+                note(product, result.message || 'Could not remove it.', 'is-error');
+                toast(result.message || 'Could not remove the product.', 'error');
+                return;
+              }
+              toast('Removed from the catalogue.', 'ok');
+              product.parentNode.removeChild(product);
+              if (result.limits) applyLimits(result.limits);
+              applyLimits(null);
+              // A freed slot may make the add button usable again.
+              if (grid.querySelectorAll('.crm-product').length < limits.max_products) {
+                toast('There is now room to add another product.', 'info');
+              }
+            })
+            .catch(function () {
+              deleteButton.disabled = false;
+              note(product, 'Could not remove the product.', 'is-error');
+              toast('Could not remove the product.', 'error');
+            });
+        });
+      }
     });
+
+    // A product name becomes a WhatsApp list row title, so the remaining
+    // characters are shown live on every card as well as the add form.
+    function paintOneCount(input, node) {
+      if (!node) return;
+      var left = limits.name_limit - input.value.trim().length;
+      node.textContent = left >= 0 ? left + ' characters left' : Math.abs(left) + ' characters too many';
+      node.classList.toggle('is-error', left < 0);
+    }
+
+    Array.prototype.forEach.call(grid.querySelectorAll('.crm-product'), function (product) {
+      var input = product.querySelector('[data-role="name"]');
+      var node = product.querySelector('[data-role="namecount"]');
+      if (input && node) {
+        input.addEventListener('input', function () { paintOneCount(input, node); });
+        paintOneCount(input, node);
+      }
+      // The description shares one WhatsApp message with the name and the pack
+      // list, so its allowance is shown the same way.
+      var summary = product.querySelector('[data-role="summary"]');
+      var summaryCount = product.querySelector('[data-role="sumcount"]');
+      if (summary && summaryCount) {
+        var paintSummary = function () {
+          var left = limits.summary_limit - summary.value.trim().length;
+          summaryCount.textContent = left >= 0
+            ? left + ' characters left' : Math.abs(left) + ' characters too many';
+          summaryCount.classList.toggle('is-error', left < 0);
+        };
+        summary.addEventListener('input', paintSummary);
+        paintSummary();
+      }
+      // Unit sizes are capped by the WhatsApp list row limit.
+      var sizeField = product.querySelector('[data-role="sizes"]');
+      var sizeCount = product.querySelector('[data-role="sizecount"]');
+      if (sizeField && sizeCount) {
+        var paintSizes = function () {
+          var count = parseSizes(sizeField.value).length;
+          var over = count > limits.pack_limit;
+          sizeCount.textContent = over
+            ? count + ' sizes, max ' + limits.pack_limit
+            : count + ' of ' + limits.pack_limit + ' sizes';
+          sizeCount.classList.toggle('is-error', over);
+        };
+        sizeField.addEventListener('input', paintSizes);
+        paintSizes();
+      }
+    });
+
+    function paintNameCount() {
+      if (!nameCount || !nameInput) return;
+      var left = limits.name_limit - nameInput.value.trim().length;
+      nameCount.textContent = left + ' left';
+      nameCount.classList.toggle('is-error', left < 0);
+    }
+
+    var addSummaryCount = document.getElementById('crmAddSummaryCount');
+    function paintAddSummaryCount() {
+      if (!addSummaryCount || !summaryInput) return;
+      var left = limits.summary_limit - summaryInput.value.trim().length;
+      addSummaryCount.textContent = left >= 0
+        ? left + ' left' : Math.abs(left) + ' too many';
+      addSummaryCount.classList.toggle('is-error', left < 0);
+    }
+    if (summaryInput) {
+      summaryInput.addEventListener('input', paintAddSummaryCount);
+      paintAddSummaryCount();
+    }
+    if (nameInput) {
+      nameInput.addEventListener('input', paintNameCount);
+      paintNameCount();
+    }
+
+    if (openButton && form) {
+      openButton.addEventListener('click', function () {
+        form.hidden = false;
+        if (addNote) addNote.textContent = '';
+        if (nameInput) nameInput.focus();
+      });
+    }
+    if (cancelButton && form) {
+      cancelButton.addEventListener('click', function () {
+        form.hidden = true;
+        if (addNote) addNote.textContent = '';
+      });
+    }
+
+    if (form) {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var name = (nameInput ? nameInput.value : '').trim();
+        var description = (summaryInput ? summaryInput.value : '').trim();
+        var sizes = parseSizes(sizesInput ? sizesInput.value : '');
+
+        function refuse(message, detail) {
+          if (addNote) addNote.textContent = message;
+          toast(message, 'error', detail);
+        }
+
+        if (!name) {
+          refuse('Give the product a name.');
+          if (nameInput) nameInput.focus();
+          return;
+        }
+        // Checked here as well as on the server, so the agent is told before the
+        // round trip and the reason is stated in full.
+        if (name.length > limits.name_limit) {
+          refuse('Product name is ' + (name.length - limits.name_limit) + ' character' +
+                 (name.length - limits.name_limit === 1 ? '' : 's') + ' too long.',
+                 'WhatsApp allows ' + limits.name_limit + ' characters in a list row, and this ' +
+                 'name has ' + name.length + '.');
+          if (nameInput) nameInput.focus();
+          return;
+        }
+        if (grid.querySelectorAll('.crm-product').length >= limits.max_products) {
+          refuse('The catalogue is full.',
+                 'WhatsApp allows ' + limits.max_products + ' products in one browse list. Remove ' +
+                 'one before adding another.');
+          return;
+        }
+        if (!sizes.length) {
+          refuse('Give the product at least one pack size.',
+                 'Customers pick a pack size before the assistant can take an order.');
+          if (sizesInput) sizesInput.focus();
+          return;
+        }
+        if (sizes.length > limits.pack_limit) {
+          refuse('Too many pack sizes: ' + sizes.length + '.',
+                 'A product can have ' + limits.pack_limit + ' pack sizes so its list still fits ' +
+                 'WhatsApp\'s ten-row limit.');
+          return;
+        }
+        var tooLong = sizes.filter(function (size) { return size.length > limits.name_limit; });
+        if (tooLong.length) {
+          refuse('Pack size name is too long.', '“' + tooLong[0] + '” has ' + tooLong[0].length +
+                 ' characters; WhatsApp allows ' + limits.name_limit + '.');
+          return;
+        }
+        if (description.length > limits.summary_limit) {
+          refuse('Description is ' + (description.length - limits.summary_limit) + ' character' +
+                 (description.length - limits.summary_limit === 1 ? '' : 's') + ' too long.',
+                 'The limit is ' + limits.summary_limit + ' characters.');
+          return;
+        }
+
+        var submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+        postJson('/api/crm/products', {
+          name: name,
+          summary: description,
+          sizes: sizes,
+        })
+          .then(function (result) {
+            if (submitButton) submitButton.disabled = false;
+            if (!result.success) {
+              var message = result.message || 'Could not create the product.';
+              if (addNote) addNote.textContent = message;
+              toast(message, 'error');
+              // The server knows the authoritative limits, so adopt whatever it
+              // reports before the agent tries again.
+              if (result.limits) applyLimits(result.limits);
+              return;
+            }
+            toast('Added “' + name + '” to the catalogue.', 'ok');
+            // A full reload keeps every card, price input and limit consistent
+            // with what the server just stored.
+            window.location.reload();
+          })
+          .catch(function () {
+            if (submitButton) submitButton.disabled = false;
+            if (addNote) addNote.textContent = 'Could not create the product.';
+            toast('Could not create the product. Check your connection and try again.', 'error');
+          });
+      });
+    }
+
+    applyLimits(null);
   }
 
   /* --------------------------------------------------------- activity log */

@@ -21268,49 +21268,49 @@ BRILLIANT_PRODUCTS = [
         "id": "foam-bath",
         "name": "Foam Bath",
         "summary": "High foaming, berry bubbly foam bath enriched with glycerine, avocado and aloe vera extracts.",
-        "sizes": ["500ml", "1 Litre", "Bulk pack"],
+        "sizes": ["500ml", "1 Litre"],
     },
     {
         "id": "dishwashing-liquid",
         "name": "Dishwashing Liquid",
         "summary": "High foaming lemon degreasing dishwashing liquid, available in 750ml and 1 Litre.",
-        "sizes": ["750ml", "1 Litre", "Bulk pack"],
+        "sizes": ["750ml", "1 Litre"],
     },
     {
         "id": "toilet-cleaner",
         "name": "Toilet Cleaner & Sanitizer",
         "summary": "Removes stubborn stains and germs and leaves a fresh pine or lavender scent.",
-        "sizes": ["500ml", "Bulk pack"],
+        "sizes": ["500ml"],
     },
     {
         "id": "all-purpose-cleaner",
         "name": "All Purpose Cleaner",
         "summary": "Restores white surfaces and lifts grease, oil and stains from stoves, fridges and tiles.",
-        "sizes": ["500ml", "750ml", "Bulk pack"],
+        "sizes": ["500ml", "750ml"],
     },
     {
         "id": "scouring-powder",
         "name": "Scouring Powder",
         "summary": "Clears encrusted deposits from pots and pans and removes rust from tools.",
-        "sizes": ["500g", "Bulk pack"],
+        "sizes": ["500g"],
     },
     {
         "id": "petroleum-jelly",
         "name": "Perfumed Petroleum Jelly",
         "summary": "Skin care jelly for minor scrapes, dryness and everyday moisture.",
-        "sizes": ["100ml", "250ml", "Bulk pack"],
+        "sizes": ["100ml", "250ml"],
     },
     {
         "id": "pine-gel",
         "name": "Pine Gel",
         "summary": "Strong, non-abrasive disinfectant cleaner for floors, counters, sinks and bathrooms.",
-        "sizes": ["500ml", "5 Litre", "Bulk pack"],
+        "sizes": ["500ml", "5 Litre"],
     },
     {
         "id": "thick-bleach",
         "name": "Thick Bleach",
         "summary": "Multipurpose thick bleach that lifts stains and odours and kills 99.9% of germs.",
-        "sizes": ["750ml", "2 Litre", "Bulk pack"],
+        "sizes": ["750ml", "2 Litre"],
     },
 ]
 
@@ -21376,6 +21376,20 @@ def ensure_shop_tables():
                 display_name VARCHAR(200),
                 summary TEXT,
                 updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        # Products created from the CRM portal rather than shipped in code. They
+        # need an order position so the browse list stays stable between edits.
+        cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS is_custom BOOLEAN DEFAULT FALSE;")
+        cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0;")
+        # Pack sizes for products added in the portal. Built-in products keep the
+        # sizes declared in code and have no rows here.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_product_sizes (
+                product_id VARCHAR(80),
+                pack_size VARCHAR(100),
+                position INTEGER DEFAULT 0,
+                PRIMARY KEY (product_id, pack_size)
             );
         """)
         # Selling prices per pack size, editable from the CRM portal. These win
@@ -21496,12 +21510,12 @@ SHOP_TRANSLATIONS = {
         " items": " zvinhu",
         " item": " chinhu",
         "Add more products": "Wedzera zvimwe zvigadzirwa",
-        "Submit order enquiry": "Tumira chikumbiro cheodha",
+        "Check out": "Bhadhara",
         "Empty the cart": "Bvisa zvose mungoro",
         "Change quantity — ": "Chinja huwandu — ",
         "Remove — ": "Bvisa — ",
-        "Pricing is confirmed by our sales team on quotation. What would you like to do?":
-            "Mutengo uchasimbiswa neboka redu rekutengesa. Chii chaungade kuita?",
+        "Our sales team confirms the final price on quotation. What would you like to do?":
+            "Boka redu rekutengesa rinosimbisa mutengo wekupedzisira. Chii chaungade kuita?",
         "Search Products": "Tsvaga Zvigadzirwa",
         "Type a product name or keyword — for example *bleach*, *jelly*, *pine* or *dish*.":
             "Nyora zita rechigadzirwa kana izwi rekutsvaga — semuenzaniso *bleach*, *jelly*, *pine* kana *dish*.",
@@ -21546,7 +21560,7 @@ SHOP_TRANSLATIONS = {
         " (8:00 AM – 5:00 PM)": " (8:00 mangwanani – 5:00 manheru)",
         "*Call:* ": "*Foni:* ",
         "*Email:* ": "*Email:* ",
-        "Let's set up your order enquiry.": "Ngatigadzirirei chikumbiro cheodha yako.",
+        "Let's set up your order.": "Ngatigadzirirei odha yako.",
         "What is your *full name*?": "Ndeapi *mazita ako ose*?",
         "Please type your full name so we can process your order.":
             "Nyora mazita ako ose kuti tikwanise kugadzirisa odha yako.",
@@ -21561,13 +21575,13 @@ SHOP_TRANSLATIONS = {
         "Please include the suburb and any landmark that helps our driver find you.":
             "📍 Ndeipi *kero yekuendesa* odha iyi?\n\n"
             "Ndapota sanganisira sabhabhu nechiratidzo chingabatsira mutyairi kukuwana.",
-        "Please confirm your order enquiry": "Ndapota simbisa chikumbiro cheodha yako",
+        "Please confirm your order": "Ndapota simbisa odha yako",
         "*Name:*": "*Zita:*",
         "*Company:*": "*Kambani:*",
         "*Phone:*": "*Foni:*",
         "*Delivery:*": "*Kero yekuendesa:*",
         "*Items:*": "*Zvinhu:*",
-        "Submit this order enquiry now?": "Tumira chikumbiro cheodha ichi izvozvi?",
+        "Place this order now?": "Isa odha iyi izvozvi?",
         "Sorry, we could not save your order just now. Please try once more, or call ":
             "Tine urombo, hatina kukwanisa kuchengetedza odha yako. Edza zvakare kana kufonera ",
         "Order received": "Odha yagamuchirwa",
@@ -21692,7 +21706,7 @@ SHOP_TRANSLATIONS = {
         " items": " izinto",
         " item": " into",
         "Add more products": "Faka eminye imikhiqizo",
-        "Submit order enquiry": "Thumela isicelo se-oda",
+        "Check out": "Bhada",
         "Empty the cart": "Khupha konke enqoleni",
         "Change quantity — ": "Ntshintsha inani — ",
         "Remove — ": "Khupha — ",
@@ -21742,7 +21756,7 @@ SHOP_TRANSLATIONS = {
         " (8:00 AM – 5:00 PM)": " (8:00 ekuseni – 5:00 ntambama)",
         "*Call:* ": "*Ucingo:* ",
         "*Email:* ": "*I-email:* ",
-        "Let's set up your order enquiry.": "Asilungise isicelo se-oda lakho.",
+        "Let's set up your order.": "Asilungise i-oda lakho.",
         "What is your *full name*?": "Ungubani *ibizo lakho elipheleleyo*?",
         "Please type your full name so we can process your order.":
             "Bhala ibizo lakho elipheleleyo ukuze silungise i-oda lakho.",
@@ -21757,13 +21771,13 @@ SHOP_TRANSLATIONS = {
         "Please include the suburb and any landmark that helps our driver find you.":
             "📍 Yiphi *ikheli yokuletha* i-oda leli?\n\n"
             "Sicela ufake isigaba sendawo kanye lesibonakalayo esizasiza umshayeli ukukuthola.",
-        "Please confirm your order enquiry": "Sicela uqinisekise isicelo se-oda lakho",
+        "Please confirm your order": "Sicela uqinisekise i-oda lakho",
         "*Name:*": "*Ibizo:*",
         "*Company:*": "*Inkampani:*",
         "*Phone:*": "*Ucingo:*",
         "*Delivery:*": "*Ukuletha:*",
         "*Items:*": "*Impahla:*",
-        "Submit this order enquiry now?": "Thumela isicelo se-oda leli khathesi?",
+        "Place this order now?": "Faka i-oda leli khathesi?",
         "Sorry, we could not save your order just now. Please try once more, or call ":
             "Siyaxolisa, sehlulekile ukugcina i-oda lakho. Zama futhi loba utshayele ",
         "Order received": "I-oda yamukelwe",
@@ -21848,7 +21862,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "Main menu": "Menyu huru",
         "Search Products": "Tsvaga Zvigadzirwa",
         "View Cart": "Ona Ngoro",
-        "Talk to Support": "Taura neRubatsiro",
+        "Contact us": "Tibatei",
         "Talk to a human": "Taura nemunhu",
         "About Us": "Nezvedu",
         "Switch to Staff": "Dzokera kuvashandi",
@@ -21859,7 +21873,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "Call Brilliant Chemicals": "Fonera Brilliant Chemicals",
         "Message Brilliant Chemicals": "Tumira meseji kuBrilliant Chemicals",
         "Shop our products": "Tenga zvigadzirwa zvedu",
-        "Talk to Support": "Taura neRubatsiro",
+        "Contact us": "Tibatei",
         "Browse all categories": "Ona zvikamu zvose",
         "Yes, submit": "Hongu, tumira",
         "Deliver to my address": "Ndiunzire kwaunogara",
@@ -21878,7 +21892,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "Main menu": "Imenyu enkulu",
         "Search Products": "Dinga Imikhiqizo",
         "View Cart": "Bona Inqola",
-        "Talk to Support": "Khuluma Losizo",
+        "Contact us": "Xhumana lathi",
         "Talk to a human": "Khuluma lomuntu",
         "About Us": "Mayelana Lathi",
         "Switch to Staff": "Buyela Kuzisebenzi",
@@ -21889,7 +21903,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "Call Brilliant Chemicals": "Tshayela Brilliant Chemicals",
         "Message Brilliant Chemicals": "Thumela umlayezo kuBrilliant Chemicals",
         "Shop our products": "Thenga imikhiqizo yethu",
-        "Talk to Support": "Khuluma Losizo",
+        "Contact us": "Xhumana lathi",
         "Browse all categories": "Bona zonke izigaba",
         "Yes, submit": "Yebo, thumela",
         "Deliver to my address": "Ngilethela ekhabeni",
@@ -22003,9 +22017,10 @@ def _shop_catalog():
 
 
 def shop_refresh_catalog():
-    """Reload product names, summaries and prices edited in the CRM portal."""
+    """Reload product names, summaries, sizes and prices edited in the CRM portal."""
     global _shop_catalog_cache
     names, summaries, prices = {}, {}, {}
+    sizes, custom = {}, []
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
@@ -22019,21 +22034,105 @@ def shop_refresh_catalog():
             for row in cursor.fetchall():
                 if row[2] is not None:
                     prices[f"{row[0]}|{row[1]}"] = float(row[2])
+            # Products added from the CRM portal are stored alongside the built-in
+            # range; their pack sizes come from their own table.
+            cursor.execute("""
+                SELECT product_id, display_name, summary FROM shop_products
+                WHERE is_custom = TRUE ORDER BY position, product_id
+            """)
+            for row in cursor.fetchall():
+                custom.append({"id": row[0],
+                               "name": (row[1] or "").strip(),
+                               "summary": (row[2] or "").strip(),
+                               "sizes": []})
+            # Every product whose sizes have been set in the portal. The product
+            # id is recorded even when the size list is empty, so clearing the
+            # sizes in the editor is not undone by the defaults in code.
+            cursor.execute("""
+                SELECT DISTINCT product_id FROM shop_product_sizes
+            """)
+            for row in cursor.fetchall():
+                sizes.setdefault(str(row[0]), [])
+            cursor.execute("""
+                SELECT product_id, pack_size FROM shop_product_sizes ORDER BY product_id, position
+            """)
+            for row in cursor.fetchall():
+                sizes.setdefault(str(row[0]), []).append(str(row[1]))
     except Exception as e:
         print(f"catalog load error: {e}")
+    for product in custom:
+        product["sizes"] = sizes.get(product["id"], [])
     _shop_catalog_cache = {"loaded": True, "names": names, "summaries": summaries,
-                           "prices": prices}
+                           "prices": prices, "sizes": sizes, "custom": custom}
     return _shop_catalog_cache
 
 
-def _shop_product(category_index):
-    """The catalogue product at a position, with CRM overrides applied."""
-    product = dict(BRILLIANT_PRODUCTS[category_index])
-    product["base_name"] = product["name"]
+def shop_all_products():
+    """The full sellable range: the built-in products plus CRM additions.
+
+    Pack sizes come from the catalogue whenever they have been set there, so the
+    sizes a customer is offered are exactly the ones the product shows in the
+    portal. The sizes in code are only a starting point. WhatsApp renders the
+    browse list as a single list message with at most ten rows, so the combined
+    range is the figure that has to fit that limit.
+    """
     catalog = _shop_catalog()
-    product["name"] = catalog["names"].get(product["id"]) or product["name"]
-    product["summary"] = catalog["summaries"].get(product["id"]) or product["summary"]
-    return product
+    names = catalog.get("names") or {}
+    summaries = catalog.get("summaries") or {}
+    sizes = catalog.get("sizes") or {}
+    products = []
+    for index, base in enumerate(BRILLIANT_PRODUCTS):
+        products.append({
+            "id": base["id"],
+            "index": index,
+            # A CRM rename applies to the browsing name as well as the detail view.
+            "name": names.get(base["id"]) or base["name"],
+            "base_name": base["name"],
+            "summary": summaries.get(base["id"]) or base["summary"],
+            # An empty override list is respected, so a size the portal removed
+            # never comes back from the code default.
+            "sizes": list(sizes[base["id"]]) if base["id"] in sizes else list(base["sizes"]),
+            "custom": False,
+        })
+    for product in (catalog.get("custom") or []):
+        if not product.get("name") or not product.get("sizes"):
+            # A product with no name or no pack size cannot be ordered, so it is
+            # kept out of the customer's list until the CRM finishes setting it up.
+            continue
+        products.append({
+            "id": product["id"],
+            "index": None,
+            "name": product["name"],
+            "base_name": product["name"],
+            "summary": product.get("summary") or "",
+            "sizes": list(product["sizes"]),
+            "custom": True,
+        })
+    return products
+
+
+def _shop_product(category_index):
+    """The catalogue product at a position, with CRM overrides applied.
+
+    Positions follow shop_all_products(), so an index past the built-in range is
+    a product added from the CRM portal.
+    """
+    products = shop_all_products()
+    try:
+        position = int(category_index)
+    except (TypeError, ValueError):
+        return None
+    if position < 0 or position >= len(products):
+        return None
+    entry = products[position]
+    catalog = _shop_catalog()
+    return {
+        "id": entry["id"],
+        "name": catalog["names"].get(entry["id"]) or entry["name"],
+        "base_name": entry["base_name"],
+        "summary": catalog["summaries"].get(entry["id"]) or entry["summary"],
+        "sizes": list(entry["sizes"]),
+    }
 
 
 def _shop_short_name(name):
@@ -22043,6 +22142,19 @@ def _shop_short_name(name):
         return SHOP_LABEL_OVERRIDES[name]
     prefix = f"{BRAND_NAME} "
     return name[len(prefix):] if name.startswith(prefix) else name
+
+
+def _shop_product_at(value):
+    """Clamp a stored product position to a real product. Returns (product, index)."""
+    entries = shop_all_products()
+    if not entries:
+        return None, 0
+    try:
+        index = int(value)
+    except (TypeError, ValueError):
+        index = 0
+    index = max(0, min(index, len(entries) - 1))
+    return _shop_product(index), index
 
 
 def _shop_first_name(display_name):
@@ -22068,17 +22180,32 @@ def _shop_first_name(display_name):
     return first[:40]
 
 
-def shop_greeting(cart=None, staff=False, display_name=None, language="en"):
+def shop_greeting(cart=None, staff=False, display_name=None, language="en", short=False):
+    """The main menu.
+
+    `short` is used when the menu is re-shown mid-conversation: repeating the
+    full welcome on every return made the thread noisy and pushed the choices
+    below the fold, so a returning customer just gets the prompt.
+    """
     count = sum(item["qty"] for item in (cart or []))
     cart_label = "View Cart"
     if count:
         cart_label = f"View Cart ({count} item{'s' if count != 1 else ''})"
     options = [("shop", "Shop"), ("search", "Search Products"), ("cart", cart_label),
-               ("support", "Talk to Support"), ("about", "About Us"),
+               ("support", "Contact us"), ("about", "About Us"),
                ("support_human", "Talk to a human")]
     if staff:
         options.append(("switch_staff", "Switch to Staff"))
     options.append(("language", "Language"))
+
+    if short:
+        # One line only, so the choices stay visible without scrolling, but the
+        # name is kept so the assistant still reads as a conversation rather
+        # than a machine.
+        first_name = _shop_first_name(display_name)
+        body = (f"What would you like to do next, *{first_name}*?"
+                if first_name else "What would you like to do next?")
+        return _shop_options(body, options)
 
     first_name = _shop_first_name(display_name)
     if first_name:
@@ -22088,19 +22215,19 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en"):
 
     body = (
         f"{opening}\n"
-        f"I am the {BRAND_NAME} shopping assistant for {COMPANY_SYSTEM_CONTACT['name']}.\n\n"
-        "🛍️ Browse our range and build an order\n"
+        f"I am the {COMPANY_SYSTEM_CONTACT['name']} assistant.\n\n"
+        "🛍️ Browse the range and build an order\n"
         "🔎 Search for a product by name\n"
         "🛒 Review your cart and check out\n"
-        "🙋 Talk to a human whenever you prefer\n\n"
-        "How can I help you today?"
+        "🙋 Ask for a person whenever you prefer\n\n"
+        "What would you like to do?"
     )
     return _shop_options(body, options)
 
 
 def _shop_category_list():
     options = [(f"cat:{index}", _shop_short_name(_shop_product(index)["name"]))
-               for index in range(len(BRILLIANT_PRODUCTS))]
+               for index in range(len(shop_all_products()))]
     return _shop_options(
         f"🛍️ *Browse Products*\n{BRAND_NAME} — household, cleaning and personal care.\n\n"
         "Select a category to browse:",
@@ -22118,11 +22245,18 @@ def _shop_product_list(category_index):
 
 
 def _shop_size_list(product, category_index):
-    product = _shop_product(category_index)
-    return _shop_options(
+    """The pack size prompt.
+
+    Marked to always render as a WhatsApp list: a product may offer up to ten
+    sizes, and reply buttons stop at three.
+    """
+    size_options = [(f"size:{index}", size) for index, size in enumerate(product["sizes"])]
+    prompt = _shop_options(
         f"📦 *{product['name']}*\n\nWhich pack size would you like?",
-        [(f"size:{index}", size) for index, size in enumerate(product["sizes"])],
+        size_options,
     )
+    prompt["force_list"] = True
+    return prompt
 
 
 def _shop_cart_summary(cart):
@@ -22135,21 +22269,20 @@ def _shop_cart_summary(cart):
 def _shop_cart_message(cart):
     if not cart:
         return _shop_options(
-            "🛒 *Your cart is empty*\n\nAdd a few Knockout products and they will show up here. "
-            "You can also type a product name to search for it.",
+            "🛒 *Your cart is empty*\n\nBrowse the range or search for a product to get started.",
             [("shop", "Browse products"), ("search", "Search products")],
         )
     total = sum(item["qty"] for item in cart)
-    options = [("shop", "Add more products"), ("checkout", "Submit order enquiry")]
+    options = [("shop", "Add more products"), ("checkout", "Check out")]
     options += [(f"qty:{index}", f"Change quantity — {_shop_short_name(item['name'])}")
                 for index, item in enumerate(cart)]
     options += [(f"rm:{index}", f"Remove — {_shop_short_name(item['name'])} ({item['size']})")
                 for index, item in enumerate(cart)]
     options.append(("clear", "Empty the cart"))
     return _shop_options(
-        f"🛒 *Your Cart* — {total} item{'s' if total != 1 else ''}\n\n"
+        f"🛒 *Your cart* — {total} item{'s' if total != 1 else ''}\n\n"
         f"{_shop_cart_summary(cart)}\n\n"
-        "Pricing is confirmed by our sales team on quotation. What would you like to do?",
+        "Our sales team confirms the final price on quotation. What would you like to do?",
         options,
     )
 
@@ -22163,18 +22296,18 @@ def _shop_search_prompt():
 
 def _shop_search_results(cart, query):
     query = (query or "").strip().lower()
+    entries = shop_all_products()
     matches = [
-        product for product in BRILLIANT_PRODUCTS
-        if query in product["name"].lower() or query in product["summary"].lower()
+        (index, entry) for index, entry in enumerate(entries)
+        if query in entry["name"].lower() or query in entry["summary"].lower()
     ]
     if not matches:
         messages = [_shop_text(
             f"😕 I could not find anything for “{query}”.\n\nTry another keyword, or browse the full range."),
             _shop_options("You can also:", [("shop", "Browse all categories")])]
         return "search", {}, messages
-    options = [(f"prod:{BRILLIANT_PRODUCTS.index(product)}", _shop_short_name(_shop_product(
-        BRILLIANT_PRODUCTS.index(product))["name"]))
-               for product in matches]
+    options = [(f"prod:{index}", _shop_short_name(_shop_product(index)["name"]))
+               for index, entry in matches]
     messages = [_shop_options(
         f"🔎 *Search results for “{query}”* — {len(matches)} product"
         f"{'s' if len(matches) != 1 else ''} found:",
@@ -22277,13 +22410,13 @@ def _shop_render(step, ctx, cart, customer=None, staff=False):
     if step == "category":
         return [_shop_category_list()]
     if step == "product":
-        return [_shop_product_list(min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1))]
+        _product, index = _shop_product_at(ctx.get("product", 0))
+        return [_shop_product_list(index)]
     if step == "size":
-        index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
-        return [_shop_size_list(BRILLIANT_PRODUCTS[index], index)]
+        product, index = _shop_product_at(ctx.get("product", 0))
+        return [_shop_size_list(product, index)]
     if step == "qty":
-        index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
-        product = _shop_product(index)
+        product, index = _shop_product_at(ctx.get("product", 0))
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
         return [_shop_text(f"📦 *{product['name']}* — {size}\n\nHow many units would you like?")]
     if step == "search":
@@ -22304,7 +22437,7 @@ def _shop_render(step, ctx, cart, customer=None, staff=False):
     if step == "language":
         return [_shop_language_options()]
     if step == "order_name":
-        return [_shop_text("📝 Let's set up your order enquiry.\n\nWhat is your *full name*?")]
+        return [_shop_text("📝 Let's set up your order.\n\nWhat is your *full name*?")]
     if step == "order_company":
         return [_shop_text("Which *company* are you ordering for? (Type *none* if you are buying for yourself.)")]
     if step == "order_phone":
@@ -22325,7 +22458,7 @@ def _shop_order_confirmation(cart, customer):
     summary = _shop_cart_summary(cart) or "—"
     delivering = (customer.get("delivery_method") or "collection") == "delivery"
     lines = [
-        "✅ *Please confirm your order enquiry*",
+        "✅ *Please confirm your order*",
         "",
         f"*Name:* {customer.get('name', '')}",
         f"*Company:* {customer.get('company', '')}",
@@ -22334,7 +22467,7 @@ def _shop_order_confirmation(cart, customer):
     ]
     if delivering:
         lines.append(f"*Delivery address:* {customer.get('delivery_address', '')}")
-    lines += ["", f"*Items:*\n{summary}", "", "Submit this order enquiry now?"]
+    lines += ["", f"*Items:*\n{summary}", "", "Place this order now?"]
     return [_shop_options("\n".join(lines),
                           [("confirm_order", "Yes, submit"), ("cart", "Back to cart")])]
 
@@ -22364,7 +22497,17 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if display_name:
         state["display_name"] = display_name
 
+    # A conversation with no history is brand new, so its first menu is the full
+    # welcome. Any later return to the menu is abbreviated.
+    conversation_started = bool(history) or step != "menu"
+
     def greet():
+        """The menu shown when a conversation returns to the start."""
+        return shop_greeting(cart, staff, display_name, language,
+                             short=conversation_started)
+
+    def welcome():
+        """The full introduction, used to open a conversation."""
         return shop_greeting(cart, staff, display_name, language)
 
     command = (button_id or raw_input or "").strip()
@@ -22532,7 +22675,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if low in ("checkout", "order"):
         if not cart:
             return result("cart", [_shop_cart_message(cart)])
-        return result("order_name", [_shop_text("📝 Let's set up your order enquiry.\n\nWhat is your *full name*?")])
+        return result("order_name", [_shop_text("📝 Let's set up your order.\n\nWhat is your *full name*?")])
 
     # A number that is not on the current menu should never silently jump levels.
     if unmatched_number and step in ("category", "product", "size", "search_results", "cart", "about", "support"):
@@ -22543,22 +22686,21 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     # ------------------------------------------------------------------ steps
     if step == "category":
-        chosen = index_of(command, len(BRILLIANT_PRODUCTS), "cat")
+        chosen = index_of(command, len(shop_all_products()), "cat")
         if chosen is None:
             return result("category", [_shop_category_list()])
         return result("product", [_shop_product_list(chosen)], new_ctx={"product": chosen})
 
     if step == "product":
         if low.startswith("prod:"):
-            chosen = index_of(command, len(BRILLIANT_PRODUCTS), "prod")
+            chosen = index_of(command, len(shop_all_products()), "prod")
             if chosen is not None:
-                return result("size", [_shop_size_list(BRILLIANT_PRODUCTS[chosen], chosen)],
+                return result("size", [_shop_size_list(_shop_product(chosen), chosen)],
                               new_ctx={"product": chosen})
         return result("category", [_shop_category_list()])
 
     if step == "size":
-        product_index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
-        product = _shop_product(product_index)
+        product, product_index = _shop_product_at(ctx.get("product", 0))
         chosen = index_of(command, len(product["sizes"]), "size")
         if chosen is None:
             return result("size", [_shop_size_list(product, product_index)])
@@ -22567,8 +22709,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         )], new_ctx={"product": product_index, "size": chosen})
 
     if step == "qty":
-        product_index = min(ctx.get("product", 0), len(BRILLIANT_PRODUCTS) - 1)
-        product = _shop_product(product_index)
+        product, product_index = _shop_product_at(ctx.get("product", 0))
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
         if not command.isdigit() or int(command) <= 0:
             return result("qty", [_shop_text("Please reply with the number of units you need, for example *10*.")])
@@ -22592,9 +22733,9 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "search_results":
         if low.startswith("prod:"):
-            chosen = index_of(command, len(BRILLIANT_PRODUCTS), "prod")
+            chosen = index_of(command, len(shop_all_products()), "prod")
             if chosen is not None:
-                return result("size", [_shop_size_list(BRILLIANT_PRODUCTS[chosen], chosen)],
+                return result("size", [_shop_size_list(_shop_product(chosen), chosen)],
                               new_ctx={"product": chosen})
         if low in ("shop",):
             return result("category", [_shop_category_list()])
@@ -22986,6 +23127,24 @@ WA_BUTTON_TITLE_LIMIT = 20
 WA_BUTTON_BODY_LIMIT = 1024
 WA_LIST_ROWS_MAX = 10
 WA_LIST_ROW_TITLE_LIMIT = 24
+
+# The customer browses products as one WhatsApp list, so the sellable range and
+# every product name have to fit WhatsApp's limits or the list cannot be sent.
+CATALOG_MAX_PRODUCTS = WA_LIST_ROWS_MAX
+CATALOG_NAME_LIMIT = WA_LIST_ROW_TITLE_LIMIT
+CATALOG_SUMMARY_LIMIT = 300
+CATALOG_PACK_LIMIT = WA_LIST_ROWS_MAX
+# Pack sizes are always offered as a WhatsApp list, which tops out at ten rows.
+# The navigation rows are added on top of the choices, so the ceiling is ten.
+CATALOG_MAX_PACKS_PER_PRODUCT = WA_LIST_ROWS_MAX
+# The first WhatsApp body limit a long description would break. A list message
+# allows 4096 characters but a reply-button message only 1024, and the same
+# description appears on both prompts, so 1024 is the figure that can never be
+# exceeded. The description also carries the "Available pack sizes" line and the
+# product name, so the editor reserves room for those.
+WA_BODY_LIMIT = 1024
+CATALOG_SUMMARY_HEADROOM = 120
+
 WA_LIST_SECTION_TITLE_LIMIT = 24
 
 
@@ -23077,7 +23236,11 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
     if not options:
         return [_wa_text_payload(body)] if body else []
 
-    if len(options) <= WA_BUTTON_LIMIT:
+    # A prompt can insist on a list. The pack size choice does, because a product
+    # may offer up to ten sizes and reply buttons stop at three.
+    must_list = bool((choice or {}).get("force_list"))
+
+    if not must_list and len(options) <= WA_BUTTON_LIMIT:
         prompt = body or _shop_translate_text("Choose an option:", language)
         if len(prompt) > WA_BUTTON_BODY_LIMIT:
             return [_wa_text_payload(prompt), _wa_button_payload(
@@ -23940,6 +24103,7 @@ def portal_crm():
                            nav_modules=user_modules(user),
                            chats=chats, orders=orders,
                            catalog=catalog,
+                           limits=catalog_limits(),
                            channel_number=company_system_channel_label(),
                            **company_system_stats())
 
@@ -24285,55 +24449,345 @@ def activity_period_label(period, date_from=None, date_to=None):
 
 
 def crm_catalog():
-    """Every product with its editable name, summary and pack prices."""
+    """Every product with its editable name, summary and pack prices.
+
+    Covers the built-in range and anything added from the CRM portal, because
+    WhatsApp shows them as one list and the limit applies to the total. A portal
+    product is included even before it has pack sizes, so it can be finished
+    here rather than becoming unreachable.
+    """
     ensure_shop_tables()
     catalog = _shop_catalog()
+    names = catalog.get("names") or {}
+    summaries = catalog.get("summaries") or {}
     rows = []
-    for index, base in enumerate(BRILLIANT_PRODUCTS):
-        product = _shop_product(index)
+
+    for entry in shop_all_products():
         sizes = [{
             "size": size,
-            "price": catalog["prices"].get(f"{base['id']}|{size}"),
-        } for size in base["sizes"]]
+            "price": catalog["prices"].get(f"{entry['id']}|{size}"),
+        } for size in entry["sizes"]]
         rows.append({
-            "index": index,
-            "id": base["id"],
-            "name": product["name"],
-            "base_name": base["name"],
-            "summary": product["summary"],
-            "base_summary": base["summary"],
+            "index": len(rows),
+            "id": entry["id"],
+            "name": names.get(entry["id"]) or entry["name"],
+            "base_name": entry["base_name"],
+            "summary": summaries.get(entry["id"]) or entry["summary"],
+            "base_summary": entry["summary"],
             "sizes": sizes,
-            "priced": all(item["price"] is not None for item in sizes),
+            "priced": bool(sizes) and all(item["price"] is not None for item in sizes),
+            "custom": entry["custom"],
+            "incomplete": False,
+        })
+
+    # Products added here that cannot be sold yet: no name, or no pack sizes.
+    listed = {row["id"] for row in rows}
+    for product in (catalog.get("custom") or []):
+        if product["id"] in listed:
+            continue
+        sizes = [{
+            "size": size,
+            "price": catalog["prices"].get(f"{product['id']}|{size}"),
+        } for size in product.get("sizes") or []]
+        rows.append({
+            "index": len(rows),
+            "id": product["id"],
+            "name": names.get(product["id"]) or product.get("name") or "",
+            "base_name": product.get("name") or "",
+            "summary": summaries.get(product["id"]) or product.get("summary") or "",
+            "base_summary": product.get("summary") or "",
+            "sizes": sizes,
+            "priced": False,
+            "custom": True,
+            "incomplete": True,
         })
     return rows
 
 
-def crm_save_product(product_id, display_name=None, summary=None):
-    """Rename a product and rewrite its customer-facing description."""
-    if not any(base["id"] == product_id for base in BRILLIANT_PRODUCTS):
-        return False
+def catalog_limits():
+    """The WhatsApp limits the catalogue editor has to respect.
+
+    `summary_limit` is the *effective* allowance, not the raw WhatsApp body cap:
+    the description is rendered inside a product prompt that also carries the
+    product name and the list of pack sizes, so the editor reserves room for
+    those and for the pack list to grow.
+    """
+    return {
+        "max_products": CATALOG_MAX_PRODUCTS,
+        "name_limit": CATALOG_NAME_LIMIT,
+        "summary_limit": CATALOG_SUMMARY_LIMIT,
+        "pack_limit": CATALOG_MAX_PACKS_PER_PRODUCT,
+        "product_count": len(shop_all_products()),
+        # Shown in the editor so the figure is explainable rather than magic.
+        "body_limit": WA_BODY_LIMIT,
+    }
+
+def _clean_text(value, limit, field):
+    """Normalise one catalogue field, returning (text, error)."""
+    text = " ".join(str(value or "").split()).strip()
+    if len(text) > limit:
+        return text, (f"{field} must be {limit} characters or fewer "
+                      f"(currently {len(text)}).")
+    return text, None
+
+
+def _clean_pack_sizes(raw_sizes):
+    """Validate and de-duplicate a product's pack sizes. Returns (sizes, error)."""
+    sizes, seen, errors = [], set(), []
+    for value in raw_sizes or []:
+        size, error = _clean_text(value, CATALOG_NAME_LIMIT, "Pack size")
+        if error:
+            errors.append(error)
+            continue
+        if not size:
+            continue
+        key = size.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        sizes.append(size)
+    if errors:
+        return [], errors[0]
+    if not sizes:
+        return [], "Give the product at least one pack size."
+    if len(sizes) > CATALOG_MAX_PACKS_PER_PRODUCT:
+        return [], (f"A product can have at most {CATALOG_MAX_PACKS_PER_PRODUCT} "
+                    f"unit sizes so its list fits WhatsApp.")
+    return sizes, None
+
+
+def _summary_fits(name, summary, sizes):
+    """True when a product prompt built from these parts fits WhatsApp.
+
+    The prompt is *name*, the description, then "Available pack sizes: ...", all
+    inside one message, so the three have to fit together rather than each on
+    its own.
+    """
+    body = (f"🧴 *{name}*\n\n{summary}\n\n"
+            f"Available pack sizes: {', '.join(sizes)}")
+    return len(body) <= WA_BODY_LIMIT
+
+
+def _slugify_product_id(name):
+    """A stable identifier derived from the product name."""
+    slug = re.sub(r"[^a-z0-9]+", "-", str(name or "").lower()).strip("-")
+    return slug[:60]
+
+
+def crm_product_names_taken(exclude_id=None):
+    """Product names already in use, lower-cased, for duplicate detection."""
+    taken = set()
+    for product in shop_all_products():
+        if exclude_id and product["id"] == exclude_id:
+            continue
+        taken.add(product["name"].strip().lower())
+    return taken
+
+
+def crm_add_product(display_name, summary=None, sizes=None, prices=None):
+    """Create a brand-new product in the catalogue.
+
+    Returns (ok, product_id_or_message). A new product has no row in the built-in
+    range, so it is stored in shop_products with is_custom set and its pack sizes
+    in their own table.
+    """
+    name, error = _clean_text(display_name, CATALOG_NAME_LIMIT, "Product name")
+    if error:
+        return False, error
+    if not name:
+        return False, "Give the product a name."
+    if name.lower() in crm_product_names_taken():
+        return False, f"“{name}” already exists in the catalogue."
+
+    summary, error = _clean_text(summary, CATALOG_SUMMARY_LIMIT, "Description")
+    if error:
+        return False, error
+
+    clean_sizes, error = _clean_pack_sizes(sizes)
+    if error:
+        return False, error
+
+    if not _summary_fits(name, summary, clean_sizes):
+        return False, ("That description is too long for WhatsApp once the product name and "
+                       "unit sizes are included. Shorten it.")
+
+    # The browse list is one WhatsApp list message, so the range has to fit.
+    if len(shop_all_products()) >= CATALOG_MAX_PRODUCTS:
+        return False, (f"The catalogue already has {CATALOG_MAX_PRODUCTS} products, which is "
+                       f"WhatsApp's limit for one list. Remove one before adding another.")
+
+    product_id = _slugify_product_id(name)
+    if not product_id:
+        return False, "That name cannot be used as a product reference."
+    if any(product["id"] == product_id for product in shop_all_products()):
+        product_id = f"{product_id}-{random.randint(100, 999)}"
+
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
             cursor.execute("""
-                INSERT INTO shop_products (product_id, display_name, summary, updated_at)
-                VALUES (%s, %s, %s, NOW())
-                ON CONFLICT (product_id) DO UPDATE
-                SET display_name = EXCLUDED.display_name, summary = EXCLUDED.summary,
-                    updated_at = NOW()
-            """, (product_id, display_name, summary))
+                INSERT INTO shop_products (product_id, display_name, summary, is_custom,
+                                           position, updated_at)
+                VALUES (%s, %s, %s, TRUE, %s, NOW())
+            """, (product_id, name, summary,
+                  len(shop_all_products())))
+            for index, size in enumerate(clean_sizes):
+                cursor.execute("""
+                    INSERT INTO shop_product_sizes (product_id, pack_size, position)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (product_id, pack_size) DO NOTHING
+                """, (product_id, size, index))
+            for price_row in (prices or []):
+                size, raw_price = price_row
+                if raw_price in (None, ""):
+                    continue
+                try:
+                    price = round(float(raw_price), 2)
+                except (TypeError, ValueError):
+                    continue
+                if price < 0 or size not in clean_sizes:
+                    continue
+                cursor.execute("""
+                    INSERT INTO shop_product_prices (product_id, pack_size, price, updated_at)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (product_id, pack_size) DO UPDATE
+                    SET price = EXCLUDED.price, updated_at = NOW()
+                """, (product_id, size, price))
             connection.commit()
         shop_refresh_catalog()
-        return True
+        return True, product_id
+    except Exception as e:
+        print(f"product add error: {e}")
+        return False, "The product could not be saved just now."
+
+
+def crm_delete_product(product_id):
+    """Remove a product that was added from the portal."""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT is_custom FROM shop_products WHERE product_id = %s",
+                           (product_id,))
+            row = cursor.fetchone()
+            if not row or not row[0]:
+                return False, "Only products added here can be removed."
+            cursor.execute("DELETE FROM shop_product_prices WHERE product_id = %s", (product_id,))
+            cursor.execute("DELETE FROM shop_product_sizes WHERE product_id = %s", (product_id,))
+            cursor.execute("DELETE FROM shop_products WHERE product_id = %s", (product_id,))
+            connection.commit()
+        shop_refresh_catalog()
+        return True, ""
+    except Exception as e:
+        print(f"product delete error: {e}")
+        return False, "The product could not be removed."
+
+
+def crm_save_product(product_id, display_name=None, summary=None):
+    """Rename a product and rewrite its customer-facing description.
+
+    Names are validated against WhatsApp's list row limit because the name is
+    what the customer's browse list shows.
+    """
+    name, error = _clean_text(display_name, CATALOG_NAME_LIMIT, "Product name")
+    if error:
+        return False, error
+    summary, error = _clean_text(summary, CATALOG_SUMMARY_LIMIT, "Description")
+    if error:
+        return False, error
+
+    built_in = any(base["id"] == product_id for base in BRILLIANT_PRODUCTS)
+    if not built_in:
+        if not any(product["id"] == product_id for product in shop_all_products()):
+            return False, "That product is no longer in the catalogue."
+        if not name:
+            return False, "A product added here needs a name."
+
+    if name and name.lower() in crm_product_names_taken(exclude_id=product_id):
+        return False, f"“{name}” is already used by another product."
+
+    # The description and the pack list share one WhatsApp message with the name,
+    # so refuse a combination that would not fit together.
+    current = next((product for product in shop_all_products()
+                    if product["id"] == product_id), None)
+    if current and not _summary_fits(name or current["name"], summary or "",
+                                     current["sizes"]):
+        return False, ("That description is too long for WhatsApp once the product name and "
+                       "unit sizes are included. Shorten it.")
+
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            if built_in:
+                cursor.execute("""
+                    INSERT INTO shop_products (product_id, display_name, summary, updated_at)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (product_id) DO UPDATE
+                    SET display_name = EXCLUDED.display_name, summary = EXCLUDED.summary,
+                        updated_at = NOW()
+                """, (product_id, name or None, summary or None))
+            else:
+                cursor.execute("""
+                    UPDATE shop_products
+                    SET display_name = %s, summary = %s, updated_at = NOW()
+                    WHERE product_id = %s
+                """, (name, summary, product_id))
+            connection.commit()
+        shop_refresh_catalog()
+        return True, ""
     except Exception as e:
         print(f"catalog save error: {e}")
-        return False
+        return False, "The product could not be saved just now."
+
+
+def crm_save_product_sizes(product_id, sizes):
+    """Replace the pack sizes shown for a product.
+
+    Works for the built-in range too: the sizes in code are only a starting
+    point, and the portal is the place they are managed. Removing a size here
+    removes it from what the assistant offers.
+    """
+    if not any(product["id"] == product_id for product in shop_all_products()):
+        # An incomplete portal product may not be in the sellable range yet, so
+        # check the stored rows as well.
+        catalog = _shop_catalog()
+        known = (any(base["id"] == product_id for base in BRILLIANT_PRODUCTS)
+                 or any(product["id"] == product_id
+                        for product in (catalog.get("custom") or [])))
+        if not known:
+            return False, "That product is no longer in the catalogue."
+    clean_sizes, error = _clean_pack_sizes(sizes)
+    if error:
+        return False, error
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("DELETE FROM shop_product_sizes WHERE product_id = %s", (product_id,))
+            # Drop prices for any pack size that no longer exists.
+            cursor.execute("""
+                DELETE FROM shop_product_prices
+                WHERE product_id = %s AND pack_size <> ALL(%s)
+            """, (product_id, clean_sizes))
+            for index, size in enumerate(clean_sizes):
+                cursor.execute("""
+                    INSERT INTO shop_product_sizes (product_id, pack_size, position)
+                    VALUES (%s, %s, %s)
+                """, (product_id, size, index))
+            connection.commit()
+        shop_refresh_catalog()
+        return True, ""
+    except Exception as e:
+        print(f"size save error: {e}")
+        return False, "The pack sizes could not be saved."
 
 
 def crm_save_price(product_id, pack_size, price):
     """Set or clear the selling price of one pack size."""
-    if not any(base["id"] == product_id and pack_size in base["sizes"]
-               for base in BRILLIANT_PRODUCTS):
+    known = any(base["id"] == product_id and pack_size in base["sizes"]
+                for base in BRILLIANT_PRODUCTS)
+    if not known:
+        known = any(product["id"] == product_id and pack_size in product["sizes"]
+                    for product in shop_all_products())
+    if not known:
         return False
     try:
         ensure_shop_tables()
@@ -24378,7 +24832,75 @@ def crm_catalog_api():
     if error:
         return error
     return jsonify({'success': True, 'products': crm_catalog(),
-                    'currency': PAYNOW_CURRENCY})
+                    'currency': PAYNOW_CURRENCY,
+                    'limits': catalog_limits()})
+
+
+@app.route('/api/crm/products', methods=['POST'])
+def crm_product_add_api():
+    """Create a brand-new product in the catalogue."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    sizes = payload.get('sizes') or []
+    if isinstance(sizes, str):
+        sizes = [part for part in re.split(r"[,\n]", sizes)]
+    prices = []
+    raw_prices = payload.get('prices') or {}
+    if isinstance(raw_prices, dict):
+        prices = list(raw_prices.items())
+    ok, result = crm_add_product(payload.get('name'), payload.get('summary'), sizes, prices)
+    if not ok:
+        return jsonify({'success': False, 'message': result,
+                        'products': crm_catalog(), 'limits': catalog_limits()}), 400
+    log_activity("added_product", "catalogue",
+                 f"Added the product “{(payload.get('name') or '').strip()}”",
+                 target=(payload.get('name') or '').strip(),
+                 details={"product_id": result, "sizes": sizes}, user=user)
+    return jsonify({'success': True, 'product_id': result, 'products': crm_catalog(),
+                    'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
+
+
+@app.route('/api/crm/products/<product_id>/delete', methods=['POST'])
+def crm_product_delete_api(product_id):
+    """Remove a product that was added from the portal."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    name = next((product['name'] for product in crm_catalog()
+                 if product['id'] == product_id), product_id)
+    ok, message = crm_delete_product(product_id)
+    if not ok:
+        return jsonify({'success': False, 'message': message,
+                        'products': crm_catalog()}), 400
+    log_activity("removed_product", "catalogue", f"Removed the product “{name}”",
+                 target=name, details={"product_id": product_id}, user=user)
+    return jsonify({'success': True, 'products': crm_catalog(),
+                    'limits': catalog_limits()})
+
+
+@app.route('/api/crm/products/<product_id>/sizes', methods=['POST'])
+def crm_product_sizes_api(product_id):
+    """Replace the pack sizes of a product added from the portal."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    sizes = payload.get('sizes') or []
+    if isinstance(sizes, str):
+        sizes = [part for part in re.split(r"[,\n]", sizes)]
+    ok, message = crm_save_product_sizes(product_id, sizes)
+    if not ok:
+        return jsonify({'success': False, 'message': message,
+                        'products': crm_catalog(), 'limits': catalog_limits()}), 400
+    name = next((product['name'] for product in crm_catalog()
+                 if product['id'] == product_id), product_id)
+    log_activity("changed_pack_sizes", "catalogue",
+                 f"Set the pack sizes of “{name}” to {', '.join(str(s) for s in sizes)}",
+                 target=name, details={"product_id": product_id, "sizes": sizes}, user=user)
+    return jsonify({'success': True, 'products': crm_catalog(),
+                    'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
 
 
 @app.route('/api/crm/activity')
@@ -24452,23 +24974,24 @@ def crm_product_save_api(product_id):
         return error
     payload = request.get_json(silent=True) or {}
     name = (payload.get('name') or '').strip()
-    summary = (payload.get('summary') or '').strip()
-    if not name:
-        return jsonify({'success': False, 'message': 'A product needs a name.'}), 400
-    if not crm_save_product(product_id, name, summary):
-        return jsonify({'success': False, 'message': 'Could not save the product.'}), 500
+    description = (payload.get('summary') or '').strip()
     before = next((product for product in crm_catalog() if product['id'] == product_id), {})
+    ok, message = crm_save_product(product_id, name, description)
+    if not ok:
+        return jsonify({'success': False, 'message': message,
+                        'products': crm_catalog(), 'limits': catalog_limits()}), 400
     action = "updated_product"
-    summary = f"Updated the details for “{name}”"
+    note = f"Updated the details for “{name}”"
     if before.get('name') and before['name'] != name:
         action = "renamed_product"
-        summary = f"Renamed “{before['name']}” to “{name}”"
-    log_activity(action, "catalogue", summary, target=name,
-                 details={"name": name, "summary": summary,
+        note = f"Renamed “{before['name']}” to “{name}”"
+    log_activity(action, "catalogue", note, target=name,
+                 details={"name": name, "summary": description,
                           "previous": {"name": before.get('name', ''),
                                        "summary": before.get('summary', '')}},
                  user=user)
-    return jsonify({'success': True, 'products': crm_catalog()})
+    return jsonify({'success': True, 'products': crm_catalog(),
+                    'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
 
 
 @app.route('/api/crm/products/<product_id>/prices', methods=['POST'])
@@ -24501,7 +25024,7 @@ def crm_price_save_api(product_id):
                  details={"pack_size": pack_size, "price": price},
                  user=user)
     return jsonify({'success': True, 'products': crm_catalog(),
-                    'currency': PAYNOW_CURRENCY})
+                    'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
 
 
 @app.route('/api/crm/orders/<reference>/fulfilment', methods=['POST'])

@@ -616,8 +616,7 @@ table.ps-table tbody tr:hover { background: rgba(220, 20, 60, 0.035); }
 .ps-composer { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--ps-line); background: var(--ps-surface); }
 .ps-composer .ps-input { flex: 1; }
 
-.ps-empty { padding: 60px 24px; text-align: center; color: var(--ps-text-soft); }
-.ps-empty i { display: block; font-size: 1.9rem; color: var(--ps-line); margin-bottom: 14px; }
+.ps-empty { padding: 60px 24px; text-align: center; color: var(--ps-text-soft); }.ps-empty i { display: block; font-size: 1.9rem; color: var(--ps-line); margin-bottom: 14px; }
 .ps-empty h4 { margin: 0 0 6px; font-size: 0.92rem; color: var(--ps-text); }
 .ps-empty p { margin: 0; font-size: 0.84rem; }
 
@@ -1187,9 +1186,49 @@ body.ps-leaving .ps-shell {
   background: var(--ps-gradient-accent);
 }
 
+/* ------------------------------------------------------- portal switch loader -- */
+/* Shown while a portal page is fetched, so switching portals reads as work in
+   progress rather than a dead click. */
+.ps-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgba(7, 16, 30, 0.55);
+  backdrop-filter: blur(3px);
+  animation: ps-overlay-in 0.18s ease;
+}
+.ps-loading-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  border-radius: 14px;
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-line);
+  box-shadow: 0 20px 46px rgba(7, 16, 30, 0.32);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ps-text);
+}
+.ps-loading-spinner {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(148, 163, 184, 0.35);
+  border-top-color: var(--ps-accent);
+  animation: ps-spin 0.7s linear infinite;
+}
+@keyframes ps-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ps-spin { to { transform: rotate(360deg); } }
+
 @media (prefers-reduced-motion: reduce) {
   .ps-shell { animation: none; }
   body.ps-leaving .ps-shell { opacity: 1; transform: none; transition: none; }
   .ps-card, .ps-btn, .ps-chip { transition: none !important; }
   .ps-card:hover { transform: none; }
+  .ps-loading-overlay { animation: none; }
+  .ps-loading-spinner { animation-duration: 1.6s; }
 }

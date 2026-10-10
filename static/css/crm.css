@@ -4,8 +4,22 @@
    ========================================================================== */
 
 /* --------------------------------------------------- compact page header
-   The CRM is a working screen, not a landing page. The hero is reduced to a
-   single line so the inbox gets the vertical space instead of a description. */
+   The CRM is a working screen, not a landing page. The page name and the tabs
+   share one row so the inbox gets the vertical space instead of a description. */
+.crm-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.crm-topbar .ps-eyebrow { flex: 0 0 auto; }
+.crm-topbar .crm-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
 .ps-hero-compact { margin-bottom: 8px; padding-top: 4px; padding-bottom: 4px; }
 
 /* The shared shell reserves 90px at the bottom for page-level scrolling, which
@@ -1010,6 +1024,145 @@ select.crm-select:focus {
   font-weight: 600;
 }
 
+/* ----------------------------------------------------------------- toasts -- */
+/* Fixed to the corner so a rejected save is visible wherever the agent is
+   looking, without a dialog that blocks the rest of the screen. */
+.crm-toasts {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(380px, calc(100vw - 36px));
+  pointer-events: none;
+}
+.crm-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-line);
+  border-left-width: 4px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  pointer-events: auto;
+  animation: crm-toast-in 0.22s ease;
+}
+.crm-toast i { font-size: 1rem; line-height: 1.2; flex: 0 0 auto; }
+.crm-toast-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.crm-toast-text { font-weight: 700; }
+.crm-toast-detail { color: var(--ps-text-soft); font-size: 0.74rem; }
+.crm-toast-close {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 2px 4px;
+  color: var(--ps-text-soft);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.crm-toast-close:hover { background: rgba(15, 23, 42, 0.06); }
+
+.crm-toast.is-ok { border-left-color: #10B981; }
+.crm-toast.is-ok > i { color: #047857; }
+.crm-toast.is-info { border-left-color: #2563EB; }
+.crm-toast.is-info > i { color: #1D4ED8; }
+.crm-toast.is-warn { border-left-color: #F59E0B; }
+.crm-toast.is-warn > i { color: #B45309; }
+.crm-toast.is-error { border-left-color: #EF4444; }
+.crm-toast.is-error > i { color: #B91C1C; }
+
+.crm-toast.is-leaving { animation: crm-toast-out 0.2s ease forwards; }
+
+@keyframes crm-toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes crm-toast-out {
+  to { opacity: 0; transform: translateY(6px); }
+}
+
+@media (max-width: 620px) {
+  .crm-toasts { right: 10px; left: 10px; bottom: 10px; max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-toast, .crm-toast.is-leaving { animation: none; }
+}
+
+/* ------------------------------------------------------------ add a product -- */
+.crm-add-product {
+  margin: 0 18px 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--ps-surface-alt);
+  border: 1px solid var(--ps-line);
+}
+.crm-add-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.crm-add-head h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.crm-add-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.crm-add-grid .crm-field-wide { grid-column: 1 / -1; }
+.crm-add-grid .crm-field span em {
+  font-style: normal;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-left: 4px;
+}
+.crm-add-grid .crm-field span em.is-error { color: #B91C1C; opacity: 1; }
+
+/* Live character count on each card, so an over-long name is obvious before
+   the save is attempted rather than only when it is refused. */
+.crm-name-count {
+  font-style: normal;
+  font-weight: 600;
+  margin-left: 6px;
+  opacity: 0.75;
+}
+.crm-name-count.is-error { color: #B91C1C; opacity: 1; }
+.crm-add-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.crm-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 18px 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+.crm-alert.is-warn {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #92400E;
+}
+.crm-price-grid + .crm-field { margin-top: 10px; }
+.crm-product-foot [data-role="delete"] { color: #B91C1C; }
+
 /* --------------------------------------------------- inbox fills the screen -- */
 /* The list and the thread are the tallest things on the tab, and both scroll
    internally so the page itself stays put.
@@ -1094,10 +1247,19 @@ select.crm-select:focus {
 
 .crm-view[data-crm-view="inbox"] .ps-composer {
   flex: 0 0 auto;
+  /* The composer is a stack: the input row, then the status line beneath it.
+     Without an explicit column the note would sit beside the input instead. */
+  flex-direction: column;
+  align-items: stretch;
   padding: 8px 14px 10px;
   gap: 6px;
 }
-.ps-composer .crm-composer-row { gap: 8px; }
+.crm-view[data-crm-view="inbox"] .ps-composer .crm-composer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.crm-view[data-crm-view="inbox"] .ps-composer .crm-composer-row .ps-input { flex: 1 1 auto; min-width: 0; }
 .crm-composer-note {
   font-size: 0.71rem;
   line-height: 1.35;

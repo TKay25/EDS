@@ -405,12 +405,43 @@
         event.preventDefault();
         document.body.classList.add('ps-leaving');
         var next = href;
-        // Navigate on the next frame: the fade starts immediately, but the
-        // request is not held back, so the switch stays as fast as a normal link.
+        // Switching portals fetches a whole new page, which can take a moment on
+        // a slow connection. An overlay makes that wait look deliberate instead
+        // of a dead click, and it is labelled with where the user is going.
+        showLoadingOverlay(link);
+        // Navigate on the next frame: the fade and the overlay start immediately,
+        // but the request is not held back, so the switch stays as fast as a
+        // normal link.
         window.requestAnimationFrame(function () {
           window.requestAnimationFrame(function () { window.location.href = next; });
         });
       });
+    });
+  }
+
+  // The overlay is created on demand so no page has to carry the markup for it.
+  function showLoadingOverlay(link) {
+    if (document.getElementById('psLoadingOverlay')) return;
+    var label = (link.getAttribute('title') || link.textContent || '').replace(/\s+/g, ' ').trim();
+    // "Switch to Sales analytics" reads as "Sales analytics" on the overlay.
+    label = label.replace(/^Switch to\s+/i, '');
+    var overlay = document.createElement('div');
+    overlay.className = 'ps-loading-overlay';
+    overlay.id = 'psLoadingOverlay';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.innerHTML =
+      '<div class="ps-loading-card">' +
+      '<span class="ps-loading-spinner" aria-hidden="true"></span>' +
+      '<span class="ps-loading-text">Opening ' + escapeHtml(label || 'the portal') + '…</span>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    // The browser may restore this page from the back/forward cache, where the
+    // overlay would still be painted. Remove it on the way back.
+    window.addEventListener('pageshow', function () {
+      var stale = document.getElementById('psLoadingOverlay');
+      if (stale && stale.parentNode) stale.parentNode.removeChild(stale);
+      document.body.classList.remove('ps-leaving');
     });
   }
 
