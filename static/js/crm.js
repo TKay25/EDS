@@ -664,6 +664,29 @@
       var saveButton = product.querySelector('[data-role="save"]');
       if (!saveButton) return;
 
+      // The price boxes are rendered from the saved unit sizes, so a size added
+      // in the editor has to be repainted here. Without this its price box only
+      // appeared on the next page load. Prices already typed are kept.
+      function paintPrices(sizes) {
+        var priceGrid = product.querySelector('.crm-price-grid');
+        if (!priceGrid || !sizes || !sizes.length) return;
+        var typed = {};
+        Array.prototype.forEach.call(
+          product.querySelectorAll('[data-role="price"]'),
+          function (input) { typed[input.getAttribute('data-size')] = input.value; });
+        priceGrid.innerHTML = sizes.map(function (size) {
+          var value = Object.prototype.hasOwnProperty.call(typed, size) ? typed[size] : '';
+          return '<label class="crm-price">' +
+            '<span class="crm-price-size">' + escapeHtml(size) + '</span>' +
+            '<span class="crm-price-box">' +
+            '<span class="crm-price-currency">' + escapeHtml(CURRENCY) + '</span>' +
+            '<input class="ps-input" type="number" step="0.01" min="0" placeholder="\u2014"' +
+            ' data-role="price" data-size="' + escapeHtml(size) + '"' +
+            ' value="' + escapeHtml(value) + '">' +
+            '</span></label>';
+        }).join('');
+      }
+
       saveButton.addEventListener('click', function () {
         var nameField = product.querySelector('[data-role="name"]');
         var name = nameField.value.trim();
@@ -774,6 +797,9 @@
           .then(function (ok) {
             setBusy(saveButton, false);
             if (ok === null || ok === false) return;
+            // The saved sizes are now the truth, so a newly added one gets its
+            // price box straight away instead of on the next page load.
+            paintPrices(wanted);
             note(product, 'Saved', 'is-ok');
             toast('Saved “' + name + '”.', 'ok');
             var priced = Array.prototype.slice.call(product.querySelectorAll('[data-role="price"]'))

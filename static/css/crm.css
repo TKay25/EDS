@@ -789,12 +789,52 @@ select.ps-input {
 
 .crm-price { display: flex; flex-direction: column; gap: 5px; }
 
-.crm-price > span {
+.crm-price-size {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--ps-text-soft);
   letter-spacing: 0.02em;
 }
+
+/* The currency sits inside the field's own border, so an amount is never read
+   without knowing which currency it is in. The input loses its border and the
+   box carries it instead, which also keeps the focus ring around the pair. */
+.crm-price-box {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--ps-line);
+  border-radius: var(--ps-radius-sm);
+  background: var(--ps-surface);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.crm-price-box:focus-within {
+  border-color: var(--ps-accent);
+  box-shadow: 0 0 0 4px var(--ps-accent-soft);
+}
+
+.crm-price-currency {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  background: var(--ps-surface-alt);
+  border-right: 1px solid var(--ps-line);
+  color: var(--ps-text-soft);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.crm-price-box .ps-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.crm-price-box .ps-input:focus { box-shadow: none; }
 
 .crm-price .ps-input { padding: 8px 10px; font-size: 0.78rem; }
 
