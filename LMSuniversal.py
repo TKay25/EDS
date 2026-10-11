@@ -23082,6 +23082,10 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if step == "payment":
         if low in ("paylater", "later", "pay later") or low in negative_words:
             reference = ctx.get("reference")
+            # The order was saved as an EcoCash one because the gateway was
+            # available. The customer has now chosen otherwise, so the record has
+            # to be corrected rather than left claiming EcoCash.
+            shop_payment_update(reference, "pay_later", method="later")
             cart = []
             return result("menu", _shop_order_placed(reference, customer, ctx.get("amount"),
                                                      staff=staff, display_name=display_name,
@@ -23121,7 +23125,10 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                               [("paynow", "Try EcoCash again"),
                                ("paylater", "Place the order and pay later")]),
             ], new_ctx=ctx)
-        shop_payment_update(ctx.get("reference"), "pending", poll_url, ctx.get("amount"))
+        # The customer has now actually chosen EcoCash, so the method is recorded
+        # here rather than left to the guess made when the order was saved.
+        shop_payment_update(ctx.get("reference"), "pending", poll_url, ctx.get("amount"),
+                            method="ecocash")
         cart = []
         return result("pay_wait", [
             _shop_text(
@@ -23146,7 +23153,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 greet(),
             ], new_history=[])
         if low in ("paylater", "later", "pay later") or low in negative_words:
-            shop_payment_update(reference, "pay_later")
+            shop_payment_update(reference, "pay_later", method="later")
             cart = []
             return result("menu", _shop_order_placed(reference, customer, amount, paid=False,
                                                      staff=staff, display_name=display_name,
@@ -23295,18 +23302,24 @@ def paynow_poll(poll_url):
     return True, str(status).strip().lower(), bool(getattr(reply, "paid", False))
 
 
-def shop_payment_update(reference, status, poll_url=None, amount=None, paid=False):
+def shop_payment_update(reference, status, poll_url=None, amount=None, paid=False, method=None):
+    """Record a payment outcome for one order.
+
+    `method` is only written when it is given, so changing a status never
+    silently rewrites the way the customer chose to pay.
+    """
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
             cursor.execute("""
                 UPDATE shop_orders
                 SET payment_status = %s,
+                    payment_method = COALESCE(%s, payment_method),
                     payment_poll_url = COALESCE(%s, payment_poll_url),
                     payment_amount = COALESCE(%s, payment_amount),
                     paid_at = CASE WHEN %s THEN NOW() ELSE paid_at END
                 WHERE reference = %s
-            """, (status, poll_url, amount, paid, reference))
+            """, (status, method, poll_url, amount, paid, reference))
             connection.commit()
         return True
     except Exception as e:
