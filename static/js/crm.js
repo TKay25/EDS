@@ -278,12 +278,16 @@
       recentEl.innerHTML = orders.slice(0, 5).map(function (order) {
         var who = order.customer_name || order.company || ('+' + order.wa_number);
         var paid = order.payment_status === 'paid';
+        var cancelled = !!order.cancelled;
+        var pill = cancelled
+          ? '<span class="crm-pill is-cancelled">Cancelled</span>'
+          : '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
+            (paid ? 'Paid' : 'Will pay') + '</span>';
         return '<div class="crm-order-row">' +
           '<div class="crm-order-row-main"><strong>' + escapeHtml(who) + '</strong>' +
           '<small>' + escapeHtml(order.reference) + ' • ' + order.items + ' items • ' +
           escapeHtml(order.created_at) + '</small></div>' +
-          '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
-          (paid ? 'Paid' : 'Will pay') + '</span>' +
+          pill +
           '</div>';
       }).join('');
     }
@@ -304,28 +308,39 @@
         var address = order.address ? '<span class="crm-sub">' + escapeHtml(order.address) + '</span>' : '';
         var paid = order.payment_status === 'paid';
         var delivered = order.delivery_method === 'delivery';
-        return '<tr data-reference="' + escapeHtml(order.reference) + '">' +
+        var cancelled = !!order.cancelled;
+        // A cancelled order has nothing left to fulfil and no money to take, so
+        // the fulfilment buttons are replaced rather than left to be pressed.
+        var paymentCell = cancelled
+          ? '<span class="crm-pill is-cancelled"><i class="bi bi-x-circle"></i> Cancelled</span>'
+          : '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
+            (paid ? '<i class="bi bi-check2"></i> Paid' : '<i class="bi bi-clock"></i> Will pay') +
+            '</span>';
+        var actionsCell = cancelled
+          ? '<span class="crm-row-note">Cancelled by the customer' + '</span>'
+          : '<div class="crm-row-actions">' +
+            '<button class="crm-mini-btn' + (delivered ? ' is-active' : '') + '" type="button" ' +
+            'data-fulfil="delivery" title="Delivered to the customer">Home</button>' +
+            '<button class="crm-mini-btn' + (!delivered ? ' is-active' : '') + '" type="button" ' +
+            'data-fulfil="collection" title="Collected from the shop">Shop</button>' +
+            '<button class="crm-mini-btn" type="button" data-mark-done="1" ' +
+            'title="Mark this order as fulfilled">' +
+            '<i class="bi bi-check2-circle"></i> Done</button>' +
+            '<button class="crm-mini-btn" type="button" data-open-order="1" ' +
+            'title="Open this order to print documents or take payment">' +
+            '<i class="bi bi-receipt"></i> Open</button>' +
+            '</div>';
+        return '<tr data-reference="' + escapeHtml(order.reference) + '"' +
+          (cancelled ? ' class="is-cancelled"' : '') + '>' +
           '<td><span class="crm-ref">' + escapeHtml(order.reference) + '</span>' + address + '</td>' +
           '<td><span class="crm-who">' + escapeHtml(who) + '</span>' + contact + '</td>' +
           '<td class="crm-col-num">' + order.items + '</td>' +
-          '<td><span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
-          (paid ? '<i class="bi bi-check2"></i> Paid' : '<i class="bi bi-clock"></i> Will pay') + '</span></td>' +
+          '<td>' + paymentCell + '</td>' +
           '<td class="crm-col-num crm-amount">' +
           (order.amount === null || order.amount === undefined
             ? '<span class="crm-amount-unset">Not priced</span>'
             : money(order.amount)) + '</td>' +
-          '<td><div class="crm-row-actions">' +
-          '<button class="crm-mini-btn' + (delivered ? ' is-active' : '') + '" type="button" ' +
-          'data-fulfil="delivery" title="Delivered to the customer">Home</button>' +
-          '<button class="crm-mini-btn' + (!delivered ? ' is-active' : '') + '" type="button" ' +
-          'data-fulfil="collection" title="Collected from the shop">Shop</button>' +
-          '<button class="crm-mini-btn" type="button" data-mark-done="1" ' +
-          'title="Mark this order as fulfilled">' +
-          '<i class="bi bi-check2-circle"></i> Done</button>' +
-          '<button class="crm-mini-btn" type="button" data-open-order="1" ' +
-          'title="Open this order to print documents or take payment">' +
-          '<i class="bi bi-receipt"></i> Open</button>' +
-          '</div></td>' +
+          '<td>' + actionsCell + '</td>' +
           '<td class="crm-col-date">' + escapeHtml(order.created_at) + '</td>' +
           '</tr>';
       }).join('');
@@ -677,6 +692,26 @@
       }
     }
 
+    // Structural changes (a product added or restored) only show up after a
+    // reload, and that reload also throws away edits on every other card. It is
+    // only worth doing silently when there is nothing to lose.
+    function reloadCatalogue(reason) {
+      if (dirtyCards > 0) {
+        var ok = window.confirm(
+          dirtyCards + (dirtyCards === 1 ? ' product has' : ' products have') +
+          ' unsaved changes.\n\nReloading to ' + reason + ' will discard them.\n\n' +
+          'Reload and lose those changes?');
+        if (!ok) {
+          toast('Reload skipped — your unsaved changes were kept.', 'warn',
+                'Refresh the page when you are ready for ' + reason + '.');
+          return;
+        }
+      }
+      // This reload is intentional, so it must not trip the guard below.
+      navigatingOnPurpose = true;
+      window.location.reload();
+    }
+
     // The catalogue count and the add button both depend on WhatsApp's limit, so
     // they are refreshed from whatever the server last reported.
     function applyLimits(incoming) {
@@ -958,9 +993,9 @@
                 }
                 toast('Restored to the catalogue.', 'ok',
                       'Reloading so the product appears with its saved details.');
-                // This reload is intentional, so it must not trip the guard.
-                navigatingOnPurpose = true;
-                window.setTimeout(function () { window.location.reload(); }, 700);
+                window.setTimeout(function () {
+                  reloadCatalogue('show the restored product');
+                }, 700);
               })
               .catch(function () {
                 setBusy(button, false);
@@ -1135,8 +1170,7 @@
             toast('Added “' + name + '” to the catalogue.', 'ok');
             // A full reload keeps every card, price input and limit consistent
             // with what the server just stored.
-            navigatingOnPurpose = true;
-            window.location.reload();
+            reloadCatalogue('show the new product');
           })
           .catch(function () {
             setBusy(submitButton, false);

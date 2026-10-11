@@ -21501,6 +21501,10 @@ def ensure_shop_tables():
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS payment_poll_url TEXT;")
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS payment_amount NUMERIC(12, 2);")
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP;")
+        # Set when a customer cancels from the assistant. Kept as its own column
+        # rather than only a status value so the cancellation is datable and can
+        # be filtered on without reinterpreting the status vocabulary.
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP;")
         connection.commit()
     _shop_tables_ready = True
 
@@ -21596,8 +21600,41 @@ SHOP_TRANSLATIONS = {
         "Empty the cart": "Bvisa zvose mungoro",
         "Change quantity — ": "Chinja huwandu — ",
         "Remove — ": "Bvisa — ",
-        "Our sales team confirms the final price on quotation. What would you like to do?":
-            "Boka redu rekutengesa rinosimbisa mutengo wekupedzisira. Chii chaungade kuita?",
+        "🛒 *Your cart* — ": "🛒 *Ngoro yako* — ",
+        "_price on request_": "_mutengo unobvunzwa_",
+        " each — ": " chimwe nechimwe — ",
+        "*Total: ": "*Zvose: ",
+        "*Priced so far: ": "*Zvakatarwa kusvika zvino: ",
+        " items still to be priced — our sales team will confirm.":
+            " zvinhu zvichiri kutarisirwa mutengo — boka redu rekutengesa richasimbisa.",
+        " item still to be priced — our sales team will confirm.":
+            " chinhu chichiri kutarisirwa mutengo — boka redu rekutengesa richasimbisa.",
+        "Our sales team will confirm the prices and the total on quotation.":
+            "Boka redu rekutengesa richasimbisa mitengo nezvose paunokumbira.",
+        # Order tracking and cancellation.
+        "📦 *My orders*": "📦 *Maodha angu*",
+        "You have not placed an order yet.": "Hausati waisa odha.",
+        "Choose an order below to cancel it. Cancelling cannot be undone.":
+            "Sarudza odha pazasi kuti uibvise. Kubvisa hakugone kudzoserwa.",
+        "None of these can be cancelled here. Ask for a person and we will help.":
+            "Hapana yaunogona kubvisa pano. Kumbira munhu tichakubatsira.",
+        "⚠️ *Cancel this order?*": "⚠️ *Bvisa odha iyi?*",
+        "*Reference:* ": "*Referensi:* ",
+        "*Items:* ": "*Zvinhu:* ",
+        "*Amount:* ": "*Mari:* ",
+        "Cancelling cannot be undone. Reply *yes* to cancel, or *no* to keep the order.":
+            "Kubvisa hakugone kudzoserwa. Pindura *hongu* kubvisa, kana *kwete* kusiyiwa.",
+        "✅ *Order ": "✅ *Odha ",
+        " cancelled.*": " yabviswa.*",
+        "Nothing will be delivered for it and no payment is due. You can place a new order whenever you like.":
+            "Hapana chichaunzwa uye hapana muripo unodikanwa. Unogona kuisa odha itsva chero paunoda.",
+        " is unchanged.": " haina kuchinja.",
+        "Not paid yet": "Haisati yabhadharwa",
+        "Paid": "Yabhadharwa",
+        "Fulfilled": "Yapiwa",
+        "Cancelled": "Yabviswa",
+        "Waiting for your EcoCash PIN": "Takamirira PIN yako yeEcoCash",
+        "to be confirmed": "ichasimbiswa",
         "Search Products": "Tsvaga Zvigadzirwa",
         "Type a product name or keyword — for example *bleach*, *jelly*, *pine* or *dish*.":
             "Nyora zita rechigadzirwa kana izwi rekutsvaga — semuenzaniso *bleach*, *jelly*, *pine* kana *dish*.",
@@ -21792,8 +21829,41 @@ SHOP_TRANSLATIONS = {
         "Empty the cart": "Khupha konke enqoleni",
         "Change quantity — ": "Ntshintsha inani — ",
         "Remove — ": "Khupha — ",
-        "Pricing is confirmed by our sales team on quotation. What would you like to do?":
-            "Intengo izaqinisekiswa liqembu lethu lezokuthengisa. Ungathanda ukwenzani?",
+        "🛒 *Your cart* — ": "🛒 *Inqola yakho* — ",
+        "_price on request_": "_intengo iyabuzwa_",
+        " each — ": " ngayinye — ",
+        "*Total: ": "*Konke: ",
+        "*Priced so far: ": "*Okubekiwe kuze kube manje: ",
+        " items still to be priced — our sales team will confirm.":
+            " izinto ezisadinga intengo — iqembu lethu lezokuthengisa lizaqinisekisa.",
+        " item still to be priced — our sales team will confirm.":
+            " into isadinga intengo — iqembu lethu lezokuthengisa lizaqinisekisa.",
+        "Our sales team will confirm the prices and the total on quotation.":
+            "Iqembu lethu lezokuthengisa lizaqinisekisa intengo lakonke nxa ucela.",
+        # Order tracking and cancellation.
+        "📦 *My orders*": "📦 *Ama-oda ami*",
+        "You have not placed an order yet.": "Kawukafaki i-oda okwamanje.",
+        "Choose an order below to cancel it. Cancelling cannot be undone.":
+            "Khetha i-oda ngezansi ukuze uyikhansela. Ukukhansela akubuyiselwa.",
+        "None of these can be cancelled here. Ask for a person and we will help.":
+            "Akukho okungakhanselwa lapha. Cela umuntu sizakusiza.",
+        "⚠️ *Cancel this order?*": "⚠️ *Khansela le i-oda?*",
+        "*Reference:* ": "*Ireferensi:* ",
+        "*Items:* ": "*Izinto:* ",
+        "*Amount:* ": "*Imali:* ",
+        "Cancelling cannot be undone. Reply *yes* to cancel, or *no* to keep the order.":
+            "Ukukhansela akubuyiselwa. Phendula *yebo* ukukhansela, loba *hatshi* ukuyigcina.",
+        "✅ *Order ": "✅ *I-oda ",
+        " cancelled.*": " ikhanseliwe.*",
+        "Nothing will be delivered for it and no payment is due. You can place a new order whenever you like.":
+            "Akukho okuzalethwa futhi akukho mali edingekayo. Ungafaka i-oda elitsha noma nini.",
+        " is unchanged.": " ayitshintshanga.",
+        "Not paid yet": "Akukabhadalwa",
+        "Paid": "Kubhadiwe",
+        "Fulfilled": "Kugcwalisiwe",
+        "Cancelled": "Kukhanseliwe",
+        "Waiting for your EcoCash PIN": "Silinde i-PIN yakho ye-EcoCash",
+        "to be confirmed": "kuzakuqinisekiswa",
         "Search Products": "Dinga Imikhiqizo",
         "Type a product name or keyword — for example *bleach*, *jelly*, *pine* or *dish*.":
             "Bhala ibizo lomkhiqizo loba ibala lokudinga — ngokwesibonelo *bleach*, *jelly*, *pine* loba *dish*.",
@@ -21967,6 +22037,9 @@ SHOP_OPTION_TRANSLATIONS = {
         "Pay later instead": "Bhadhara gare gare",
         "I have authorised it": "Ndabvumidza kubhadhara",
         "Empty the cart": "Bvisa zvose mungoro",
+        "My orders": "Maodha angu",
+        "Yes, cancel it": "Hongu, bvisa odha",
+        "Keep it": "Sirasiya odha",
     },
     "nd": {
         "Shop": "Thenga",
@@ -21997,6 +22070,9 @@ SHOP_OPTION_TRANSLATIONS = {
         "Pay later instead": "Bhadala ngesikhathi esizayo",
         "I have authorised it": "Sengikuvumelile ukubhadala",
         "Empty the cart": "Khupha konke enqoleni",
+        "My orders": "Ama-oda ami",
+        "Yes, cancel it": "Yebo, khansela i-oda",
+        "Keep it": "Yigcine i-oda",
     },
 }
 
@@ -22032,11 +22108,13 @@ def _shop_translate_option(label, language):
             "Change quantity — ": "Chinja huwandu — ",
             "Remove — ": "Bvisa — ",
             "Pay now with EcoCash — ": "Bhadhara neEcoCash izvozvi — ",
+            "Cancel ": "Bvisa ",
         },
         "nd": {
             "Change quantity — ": "Ntshintsha inani — ",
             "Remove — ": "Khupha — ",
             "Pay now with EcoCash — ": "Bhadala ngeEcoCash khathesi — ",
+            "Cancel ": "Khansela ",
         },
     }
     for source, target in prefixes.get(language, {}).items():
@@ -22354,6 +22432,7 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
     if count:
         cart_label = f"View Cart ({count} item{'s' if count != 1 else ''})"
     options = [("shop", "Shop"), ("search", "Search Products"), ("cart", cart_label),
+               ("orders", "My orders"),
                ("support", "Contact us"), ("about", "About Us"),
                ("support_human", "Talk to a human")]
     if staff:
@@ -22381,6 +22460,7 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
         "🛍️ Browse the range and build an order\n"
         "🔎 Search for a product by name\n"
         "🛒 Review your cart and check out\n"
+        "📦 Track or cancel an order\n"
         "🙋 Ask for a person whenever you prefer\n\n"
         "What would you like to do?"
     )
@@ -22569,7 +22649,7 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
     if not cart:
         return None
     customer = customer or {}
-    reference = f"BC-{datetime.now().strftime('%y%m%d')}-{random.randint(1000, 9999)}"
+    reference = f"{SHOP_ORDER_PREFIX}{datetime.now().strftime('%y%m%d')}-{random.randint(1000, 9999)}"
     wa_number = str(wa_number)[-15:] if wa_number else None
     # Collection orders have no address, so the delivery column must be set even
     # when the customer never typed one.
@@ -22622,8 +22702,34 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
 SHOP_BACK_WORDS = ("b", "back", "previous", "previous menu", "go back", "return")
 SHOP_MENU_WORDS = ("m", "menu", "main menu", "mainmenu", "home", "reset", "start", "restart", "0")
 
+# Button ids and navigation words are the assistant's own vocabulary, not
+# something a customer typed. Shielding them from translation hides them from it:
+# the cart reply contains the word "cart", so "Your cart is empty" and the cart
+# heading could never be translated while "cart" was protected. Only free text is
+# protected now.
+SHOP_RESERVED_WORDS = frozenset({
+    "shop", "search", "cart", "support", "about", "language", "checkout", "clear",
+    "paynow", "paylater", "confirm_order", "support_human", "paid_check",
+    "delivery", "collection", "none", "back", "previous", "menu", "home", "reset",
+    "restart", "start", "b", "m", "yes", "y", "no", "n", "ok", "later", "cancel",
+    "skip", "help", "en", "sn", "nd",
+})
 
-def _shop_render(step, ctx, cart, customer=None, staff=False):
+
+def _shop_preserved_command(command):
+    """The customer's own input, unless it is one of the assistant's own words."""
+    value = (command or "").strip()
+    if not value or value.lower() in SHOP_RESERVED_WORDS:
+        return ""
+    return value
+
+
+# Every order reference begins with this. It is also how a reference is
+# recognised when a customer types or pastes one back into the chat.
+SHOP_ORDER_PREFIX = "BC-"
+
+
+def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None):
     """Rebuild the prompt for a step without consuming input (used by Back)."""
     ctx = ctx or {}
     customer = customer or {}
@@ -22646,6 +22752,17 @@ def _shop_render(step, ctx, cart, customer=None, staff=False):
         return messages
     if step == "cart":
         return [_shop_cart_message(cart)]
+    if step == "orders":
+        return [_shop_orders_menu(wa_number)]
+    if step == "order_cancel_confirm":
+        reference = ctx.get("cancel_reference") or ""
+        order = next((row for row in shop_customer_orders(wa_number, limit=10)
+                      if row["reference"] == reference), None)
+        if order and order["cancellable"]:
+            return [_shop_cancel_prompt(order)]
+        # The order moved on while the customer was deciding, so the list is the
+        # only truthful thing to show.
+        return [_shop_orders_menu(wa_number)]
     if step == "about":
         return _shop_about()
     if step == "support":
@@ -22691,6 +22808,128 @@ def _shop_order_confirmation(cart, customer):
               "Place this order now?"]
     return [_shop_options("\n".join(lines),
                           [("confirm_order", "Yes, submit"), ("cart", "Back to cart")])]
+
+
+def _shop_order_state_text(order):
+    """How one order reads to the customer, worst state first."""
+    if order["cancelled"]:
+        return "Cancelled"
+    if order["paid"]:
+        return "Paid"
+    if order["fulfilled"]:
+        return "Fulfilled"
+    if order["awaiting_pin"]:
+        return "Waiting for your EcoCash PIN"
+    return "Not paid yet"
+
+
+def _shop_money_text(amount):
+    return f"{PAYNOW_CURRENCY} {amount:.2f}" if amount is not None else "to be confirmed"
+
+
+def _shop_orders_menu(wa_number):
+    """The customer's own recent orders, with a cancel choice for the open ones.
+
+    Only their own orders are listed, and only the ones that can actually be
+    cancelled are offered, so the menu never promises something the next step
+    would then refuse.
+    """
+    orders = shop_customer_orders(wa_number, limit=5)
+    if not orders:
+        return _shop_options(
+            "📦 *My orders*\n\nYou have not placed an order yet.",
+            [("shop", "Browse products"), ("cart", "View Cart")])
+
+    lines = ["📦 *My orders*", ""]
+    options = []
+    for order in orders:
+        count = order["items"]
+        lines.append(f"*{order['reference']}* — {count} item"
+                     f"{'s' if count != 1 else ''}, {_shop_money_text(order['amount'])}")
+        lines.append(f"    {order['created_at']} · {_shop_order_state_text(order)}")
+        if order["cancellable"]:
+            options.append((f"cancel:{order['reference']}", f"Cancel {order['reference']}"))
+    lines.append("")
+    if options:
+        lines.append("Choose an order below to cancel it. Cancelling cannot be undone.")
+    else:
+        lines.append("None of these can be cancelled here. Ask for a person and we will help.")
+    options.append(("support_human", "Talk to a human"))
+    options.append(("shop", "Browse products"))
+    return _shop_options("\n".join(lines), options)
+
+
+def _shop_cancel_prompt(order):
+    """The confirmation shown before an order is cancelled.
+
+    A cancellation is never actioned from one tap: the reference, the item count
+    and the amount are read back to the customer first.
+    """
+    count = order["items"]
+    lines = [
+        "⚠️ *Cancel this order?*",
+        "",
+        f"*Reference:* {order['reference']}",
+        f"*Items:* {count} item{'s' if count != 1 else ''}",
+        f"*Amount:* {_shop_money_text(order['amount'])}",
+        "",
+    ]
+    if order["awaiting_pin"]:
+        lines.append(
+            "There is an EcoCash prompt on your phone for this order. If you have already "
+            "entered your PIN the payment may still go through, and our sales team will "
+            "contact you about it.")
+        lines.append("")
+    lines.append("Cancelling cannot be undone. Reply *yes* to cancel, or *no* to keep the order.")
+    return _shop_options("\n".join(lines),
+                         [("cancel_yes", "Yes, cancel it"), ("orders", "Keep it")])
+
+
+def _shop_cancel_result(ok, reason, detail, order=None):
+    """What the customer is told after a cancellation attempt.
+
+    Returns (messages, actions). Every failure that involves money or goods is
+    handed to a person rather than left with the assistant, because only a person
+    can refund or reopen.
+    """
+    reference = (detail or {}).get("reference") or ""
+    if ok:
+        lines = [f"✅ *Order {reference} cancelled.*",
+                 "",
+                 "Nothing will be delivered for it and no payment is due. You can place a "
+                 "new order whenever you like."]
+        actions = [{"type": "escalate",
+                    "reason": f"Customer cancelled order {reference}",
+                    "message": f"The customer cancelled {reference} from the assistant."}]
+        if order and order["awaiting_pin"]:
+            lines += ["",
+                      "⚠️ An EcoCash prompt was already on your phone. If you entered your PIN "
+                      "before cancelling, our sales team will contact you about a refund."]
+            actions.append({"type": "escalate",
+                            "reason": f"Cancelled order {reference} may still be paid",
+                            "message": f"{reference} was cancelled while an EcoCash prompt was "
+                                       f"outstanding. Check whether the payment landed."})
+        return [_shop_text("\n".join(lines))], actions
+
+    blocked = {
+        "already_cancelled": f"ℹ️ *{reference}* was already cancelled, so there is nothing to "
+                             "do. No payment is due for it.",
+        "paid": f"⚠️ *{reference}* has already been paid, so it cannot be cancelled here. "
+                "Our sales team will help you with a refund — I have passed this on.",
+        "fulfilled": f"⚠️ *{reference}* has already been fulfilled, so it cannot be cancelled "
+                     "here. Our sales team will help — I have passed this on.",
+        "not_found": "I could not find that order against this number. Ask for a person and we "
+                     "will look into it.",
+        "error": "😕 Something went wrong, so *nothing was cancelled*. Our sales team will sort "
+                 "it out — I have passed this on.",
+    }
+    message = blocked.get(reason, blocked["error"])
+    if reason == "already_cancelled":
+        return [_shop_text(message)], []
+    return [_shop_text(message)], [{"type": "escalate",
+                                    "reason": f"Order {reference} could not be cancelled "
+                                              f"({reason})",
+                                    "message": message}]
 
 
 def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None, display_name=None):
@@ -22761,8 +23000,10 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         saved_ctx = ctx if new_ctx is None else new_ctx
         saved_customer = customer if new_customer is None else new_customer
         # Never let translation touch anything a person typed or was addressed
-        # by: their name, their order details and the product they picked.
-        preserve = [command, _shop_first_name(display_name)]
+        # by: their name, their order details and the product they picked. The
+        # button they pressed is the assistant's own vocabulary, so it is not
+        # protected - doing so would hide its words from the translator.
+        preserve = [_shop_preserved_command(command), _shop_first_name(display_name)]
         preserve.extend((saved_customer or {}).values())
         preserve.extend((saved_ctx or {}).values())
         for item in cart:
@@ -22814,7 +23055,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         restored_ctx = previous.get("ctx") or {}
         if restored == "menu":
             return finish("menu", [greet()], new_history=[])
-        return finish(restored, _shop_render(restored, restored_ctx, cart, customer),
+        return finish(restored, _shop_render(restored, restored_ctx, cart, customer,
+                                             staff, wa_number),
                       new_ctx=restored_ctx, new_history=history[:-1])
 
     # --------------------------------------------------------- global commands
@@ -22828,7 +23070,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             restored_step = previous.get("step") or "menu"
             restored_ctx = previous.get("ctx") or {}
             restored_messages = ([greet()] if restored_step == "menu" else
-                                 _shop_render(restored_step, restored_ctx, cart, customer, staff))
+                                 _shop_render(restored_step, restored_ctx, cart, customer,
+                                              staff, wa_number))
             restored_history = [] if restored_step == "menu" else history[:-1]
             return finish(
                 restored_step,
@@ -22893,14 +23136,61 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         cart = []
         return result("cart", [_shop_text("🧺 Your cart has been emptied."), _shop_cart_message(cart)])
 
+    # ------------------------------------------------------ orders and cancelling
+    if low in ("orders", "my orders", "order history", "maodha angu", "ama-oda ami"):
+        return result("orders", [_shop_orders_menu(wa_number)])
+
+    # A cancel choice from the list, or a reference the customer typed or pasted
+    # back into the chat. Only their own open orders are offered, and a reference
+    # is only read as one when it looks like one.
+    cancel_reference = ""
+    if low.startswith("cancel:") or low.startswith("cancel "):
+        cancel_reference = command.split(":", 1)[1].strip() if ":" in command \
+            else command.split(" ", 1)[1].strip()
+    elif step in ("menu", "orders") and command.upper().startswith(SHOP_ORDER_PREFIX):
+        cancel_reference = command.strip().upper()
+
+    if cancel_reference:
+        order = next((row for row in shop_customer_orders(wa_number, limit=10)
+                      if row["reference"] == cancel_reference), None)
+        if order and order["cancellable"]:
+            return result("order_cancel_confirm", [_shop_cancel_prompt(order)],
+                          new_ctx=dict(ctx, cancel_reference=cancel_reference))
+        # Nothing to confirm: say why rather than opening a confirmation that
+        # would fail on the next tap.
+        messages, actions = _shop_cancel_result(
+            False, "not_found" if not order else order["blocked_reason"],
+            {"reference": cancel_reference}, order)
+        return result("orders", messages + [_shop_orders_menu(wa_number)], actions=actions)
+
+    if step == "order_cancel_confirm":
+        reference = ctx.get("cancel_reference") or ""
+        order = next((row for row in shop_customer_orders(wa_number, limit=10)
+                      if row["reference"] == reference), None)
+        if low == "cancel_yes" or low in affirmative_words or low in ("hongu", "ehe", "yebo"):
+            ok, reason, detail = shop_cancel_order(reference, wa_number)
+            messages, actions = _shop_cancel_result(ok, reason, detail, order)
+            return result("menu", messages + [greet()], actions=actions, new_history=[])
+        if low == "orders" or low in negative_words or low in ("kwete", "cha", "hayi"):
+            return result("orders", [
+                _shop_text(f"👍 *{reference}* is unchanged."),
+                _shop_orders_menu(wa_number)])
+        # Anything else re-asks rather than guessing at a destructive answer.
+        if order:
+            return result("order_cancel_confirm", [_shop_cancel_prompt(order)])
+        return result("orders", [_shop_orders_menu(wa_number)])
+
+    if step == "orders":
+        return result("orders", [_shop_orders_menu(wa_number)])
+
     if low in ("checkout", "order"):
         if not cart:
             return result("cart", [_shop_cart_message(cart)])
         return result("order_name", [_shop_text("📝 Let's set up your order.\n\nWhat is your *full name*?")])
 
     # A number that is not on the current menu should never silently jump levels.
-    if unmatched_number and step in ("category", "product", "size", "search_results", "cart", "about", "support"):
-        prompt = _shop_render(step, ctx, cart, customer, staff)
+    if unmatched_number and step in ("category", "product", "size", "search_results", "cart", "about", "support", "orders", "order_cancel_confirm"):
+        prompt = _shop_render(step, ctx, cart, customer, staff, wa_number)
         return finish(step, prompt + [_shop_text(
             f"🤔 *{command}* is not one of the options above. Please choose from the list, "
             "or use *B* to go back and *M* for the main menu.")])
@@ -23464,6 +23754,159 @@ def order_payment_status(reference, refresh=True):
         "currency": PAYNOW_CURRENCY,
         "awaiting": bool(poll_url) and not paid and status not in ("cancelled", "failed"),
     }
+
+
+def _shop_order_owner_key(number):
+    """The key an order is stored under, so a lookup matches what was written.
+
+    Orders record `str(wa_number)[-15:]`, which is the convention the inbox and
+    the chat link already rely on, so the same normalisation is used here.
+    """
+    return str(number)[-15:] if number else ""
+
+
+def shop_customer_orders(wa_number, limit=5):
+    """The customer's own recent orders, newest first.
+
+    Scoped to the number the order was placed from, so one number can never see
+    another's orders. The amount is the sum of the line prices captured at the
+    time of sale, and is left unset when a line was never priced rather than
+    being reported as zero.
+    """
+    owner = _shop_order_owner_key(wa_number)
+    if not owner:
+        return []
+    ensure_shop_tables()
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT orders.reference, COALESCE(orders.item_count, 0),
+                       COALESCE(orders.payment_status, 'unpaid'),
+                       COALESCE(orders.status, 'new'), orders.created_at,
+                       orders.payment_amount, orders.paid_at, orders.fulfilled_at,
+                       orders.cancelled_at, orders.payment_poll_url,
+                       (SELECT SUM(items.unit_price * items.quantity)
+                          FROM shop_order_items items
+                         WHERE items.order_id = orders.id
+                           AND items.unit_price IS NOT NULL),
+                       (SELECT COUNT(*) FROM shop_order_items items
+                         WHERE items.order_id = orders.id
+                           AND items.unit_price IS NULL)
+                FROM shop_orders orders
+                WHERE orders.wa_number = %s
+                ORDER BY orders.created_at DESC NULLS LAST, orders.id DESC
+                LIMIT %s
+            """, (owner, limit))
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"customer orders error: {e}")
+        return []
+
+    orders = []
+    for row in rows:
+        paid = (row[2] or "").lower() == "paid" or row[6] is not None
+        cancelled = row[8] is not None or (row[3] or "") == "cancelled"
+        fulfilled = row[7] is not None or (row[3] or "") == "closed"
+        unpriced = int(row[11] or 0)
+        if row[5] is not None:
+            amount = float(row[5])
+        elif unpriced:
+            amount = None
+        else:
+            amount = float(row[10]) if row[10] is not None else None
+        if cancelled:
+            reason = "cancelled"
+        elif paid:
+            reason = "paid"
+        elif fulfilled:
+            reason = "fulfilled"
+        else:
+            reason = ""
+        orders.append({
+            "reference": row[0],
+            "items": int(row[1] or 0),
+            "payment_status": row[2] or "unpaid",
+            "status": row[3] or "new",
+            "created_at": fmt_time(row[4], "%d %b %Y %H:%M"),
+            "amount": amount,
+            "unpriced": unpriced,
+            "paid": paid,
+            "cancelled": cancelled,
+            "fulfilled": fulfilled,
+            # A prompt on the customer's handset could still be authorised.
+            "awaiting_pin": bool(row[9]) and not paid,
+            "cancellable": not (cancelled or paid or fulfilled),
+            "blocked_reason": reason,
+        })
+    return orders
+
+
+def shop_cancel_order(reference, wa_number, user=None):
+    """Cancel one of the customer's own orders. Returns (ok, reason, detail).
+
+    Every precondition sits in the UPDATE itself, so a state change between
+    reading and writing cannot slip through: the row is only cancelled while it
+    is still that customer's own, still open, still unpaid and still unfulfilled.
+    `RETURNING` then says whether this call was the one that changed it, which
+    makes a repeated tap harmless instead of a second cancellation.
+    """
+    reference = (reference or "").strip()
+    owner = _shop_order_owner_key(wa_number)
+    if not reference or not owner:
+        return False, "not_found", {}
+
+    ensure_shop_tables()
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_orders
+                SET status = 'cancelled', cancelled_at = NOW()
+                WHERE reference = %s
+                  AND wa_number = %s
+                  AND COALESCE(status, 'new') NOT IN ('cancelled', 'closed')
+                  AND fulfilled_at IS NULL
+                  AND paid_at IS NULL
+                  AND COALESCE(payment_status, 'unpaid') <> 'paid'
+                RETURNING reference, COALESCE(item_count, 0)
+            """, (reference, owner))
+            changed = cursor.fetchone()
+    except Exception as e:
+        print(f"order cancel error: {e}")
+        return False, "error", {}
+
+    if changed:
+        _shop_payment_event(reference, "cancelled_by_customer", "cancelled", owner)
+        log_activity("customer_cancelled_order", "order",
+                     f"Cancelled order {reference} from the assistant",
+                     target=reference, details={"wa_number": owner}, user=user)
+        return True, "", {"reference": reference, "items": int(changed[1] or 0)}
+
+    # Nothing was changed, so the reason comes from the order itself. The read is
+    # scoped to the same number, and a reference belonging to someone else reads
+    # exactly like one that does not exist, so it cannot be probed.
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT COALESCE(status, 'new'), COALESCE(payment_status, 'unpaid'),
+                       paid_at, fulfilled_at, cancelled_at
+                FROM shop_orders WHERE reference = %s AND wa_number = %s
+            """, (reference, owner))
+            row = cursor.fetchone()
+    except Exception as e:
+        print(f"order cancel lookup error: {e}")
+        return False, "error", {}
+    if not row:
+        return False, "not_found", {}
+    if row[4] is not None or (row[0] or "") == "cancelled":
+        return False, "already_cancelled", {}
+    if (row[1] or "").lower() == "paid" or row[2] is not None:
+        return False, "paid", {}
+    if row[3] is not None or (row[0] or "") == "closed":
+        return False, "fulfilled", {}
+    # The order looks cancellable but the update refused it, so something moved
+    # between the two statements. Sending the customer to a person is the only
+    # honest answer rather than assuming which.
+    return False, "error", {}
 
 
 def shop_nav_block(nav, language="en"):
@@ -24707,7 +25150,8 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
                orders.delivery_address, orders.item_count, orders.payment_method,
                COALESCE(orders.payment_status, 'unpaid'), orders.payment_amount,
                COALESCE(orders.delivery_method, 'delivery'), orders.status, orders.created_at,
-               orders.wa_number, COALESCE(chats.wa_profile_name, chats.display_name)
+               orders.wa_number, COALESCE(chats.wa_profile_name, chats.display_name),
+               orders.fulfilled_at, orders.cancelled_at
         FROM shop_orders orders
         LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
         WHERE {clause}
@@ -24738,6 +25182,9 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
             "created_at": fmt_time(row[11], "%d %b %Y %H:%M"),
             "wa_number": row[12] or "",
             "profile_name": row[13] or "",
+            "fulfilled_at": fmt_time(row[14], "%d %b %Y %H:%M"),
+            "cancelled_at": fmt_time(row[15], "%d %b %Y %H:%M"),
+            "cancelled": row[15] is not None or (row[10] or "") == "cancelled",
         })
     return orders
 
@@ -24855,13 +25302,22 @@ def order_fulfilment_filter(key, alias="shop_orders"):
     `status` must be qualified for the same reason `created_at` must be: the
     overview query joins whatsapp_chats, which has its own status column, so a
     bare reference makes the filter unusable.
+
+    A cancelled order is excluded from every view but its own, so it can never be
+    counted as a sale or mistaken for work still to be done.
     """
+    active = (f"{alias}.cancelled_at IS NULL AND "
+              f"COALESCE({alias}.status, 'new') <> 'cancelled'")
+    cancelled = (f"({alias}.cancelled_at IS NOT NULL OR "
+                 f"COALESCE({alias}.status, 'new') = 'cancelled')")
     filters = {
-        "all": "1 = 1",
-        "delivery": f"COALESCE({alias}.delivery_method, 'delivery') = 'delivery'",
-        "collection": f"{alias}.delivery_method = 'collection'",
-        "pending": f"{alias}.fulfilled_at IS NULL AND {alias}.status <> 'closed'",
+        "all": active,
+        "delivery": f"COALESCE({alias}.delivery_method, 'delivery') = 'delivery' AND {active}",
+        "collection": f"{alias}.delivery_method = 'collection' AND {active}",
+        "pending": (f"{alias}.fulfilled_at IS NULL AND {alias}.status <> 'closed' "
+                    f"AND {active}"),
         "fulfilled": f"{alias}.fulfilled_at IS NOT NULL OR {alias}.status = 'closed'",
+        "cancelled": cancelled,
     }
     return filters.get(key) or filters["all"]
 

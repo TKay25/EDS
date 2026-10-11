@@ -45,6 +45,51 @@
     // repaint (and the scroll jump that comes with it).
     var lastThreadHtml = null;
     var lastListHtml = null;
+    // Conversations already on screen. One that appears later is news for whoever
+    // is working with another view open. Null means the first load has not
+    // happened, which must not be announced.
+    var knownChatIds = null;
+
+    function inboxIsOnScreen() {
+      var view = document.querySelector('[data-crm-view="inbox"]');
+      return !!(view && view.classList.contains('is-active'));
+    }
+
+    function pulseInboxTab() {
+      var tab = document.getElementById('crmTabInbox');
+      if (!tab) return;
+      tab.classList.remove('is-pulsing');
+      // Reading the layout restarts the animation when one is already running.
+      void tab.offsetWidth;
+      tab.classList.add('is-pulsing');
+      window.setTimeout(function () { tab.classList.remove('is-pulsing'); }, 6000);
+    }
+
+    // A conversation that arrives while the agent is looking at another view is
+    // easy to miss, so it is announced. The list is only trusted to mean "new"
+    // when nothing is narrowing it, otherwise a filter change would look like an
+    // arrival.
+    function announceNewChats(chats) {
+      var ids = chats.map(function (chat) { return String(chat.id); });
+      var first = knownChatIds === null;
+      var fresh = first ? [] : chats.filter(function (chat) {
+        return knownChatIds.indexOf(String(chat.id)) === -1;
+      });
+      knownChatIds = ids;
+      if (first || !fresh.length) return;
+      if (searchTerm !== '' || (root.getAttribute('data-filter') || 'all') !== 'all') return;
+      // Nothing to announce when the conversation is already in front of them.
+      if (inboxIsOnScreen()) return;
+
+      var who = fresh.length === 1
+        ? (fresh[0].display_name || ('+' + fresh[0].wa_number))
+        : fresh.length + ' conversations';
+      pulseInboxTab();
+      if (window.crmToast) {
+        window.crmToast(fresh.length === 1 ? 'New chat from ' + who : who + ' waiting',
+                        'info', 'Open the Inbox tab to reply.');
+      }
+    }
 
     function statusChip(status, unattended) {
       var label = { bot: 'Assistant', escalated: 'Needs agent', human: 'Agent live', closed: 'Closed' }[status] || status;
@@ -304,7 +349,7 @@
         });
     }
 
-    function refresh(silent) {
+    function refresh(silent, skipAnnounce) {
       var filter = root.getAttribute('data-filter') || 'all';
       var url = '/api/crm/summary?filter=' + encodeURIComponent(filter);
       if (searchTerm) url += '&search=' + encodeURIComponent(searchTerm);
@@ -312,8 +357,10 @@
         .then(function (response) { return response.json(); })
         .then(function (payload) {
           if (!payload.success) return;
-          renderList(payload.chats || []);
-          updateSearchChrome((payload.chats || []).length);
+          var chats = payload.chats || [];
+          if (!skipAnnounce) announceNewChats(chats);
+          renderList(chats);
+          updateSearchChrome(chats.length);
           var stats = payload.stats || {};
           Object.keys(stats).forEach(function (key) {
             var node = document.querySelector('[data-stat="' + key + '"]');
@@ -447,22 +494,42 @@
     }
 
     refresh(false);
+
+    // The open thread only needs reloading while its panel is on screen, so a
+    // poll arriving while the agent is on Analytics or Products skips that round
+    // trip entirely. The list still refreshes, because it feeds the tab badge.
+    function reloadOpenThread() {
+      if (activeId && inboxIsOnScreen()) loadMessages(true, true);
+    }
+
     // Polling re-renders the list and reloads the open thread, and each request
     // costs a round trip to a remote database, so it is skipped while the tab is
     // in the background and does nothing when the payload is unchanged.
     timer = window.setInterval(function () {
       if (document.hidden) return;
       refresh(true);
-      if (activeId) loadMessages(true, true);
+      reloadOpenThread();
     }, 20000);
     // Returning to the tab catches up straight away rather than waiting for the
     // next tick, which would otherwise be up to twenty seconds of stale data.
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) {
         refresh(true);
-        if (activeId) loadMessages(true, true);
+        reloadOpenThread();
       }
     });
+
+    // Coming back to the inbox after working elsewhere must not show a thread
+    // that stopped being refreshed while its panel was hidden.
+    var inboxTab = document.getElementById('crmTabInbox');
+    if (inboxTab) {
+      inboxTab.addEventListener('click', function () {
+        // The agent is opening the inbox themselves, so there is nothing to
+        // announce - the conversation is about to be in front of them.
+        refresh(true, true);
+        if (activeId) loadMessages(true, true);
+      });
+    }
     window.addEventListener('beforeunload', function () {
       window.clearInterval(timer);
       window.clearTimeout(searchTimer);
