@@ -112,10 +112,15 @@
     // bottom padding while it is showing.
     var shell = document.querySelector('.ps-shell');
 
-    function show(name) {
+    function show(name, focusTab) {
       tabs.forEach(function (tab) {
-        tab.classList.toggle('is-active', tab.getAttribute('data-crm-tab') === name);
-        tab.setAttribute('aria-selected', tab.getAttribute('data-crm-tab') === name ? 'true' : 'false');
+        var selected = tab.getAttribute('data-crm-tab') === name;
+        tab.classList.toggle('is-active', selected);
+        tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+        // Roving tabindex: only the selected tab stays in the tab order, so a
+        // keyboard user reaches the panel with one Tab instead of four.
+        tab.setAttribute('tabindex', selected ? '0' : '-1');
+        if (selected && focusTab) tab.focus();
       });
       views.forEach(function (view) {
         view.classList.toggle('is-active', view.getAttribute('data-crm-view') === name);
@@ -144,14 +149,34 @@
       box.style.setProperty('--crm-inbox-height', Math.round(available) + 'px');
     }
 
-    tabs.forEach(function (tab) {
+    tabs.forEach(function (tab, index) {
       tab.addEventListener('click', function () { show(tab.getAttribute('data-crm-tab')); });
+
+      // Arrow keys walk the tabs, Home and End jump to the ends. The view is
+      // selected as focus moves so the panel always matches the focused tab.
+      tab.addEventListener('keydown', function (event) {
+        var last = tabs.length - 1;
+        var next = null;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          next = index === last ? 0 : index + 1;
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          next = index === 0 ? last : index - 1;
+        } else if (event.key === 'Home') {
+          next = 0;
+        } else if (event.key === 'End') {
+          next = last;
+        }
+        if (next === null) return;
+        event.preventDefault();
+        show(tabs[next].getAttribute('data-crm-tab'), true);
+      });
     });
 
-    // Apply the initial state: the inbox is the active view on load.
+    // Apply the initial state. Without this the selected tab carried no
+    // aria-selected until the first click, so the active view was never
+    // announced, and every tab kept a tabindex of 0.
     var initial = root.querySelector('[data-crm-tab].is-active');
-    if (shell) shell.classList.toggle('ps-shell-tight',
-      !initial || initial.getAttribute('data-crm-tab') === 'inbox');
+    show(initial ? initial.getAttribute('data-crm-tab') : 'inbox');
 
     // Measure once the browser has laid the page out; measuring mid-init reads
     // a not-yet-laid-out box and would size the inbox wrongly on first paint.
@@ -626,8 +651,30 @@
       node.classList.remove('is-ok', 'is-error');
       if (kind) node.classList.add(kind);
       window.setTimeout(function () {
+        // The unsaved-changes note is a standing state, not a flash, so it stays
+        // until the card is saved or reverted.
+        if (node.textContent === 'Unsaved changes' && product.classList.contains('is-dirty')) return;
         if (node.textContent === message) node.textContent = '';
       }, 4000);
+    }
+
+    // How many cards hold edits that have not reached the server yet.
+    var dirtyCards = 0;
+    // Set while the page is navigating on purpose, so the guard below does not
+    // block the app's own reloads.
+    var navigatingOnPurpose = false;
+
+    function markDirty(product, dirty) {
+      if (product.classList.contains('is-dirty') === dirty) return;
+      product.classList.toggle('is-dirty', dirty);
+      dirtyCards += dirty ? 1 : -1;
+      if (dirtyCards < 0) dirtyCards = 0;
+      if (dirty) {
+        note(product, 'Unsaved changes', 'is-error');
+      } else {
+        var node = product.querySelector('[data-role="note"]');
+        if (node && node.textContent === 'Unsaved changes') node.textContent = '';
+      }
     }
 
     // The catalogue count and the add button both depend on WhatsApp's limit, so
@@ -663,6 +710,18 @@
       var id = product.getAttribute('data-product-id');
       var saveButton = product.querySelector('[data-role="save"]');
       if (!saveButton) return;
+
+      // Any edit inside this card is unsaved until its save button is used. The
+      // listener sits on the card so repainted price inputs are covered too.
+      ['input', 'change'].forEach(function (eventName) {
+        product.addEventListener(eventName, function (event) {
+          var target = event.target;
+          if (!target || !target.tagName) return;
+          if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' &&
+              target.tagName !== 'SELECT') return;
+          markDirty(product, true);
+        });
+      });
 
       // The price boxes are rendered from the saved unit sizes, so a size added
       // in the editor has to be repainted here. Without this its price box only
@@ -801,6 +860,7 @@
             // price box straight away instead of on the next page load.
             paintPrices(wanted);
             note(product, 'Saved', 'is-ok');
+            markDirty(product, false);
             toast('Saved “' + name + '”.', 'ok');
             var priced = Array.prototype.slice.call(product.querySelectorAll('[data-role="price"]'))
               .every(function (input) { return input.value.trim() !== ''; });
@@ -898,6 +958,8 @@
                 }
                 toast('Restored to the catalogue.', 'ok',
                       'Reloading so the product appears with its saved details.');
+                // This reload is intentional, so it must not trip the guard.
+                navigatingOnPurpose = true;
                 window.setTimeout(function () { window.location.reload(); }, 700);
               })
               .catch(function () {
@@ -1073,6 +1135,7 @@
             toast('Added “' + name + '” to the catalogue.', 'ok');
             // A full reload keeps every card, price input and limit consistent
             // with what the server just stored.
+            navigatingOnPurpose = true;
             window.location.reload();
           })
           .catch(function () {
@@ -1084,6 +1147,15 @@
     }
 
     applyLimits(null);
+
+    // Closing the tab or reloading with unsaved catalogue edits loses them
+    // silently, so the browser is asked to confirm first.
+    window.addEventListener('beforeunload', function (event) {
+      if (navigatingOnPurpose || dirtyCards <= 0) return;
+      event.preventDefault();
+      // Some browsers still need returnValue set to show their own prompt.
+      event.returnValue = '';
+    });
   }
 
   /* --------------------------------------------------------- activity log */

@@ -26,36 +26,48 @@
     <div class="crm-topbar">
         <span class="ps-eyebrow"><i class="bi bi-headset"></i> CRM Portal</span>
 
-        <nav class="crm-tabs" role="tablist">
-            <button class="crm-tab is-active" type="button" data-crm-tab="inbox" role="tab">
-                <i class="bi bi-chat-dots-fill"></i>
-                <span class="crm-tab-text">
-                    <span class="crm-tab-full">Inbox</span><span class="crm-tab-short">Inbox</span>
-                    <span class="crm-tab-count" data-stat="stat_unattended">{{ stat_unattended }}</span>
-                </span>
-            </button>
-            <button class="crm-tab" type="button" data-crm-tab="analytics" role="tab">
-                <i class="bi bi-graph-up-arrow"></i>
-                <span class="crm-tab-text">
-                    <span class="crm-tab-full">Sales analytics</span><span class="crm-tab-short">Analytics</span>
-                </span>
-            </button>
-            <button class="crm-tab" type="button" data-crm-tab="products" role="tab">
-                <i class="bi bi-box-seam-fill"></i>
-                <span class="crm-tab-text">
-                    <span class="crm-tab-full">Products &amp; pricing</span><span class="crm-tab-short">Products</span>
-                </span>
-            </button>
-            <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity">
+        {# The tablist holds only tabs. The activity log opens a dialog rather than
+           switching a view, so it sits beside the tablist instead of inside it. #}
+        <div class="crm-tabs">
+            <div class="crm-tablist" role="tablist" aria-label="CRM sections">
+                <button class="crm-tab is-active" type="button" id="crmTabInbox"
+                        data-crm-tab="inbox" role="tab" aria-selected="true" tabindex="0"
+                        aria-controls="crmViewInbox">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    <span class="crm-tab-text">
+                        <span class="crm-tab-full">Inbox</span><span class="crm-tab-short">Inbox</span>
+                        <span class="crm-tab-count" data-stat="stat_unattended">{{ stat_unattended }}</span>
+                    </span>
+                </button>
+                <button class="crm-tab" type="button" id="crmTabAnalytics"
+                        data-crm-tab="analytics" role="tab" aria-selected="false" tabindex="-1"
+                        aria-controls="crmViewAnalytics">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span class="crm-tab-text">
+                        <span class="crm-tab-full">Sales analytics</span><span class="crm-tab-short">Analytics</span>
+                    </span>
+                </button>
+                <button class="crm-tab" type="button" id="crmTabProducts"
+                        data-crm-tab="products" role="tab" aria-selected="false" tabindex="-1"
+                        aria-controls="crmViewProducts">
+                    <i class="bi bi-box-seam-fill"></i>
+                    <span class="crm-tab-text">
+                        <span class="crm-tab-full">Products &amp; pricing</span><span class="crm-tab-short">Products</span>
+                    </span>
+                </button>
+            </div>
+            <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity"
+                    aria-haspopup="dialog">
                 <i class="bi bi-clock-history"></i>
                 <span class="crm-tab-text">
                     <span class="crm-tab-full">Activity log</span><span class="crm-tab-short">Activity</span>
                 </span>
             </button>
-        </nav>
+        </div>
     </div>
 
-    <section class="crm-view is-active" data-crm-view="inbox">
+    <section class="crm-view is-active" id="crmViewInbox" data-crm-view="inbox"
+             role="tabpanel" aria-labelledby="crmTabInbox">
     {# One compact bar carries the unattended count, the filter and the two
        presets, so the conversation list and thread get the height instead. #}
     <section class="ps-banner crm-banner-tight">
@@ -242,7 +254,8 @@
     </section>
 
     <!-- ======================================================== analytics -->
-    <section class="crm-view" data-crm-view="analytics">
+    <section class="crm-view" id="crmViewAnalytics" data-crm-view="analytics"
+             role="tabpanel" aria-labelledby="crmTabAnalytics">
         {# One compact toolbar rather than a panel with its own header: three
            selects do not need a title bar above them. #}
         <div class="ps-panel crm-filters-panel">
@@ -408,7 +421,8 @@
     </section>
 
     <!-- ========================================================= products -->
-    <section class="crm-view" data-crm-view="products">
+    <section class="crm-view" id="crmViewProducts" data-crm-view="products"
+             role="tabpanel" aria-labelledby="crmTabProducts">
         <div class="ps-panel">
             <div class="ps-panel-head">
                 <h3><i class="bi bi-box-seam-fill"></i> Product catalogue</h3>
