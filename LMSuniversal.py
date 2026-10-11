@@ -8,7 +8,7 @@ from db_helper import get_db, execute_query
 import numpy as np
 from mysql.connector import Error
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for, send_file,flash, make_response, after_this_request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pandas as pd
 from xhtml2pdf import pisa
 from email.mime.text import MIMEText
@@ -23698,6 +23698,28 @@ def _safe_scalar(query, params=None, default=0):
         return default
 
 
+# ------------------------------------------------------------- display times --
+# Timestamps are written by PostgreSQL's NOW() into naive TIMESTAMP columns and
+# the database runs in UTC, so a value read back is UTC with no tzinfo attached.
+# Formatting it directly shows UTC, which reads as two hours behind in Zimbabwe.
+DISPLAY_TZ_OFFSET = int(os.getenv("DISPLAY_TZ_OFFSET", "2"))
+
+
+def local_time(value):
+    """A stored UTC timestamp as local time, or None."""
+    if value is None:
+        return None
+    if value.tzinfo is not None:
+        value = value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value + timedelta(hours=DISPLAY_TZ_OFFSET)
+
+
+def fmt_time(value, pattern="%d %b %Y %H:%M"):
+    """A stored UTC timestamp formatted for display in local time."""
+    local = local_time(value)
+    return local.strftime(pattern) if local else ""
+
+
 # ------------------------------------------------------------ portal access --
 COMPANY_MODULES = [
     {"key": "leave", "title": "Leave Management", "icon": "bi-calendar2-check",
@@ -23962,23 +23984,43 @@ def portal_api_user(module=None):
 
 
 def company_system_stats():
-    """Headline numbers shown on the portal hub cards."""
+    """Headline numbers shown on the portal hub cards.
+
+    The counts are combined into one statement because the database is remote,
+    so the cost of this function is the number of round trips rather than the
+    amount of work: six separate counts cost six round trips for the same data.
+    """
     ensure_company_system_tables()
     pending_table = f"{COMPANY_SYSTEM_PREFIX}appspendingapproval"
-    return {
-        "stat_employees": _safe_scalar(f"SELECT COUNT(*) FROM {COMPANY_SYSTEM_TABLE}"),
-        "stat_pending_leave": _safe_scalar(f"SELECT COUNT(*) FROM {pending_table}"),
-        "stat_roles": _safe_scalar(f"SELECT COUNT(DISTINCT role) FROM {COMPANY_SYSTEM_TABLE}"),
-        "stat_unattended": _safe_scalar(
-            "SELECT COUNT(*) FROM whatsapp_chats WHERE company_reg = %s AND unattended = TRUE AND status <> 'closed'",
-            (COMPANY_SYSTEM_PREFIX,)),
-        "stat_open_chats": _safe_scalar(
-            "SELECT COUNT(*) FROM whatsapp_chats WHERE company_reg = %s AND status <> 'closed'",
-            (COMPANY_SYSTEM_PREFIX,)),
-        "stat_human_chats": _safe_scalar(
-            "SELECT COUNT(*) FROM whatsapp_chats WHERE company_reg = %s AND status = 'human'",
-            (COMPANY_SYSTEM_PREFIX,)),
+    stats = {
+        "stat_employees": 0,
+        "stat_pending_leave": 0,
+        "stat_roles": 0,
+        "stat_unattended": 0,
+        "stat_open_chats": 0,
+        "stat_human_chats": 0,
     }
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute(f"""
+                SELECT
+                    (SELECT COUNT(*) FROM {COMPANY_SYSTEM_TABLE}),
+                    (SELECT COUNT(*) FROM {pending_table}),
+                    (SELECT COUNT(DISTINCT role) FROM {COMPANY_SYSTEM_TABLE}),
+                    (SELECT COUNT(*) FROM whatsapp_chats
+                      WHERE company_reg = %s AND unattended = TRUE AND status <> 'closed'),
+                    (SELECT COUNT(*) FROM whatsapp_chats
+                      WHERE company_reg = %s AND status <> 'closed'),
+                    (SELECT COUNT(*) FROM whatsapp_chats
+                      WHERE company_reg = %s AND status = 'human')
+            """, (COMPANY_SYSTEM_PREFIX, COMPANY_SYSTEM_PREFIX, COMPANY_SYSTEM_PREFIX))
+            row = cursor.fetchone()
+        if row:
+            for key, value in zip(stats, row):
+                stats[key] = value or 0
+    except Exception as e:
+        print(f"portal stats query failed: {e}")
+    return stats
 
 
 def _crm_chats(filter_key="all", search=None):
@@ -24046,8 +24088,8 @@ def _crm_chats(filter_key="all", search=None):
             "handoff_reason": row[5],
             "unread_count": row[6] or 0,
             "last_message": row[7],
-            "last_message_at": row[8].strftime("%d %b %Y %H:%M") if row[8] else "",
-            "last_message_iso": row[8].isoformat() if row[8] else "",
+            "last_message_at": fmt_time(row[8], "%d %b %Y %H:%M"),
+            "last_message_iso": local_time(row[8]).isoformat() if row[8] else "",
             "assigned_to": row[9] or "",
             "is_staff": bool(row[10]),
             "kind": "inhouse" if row[10] else "shopping",
@@ -24467,7 +24509,7 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
             "amount": float(row[8]) if row[8] is not None else None,
             "delivery_method": row[9] or "delivery",
             "status": row[10] or "new",
-            "created_at": row[11].strftime("%d %b %Y %H:%M") if row[11] else "",
+            "created_at": fmt_time(row[11], "%d %b %Y %H:%M"),
             "wa_number": row[12] or "",
             "profile_name": row[13] or "",
         })
@@ -24596,8 +24638,8 @@ def activity_log_entries(period="today", category="all", employee=None,
             "target": row[7] or "",
             "details": row[8] or "",
             "ip_address": row[9] or "",
-            "created_at": row[10].strftime("%d %b %Y %H:%M") if row[10] else "",
-            "created_iso": row[10].isoformat() if row[10] else "",
+            "created_at": fmt_time(row[10], "%d %b %Y %H:%M"),
+            "created_iso": local_time(row[10]).isoformat() if row[10] else "",
         })
     return entries
 
@@ -24907,7 +24949,7 @@ def crm_removed_products():
                 FROM shop_product_removed ORDER BY removed_at DESC
             """)
             return [{"id": row[0], "name": row[1] or row[0], "removed_by": row[2] or "",
-                     "removed_at": row[3].strftime("%d %b %Y %H:%M") if row[3] else ""}
+                     "removed_at": fmt_time(row[3], "%d %b %Y %H:%M")}
                     for row in cursor.fetchall()]
     except Exception as e:
         print(f"removed products error: {e}")
@@ -25348,7 +25390,7 @@ def crm_chat_messages(chat_id):
                 'sender': row[1],
                 'type': row[2],
                 'body': row[3],
-                'at': row[4].strftime('%d %b, %H:%M') if row[4] else '',
+                'at': fmt_time(row[4], '%d %b, %H:%M'),
                 'failed': row[5] is False,
                 # The name the reply went out under, so the thread can show which
                 # member of staff answered rather than a generic "Agent".
@@ -25395,26 +25437,45 @@ def crm_chat_reply(chat_id):
     user, error = portal_api_user('crm')
     if error:
         return error
-    body = ((request.get_json(silent=True) or {}).get('message') or '').strip()
+    payload = request.get_json(silent=True) or {}
+    body = (payload.get('message') or '').strip()
     if not body:
         return jsonify({'success': False, 'message': 'Type a reply first.'}), 400
+    # An agent replying while the assistant is still answering is ambiguous: the
+    # customer would get the agent's message and then a bot reply to their next
+    # one. The portal asks which is wanted and sends the answer with the reply.
+    # 'bot' leaves the assistant answering, 'human' takes the chat over.
+    reply_mode = (payload.get('mode') or '').strip().lower()
+    if reply_mode not in ('bot', 'human'):
+        reply_mode = ''
 
     with get_db() as (cursor, connection):
-        cursor.execute("SELECT wa_number, channel FROM whatsapp_chats WHERE id = %s", (chat_id,))
+        cursor.execute("SELECT wa_number, channel, status FROM whatsapp_chats WHERE id = %s", (chat_id,))
         row = cursor.fetchone()
     if not row:
         return jsonify({'success': False, 'message': 'Conversation not found.'}), 404
 
     agent = f"{user['firstname']} {user['surname']}".strip()
+    if reply_mode:
+        # Applied before the send so the chat is in the chosen mode by the time
+        # the customer can see the message.
+        crm_set_chat_mode(chat_id, reply_mode, agent if reply_mode == 'human' else None)
+        if reply_mode == 'human':
+            log_activity("switched_to_human", "chat",
+                         f"Took over +{row[0]} when replying",
+                         target=f"+{row[0]}",
+                         details={"chat_id": chat_id, "via": "manual reply"}, user=user)
+
     sent, detail = crm_send_whatsapp(row[0], body, row[1])
     crm_record_message(row[0], 'outbound', 'agent', body, 'text',
                        channel=row[1], delivered=sent, sender_name=agent)
     log_activity("replied_to_customer", "chat",
                  f"Replied to +{row[0]}",
                  target=f"+{row[0]}",
-                 details={"message": body[:500], "delivered": bool(sent)},
-                 user=user)
+                 details={"message": body[:500], "delivered": bool(sent)}, user=user)
     response = {'success': True, 'delivered': sent}
+    if reply_mode:
+        response['mode'] = reply_mode
     if not sent:
         response['message'] = f"Saved to the conversation, but WhatsApp delivery failed: {detail}"
     return jsonify(response)

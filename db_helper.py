@@ -97,6 +97,12 @@ def get_db():
     try:
         pool = _get_pool()
         connection = pool.getconn()
+        # Autocommit avoids an explicit BEGIN and the rollback before reuse,
+        # which together cost two extra round trips per call. Against a remote
+        # database that dominates the cost of a read. Statements that write call
+        # connection.commit() themselves, which is a no-op in this mode.
+        if not connection.autocommit:
+            connection.autocommit = True
         cursor = connection.cursor()
         yield cursor, connection
     except Exception:
@@ -116,11 +122,8 @@ def get_db():
                 pass  # Ignore errors during cursor close
         if connection and pool:
             try:
-                # A pooled connection may still hold an open transaction, so it
-                # is rolled back before the next caller receives it. Anything the
-                # caller wanted kept was already committed by the caller.
-                if connection.get_transaction_status() != psycopg2.extensions.TRANSACTION_STATUS_IDLE:
-                    connection.rollback()
+                # Nothing is left open in autocommit, so the connection goes
+                # straight back to the pool.
                 pool.putconn(connection)
             except Exception:
                 _discard(connection, pool)
@@ -140,3 +143,36 @@ def get_db_cursor_only():
     """
     with get_db() as (cursor, _connection):
         yield cursor
+
+
+def execute_query(query, params=None, fetch_one=False, fetch_all=False, commit=False):
+    """
+    Helper function for single queries (non-context-based).
+
+    Args:
+        query: SQL query string
+        params: Tuple of parameters for the query
+        fetch_one: If True, returns one result
+        fetch_all: If True, returns all results
+        commit: If True, commits the transaction
+
+    Returns:
+        Query result or None depending on fetch flags
+
+    Example:
+        result = execute_query("SELECT * FROM users WHERE id = %s", (1,), fetch_one=True)
+    """
+    with get_db() as (cursor, connection):
+        cursor.execute(query, params or ())
+
+        if fetch_one:
+            result = cursor.fetchone()
+        elif fetch_all:
+            result = cursor.fetchall()
+        else:
+            result = None
+
+        if commit:
+            connection.commit()
+
+        return result

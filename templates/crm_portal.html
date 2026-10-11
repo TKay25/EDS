@@ -158,6 +158,15 @@
 
                 <div class="ps-thread-body crm-thread-body" id="crmThread" style="display:none;"></div>
 
+                {# Shown while a conversation's messages are being fetched, so a
+                   slow round trip does not look like a chat that failed to open. #}
+                <div class="ps-thread-body crm-thread-loading" id="crmThreadLoading" hidden>
+                    <div class="crm-thread-loading-inner" role="status" aria-live="polite">
+                        <span class="crm-spinner" aria-hidden="true"></span>
+                        <p>Loading messages…</p>
+                    </div>
+                </div>
+
                 <div class="ps-thread-body" id="crmEmpty">
                     <div class="ps-empty">
                         <i class="bi bi-chat-dots"></i>
@@ -184,6 +193,37 @@
                     </div>
                     <div class="crm-composer-note" id="crmComposerNote"></div>
                 </form>
+            </div>
+        </div>
+
+        {# Replying while the assistant is still answering is ambiguous, so the
+           choice is made explicit before the message goes out. #}
+        <div class="crm-mode-modal" id="crmModeModal" hidden>
+            <div class="crm-mode-card" role="dialog" aria-modal="true"
+                 aria-labelledby="crmModeTitle">
+                <h4 id="crmModeTitle">Send this reply</h4>
+                <p class="ps-muted" id="crmModePreview"></p>
+                <p class="ps-muted">
+                    The assistant is still answering this customer. Choose what should happen
+                    after your message.
+                </p>
+                <div class="crm-mode-actions">
+                    <button class="ps-btn ps-btn-primary" type="button" data-mode-choice="human">
+                        <i class="bi bi-person-fill"></i> Switch to human
+                    </button>
+                    <span class="crm-modal-hint">
+                        Take the chat over. The assistant stops replying until you return it to the bot.
+                    </span>
+                    <button class="ps-btn ps-btn-ghost" type="button" data-mode-choice="bot">
+                        <i class="bi bi-robot"></i> Stay in bot mode
+                    </button>
+                    <span class="crm-modal-hint">
+                        The assistant keeps handling this chat, so it will answer the customer's next message.
+                    </span>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" data-mode-choice="cancel">
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     </section>

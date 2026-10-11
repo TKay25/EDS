@@ -30,6 +30,7 @@
     var composerEl = document.getElementById('crmComposer');
     var composerNoteEl = document.getElementById('crmComposerNote');
     var replyInput = document.getElementById('crmReplyInput');
+    var threadLoadingEl = document.getElementById('crmThreadLoading');
     var searchEl = document.getElementById('crmChatSearch');
     var searchClearEl = document.getElementById('crmChatSearchClear');
     var searchHintEl = document.getElementById('crmSearchHint');
@@ -40,6 +41,10 @@
     var timer = null;
     var searchTerm = '';
     var searchTimer = null;
+    // The last rendered thread, so a background poll can skip a pointless
+    // repaint (and the scroll jump that comes with it).
+    var lastThreadHtml = null;
+    var lastListHtml = null;
 
     function statusChip(status, unattended) {
       var label = { bot: 'Assistant', escalated: 'Needs agent', human: 'Agent live', closed: 'Closed' }[status] || status;
@@ -59,7 +64,7 @@
           '</p></div>';
         return;
       }
-      listEl.innerHTML = chats.map(function (chat) {
+      var markup = chats.map(function (chat) {
         var initials = escapeHtml((chat.display_name || 'C').trim().slice(0, 2).toUpperCase());
         var preview = escapeHtml(chat.last_message || 'No messages yet');
         // Staff (leave management) and shopping conversations share one channel,
@@ -92,6 +97,12 @@
           '<div class="ps-chat-time">' + escapeHtml(chat.last_message_at || '') + '</div>' +
           '</div></div>';
       }).join('');
+
+      // Rebuilding the list drops the click handlers and the keyboard focus, so
+      // a background poll that produced identical markup is skipped entirely.
+      if (markup === lastListHtml) return;
+      lastListHtml = markup;
+      listEl.innerHTML = markup;
 
       Array.prototype.forEach.call(listEl.querySelectorAll('.ps-chat-item'), function (item) {
         item.addEventListener('click', function () {
@@ -186,18 +197,39 @@
 
     function openChat(chatId) {
       activeId = chatId;
+      // A different conversation always needs a full repaint.
+      lastThreadHtml = null;
       Array.prototype.forEach.call(listEl.querySelectorAll('.ps-chat-item'), function (item) {
         item.classList.toggle('is-active', item.getAttribute('data-chat-id') === String(chatId));
       });
       loadMessages();
     }
 
-    function loadMessages(silent) {
+    // While a conversation is loading, the empty state and the thread are hidden
+    // and the spinner takes their place, so a slow remote query is visibly work
+    // in progress rather than a click that appears to do nothing.
+    function showThreadLoading(show) {
+      if (!threadLoadingEl) return;
+      threadLoadingEl.hidden = !show;
+      if (show) {
+        if (emptyEl) emptyEl.style.display = 'none';
+        threadEl.style.display = 'none';
+        if (composerEl) composerEl.style.display = 'none';
+        nameEl.textContent = 'Loading…';
+        numberEl.textContent = '';
+      }
+    }
+
+    function loadMessages(silent, quiet) {
       if (!activeId) return;
+      // A non-quiet load is a deliberate open, so the spinner is shown while the
+      // round trip to the remote database is in flight.
+      if (!quiet) showThreadLoading(true);
       fetch('/api/crm/chats/' + activeId + '/messages')
         .then(function (response) { return response.json(); })
         .then(function (payload) {
-          if (!payload.success) return;
+          if (!payload.success) { if (!quiet) showThreadLoading(false); return; }
+          if (!quiet) showThreadLoading(false);
           emptyEl.style.display = 'none';
           // Must stay a flex column: the bubble sides are driven by align-self,
           // which 'block' silently disables and flattens every message left.
@@ -215,7 +247,7 @@
           // newest message sits at the bottom, which is how every messaging
           // app reads, and the view is scrolled there on load.
           var ordered = payload.messages.slice().reverse();
-          threadEl.innerHTML = ordered.length
+          var html = ordered.length
             ? ordered.map(function (message) {
                 var failed = message.failed && message.direction === 'outbound'
                   ? '<small class="crm-bubble-failed"><i class="bi bi-exclamation-triangle"></i>' +
@@ -232,9 +264,26 @@
                   '<small>' + escapeHtml(message.at) + '</small>' + failed + '</div>';
               }).join('')
             : '<div class="ps-empty"><p>No messages yet.</p></div>';
+
+          // A background refresh must not disturb an agent who is reading or
+          // typing: only repaint when the content actually changed, and only
+          // auto-scroll when the view was already at the bottom.
+          if (quiet) {
+            if (html === lastThreadHtml) return;
+            var atBottom = threadEl.scrollHeight - threadEl.scrollTop - threadEl.clientHeight < 60;
+            threadEl.innerHTML = html;
+            lastThreadHtml = html;
+            if (atBottom) threadEl.scrollTop = threadEl.scrollHeight;
+            return;
+          }
+          threadEl.innerHTML = html;
+          lastThreadHtml = html;
           threadEl.scrollTop = threadEl.scrollHeight;
         })
-        .catch(function () { if (!silent) console.warn('Could not load conversation'); });
+        .catch(function () {
+          if (!quiet) showThreadLoading(false);
+          if (!silent) console.warn('Could not load conversation');
+        });
     }
 
     function setMode(mode) {
@@ -275,21 +324,36 @@
     }
 
     if (composerEl) {
-      composerEl.addEventListener('submit', function (event) {
-        event.preventDefault();
-        var value = replyInput.value.trim();
-        if (!value || !activeId) return;
-        replyInput.value = '';
-        setComposerNotice('');
+      var modeModal = document.getElementById('crmModeModal');
+      var modePreview = document.getElementById('crmModePreview');
+      var pendingReply = '';
+
+      function closeModeModal() {
+        if (modeModal) modeModal.hidden = true;
+        pendingReply = '';
+      }
+
+      // sendReply performs the actual POST. mode is 'bot' or 'human' when the
+      // agent chose one, or '' when the chat is already theirs to answer.
+      function sendReply(value, mode) {
+        var payload = { message: value };
+        if (mode) payload.mode = mode;
         fetch('/api/crm/chats/' + activeId + '/reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: value })
+          body: JSON.stringify(payload)
         })
           .then(function (response) { return response.json(); })
-          .then(function (payload) {
-            if (payload && payload.delivered === false) {
-              setComposerNotice(payload.message || 'WhatsApp did not accept that message.', true);
+          .then(function (result) {
+            if (result && result.delivered === false) {
+              setComposerNotice(result.message || 'WhatsApp did not accept that message.', true);
+            }
+            if (payload.mode) {
+              // The chosen mode is now in force, so the header reflects it.
+              activeStatus = payload.mode;
+              if (statusEl) statusEl.innerHTML = statusChip(activeStatus, false);
+              if (reasonEl) reasonEl.textContent = '';
+              renderActions();
             }
             loadMessages(true);
             refresh(true);
@@ -297,6 +361,47 @@
           .catch(function () {
             setComposerNotice('Could not send the reply. Please try again.', true);
           });
+      }
+
+      if (modeModal) {
+        modeModal.addEventListener('click', function (event) {
+          var choice = event.target.closest('[data-mode-choice]');
+          if (choice) {
+            var picked = choice.getAttribute('data-mode-choice');
+            if (picked === 'cancel') { closeModeModal(); return; }
+            var text = pendingReply;
+            closeModeModal();
+            if (text) sendReply(text, picked);
+            return;
+          }
+          // A click on the backdrop dismisses without sending.
+          if (event.target === modeModal) closeModeModal();
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && modeModal && !modeModal.hidden) closeModeModal();
+        });
+      }
+
+      composerEl.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var value = replyInput.value.trim();
+        if (!value || !activeId) return;
+        setComposerNotice('');
+
+        // While the assistant is still answering, sending a manual message is
+        // ambiguous: the customer would get this reply and then a bot reply to
+        // whatever they say next. Ask which is intended before sending.
+        if (activeStatus !== 'human' && modeModal) {
+          pendingReply = value;
+          if (modePreview) modePreview.textContent = value;
+          modeModal.hidden = false;
+          var first = modeModal.querySelector('[data-mode-choice="human"]');
+          if (first) first.focus();
+          return;
+        }
+
+        replyInput.value = '';
+        sendReply(value, '');
       });
     }
 
@@ -342,7 +447,22 @@
     }
 
     refresh(false);
-    timer = window.setInterval(function () { refresh(true); if (activeId) loadMessages(true); }, 20000);
+    // Polling re-renders the list and reloads the open thread, and each request
+    // costs a round trip to a remote database, so it is skipped while the tab is
+    // in the background and does nothing when the payload is unchanged.
+    timer = window.setInterval(function () {
+      if (document.hidden) return;
+      refresh(true);
+      if (activeId) loadMessages(true, true);
+    }, 20000);
+    // Returning to the tab catches up straight away rather than waiting for the
+    // next tick, which would otherwise be up to twenty seconds of stale data.
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) {
+        refresh(true);
+        if (activeId) loadMessages(true, true);
+      }
+    });
     window.addEventListener('beforeunload', function () {
       window.clearInterval(timer);
       window.clearTimeout(searchTimer);
