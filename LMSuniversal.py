@@ -21595,7 +21595,7 @@ SHOP_TRANSLATIONS = {
         "Your Cart": "Ngoro Yako",
         " items": " zvinhu",
         " item": " chinhu",
-        "Add more products": "Wedzera zvimwe zvigadzirwa",
+        "Add more products": "Wedzera zvimwe",
         "Check out": "Bhadhara",
         "Empty the cart": "Bvisa zvose mungoro",
         "Change quantity — ": "Chinja huwandu — ",
@@ -21651,7 +21651,7 @@ SHOP_TRANSLATIONS = {
         "Office hours:": "Nguva dzebasa:",
         "Monday to Friday, 8:00 AM - 5:00 PM": "Muvhuro kusvika Chishanu, 8:00 mangwanani - 5:00 manheru",
         "Email:": "Email:",
-        "Message Brilliant Chemicals instead": "Tumira meseji kuBrilliant Chemicals",
+        "Message us instead": "Tumira meseji",
         "About Brilliant Chemicals (Pvt) Ltd": "NezveBrilliant Chemicals (Pvt) Ltd",
         "We are a Zimbabwean company, registered as *Vivid Chemicals*, that manufactures, markets and ":
             "Tiri kambani yekuZimbabwe yakanyoreswa se *Vivid Chemicals*, inogadzira nekutengesa ",
@@ -21726,8 +21726,6 @@ SHOP_TRANSLATIONS = {
             "Kubhadhara neEcoCash hakuna kugadzirirwa pano.",
         "We could not reach EcoCash just now.": "Hatina kukwanisa kubata EcoCash izvozvi.",
         "You can still place the order and pay later.": "Unogona kuisa odha wobhadha gare gare.",
-        "Pay now with EcoCash": "Bhadhara neEcoCash izvozvi",
-        "Place the order and pay later": "Isa odha ubhadhe gare gare",
         "Try EcoCash again": "Edza EcoCash zvakare",
         "Pay later instead": "Bhadhara gare gare",
         "I have authorised it": "Ndabvumidza kubhadhara",
@@ -21880,7 +21878,7 @@ SHOP_TRANSLATIONS = {
         "Office hours:": "Amahora omsebenzi:",
         "Monday to Friday, 8:00 AM - 5:00 PM": "NgoMvulo kusiya kuLwesihlanu, 8:00 ekuseni - 5:00 ntambama",
         "Email:": "I-email:",
-        "Message Brilliant Chemicals instead": "Thumela umlayezo kuBrilliant Chemicals",
+        "Message us instead": "Thumela umlayezo",
         "About Brilliant Chemicals (Pvt) Ltd": "Mayelana leBrilliant Chemicals (Pvt) Ltd",
         "We are a Zimbabwean company, registered as *Vivid Chemicals*, that manufactures, markets and ":
             "Siyinkampani yaseZimbabwe ebhaliswe njenge *Vivid Chemicals*, eyenza njalo ithengise ",
@@ -21955,11 +21953,9 @@ SHOP_TRANSLATIONS = {
             "Ukubhadala ngeEcoCash akulungiswanga lapha.",
         "We could not reach EcoCash just now.": "Sehlulekile ukufinyelela iEcoCash khathesi.",
         "You can still place the order and pay later.": "Ungafaka i-oda ubhadale ngesikhathi esizayo.",
-        "Pay now with EcoCash": "Bhadala ngeEcoCash khathesi",
-        "Place the order and pay later": "Faka i-oda ubhadale ngesikhathi esizayo",
         "Try EcoCash again": "Zama futhi ngeEcoCash",
-        "Pay later instead": "Bhadala ngesikhathi esizayo",
-        "I have authorised it": "Sengikuvumelile ukubhadala",
+        "Pay later instead": "Bhadala kamuva",
+        "I have authorised it": "Sengikuvumile",
         "Payment received": "Ukubhadala kwamukelwe",
         "is paid and confirmed.": "selibhadalwe laqinisekiswa.",
         "EcoCash reported the payment as *": "IEcoCash itshengisa ukuthi ukubhadala *",
@@ -22021,9 +22017,10 @@ SHOP_OPTION_TRANSLATIONS = {
         "Language": "Mutauro",
         "Browse products": "Ongorora zvigadzirwa",
         "Search products": "Tsvaga zvigadzirwa",
-        "Choose pack size": "Sarudza saizi yepakiti",
-        "Call Brilliant Chemicals": "Fonera Brilliant Chemicals",
-        "Message Brilliant Chemicals": "Tumira meseji kuBrilliant Chemicals",
+        "Choose pack size": "Sarudza saizi",
+        "Call us": "Tifonerei",
+        "Message us": "Titumirei meseji",
+        "Message us instead": "Titumirei meseji",
         "Shop our products": "Tenga zvigadzirwa zvedu",
         "Contact us": "Tibatei",
         "Browse all categories": "Ona zvikamu zvose",
@@ -22031,8 +22028,9 @@ SHOP_OPTION_TRANSLATIONS = {
         "Deliver to my address": "Ndiunzire kwaunogara",
         "Collect from the shop": "Ndichitora kuchitoro",
         "Back to cart": "Dzokera kungoro",
-        "Place the order and pay later": "Isa odha ubhadhe gare gare",
-        "Pay now with EcoCash": "Bhadhara neEcoCash izvozvi",
+        "Pay now via EcoCash": "Bhadhara neEcoCash",
+        "Pay on delivery": "Bhadhara pakusvitswa",
+        "Pay at the shop": "Bhadhara kuchitoro",
         "Try EcoCash again": "Edza EcoCash zvakare",
         "Pay later instead": "Bhadhara gare gare",
         "I have authorised it": "Ndabvumidza kubhadhara",
@@ -22054,9 +22052,10 @@ SHOP_OPTION_TRANSLATIONS = {
         "Language": "Ulimi",
         "Browse products": "Bona imikhiqizo",
         "Search products": "Dinga imikhiqizo",
-        "Choose pack size": "Khetha umkhulu wephakethe",
-        "Call Brilliant Chemicals": "Tshayela Brilliant Chemicals",
-        "Message Brilliant Chemicals": "Thumela umlayezo kuBrilliant Chemicals",
+        "Choose pack size": "Khetha umkhulu",
+        "Call us": "Sitshayeleni",
+        "Message us": "Sithumele umlayezo",
+        "Message us instead": "Sithumele umlayezo",
         "Shop our products": "Thenga imikhiqizo yethu",
         "Contact us": "Xhumana lathi",
         "Browse all categories": "Bona zonke izigaba",
@@ -22064,11 +22063,12 @@ SHOP_OPTION_TRANSLATIONS = {
         "Deliver to my address": "Ngilethela ekhabeni",
         "Collect from the shop": "Ngizothatha esitolo",
         "Back to cart": "Buyela enqoleni",
-        "Place the order and pay later": "Faka i-oda ubhadale ngesikhathi esizayo",
-        "Pay now with EcoCash": "Bhadala ngeEcoCash khathesi",
+        "Pay now via EcoCash": "Bhadala ngeEcoCash",
+        "Pay on delivery": "Bhadala lapho kulethwa",
+        "Pay at the shop": "Bhadala esitolo",
         "Try EcoCash again": "Zama futhi ngeEcoCash",
-        "Pay later instead": "Bhadala ngesikhathi esizayo",
-        "I have authorised it": "Sengikuvumelile ukubhadala",
+        "Pay later instead": "Bhadala kamuva",
+        "I have authorised it": "Sengikuvumile",
         "Empty the cart": "Khupha konke enqoleni",
         "My orders": "Ama-oda ami",
         "Yes, cancel it": "Yebo, khansela i-oda",
@@ -22106,14 +22106,14 @@ def _shop_translate_option(label, language):
     prefixes = {
         "sn": {
             "Change quantity — ": "Chinja huwandu — ",
+            "Qty — ": "Huwandu — ",
             "Remove — ": "Bvisa — ",
-            "Pay now with EcoCash — ": "Bhadhara neEcoCash izvozvi — ",
             "Cancel ": "Bvisa ",
         },
         "nd": {
             "Change quantity — ": "Ntshintsha inani — ",
+            "Qty — ": "Inani — ",
             "Remove — ": "Khupha — ",
-            "Pay now with EcoCash — ": "Bhadala ngeEcoCash khathesi — ",
             "Cancel ": "Khansela ",
         },
     }
@@ -22384,6 +22384,38 @@ def _shop_short_name(name):
     return name[len(prefix):] if name.startswith(prefix) else name
 
 
+# A translated choice can be a little longer than the English it replaces, and
+# the label is built before the language is known, so room is kept for the
+# longest translation so a label that fits in English still fits afterwards.
+SHOP_LABEL_TRANSLATION_HEADROOM = 3
+
+
+def _shop_cart_line_labels(cart):
+    """The per-line cart choices, named when a name is short and unique enough.
+
+    A WhatsApp list row holds 24 characters and a product name is free text an
+    administrator can type, so a name does not always fit beside an action. Two
+    pack sizes of one product would also produce two identical choices, so a
+    name is used only while every name in the cart fits and none repeats. The
+    style is settled once for the whole cart rather than line by line: a list
+    that mixed names and numbers would leave the customer guessing which line
+    each choice belonged to. The cart body numbers its lines, so the numbered
+    style always identifies one.
+    """
+    budget = WA_LIST_ROW_TITLE_LIMIT - SHOP_LABEL_TRANSLATION_HEADROOM
+    names = [_shop_short_name(item["name"]) for item in cart]
+    named = [(f"Qty — {name}", f"Remove — {name}") for name in names]
+    numbered = [(f"Change quantity — #{index + 1}", f"Remove — #{index + 1}")
+                for index in range(len(cart))]
+    usable = (len(set(names)) == len(names) and
+              all(max(len(qty), len(remove)) <= budget for qty, remove in named))
+    labels = {}
+    for index, (qty, remove) in enumerate(named if usable else numbered):
+        labels[f"qty:{index}"] = qty
+        labels[f"rm:{index}"] = remove
+    return labels
+
+
 def _shop_product_at(value):
     """Clamp a stored product position to a real product. Returns (product, index)."""
     entries = shop_all_products()
@@ -22569,11 +22601,10 @@ def _shop_cart_message(cart):
             [("shop", "Browse products"), ("search", "Search products")],
         )
     total = sum(item["qty"] for item in cart)
+    labels = _shop_cart_line_labels(cart)
     options = [("shop", "Add more products"), ("checkout", "Check out")]
-    options += [(f"qty:{index}", f"Change quantity — {_shop_short_name(item['name'])}")
-                for index, item in enumerate(cart)]
-    options += [(f"rm:{index}", f"Remove — {_shop_short_name(item['name'])} ({item['size']})")
-                for index, item in enumerate(cart)]
+    options += [(f"qty:{index}", labels[f"qty:{index}"]) for index in range(len(cart))]
+    options += [(f"rm:{index}", labels[f"rm:{index}"]) for index in range(len(cart))]
     options.append(("clear", "Empty the cart"))
     return _shop_options(
         f"🛒 *Your cart* — {total} item{'s' if total != 1 else ''}\n\n"
@@ -22615,8 +22646,8 @@ def _shop_search_results(cart, query):
 def _shop_support():
     return [_shop_options(
         "☎️ *Customer Support*\n\nHow would you like to contact Brilliant Chemicals Sales?",
-        [("support_call", "Call Brilliant Chemicals"),
-         ("support_msg", "Message Brilliant Chemicals"),
+        [("support_call", "Call us"),
+         ("support_msg", "Message us"),
          ("support_human", "Talk to a human")],
     )]
 
@@ -22729,8 +22760,15 @@ def _shop_preserved_command(command):
 SHOP_ORDER_PREFIX = "BC-"
 
 
-def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None):
-    """Rebuild the prompt for a step without consuming input (used by Back)."""
+def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
+                 display_name=None, language="en"):
+    """Rebuild the prompt for a step without consuming input.
+
+    Used by Back and by the language detour to put the customer back where they
+    were. Every step the engine can store in its history needs a branch here,
+    and each one reuses the engine's own prompt builder so the restored prompt
+    cannot drift from the one the customer first saw.
+    """
     ctx = ctx or {}
     customer = customer or {}
     if step == "category":
@@ -22745,6 +22783,8 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None):
         product, index = _shop_product_at(ctx.get("product", 0))
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
         return [_shop_text(f"📦 *{product['name']}* — {size}\n\nHow many units would you like?")]
+    if step == "cart_qty":
+        return [_shop_cart_qty_prompt()]
     if step == "search":
         return [_shop_search_prompt()]
     if step == "search_results":
@@ -22788,6 +22828,12 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None):
                            "Please include the suburb and any landmark that helps our driver find you.")]
     if step == "order_confirm":
         return _shop_order_confirmation(cart, customer)
+    if step == "payment":
+        return [_shop_payment_prompt(customer)]
+    if step == "pay_phone":
+        return [_shop_pay_phone_prompt(ctx.get("phone"))]
+    if step == "pay_wait":
+        return _shop_pay_wait_prompt(ctx.get("amount"))
     return [shop_greeting(cart, staff, display_name, language)]
 
 
@@ -22825,6 +22871,56 @@ def _shop_order_state_text(order):
 
 def _shop_money_text(amount):
     return f"{PAYNOW_CURRENCY} {amount:.2f}" if amount is not None else "to be confirmed"
+
+
+def _shop_pay_later_label(customer):
+    """Where the money will change hands, now that the fulfilment is known.
+
+    Both phrasings stay inside WhatsApp's 24-character list-row title limit,
+    which the longer "Place the order and pay later" did not.
+    """
+    delivering = (customer or {}).get("delivery_method") == "delivery"
+    return "Pay on delivery" if delivering else "Pay at the shop"
+
+
+def _shop_payment_options(customer):
+    """The two ways to pay, as short labels.
+
+    The amount deliberately stays in the message body rather than in the label:
+    a label long enough to carry it is clipped by WhatsApp before the customer
+    ever sees it.
+    """
+    return [
+        ("paynow", "Pay now via EcoCash"),
+        ("paylater", _shop_pay_later_label(customer)),
+    ]
+
+
+def _shop_payment_prompt(customer):
+    return _shop_options("How would you like to pay?", _shop_payment_options(customer))
+
+
+def _shop_cart_qty_prompt():
+    return _shop_text("How many units would you like?")
+
+
+def _shop_pay_phone_prompt(phone):
+    return _shop_text(
+        f"📱 Send the EcoCash prompt to which number?\n\n"
+        f"Reply *yes* to use *{phone}*, or type the number to use a different line.")
+
+
+def _shop_pay_wait_prompt(amount):
+    return [
+        _shop_text(
+            "📲 *Check your phone*\n\n"
+            f"An EcoCash prompt for *{PAYNOW_CURRENCY} {float(amount or 0):.2f}* "
+            "has been sent. Enter your EcoCash PIN to authorise the payment.\n\n"
+            "The prompt expires after a few minutes. I will confirm here as soon as it clears."),
+        _shop_options("Once you are done:",
+                      [("paid_check", "I have authorised it"),
+                       ("paylater", "Pay later instead")]),
+    ]
 
 
 def _shop_orders_menu(wa_number):
@@ -23056,7 +23152,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         if restored == "menu":
             return finish("menu", [greet()], new_history=[])
         return finish(restored, _shop_render(restored, restored_ctx, cart, customer,
-                                             staff, wa_number),
+                                             staff, wa_number, display_name, language),
                       new_ctx=restored_ctx, new_history=history[:-1])
 
     # --------------------------------------------------------- global commands
@@ -23071,7 +23167,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             restored_ctx = previous.get("ctx") or {}
             restored_messages = ([greet()] if restored_step == "menu" else
                                  _shop_render(restored_step, restored_ctx, cart, customer,
-                                              staff, wa_number))
+                                              staff, wa_number, display_name, language))
             restored_history = [] if restored_step == "menu" else history[:-1]
             return finish(
                 restored_step,
@@ -23107,7 +23203,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             f"📞 Call Brilliant Chemicals on {phones}.\n\n"
             f"Office hours: {COMPANY_SYSTEM_CONTACT['hours']}.\n"
             f"Email: {COMPANY_SYSTEM_CONTACT['email']}",
-            [("support_msg", "Message Brilliant Chemicals instead")])])
+            [("support_msg", "Message us instead")])])
 
     if low in ("support_msg", "message"):
         return result("support_msg", [_shop_text(
@@ -23190,7 +23286,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     # A number that is not on the current menu should never silently jump levels.
     if unmatched_number and step in ("category", "product", "size", "search_results", "cart", "about", "support", "orders", "order_cancel_confirm"):
-        prompt = _shop_render(step, ctx, cart, customer, staff, wa_number)
+        prompt = _shop_render(step, ctx, cart, customer, staff, wa_number, display_name, language)
         return finish(step, prompt + [_shop_text(
             f"🤔 *{command}* is not one of the options above. Please choose from the list, "
             "or use *B* to go back and *M* for the main menu.")])
@@ -23265,7 +23361,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             return result("cart", [_shop_cart_message(cart)])
         if low.startswith("qty:"):
             try:
-                return result("cart_qty", [_shop_text("How many units would you like?")],
+                return result("cart_qty", [_shop_cart_qty_prompt()],
                               new_ctx={"edit": int(low.split(":", 1)[1])})
             except ValueError:
                 return result("cart", [_shop_cart_message(cart)])
@@ -23352,10 +23448,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                         "🎉 *Order received*\n\n"
                         f"Thank you {customer.get('name', '')}! Your reference is *{reference}*.\n"
                         f"Order total: *{PAYNOW_CURRENCY} {total:.2f}*"),
-                    _shop_options(
-                        "How would you like to pay?",
-                        [("paynow", f"Pay now with EcoCash — {PAYNOW_CURRENCY} {total:.2f}"),
-                         ("paylater", "Place the order and pay later")]),
+                    _shop_payment_prompt(customer),
                 ], new_ctx=ctx)
 
             cart = []
@@ -23385,15 +23478,11 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                           new_history=[])
         if low in ("paynow", "pay", "ecocash") or low in affirmative_words:
             phone = str(customer.get("phone") or "").strip() or str(wa_number or "")
-            return result("pay_phone", [_shop_text(
-                f"📱 Send the EcoCash prompt to which number?\n\n"
-                f"Reply *yes* to use *{phone}*, or type the number to use a different line.")],
-                new_ctx=dict(ctx, phone=phone))
+            return result("pay_phone", [_shop_pay_phone_prompt(phone)],
+                          new_ctx=dict(ctx, phone=phone))
         if low in ("b", "back"):
             return result("order_confirm", _shop_order_confirmation(cart, customer))
-        return result("payment", [_shop_options(
-            "How would you like to pay?",
-            [("paynow", "Pay now with EcoCash"), ("paylater", "Place the order and pay later")])])
+        return result("payment", [_shop_payment_prompt(customer)])
 
     if step == "pay_phone":
         typed = (raw_input or "").strip()
@@ -23413,24 +23502,16 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 _shop_text(f"⚠️ {message}\n\nYou can still place the order and pay later."),
                 _shop_options("What would you like to do?",
                               [("paynow", "Try EcoCash again"),
-                               ("paylater", "Place the order and pay later")]),
+                               ("paylater", _shop_pay_later_label(customer))]),
             ], new_ctx=ctx)
         # The customer has now actually chosen EcoCash, so the method is recorded
         # here rather than left to the guess made when the order was saved.
         shop_payment_update(ctx.get("reference"), "pending", poll_url, ctx.get("amount"),
                             method="ecocash")
         cart = []
-        return result("pay_wait", [
-            _shop_text(
-                "📲 *Check your phone*\n\n"
-                f"An EcoCash prompt for *{PAYNOW_CURRENCY} {float(ctx.get('amount') or 0):.2f}* "
-                "has been sent. Enter your EcoCash PIN to authorise the payment.\n\n"
-                "The prompt expires after a few minutes. I will confirm here as soon as it clears."),
-            _shop_options("Once you are done:",
-                          [("paid_check", "I have authorised it"),
-                           ("paylater", "Pay later instead")]),
-        ], actions=[{"type": "escalate",
-                     "reason": f"EcoCash payment pending {ctx.get('reference')}"}])
+        return result("pay_wait", _shop_pay_wait_prompt(ctx.get("amount")),
+                      actions=[{"type": "escalate",
+                                "reason": f"EcoCash payment pending {ctx.get('reference')}"}])
 
     if step == "pay_wait":
         reference = ctx.get("reference")
@@ -23569,12 +23650,37 @@ def paynow_initiate(reference, amount, phone, customer=None, description=None):
         _shop_payment_event(reference, "initiate", "error", e)
         return False, "We could not reach EcoCash just now.", ""
 
-    success = bool(getattr(response, "success", False))
-    poll_url = getattr(response, "poll_url", "") or ""
-    error = getattr(response, "error", "") or ""
+    success = getattr(response, "success", False) is True
+
+    # The SDK's response classes declare their fields as bare annotations
+    # (`error = str`, `instructions = str`) and `__init__` returns early on an
+    # error, so those names fall back to the annotation itself. Reading one
+    # without this guard leaks the `str` type into a customer message and into a
+    # JSON response, which Flask then refuses to serialise.
+    def _field(name):
+        value = getattr(response, name, "")
+        return value if isinstance(value, str) else ""
+
+    # On an error the SDK also never stores the reason - that assignment sits
+    # after the early return - so the raw payload it keeps is the only place the
+    # gateway's own words survive.
+    raw = getattr(response, "data", None)
+    raw = raw if isinstance(raw, dict) else {}
+
+    def _raw(name):
+        value = raw.get(name, "")
+        if isinstance(value, (list, tuple)):
+            value = value[0] if value else ""
+        return value if isinstance(value, str) else ""
+
+    poll_url = _field("poll_url") or _raw("pollurl")
+    error = _field("error") or _raw("error")
+    # On success the SDK stores the text on `instruction`, singular, even though
+    # the class annotation is spelled `instructions`.
+    instructions = _field("instructions") or _field("instruction") or _raw("instructions")
     _shop_payment_event(reference, "initiate", "ok" if success else "error", error or poll_url)
     if success:
-        return True, getattr(response, "instructions", "") or "", poll_url
+        return True, instructions, poll_url
     return False, error or "EcoCash did not accept the request.", poll_url
 
 
@@ -23921,13 +24027,21 @@ def shop_nav_block(nav, language="en"):
     return "━━━━━━━━━━━━━━━\n" + _shop_translate_text("\n".join(lines), language)
 
 
-def shop_nav_options(nav, language="en"):
-    """Navigation choices offered alongside every prompt."""
+def shop_nav_options(nav, language="en", with_language=False):
+    """Navigation choices offered alongside every prompt.
+
+    Language is added only where the prompt carries no choices of its own.
+    WhatsApp allows three reply buttons and Back plus Main menu already take two,
+    so a prompt with a business choice would be pushed out of buttons and into a
+    list just to make room for it.
+    """
     options = []
     if nav and nav.get("back"):
         options.append({"id": "b", "label": _shop_translate_option("Back", language)})
     if nav and nav.get("menu"):
         options.append({"id": "m", "label": _shop_translate_option("Main menu", language)})
+    if with_language and options:
+        options.append({"id": "language", "label": _shop_translate_option("Language", language)})
     return options
 
 
@@ -24016,6 +24130,21 @@ def _wa_list_payload(body, options, nav_count=0, language="en"):
     }
 
 
+def _shop_offer_language(content_count, nav_count, must_list):
+    """Whether a Language shortcut can be added without changing the prompt.
+
+    WhatsApp allows three reply buttons and ten list rows, so the shortcut is
+    offered only where there is genuinely room for it: never by pushing a prompt
+    that fits in buttons into a list, and never by pushing a business choice out
+    of the rows and into the numbered text at the bottom instead.
+    """
+    if not nav_count:
+        return False
+    if not must_list and content_count + nav_count <= WA_BUTTON_LIMIT:
+        return content_count + nav_count + 1 <= WA_BUTTON_LIMIT
+    return content_count + nav_count + 1 <= WA_LIST_ROWS_MAX
+
+
 def shop_whatsapp_payloads(messages, nav=None, language="en"):
     """Render one assistant turn as WhatsApp buttons or a list.
 
@@ -24040,16 +24169,17 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
         parts.append(choice_text)
 
     content_options = list((choice or {}).get("options") or [])
+    # A prompt can insist on a list. The pack size choice does, because a product
+    # may offer up to ten sizes and reply buttons stop at three.
+    must_list = bool((choice or {}).get("force_list"))
     nav_options = shop_nav_options(nav, language)
+    if _shop_offer_language(len(content_options), len(nav_options), must_list):
+        nav_options = shop_nav_options(nav, language, with_language=True)
     options = content_options + nav_options
     body = "\n\n".join(parts)
 
     if not options:
         return [_wa_text_payload(body)] if body else []
-
-    # A prompt can insist on a list. The pack size choice does, because a product
-    # may offer up to ten sizes and reply buttons stop at three.
-    must_list = bool((choice or {}).get("force_list"))
 
     if not must_list and len(options) <= WA_BUTTON_LIMIT:
         prompt = body or _shop_translate_text("Choose an option:", language)
