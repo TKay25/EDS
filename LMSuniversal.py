@@ -21596,7 +21596,8 @@ SHOP_TRANSLATIONS = {
         " items": " zvinhu",
         " item": " chinhu",
         "Add more products": "Wedzera zvimwe",
-        "Check out": "Bhadhara",
+        "Check out": "Pedzisa kutenga",
+        "What would you like to do?": "Chii chaunoda kuita?",
         "Empty the cart": "Bvisa zvose mungoro",
         "Change quantity — ": "Chinja huwandu — ",
         "Remove — ": "Bvisa — ",
@@ -21833,7 +21834,8 @@ SHOP_TRANSLATIONS = {
         " items": " izinto",
         " item": " into",
         "Add more products": "Faka eminye imikhiqizo",
-        "Check out": "Bhada",
+        "Check out": "Qedela ukuthenga",
+        "What would you like to do?": "Ufuna ukwenzani?",
         "Empty the cart": "Khupha konke enqoleni",
         "Change quantity — ": "Ntshintsha inani — ",
         "Remove — ": "Khupha — ",
@@ -22753,6 +22755,11 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
 # Customers can always step back one menu or jump straight to the main menu.
 SHOP_BACK_WORDS = ("b", "back", "previous", "previous menu", "go back", "return")
 SHOP_MENU_WORDS = ("m", "menu", "main menu", "mainmenu", "home", "reset", "start", "restart", "0")
+# The cart's checkout choice is labelled in the customer's own language, so the
+# words on the button have to work when typed as well as tapped - the same
+# courtesy the menu and order-list words already get. Only the words that are
+# actually printed on the button, so nothing else gains a new meaning.
+SHOP_CHECKOUT_WORDS = ("check out", "pedzisa kutenga", "qedela ukuthenga")
 
 # Button ids and navigation words are the assistant's own vocabulary, not
 # something a customer typed. Shielding them from translation hides them from it:
@@ -23390,7 +23397,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if step == "orders":
         return result("orders", [_shop_orders_menu(wa_number)])
 
-    if low in ("checkout", "order"):
+    if low in ("checkout", "order") or low in SHOP_CHECKOUT_WORDS:
         if not cart:
             return result("cart", [_shop_cart_message(cart)])
         return result("order_name", [_shop_text("📝 Let's set up your order.\n\nWhat is your *full name*?")])
