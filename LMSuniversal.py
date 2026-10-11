@@ -21631,6 +21631,16 @@ SHOP_TRANSLATIONS = {
         " is unchanged.": " haina kuchinja.",
         "Not paid yet": "Haisati yabhadharwa",
         "Paid": "Yabhadharwa",
+        "Paid via EcoCash": "Yabhadharwa neEcoCash",
+        "Paid at the shop": "Yabhadharwa kuchitoro",
+        "Paid on delivery": "Yabhadharwa pakusvitswa",
+        "Paid by other means": "Yabhadharwa neimwe nzira",
+        "🚚 *Delivery is charged separately*":
+            "🚚 *Kutakura kunobhadharwa kwakasiyana*",
+        "The amount above covers the goods only. Our sales agent will send you the "
+        "delivery cost for your area here on WhatsApp before it is arranged.":
+            "Mari iri pamusoro iyi inongofukidza zvinhu chete. Mutengesi wedu achakutumira "
+            "mari yekutakura yenzvimbo yako pano paWhatsApp isati yarongwa.",
         "Fulfilled": "Yapiwa",
         "Cancelled": "Yabviswa",
         "Waiting for your EcoCash PIN": "Takamirira PIN yako yeEcoCash",
@@ -22000,6 +22010,17 @@ SHOP_TRANSLATIONS = {
         "Choose an option": "Khetha",
         "Choose an option:": "Khetha:",
         "Reply with a number for the rest:": "Phendula ngenombolo kokusele:",
+        "Paid": "Ikhokhelwe",
+        "Paid via EcoCash": "Ikhokhelwe ngeEcoCash",
+        "Paid at the shop": "Ikhokhelwe esitolo",
+        "Paid on delivery": "Ikhokhelwe lapho kulethwa",
+        "Paid by other means": "Ikhokhelwe ngendlela enye",
+        "🚚 *Delivery is charged separately*":
+            "🚚 *Ukulethwa kubhadalwa ngokwehlukile*",
+        "The amount above covers the goods only. Our sales agent will send you the "
+        "delivery cost for your area here on WhatsApp before it is arranged.":
+            "Imali engenhla ihlanganisa impahla kuphela. Umthengisi wethu uzakuthumelela "
+            "imali yokulethwa yendawo yakho lapha kuWhatsApp ngaphambi kokuba kuhlelwe.",
     },
 }
 
@@ -22824,8 +22845,7 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
                               [("delivery", "Deliver to my address"),
                                ("collection", "Collect from the shop")])]
     if step == "order_address":
-        return [_shop_text("📍 What is the *delivery address* for this order?\n\n"
-                           "Please include the suburb and any landmark that helps our driver find you.")]
+        return [_shop_order_address_prompt(customer)]
     if step == "order_confirm":
         return _shop_order_confirmation(cart, customer)
     if step == "payment":
@@ -22850,8 +22870,11 @@ def _shop_order_confirmation(cart, customer):
     ]
     if delivering:
         lines.append(f"*Delivery address:* {customer.get('delivery_address', '')}")
-    lines += ["", f"*Items:*\n{summary}", "", _shop_cart_total_line(cart), "",
-              "Place this order now?"]
+    lines += ["", f"*Items:*\n{summary}", "", _shop_cart_total_line(cart)]
+    note = _shop_delivery_note(customer)
+    if note:
+        lines += ["", note]
+    lines += ["", "Place this order now?"]
     return [_shop_options("\n".join(lines),
                           [("confirm_order", "Yes, submit"), ("cart", "Back to cart")])]
 
@@ -22861,7 +22884,10 @@ def _shop_order_state_text(order):
     if order["cancelled"]:
         return "Cancelled"
     if order["paid"]:
-        return "Paid"
+        # How the money was taken is part of what "paid" means to a customer
+        # checking their own order, so it is named whenever it is recorded.
+        label = _shop_payment_method_label(order.get("payment_method"))
+        return f"Paid {label}" if label else "Paid"
     if order["fulfilled"]:
         return "Fulfilled"
     if order["awaiting_pin"]:
@@ -22879,8 +22905,93 @@ def _shop_pay_later_label(customer):
     Both phrasings stay inside WhatsApp's 24-character list-row title limit,
     which the longer "Place the order and pay later" did not.
     """
-    delivering = (customer or {}).get("delivery_method") == "delivery"
-    return "Pay on delivery" if delivering else "Pay at the shop"
+    return "Pay on delivery" if _shop_paying_on_delivery(customer) else "Pay at the shop"
+
+
+def _shop_paying_on_delivery(customer):
+    return (customer or {}).get("delivery_method") == "delivery"
+
+
+def _shop_pay_later_method(customer):
+    """The stored method for an order the customer will pay in person.
+
+    Cash at the counter and cash on the doorstep are different events to the
+    business - one is taken before the goods leave, the other after - so the
+    record says which rather than a single vague "later".
+    """
+    return "delivery" if _shop_paying_on_delivery(customer) else "shop"
+
+
+# ------------------------------------------------------------------- payment --
+# The vocabulary stored on shop_orders.payment_method. EcoCash is settled by the
+# gateway; the rest are taken by hand, by whoever is holding the goods, so the
+# record has to say which one - otherwise neither a receipt nor the chatbot can
+# tell a customer where the money they handed over was taken.
+SHOP_PAYMENT_METHODS = ("ecocash", "shop", "delivery", "other")
+
+SHOP_PAYMENT_METHOD_LABELS = {
+    "ecocash": "via EcoCash",
+    "shop": "at the shop",
+    "delivery": "on delivery",
+    "other": "by other means",
+}
+
+# `later` is what an order was once saved with before the customer had chosen,
+# and `pay_later` spells the same thing; neither names a way of paying, so an
+# order carrying one is reported as having no recorded method rather than being
+# guessed at.
+SHOP_METHODLESS = ("", "later", "pay_later", "none", "unknown")
+
+
+def _shop_payment_method(value):
+    """A stored method reduced to the vocabulary above, or '' when it names none."""
+    text = str(value or "").strip().lower()
+    if text in SHOP_METHODLESS:
+        return ""
+    if "ecocash" in text or "paynow" in text:
+        return "ecocash"
+    for method in SHOP_PAYMENT_METHODS:
+        if method in text:
+            return method
+    return "other"
+
+
+def _shop_payment_method_label(value):
+    """What a badge says after "Paid", or '' when the method is not recorded."""
+    return SHOP_PAYMENT_METHOD_LABELS.get(_shop_payment_method(value), "")
+
+
+# Delivery is quoted separately because it depends on where the goods are going
+# and who is carrying them, so the cart total is for the goods alone. Saying so
+# before the money is paid is what stops a delivery charge reading as a surprise
+# on the doorstep.
+SHOP_DELIVERY_NOTE = (
+    "🚚 *Delivery is charged separately*\n"
+    "The amount above covers the goods only. Our sales agent will send you the "
+    "delivery cost for your area here on WhatsApp before it is arranged.")
+
+
+def _shop_delivery_note(customer):
+    """The delivery-cost note, or nothing when the customer is collecting."""
+    return SHOP_DELIVERY_NOTE if _shop_paying_on_delivery(customer) else ""
+
+
+def _shop_order_address_prompt(customer):
+    """The delivery-address question, with the delivery-cost note attached.
+
+    The note belongs here as much as anywhere: this is the moment the customer
+    has chosen delivery, so it is the first chance to say the total is for the
+    goods alone.
+    """
+    return _shop_text_with_note(
+        "📍 What is the *delivery address* for this order?\n\n"
+        "Please include the suburb and any landmark that helps our driver find you.",
+        _shop_delivery_note(customer))
+
+
+def _shop_text_with_note(text, note):
+    """One text message, with the note appended when there is one to give."""
+    return _shop_text("\n\n".join(part for part in (text, note) if part))
 
 
 def _shop_payment_options(customer):
@@ -23414,9 +23525,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if step == "order_fulfilment":
         if low in ("delivery", "deliver", "1") or "deliver" in low:
             customer["delivery_method"] = "delivery"
-            return result("order_address", [_shop_text(
-                "📍 What is the *delivery address* for this order?\n\n"
-                "Please include the suburb and any landmark that helps our driver find you.")])
+            return result("order_address", [_shop_order_address_prompt(customer)])
         if low in ("collection", "collect", "pickup", "pick up", "2") or "collect" in low:
             # No address to collect: the customer comes to us.
             customer["delivery_method"] = "collection"
@@ -23434,8 +23543,12 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         if low == "confirm_order" or low in affirmative_words:
             total = shop_cart_total(cart)
             can_pay = total is not None and paynow_configured()
+            # Without a gateway the customer pays whoever hands over the goods, so
+            # the method is already known. With one, it is chosen at the next step
+            # and written again there once it is.
             reference = _shop_save_order(state, channel, wa_number, customer,
-                                         payment_method="ecocash" if can_pay else "later",
+                                         payment_method="ecocash" if can_pay
+                                         else _shop_pay_later_method(customer),
                                          delivery_method=customer.get("delivery_method"))
             if not reference:
                 return result("order_confirm", [_shop_text(
@@ -23444,10 +23557,11 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             ctx = {"reference": reference, "amount": total}
             if can_pay:
                 return result("payment", [
-                    _shop_text(
+                    _shop_text_with_note(
                         "🎉 *Order received*\n\n"
                         f"Thank you {customer.get('name', '')}! Your reference is *{reference}*.\n"
-                        f"Order total: *{PAYNOW_CURRENCY} {total:.2f}*"),
+                        f"Order total: *{PAYNOW_CURRENCY} {total:.2f}*",
+                        _shop_delivery_note(customer)),
                     _shop_payment_prompt(customer),
                 ], new_ctx=ctx)
 
@@ -23468,7 +23582,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             # The order was saved as an EcoCash one because the gateway was
             # available. The customer has now chosen otherwise, so the record has
             # to be corrected rather than left claiming EcoCash.
-            shop_payment_update(reference, "pay_later", method="later")
+            shop_payment_update(reference, "pay_later", method=_shop_pay_later_method(customer))
             cart = []
             return result("menu", _shop_order_placed(reference, customer, ctx.get("amount"),
                                                      staff=staff, display_name=display_name,
@@ -23524,7 +23638,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 greet(),
             ], new_history=[])
         if low in ("paylater", "later", "pay later") or low in negative_words:
-            shop_payment_update(reference, "pay_later", method="later")
+            shop_payment_update(reference, "pay_later", method=_shop_pay_later_method(customer))
             cart = []
             return result("menu", _shop_order_placed(reference, customer, amount, paid=False,
                                                      staff=staff, display_name=display_name,
@@ -23532,7 +23646,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                           new_history=[])
         ok, paynow_status, _payload = paynow_poll(poll_url)
         if ok and paynow_status == "paid":
-            shop_payment_update(reference, "paid", paid=True)
+            shop_payment_update(reference, "paid", paid=True, method="ecocash")
             cart = []
             return result("menu", [
                 _shop_text(f"🎉 *Payment received* — thank you!\n\n"
@@ -23584,6 +23698,11 @@ def _shop_order_placed(reference, customer, amount=None, paid=False, staff=False
             lines.append(f"Bring it with you to collect from our shop"
                          + (f", and pay *{PAYNOW_CURRENCY} {float(amount or 0):.2f}* there."
                             if amount is not None else "."))
+        if delivering:
+            # The total is the goods only, so the delivery charge is named here
+            # rather than left to be discovered when the order arrives.
+            lines.append("")
+            lines.append(SHOP_DELIVERY_NOTE)
         lines.append("")
         lines.append(f"Our sales team will confirm "
                      + ("delivery arrangements" if delivering else "when your order is ready")
@@ -23678,7 +23797,11 @@ def paynow_initiate(reference, amount, phone, customer=None, description=None):
     # On success the SDK stores the text on `instruction`, singular, even though
     # the class annotation is spelled `instructions`.
     instructions = _field("instructions") or _field("instruction") or _raw("instructions")
-    _shop_payment_event(reference, "initiate", "ok" if success else "error", error or poll_url)
+    # The reason is not always in an `error` field, and the operator needs the
+    # gateway's own words to act on a refusal, so the raw payload is recorded
+    # when there is nothing readable in the parsed one.
+    _shop_payment_event(reference, "initiate", "ok" if success else "error",
+                        error or (poll_url if success else str(raw)[:400]))
     if success:
         return True, instructions, poll_url
     return False, error or "EcoCash did not accept the request.", poll_url
@@ -23694,8 +23817,12 @@ def paynow_poll(poll_url):
     except Exception as e:
         print(f"paynow poll error: {e}")
         return False, "", False
-    status = getattr(reply, "status", "") or ""
-    return True, str(status).strip().lower(), bool(getattr(reply, "paid", False))
+    # `paid` is only ever a real bool when the SDK's __init__ ran to completion;
+    # a missing one falls back to the class annotation, which is truthy, so the
+    # truth is required rather than merely checked.
+    status = getattr(reply, "status", "")
+    status = status.strip().lower() if isinstance(status, str) else ""
+    return True, status, getattr(reply, "paid", False) is True
 
 
 def shop_payment_update(reference, status, poll_url=None, amount=None, paid=False, method=None):
@@ -23832,7 +23959,9 @@ def order_payment_status(reference, refresh=True):
         ok, gateway_status, gateway_paid = paynow_poll(poll_url)
         if ok:
             if gateway_paid:
-                shop_payment_update(reference, "paid", amount=amount, paid=True)
+                # Settled by the gateway, so the money came in through EcoCash
+                # even if the order had been recorded as a pay-later one.
+                shop_payment_update(reference, "paid", amount=amount, paid=True, method="ecocash")
                 _shop_payment_event(reference, "poll", "paid", gateway_status)
                 log_activity("payment_received", "order",
                              f"EcoCash payment received for {reference}",
@@ -23851,15 +23980,56 @@ def order_payment_status(reference, refresh=True):
                 shop_payment_update(reference, gateway_status, amount=amount)
                 _shop_payment_event(reference, "poll", gateway_status, gateway_status)
                 status = gateway_status
+    method_key = _shop_payment_method(method)
     return {
         "reference": reference,
         "method": method or "",
+        "method_key": method_key,
+        "method_label": SHOP_PAYMENT_METHOD_LABELS.get(method_key, ""),
         "status": status,
         "paid": paid,
         "amount": float(amount) if amount is not None else None,
         "currency": PAYNOW_CURRENCY,
         "awaiting": bool(poll_url) and not paid and status not in ("cancelled", "failed"),
     }
+
+
+def order_record_payment(reference, method, user=None):
+    """Record money taken by hand for an order. Returns (ok, message).
+
+    EcoCash settles itself through the gateway and writes its own result, but cash
+    at the counter and cash on the doorstep are taken by a person, so the sales
+    team has to say which one happened. Without that the record cannot tell the
+    two apart, and the receipt printed afterwards would have no way of saying
+    where the money was taken.
+    """
+    reference = (reference or "").strip()
+    key = _shop_payment_method(method)
+    if not reference:
+        return False, "That order could not be found."
+    if not key:
+        return False, "Choose how the customer paid."
+    detail = order_detail(reference)
+    if not detail:
+        return False, "That order could not be found."
+    if detail["payment_status"] == "paid":
+        return False, "That order is already marked paid."
+
+    amount = detail.get("amount_charged")
+    if amount is None:
+        amount = detail.get("total")
+    if not shop_payment_update(reference, "paid", amount=amount, paid=True, method=key):
+        return False, "The payment could not be recorded just now."
+    _shop_payment_event(reference, "recorded_by_staff", "paid",
+                        f"{key} {amount if amount is not None else ''} {user or ''}".strip())
+    log_activity("recorded_payment", "order",
+                 f"Recorded {reference} as paid "
+                 f"{SHOP_PAYMENT_METHOD_LABELS.get(key, key)}",
+                 target=reference,
+                 details={"method": key, "amount": amount}, user=user)
+    return True, ("Recorded as paid "
+                  f"{SHOP_PAYMENT_METHOD_LABELS.get(key, key)}. The receipt can now be "
+                  "printed or sent to the customer.")
 
 
 def _shop_order_owner_key(number):
@@ -23897,7 +24067,8 @@ def shop_customer_orders(wa_number, limit=5):
                            AND items.unit_price IS NOT NULL),
                        (SELECT COUNT(*) FROM shop_order_items items
                          WHERE items.order_id = orders.id
-                           AND items.unit_price IS NULL)
+                           AND items.unit_price IS NULL),
+                       orders.payment_method
                 FROM shop_orders orders
                 WHERE orders.wa_number = %s
                 ORDER BY orders.created_at DESC NULLS LAST, orders.id DESC
@@ -23932,6 +24103,7 @@ def shop_customer_orders(wa_number, limit=5):
             "reference": row[0],
             "items": int(row[1] or 0),
             "payment_status": row[2] or "unpaid",
+            "payment_method": row[12],
             "status": row[3] or "new",
             "created_at": fmt_time(row[4], "%d %b %Y %H:%M"),
             "amount": amount,
@@ -26222,8 +26394,13 @@ def _pdf_download(html, filename):
 
 def _order_document_context(order, user):
     """Values shared by both printed documents."""
+    method_key = _shop_payment_method(order.get('payment_method'))
     return {
         'order': order,
+        # Both documents name how the money moved, from the one vocabulary, so a
+        # printed receipt cannot describe a payment differently to the chatbot.
+        'payment_method_key': method_key,
+        'payment_method_label': SHOP_PAYMENT_METHOD_LABELS.get(method_key, ''),
         'printed_at': local_time(datetime.utcnow()).strftime('%d %b %Y %H:%M'),
         'printed_by': f"{user.get('firstname', '')} {user.get('surname', '')}".strip(),
         'company_name': COMPANY_SYSTEM_NAME,
@@ -26317,6 +26494,23 @@ def crm_order_request_payment_api(reference):
                         'payment': order_payment_status(reference, refresh=False)}), 400
     return jsonify({'success': True,
                     'message': message or 'An EcoCash prompt was sent to the customer.',
+                    'payment': order_payment_status(reference, refresh=False)})
+
+
+@app.route('/api/crm/orders/<reference>/record-payment', methods=['POST'])
+def crm_order_record_payment_api(reference):
+    """Record money taken by hand: at the shop, on delivery, or otherwise."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    if not order_detail(reference):
+        return jsonify({'success': False, 'message': 'Order not found.'}), 404
+    ok, message = order_record_payment(reference, payload.get('method'), user)
+    if not ok:
+        return jsonify({'success': False, 'message': message,
+                        'payment': order_payment_status(reference, refresh=False)}), 400
+    return jsonify({'success': True, 'message': message,
                     'payment': order_payment_status(reference, refresh=False)})
 
 
@@ -26561,7 +26755,7 @@ def shop_paynow_callback(reference, data):
         return False
     _shop_payment_event(reference, "callback", status, data)
     if status == 'paid':
-        shop_payment_update(reference, 'paid', paid=True)
+        shop_payment_update(reference, 'paid', paid=True, method="ecocash")
         shop_send_whatsapp_reference(
             reference,
             "🎉 *Payment received* — thank you!\n\n"
@@ -26665,9 +26859,12 @@ def order_receipt_pdf(reference):
         # Pushed defensively: a payment confirmed by polling can be handled on a
         # background thread, where Flask has no application context to render in.
         with app.app_context():
+            method_key = _shop_payment_method(order.get('payment_method'))
             html = render_template(
                 'receipt_pdf.html',
                 order=order,
+                payment_method_key=method_key,
+                payment_method_label=SHOP_PAYMENT_METHOD_LABELS.get(method_key, ''),
                 printed_at=local_time(datetime.utcnow()).strftime('%d %b %Y %H:%M'),
                 printed_by='',
                 company_name=COMPANY_SYSTEM_NAME,

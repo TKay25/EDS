@@ -222,7 +222,7 @@
         </tr>
         <tr>
             <td class="label">Payment method</td>
-            <td>{{ 'EcoCash' if 'ecocash' in (order.payment_method or '') | lower else (order.payment_method or 'Not recorded') }}</td>
+            <td>{{ ('Paid ' + payment_method_label) if payment_method_label else (order.payment_method or 'Not recorded') }}</td>
             <td class="label">Fulfilment</td>
             <td>{{ 'Delivery to the customer' if order.delivery_method == 'delivery' else 'Collection from the shop' }}</td>
         </tr>

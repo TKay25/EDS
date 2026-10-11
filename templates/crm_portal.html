@@ -399,6 +399,29 @@
                 </div>
                 <div class="crm-order-body" id="crmOrderBody"></div>
                 <p class="crm-od-status" id="crmOrderNote"></p>
+                {# EcoCash settles itself through the gateway, but cash at the counter
+                   and cash on the doorstep are taken by a person, so the sales team
+                   says which one happened. Without it the record cannot tell the two
+                   apart and the receipt cannot say where the money was taken. #}
+                <div class="crm-order-settle" id="crmOrderSettle">
+                    <label for="crmOrderMethod">Record a payment taken by hand</label>
+                    <div class="crm-order-settle-row">
+                        <select id="crmOrderMethod" class="ps-input">
+                            <option value="shop">Cash at the shop</option>
+                            <option value="delivery">Cash on delivery</option>
+                            <option value="ecocash">EcoCash, taken at the counter</option>
+                            <option value="other">Another method</option>
+                        </select>
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                                id="crmOrderRecordPay" data-order-action="record-payment">
+                            <i class="bi bi-cash-coin"></i> Record payment
+                        </button>
+                    </div>
+                    <p class="crm-order-settle-hint">
+                        Use this when the customer pays in person. The receipt can be
+                        printed or sent once it is recorded.
+                    </p>
+                </div>
                 <div class="crm-order-actions">
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
                             data-order-action="delivery-note">

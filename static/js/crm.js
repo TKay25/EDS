@@ -388,6 +388,9 @@
       var cls = status === 'paid' ? 'is-paid' : 'is-unpaid';
       var label = { paid: 'Paid', pending: 'Awaiting PIN', cancelled: 'Cancelled',
                     failed: 'Failed', unpaid: 'Not paid' }[status] || status;
+      // How the money was taken is part of what "paid" means to whoever reads
+      // the order, so it is named whenever the record has it.
+      if (status === 'paid' && payment.method_label) label = 'Paid ' + payment.method_label;
       return '<span class="crm-pill ' + cls + '">' + escapeHtml(label) + '</span>';
     }
 
@@ -451,8 +454,11 @@
       var requestBtn = document.getElementById('crmOrderRequestPay');
       var receiptBtn = document.getElementById('crmOrderReceipt');
       var sendBtn = document.getElementById('crmOrderSendReceipt');
+      var settleEl = document.getElementById('crmOrderSettle');
       var noteEl = document.getElementById('crmOrderNote');
 
+      // Nothing to record once the money is already accounted for.
+      if (settleEl) settleEl.hidden = paid;
       if (requestBtn) {
         // Nothing to request once it is settled, and no point while the customer
         // already has a prompt on their handset.
@@ -467,14 +473,16 @@
       if (sendBtn) sendBtn.disabled = !paid;
       if (noteEl) {
         if (paid) {
-          noteEl.textContent = 'Paid ' + (order.paid_at || '') +
+          var how = (payment && payment.method_label) ? ' ' + payment.method_label : '';
+          noteEl.textContent = 'Paid' + how + ' ' + (order.paid_at || '') +
             '. The receipt can be printed or emailed to the customer.';
           noteEl.className = 'crm-od-status is-ok';
         } else if (awaiting) {
           noteEl.textContent = 'An EcoCash prompt was sent to the customer.';
           noteEl.className = 'crm-od-status';
         } else {
-          noteEl.textContent = 'Not paid. Send the EcoCash prompt when the customer is ready to pay.';
+          noteEl.textContent = 'Not paid. Send the EcoCash prompt, or record the payment ' +
+            'here if the customer pays in person.';
           noteEl.className = 'crm-od-status';
         }
       }
@@ -548,7 +556,7 @@
                 window.crmToast && window.crmToast(
                   result.message || (result.success ? 'Receipt sent.' : 'Could not send the receipt.'),
                   result.success ? 'success' : 'error');
-                if (result.success) refresh(true);
+                if (result.success) load(true);
               })
               .catch(function () {
                 action.disabled = false;
@@ -572,6 +580,24 @@
               .catch(function () {
                 action.disabled = false;
                 window.crmToast && window.crmToast('Could not request payment.', 'error');
+              });
+            return;
+          }
+          if (kind === 'record-payment') {
+            var methodEl = document.getElementById('crmOrderMethod');
+            action.disabled = true;
+            postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/record-payment',
+                     { method: methodEl ? methodEl.value : 'shop' })
+              .then(function (result) {
+                action.disabled = false;
+                window.crmToast && window.crmToast(
+                  result.message || (result.success ? 'Payment recorded.' : 'Could not record the payment.'),
+                  result.success ? 'success' : 'error');
+                if (result.success) { loadOrder(orderRef, true); load(true); }
+              })
+              .catch(function () {
+                action.disabled = false;
+                window.crmToast && window.crmToast('Could not record the payment.', 'error');
               });
             return;
           }
