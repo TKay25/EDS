@@ -1,2 +1,6 @@
 # Artifacto — generated semantic artifacts (auto-updated by plugin)
 artifacts/
+
+# Local secrets: business keys live in the host's environment, never in git.
+.env
+.env.*

@@ -58,6 +58,32 @@
 
   window.crmToast = toast;
 
+  // Shows a spinner on a button while its request is in flight, then restores
+  // the original label. The catalogue save is several chained requests, so the
+  // button would otherwise sit looking dead and invite a second click.
+  function setBusy(button, busy, label) {
+    if (!button) return;
+    if (busy) {
+      if (!button.hasAttribute('data-idle-html')) {
+        button.setAttribute('data-idle-html', button.innerHTML);
+      }
+      button.disabled = true;
+      button.classList.add('is-busy');
+      button.setAttribute('aria-busy', 'true');
+      button.innerHTML = '<span class="crm-spinner is-btn" aria-hidden="true"></span>' +
+        escapeHtml(label || button.getAttribute('data-busy-label') || 'Saving…');
+      return;
+    }
+    button.disabled = false;
+    button.classList.remove('is-busy');
+    button.removeAttribute('aria-busy');
+    var idle = button.getAttribute('data-idle-html');
+    if (idle !== null) {
+      button.innerHTML = idle;
+      button.removeAttribute('data-idle-html');
+    }
+  }
+
   function money(value) {
     var number = Number(value);
     if (!isFinite(number)) return CURRENCY + ' 0.00';
@@ -191,10 +217,19 @@
       });
     }
 
+    function emptyState(icon, title, hint) {
+      return '<div class="crm-empty-state is-compact">' +
+        '<span class="crm-empty-icon"><i class="bi ' + icon + '"></i></span>' +
+        '<p class="crm-empty-title">' + title + '</p>' +
+        '<p class="crm-empty-hint">' + hint + '</p>' +
+        '</div>';
+    }
+
     function renderTop(items) {
       if (!topEl) return;
       if (!items || !items.length) {
-        topEl.innerHTML = '<p class="ps-muted crm-empty-note">No orders in this period yet.</p>';
+        topEl.innerHTML = emptyState('bi-bar-chart-line', 'Nothing sold in this period',
+          'Widen the period above to see what is moving.');
         return;
       }
       var peak = items.reduce(function (max, item) { return Math.max(max, item.units); }, 0) || 1;
@@ -202,7 +237,7 @@
         var width = Math.max(6, Math.round((item.units / peak) * 100));
         return '<div class="crm-top-item">' +
           '<div class="crm-top-head"><strong>' + escapeHtml(item.product) + '</strong>' +
-          '<span>' + item.units + ' units</span></div>' +
+          '<span class="crm-top-units">' + item.units + ' units</span></div>' +
           '<div class="crm-bar"><i style="width:' + width + '%"></i></div>' +
           '</div>';
       }).join('');
@@ -211,17 +246,19 @@
     function renderRecent(orders) {
       if (!recentEl) return;
       if (!orders || !orders.length) {
-        recentEl.innerHTML = '<p class="ps-muted crm-empty-note">No orders in this period yet.</p>';
+        recentEl.innerHTML = emptyState('bi-inbox', 'No orders in this period',
+          'Orders taken by the assistant land here straight away.');
         return;
       }
       recentEl.innerHTML = orders.slice(0, 5).map(function (order) {
         var who = order.customer_name || order.company || ('+' + order.wa_number);
+        var paid = order.payment_status === 'paid';
         return '<div class="crm-order-row">' +
           '<div class="crm-order-row-main"><strong>' + escapeHtml(who) + '</strong>' +
           '<small>' + escapeHtml(order.reference) + ' • ' + order.items + ' items • ' +
           escapeHtml(order.created_at) + '</small></div>' +
-          '<span class="crm-pill ' + (order.payment_status === 'paid' ? 'is-paid' : 'is-unpaid') + '">' +
-          (order.payment_status === 'paid' ? 'Paid' : 'Will pay') + '</span>' +
+          '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
+          (paid ? 'Paid' : 'Will pay') + '</span>' +
           '</div>';
       }).join('');
     }
@@ -229,7 +266,10 @@
     function renderTable(orders) {
       if (!bodyEl) return;
       if (!orders || !orders.length) {
-        bodyEl.innerHTML = '<tr><td colspan="7" class="crm-empty-cell">No orders match these filters.</td></tr>';
+        bodyEl.innerHTML = '<tr><td colspan="7" class="crm-empty-cell">' +
+          emptyState('bi-receipt-cutoff', 'No orders match these filters',
+            'Try All time, or clear the payment and fulfilment filters.') +
+          '</td></tr>';
         return;
       }
       var state = filters();
@@ -241,11 +281,14 @@
         var delivered = order.delivery_method === 'delivery';
         return '<tr data-reference="' + escapeHtml(order.reference) + '">' +
           '<td><span class="crm-ref">' + escapeHtml(order.reference) + '</span>' + address + '</td>' +
-          '<td>' + escapeHtml(who) + contact + '</td>' +
-          '<td>' + order.items + '</td>' +
+          '<td><span class="crm-who">' + escapeHtml(who) + '</span>' + contact + '</td>' +
+          '<td class="crm-col-num">' + order.items + '</td>' +
           '<td><span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
           (paid ? '<i class="bi bi-check2"></i> Paid' : '<i class="bi bi-clock"></i> Will pay') + '</span></td>' +
-          '<td>' + money(order.amount) + '</td>' +
+          '<td class="crm-col-num crm-amount">' +
+          (order.amount === null || order.amount === undefined
+            ? '<span class="crm-amount-unset">Not priced</span>'
+            : money(order.amount)) + '</td>' +
           '<td><div class="crm-row-actions">' +
           '<button class="crm-mini-btn' + (delivered ? ' is-active' : '') + '" type="button" ' +
           'data-fulfil="delivery" title="Delivered to the customer">Home</button>' +
@@ -258,7 +301,7 @@
           'title="Open this order to print documents or take payment">' +
           '<i class="bi bi-receipt"></i> Open</button>' +
           '</div></td>' +
-          '<td>' + escapeHtml(order.created_at) + '</td>' +
+          '<td class="crm-col-date">' + escapeHtml(order.created_at) + '</td>' +
           '</tr>';
       }).join('');
 
@@ -681,13 +724,13 @@
             return;
           }
         }
-        saveButton.disabled = true;
+        setBusy(saveButton, true, 'Saving…');
         postJson('/api/crm/products/' + encodeURIComponent(id), { name: name, summary: description })
           .then(function (result) {
             if (!result.success) {
               note(product, result.message || 'Could not save.', 'is-error');
               toast(result.message || 'Could not save the product.', 'error');
-              saveButton.disabled = false;
+              setBusy(saveButton, false);
               return null;
             }
             // Pack sizes are replaced first: removing a size would otherwise
@@ -729,7 +772,7 @@
             });
           })
           .then(function (ok) {
-            saveButton.disabled = false;
+            setBusy(saveButton, false);
             if (ok === null || ok === false) return;
             note(product, 'Saved', 'is-ok');
             toast('Saved “' + name + '”.', 'ok');
@@ -743,7 +786,7 @@
             }
           })
           .catch(function () {
-            saveButton.disabled = false;
+            setBusy(saveButton, false);
             note(product, 'Could not save the product.', 'is-error');
             toast('Could not save the product. Check your connection and try again.', 'error');
           });
@@ -757,11 +800,11 @@
                               'The assistant will stop offering it. You can restore it afterwards.')) {
             return;
           }
-          deleteButton.disabled = true;
+          setBusy(deleteButton, true, 'Removing…');
           postJson('/api/crm/products/' + encodeURIComponent(id) + '/delete', {})
             .then(function (result) {
               if (!result.success) {
-                deleteButton.disabled = false;
+                setBusy(deleteButton, false);
                 note(product, result.message || 'Could not remove it.', 'is-error');
                 toast(result.message || 'Could not remove the product.', 'error');
                 return;
@@ -778,7 +821,7 @@
               }
             })
             .catch(function () {
-              deleteButton.disabled = false;
+              setBusy(deleteButton, false);
               note(product, 'Could not remove the product.', 'is-error');
               toast('Could not remove the product.', 'error');
             });
@@ -819,11 +862,11 @@
           button.addEventListener('click', function () {
             var row = button.closest('li');
             var restoreId = row.getAttribute('data-product-id');
-            button.disabled = true;
+            setBusy(button, true, 'Restoring…');
             postJson('/api/crm/products/' + encodeURIComponent(restoreId) + '/restore', {})
               .then(function (result) {
                 if (!result.success) {
-                  button.disabled = false;
+                  setBusy(button, false);
                   toast(result.message || 'Could not restore it.', 'error');
                   return;
                 }
@@ -832,7 +875,7 @@
                 window.setTimeout(function () { window.location.reload(); }, 700);
               })
               .catch(function () {
-                button.disabled = false;
+                setBusy(button, false);
                 toast('Could not restore the product.', 'error');
               });
           });
@@ -984,14 +1027,14 @@
         }
 
         var submitButton = form.querySelector('button[type="submit"]');
-        if (submitButton) submitButton.disabled = true;
+        setBusy(submitButton, true, 'Adding…');
         postJson('/api/crm/products', {
           name: name,
           summary: description,
           sizes: sizes,
         })
           .then(function (result) {
-            if (submitButton) submitButton.disabled = false;
+            setBusy(submitButton, false);
             if (!result.success) {
               var message = result.message || 'Could not create the product.';
               if (addNote) addNote.textContent = message;
@@ -1007,7 +1050,7 @@
             window.location.reload();
           })
           .catch(function () {
-            if (submitButton) submitButton.disabled = false;
+            setBusy(submitButton, false);
             if (addNote) addNote.textContent = 'Could not create the product.';
             toast('Could not create the product. Check your connection and try again.', 'error');
           });

@@ -271,10 +271,38 @@
 
 /* ----------------------------------------------------------- analytics head
    Three selects plus labels do not fit on one line at tablet width, and the
-   labels were taller than the fields, causing a ragged wrap. */
-.crm-filters { align-items: flex-end; }
+   labels were taller than the fields, causing a ragged wrap. They now share a
+   single compact toolbar instead of a title bar above a body. */
+.crm-filters-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px 20px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+}
 
-.crm-filters .crm-field { min-width: 168px; }
+.crm-filters-bar .crm-filters { flex: 1 1 auto; }
+
+.crm-filters-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  align-self: flex-end;
+  padding-bottom: 11px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ps-text-soft);
+  white-space: nowrap;
+}
+
+.crm-filters-label i { color: var(--ps-accent); font-size: 0.82rem; }
+
+.crm-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+
+.crm-filters .crm-field { min-width: 158px; }
 
 .crm-filters .ps-input {
   padding: 9px 34px 9px 12px;
@@ -285,6 +313,15 @@
   border: 1px solid var(--ps-line);
   border-radius: var(--ps-radius-sm);
   cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.crm-filters .ps-input:hover { border-color: rgba(220, 20, 60, 0.32); }
+
+.crm-filters .ps-input:focus {
+  outline: none;
+  border-color: var(--ps-accent);
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.12);
 }
 
 
@@ -331,14 +368,6 @@
 .crm-composer-row { display: flex; gap: 10px; flex: 1; }
 
 /* --------------------------------------------------------- filter selects */
-.crm-filters {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.crm-filters-panel .crm-filters { align-items: flex-end; }
-
 .crm-field { display: flex; flex-direction: column; gap: 5px; min-width: 150px; }
 
 .crm-field > span {
@@ -369,27 +398,98 @@ select.ps-input {
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 20px;
   margin-bottom: 22px;
+  align-items: stretch;
 }
 
-.crm-empty-note { margin: 0; font-size: 0.78rem; }
+.crm-grid-2 > .ps-panel { display: flex; flex-direction: column; }
+.crm-grid-2 > .ps-panel > .ps-panel-body { flex: 1 1 auto; display: flex; flex-direction: column; }
 
-.crm-top-items { display: flex; flex-direction: column; gap: 12px; }
+/* --------------------------------------------------------- stat cards
+   The icon becomes a tinted chip so the card reads as an icon, a number and a
+   caption rather than three grey lines. */
+.crm-view[data-crm-view="analytics"] .ps-stats { gap: 14px; margin-bottom: 20px; }
 
-.crm-top-item { display: flex; flex-direction: column; gap: 6px; }
+.crm-view[data-crm-view="analytics"] .ps-stat {
+  padding: 16px 18px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.crm-view[data-crm-view="analytics"] .ps-stat:hover {
+  transform: translateY(-2px);
+  border-color: rgba(220, 20, 60, 0.2);
+  box-shadow: 0 14px 30px rgba(7, 16, 30, 0.09);
+}
+
+.crm-view[data-crm-view="analytics"] .ps-stat-label {
+  gap: 0;
+  margin-bottom: 12px;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+}
+
+.crm-view[data-crm-view="analytics"] .ps-stat-label i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+  border-radius: 9px;
+  background: var(--ps-accent-soft);
+  color: var(--ps-accent);
+  font-size: 0.85rem;
+}
+
+.crm-view[data-crm-view="analytics"] .ps-stat:nth-child(2) .ps-stat-label i {
+  background: rgba(29, 78, 216, 0.1);
+  color: #1D4ED8;
+}
+.crm-view[data-crm-view="analytics"] .ps-stat:nth-child(3) .ps-stat-label i {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+.crm-view[data-crm-view="analytics"] .ps-stat:nth-child(4) .ps-stat-label i {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7C3AED;
+}
+
+.crm-view[data-crm-view="analytics"] .ps-stat-value {
+  font-size: 1.6rem;
+  letter-spacing: -0.04em;
+}
+
+.crm-view[data-crm-view="analytics"] .ps-stat-note {
+  margin-top: 8px;
+  font-size: 0.73rem;
+}
+
+.crm-top-items { display: flex; flex-direction: column; gap: 14px; flex: 1 1 auto; }
+
+.crm-top-item { display: flex; flex-direction: column; gap: 7px; }
 
 .crm-top-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
 }
 
 .crm-top-head strong { color: var(--ps-text); font-weight: 600; }
-.crm-top-head span { color: var(--ps-text-soft); font-size: 0.76rem; font-weight: 600; }
+
+.crm-top-units {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--ps-surface-alt);
+  border: 1px solid var(--ps-line);
+  color: var(--ps-text-soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
 
 .crm-bar {
-  height: 8px;
+  height: 9px;
   border-radius: 999px;
   background: var(--ps-surface-alt);
   overflow: hidden;
@@ -400,9 +500,10 @@ select.ps-input {
   height: 100%;
   border-radius: 999px;
   background: var(--ps-gradient-accent);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.crm-order-list { display: flex; flex-direction: column; gap: 10px; }
+.crm-order-list { display: flex; flex-direction: column; gap: 10px; flex: 1 1 auto; }
 
 .crm-order-row {
   display: flex;
@@ -412,6 +513,12 @@ select.ps-input {
   border-radius: var(--ps-radius-sm);
   background: var(--ps-surface-alt);
   border: 1px solid var(--ps-line);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.crm-order-row:hover {
+  border-color: rgba(220, 20, 60, 0.22);
+  transform: translateX(2px);
 }
 
 .crm-order-row-main { flex: 1; min-width: 0; }
@@ -429,6 +536,53 @@ select.ps-input {
   color: var(--ps-text-soft);
   margin-top: 2px;
 }
+
+/* ------------------------------------------------------------ empty states
+   A blank panel with one grey line reads like something failed. This gives the
+   reader a reason and a next step instead. */
+.crm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 30px 18px;
+}
+
+.crm-empty-state.is-compact { padding: 22px 14px; }
+
+.crm-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 6px;
+  border-radius: 13px;
+  background: var(--ps-surface-alt);
+  border: 1px solid var(--ps-line);
+  color: var(--ps-text-soft);
+  font-size: 1.05rem;
+}
+
+.crm-empty-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ps-text);
+}
+
+.crm-empty-hint {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ps-text-soft);
+}
+
+/* The table's own empty row should not carry the table's row padding too. */
+.crm-empty-cell .crm-empty-state { padding: 26px 18px; }
+.crm-empty-cell { padding: 0 !important; }
 
 /* ---------------------------------------------------------------- tables */
 .crm-table-wrap { overflow-x: auto; }
@@ -457,6 +611,66 @@ select.ps-input {
 
 .crm-table tbody tr:last-child td { border-bottom: 0; }
 .crm-table tbody tr:hover { background: rgba(220, 20, 60, 0.025); }
+
+/* ------------------------------------------------- the orders table proper
+   Seven columns of similar-looking text is hard to scan, so the header sticks
+   while the list scrolls, alternating rows are tinted, numbers are aligned on
+   their digits, and the customer name is the one bold anchor per row. */
+.crm-orders-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--ps-surface-alt);
+  border-bottom: 1px solid var(--ps-line);
+}
+
+.crm-orders-table tbody tr:nth-child(even) { background: rgba(246, 248, 251, 0.6); }
+.crm-orders-table tbody tr:hover { background: rgba(220, 20, 60, 0.04); }
+
+.crm-orders-table td { padding: 14px 18px; }
+
+.crm-col-num { text-align: right; white-space: nowrap; }
+.crm-col-date { white-space: nowrap; color: var(--ps-text-soft); font-size: 0.75rem; }
+
+.crm-who { display: block; font-weight: 600; color: var(--ps-text); }
+
+.crm-amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ps-text);
+}
+
+/* An order with no price set is not worth nothing, so it must not read as
+   USD 0.00. */
+.crm-amount-unset {
+  font-weight: 500;
+  font-size: 0.73rem;
+  color: var(--ps-text-soft);
+  font-style: italic;
+}
+
+.crm-orders-table .crm-ref {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 7px;
+  background: var(--ps-surface-alt);
+  border: 1px solid var(--ps-line);
+  letter-spacing: -0.01em;
+  margin-bottom: 3px;
+}
+
+.crm-orders-table .crm-sub {
+  display: block;
+  font-size: 0.73rem;
+  color: var(--ps-text-soft);
+  margin-top: 2px;
+  max-width: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-orders-table .crm-row-actions { gap: 5px; }
 
 .crm-empty-cell {
   text-align: center;
@@ -872,6 +1086,37 @@ select.crm-select:focus {
   .crm-grid-2 { grid-template-columns: 1fr; }
 }
 
+/* On a phone the toolbar would otherwise stack three full-width selects under
+   their labels and push the numbers below the fold, so the label takes its own
+   line and the fields pair up. */
+@media (max-width: 720px) {
+  .crm-filters-bar { padding: 12px 14px; gap: 10px 12px; }
+
+  .crm-filters-label {
+    width: 100%;
+    align-self: flex-start;
+    padding-bottom: 0;
+  }
+
+  .crm-filters { gap: 10px; }
+
+  .crm-filters .crm-field { flex: 1 1 calc(50% - 5px); min-width: 0; }
+  .crm-filters .crm-field:first-child { flex: 1 1 100%; }
+
+  .crm-orders-table td, .crm-orders-table th { padding: 12px 14px; }
+
+  /* Four cards land 3 + 1 at this width, which looks accidental; two even
+     columns read as a deliberate block. */
+  .crm-view[data-crm-view="analytics"] .ps-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .crm-view[data-crm-view="analytics"] .ps-stat { padding: 14px 16px; }
+  .crm-view[data-crm-view="analytics"] .ps-stat-value { font-size: 1.4rem; }
+  .crm-view[data-crm-view="analytics"] .ps-stat-label i { width: 24px; height: 24px; }
+}
+
 @media (max-width: 620px) {
   .crm-select-wrap { width: 100%; }
   select.crm-select { flex: 1; min-width: 0; }
@@ -1025,29 +1270,32 @@ select.crm-select:focus {
 }
 
 /* ----------------------------------------------------------------- toasts -- */
-/* Fixed to the corner so a rejected save is visible wherever the agent is
-   looking, without a dialog that blocks the rest of the screen. */
+/* Fixed to the top centre so a rejected save is seen immediately, wherever the
+   agent's eye happens to be, without a dialog that blocks the screen. */
 .crm-toasts {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1200;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
-  max-width: min(380px, calc(100vw - 36px));
+  width: min(460px, calc(100vw - 24px));
   pointer-events: none;
 }
 .crm-toast {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  width: 100%;
   padding: 12px 14px;
   border-radius: 12px;
   background: var(--ps-surface);
   border: 1px solid var(--ps-line);
   border-left-width: 4px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
   font-size: 0.8rem;
   line-height: 1.4;
   pointer-events: auto;
@@ -1080,15 +1328,21 @@ select.crm-select:focus {
 .crm-toast.is-leaving { animation: crm-toast-out 0.2s ease forwards; }
 
 @keyframes crm-toast-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
   to { opacity: 1; transform: none; }
 }
 @keyframes crm-toast-out {
-  to { opacity: 0; transform: translateY(6px); }
+  to { opacity: 0; transform: translateY(-8px); }
 }
 
 @media (max-width: 620px) {
-  .crm-toasts { right: 10px; left: 10px; bottom: 10px; max-width: none; }
+  .crm-toasts {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1350,6 +1604,27 @@ select.crm-select:focus {
   animation: crm-spin 720ms linear infinite;
 }
 @keyframes crm-spin { to { transform: rotate(360deg); } }
+
+/* Inline variant for a button that is waiting on the server. It inherits the
+   button's text colour, so one rule works on the light and the dark buttons. */
+.crm-spinner.is-btn {
+  width: 13px;
+  height: 13px;
+  margin-right: 7px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-top-color: currentColor;
+  vertical-align: -2px;
+  animation: crm-spin 620ms linear infinite;
+}
+
+/* A busy button keeps its size so the row does not jump as the label changes. */
+.ps-btn.is-busy {
+  cursor: progress;
+  pointer-events: none;
+  opacity: 0.85;
+}
 @media (prefers-reduced-motion: reduce) {
   .crm-spinner { animation-duration: 1600ms; }
 }

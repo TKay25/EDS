@@ -231,11 +231,13 @@
 
     <!-- ======================================================== analytics -->
     <section class="crm-view" data-crm-view="analytics">
-        <div class="ps-panel">
-            <div class="ps-panel-head">
-                <h3><i class="bi bi-funnel-fill"></i> Filters</h3>
-            </div>
-            <div class="ps-panel-body crm-filters-panel">
+        {# One compact toolbar rather than a panel with its own header: three
+           selects do not need a title bar above them. #}
+        <div class="ps-panel crm-filters-panel">
+            <div class="crm-filters-bar">
+                <span class="crm-filters-label">
+                    <i class="bi bi-funnel-fill"></i> Filters
+                </span>
                 <div class="crm-filters">
                     <label class="crm-field">
                         <span>Period</span>
@@ -299,7 +301,11 @@
                 <div class="ps-panel-head"><h3><i class="bi bi-trophy-fill"></i> Top products</h3></div>
                 <div class="ps-panel-body">
                     <div class="crm-top-items" id="crmTopItems">
-                        <p class="ps-muted crm-empty-note">No orders in this period yet.</p>
+                        <div class="crm-empty-state is-compact">
+                            <span class="crm-empty-icon"><i class="bi bi-bar-chart-line"></i></span>
+                            <p class="crm-empty-title">Nothing sold in this period</p>
+                            <p class="crm-empty-hint">Widen the period above to see what is moving.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -307,12 +313,16 @@
             <div class="ps-panel">
                 <div class="ps-panel-head"><h3><i class="bi bi-clock-history"></i> Recent orders</h3></div>
                 <div class="ps-panel-body crm-order-list" id="crmRecentOrders">
-                    <p class="ps-muted crm-empty-note">No orders in this period yet.</p>
+                    <div class="crm-empty-state is-compact">
+                        <span class="crm-empty-icon"><i class="bi bi-inbox"></i></span>
+                        <p class="crm-empty-title">No orders in this period</p>
+                        <p class="crm-empty-hint">Orders taken by the assistant land here straight away.</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="ps-panel">
+        <div class="ps-panel crm-orders-panel">
             <div class="ps-panel-head">
                 <h3><i class="bi bi-table"></i> Orders in view</h3>
                 <div class="ps-panel-actions">
@@ -320,20 +330,29 @@
                 </div>
             </div>
             <div class="crm-table-wrap">
-                <table class="crm-table">
+                <table class="crm-table crm-orders-table">
                     <thead>
                         <tr>
                             <th>Reference</th>
                             <th>Customer</th>
-                            <th>Items</th>
+                            <th class="crm-col-num">Items</th>
                             <th>Payment</th>
-                            <th>Amount</th>
+                            <th class="crm-col-num">Amount</th>
                             <th>Fulfilment</th>
-                            <th>Placed</th>
+                            <th class="crm-col-date">Placed</th>
                         </tr>
                     </thead>
                     <tbody id="crmOrdersBody">
-                        <tr><td colspan="7" class="crm-empty-cell">No orders match these filters.</td></tr>
+                        <tr>
+                            <td colspan="7" class="crm-empty-cell">
+                                <div class="crm-empty-state is-compact">
+                                    <span class="crm-empty-icon"><i class="bi bi-receipt-cutoff"></i></span>
+                                    <p class="crm-empty-title">No orders match these filters</p>
+                                    <p class="crm-empty-hint">Try All time, or clear the payment and
+                                        fulfilment filters.</p>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

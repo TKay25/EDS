@@ -21265,6 +21265,11 @@ PAYNOW_RETURN_URL = os.getenv("PAYNOW_RETURN_URL", "https://eds-dfym.onrender.co
 PAYNOW_RESULT_URL = os.getenv("PAYNOW_RESULT_URL",
                               "https://eds-dfym.onrender.com/paynow/result/update")
 PAYNOW_CURRENCY = os.getenv("PAYNOW_CURRENCY", "USD")
+# Paynow rejects a mobile (EcoCash) transaction that carries no auth email, and
+# the chatbot never asks a WhatsApp customer for one. The company address stands
+# in: the prompt still goes to the customer's own handset and the PIN is still
+# entered there, so nothing about the customer's money changes.
+PAYNOW_AUTH_EMAIL = os.getenv("PAYNOW_AUTH_EMAIL", "echelonequipmentimports@gmail.com")
 
 # Basket prices per pack size, "product-id|size" -> amount, for example
 # SHOP_PRICES='{"foam-bath|500ml": 2.50}'. An unpriced cart can still be
@@ -22405,9 +22410,17 @@ def _shop_size_list(product, category_index):
     """The pack size prompt.
 
     Marked to always render as a WhatsApp list: a product may offer up to ten
-    sizes, and reply buttons stop at three.
+    sizes, and reply buttons stop at three. Each row shows the price when one has
+    been set, so the customer is not choosing blind.
     """
-    size_options = [(f"size:{index}", size) for index, size in enumerate(product["sizes"])]
+    def label(index, size):
+        unit = shop_price({"id": product["id"], "size": size})
+        if unit is None:
+            return size
+        return f"{size} — {PAYNOW_CURRENCY} {unit:.2f}"
+
+    size_options = [(f"size:{index}", label(index, size))
+                    for index, size in enumerate(product["sizes"])]
     prompt = _shop_options(
         f"📦 *{product['name']}*\n\nWhich pack size would you like?",
         size_options,
@@ -22416,11 +22429,57 @@ def _shop_size_list(product, category_index):
     return prompt
 
 
+def _shop_line_amounts(item):
+    """(unit_price, line_total) for a cart line. Either may be None.
+
+    A price is only ever shown when the business has actually set one, so the
+    assistant can never invent a figure for a customer.
+    """
+    unit = shop_price(item)
+    if unit is None:
+        return None, None
+    return unit, round(unit * int(item.get("qty") or 0), 2)
+
+
 def _shop_cart_summary(cart):
+    """The itemised basket, with money wherever a price has been set.
+
+    A line with no price says so rather than being left blank: an absent figure
+    beside a priced line reads as free, which is the wrong thing for a customer
+    to believe about a money document.
+    """
     lines = []
     for index, item in enumerate(cart, start=1):
-        lines.append(f"{index}. {item['name']} ({item['size']}) × {item['qty']}")
+        unit, line_total = _shop_line_amounts(item)
+        line = f"{index}. {item['name']} ({item['size']}) × {item['qty']}"
+        if unit is None:
+            line += "\n    _price on request_"
+        else:
+            line += (f"\n    {PAYNOW_CURRENCY} {unit:.2f} each — "
+                     f"*{PAYNOW_CURRENCY} {line_total:.2f}*")
+        lines.append(line)
     return "\n".join(lines)
+
+
+def _shop_cart_total_line(cart):
+    """The amount due, or an honest statement of what is still to be priced."""
+    total = shop_cart_total(cart)
+    if total is not None:
+        return f"*Total: {PAYNOW_CURRENCY} {total:.2f}*"
+
+    priced = 0.0
+    unpriced = 0
+    for item in cart or []:
+        unit, line_total = _shop_line_amounts(item)
+        if unit is None:
+            unpriced += 1
+        else:
+            priced += line_total
+    if priced:
+        return (f"*Priced so far: {PAYNOW_CURRENCY} {priced:.2f}*\n"
+                f"{unpriced} item{'s' if unpriced != 1 else ''} still to be priced — "
+                "our sales team will confirm.")
+    return "Our sales team will confirm the prices and the total on quotation."
 
 
 def _shop_cart_message(cart):
@@ -22439,7 +22498,8 @@ def _shop_cart_message(cart):
     return _shop_options(
         f"🛒 *Your cart* — {total} item{'s' if total != 1 else ''}\n\n"
         f"{_shop_cart_summary(cart)}\n\n"
-        "Our sales team confirms the final price on quotation. What would you like to do?",
+        f"{_shop_cart_total_line(cart)}\n\n"
+        "What would you like to do?",
         options,
     )
 
@@ -22627,7 +22687,8 @@ def _shop_order_confirmation(cart, customer):
     ]
     if delivering:
         lines.append(f"*Delivery address:* {customer.get('delivery_address', '')}")
-    lines += ["", f"*Items:*\n{summary}", "", "Place this order now?"]
+    lines += ["", f"*Items:*\n{summary}", "", _shop_cart_total_line(cart), "",
+              "Place this order now?"]
     return [_shop_options("\n".join(lines),
                           [("confirm_order", "Yes, submit"), ("cart", "Back to cart")])]
 
@@ -23192,8 +23253,19 @@ def paynow_initiate(reference, amount, phone, customer=None, description=None):
         return False, "EcoCash payments are not configured on this deployment.", ""
     customer = customer or {}
     try:
-        payment = client.create_payment(reference, customer.get("email") or "")
-        payment.add(description or f"Brilliant Chemicals order {reference}", float(amount))
+        amount = float(amount or 0)
+    except (TypeError, ValueError):
+        amount = 0
+    if amount <= 0:
+        # Paynow raises on a non-positive total, which would otherwise surface as
+        # a misleading "could not reach EcoCash".
+        return False, "There is no amount to charge for this order.", ""
+    # Paynow requires a non-empty auth email for mobile transactions, so a
+    # customer who never gave one falls back to the company address.
+    auth_email = (customer.get("email") or "").strip() or PAYNOW_AUTH_EMAIL
+    try:
+        payment = client.create_payment(reference, auth_email)
+        payment.add(description or f"Brilliant Chemicals order {reference}", amount)
         response = client.send_mobile(payment, phone, "ecocash")
     except Exception as e:
         print(f"paynow initiate error: {e}")
