@@ -21636,6 +21636,11 @@ SHOP_TRANSLATIONS = {
         "Paid at the shop": "Yabhadharwa kuchitoro",
         "Paid on delivery": "Yabhadharwa pakusvitswa",
         "Paid by other means": "Yabhadharwa neimwe nzira",
+        "Will pay": "Uchabhadhara",
+        "Will pay via EcoCash": "Uchabhadhara neEcoCash",
+        "Will pay on collection from the shop": "Uchabhadhara paunotora kuchitoro",
+        "Will pay on delivery": "Uchabhadhara pakusvitswa",
+        "Will pay by other means": "Uchabhadhara neimwe nzira",
         "🚚 *Delivery is charged separately*":
             "🚚 *Kutakura kunobhadharwa kwakasiyana*",
         "The amount above covers the goods only. Our sales agent will send you the "
@@ -22017,6 +22022,11 @@ SHOP_TRANSLATIONS = {
         "Paid at the shop": "Ikhokhelwe esitolo",
         "Paid on delivery": "Ikhokhelwe lapho kulethwa",
         "Paid by other means": "Ikhokhelwe ngendlela enye",
+        "Will pay": "Uzabhadala",
+        "Will pay via EcoCash": "Uzabhadala ngeEcoCash",
+        "Will pay on collection from the shop": "Uzabhadala lapho uthatha esitolo",
+        "Will pay on delivery": "Uzabhadala lapho kulethwa",
+        "Will pay by other means": "Uzabhadala ngendlela enye",
         "🚚 *Delivery is charged separately*":
             "🚚 *Ukulethwa kubhadalwa ngokwehlukile*",
         "The amount above covers the goods only. Our sales agent will send you the "
@@ -22893,13 +22903,15 @@ def _shop_order_state_text(order):
     if order["paid"]:
         # How the money was taken is part of what "paid" means to a customer
         # checking their own order, so it is named whenever it is recorded.
-        label = _shop_payment_method_label(order.get("payment_method"))
-        return f"Paid {label}" if label else "Paid"
+        return _shop_order_payment_badge(True, order.get("payment_method"))
     if order["fulfilled"]:
         return "Fulfilled"
     if order["awaiting_pin"]:
         return "Waiting for your EcoCash PIN"
-    return "Not paid yet"
+    # An unpaid order says where the money will be taken rather than only that it
+    # is outstanding, which is what the customer needs to know.
+    return _shop_order_payment_badge(False, order.get("payment_method"),
+                                     order.get("delivery_method"), order.get("payment_status"))
 
 
 def _shop_money_text(amount):
@@ -22943,6 +22955,17 @@ SHOP_PAYMENT_METHOD_LABELS = {
     "other": "by other means",
 }
 
+# What an order that has not been settled says about the money. A settled order
+# names where the money came in; an unsettled one names where it is going to be
+# taken, which reads as what the customer should expect to do.
+SHOP_PAYMENT_OUTLOOK = {
+    "ecocash": "Will pay via EcoCash",
+    "shop": "Will pay on collection from the shop",
+    "delivery": "Will pay on delivery",
+    "other": "Will pay by other means",
+}
+SHOP_PAYMENT_OUTLOOK_UNKNOWN = "Will pay"
+
 # `later` is what an order was once saved with before the customer had chosen,
 # and `pay_later` spells the same thing; neither names a way of paying, so an
 # order carrying one is reported as having no recorded method rather than being
@@ -22966,6 +22989,44 @@ def _shop_payment_method(value):
 def _shop_payment_method_label(value):
     """What a badge says after "Paid", or '' when the method is not recorded."""
     return SHOP_PAYMENT_METHOD_LABELS.get(_shop_payment_method(value), "")
+
+
+def _shop_payment_outlook(method, delivery_method=None, status=""):
+    """What an unsettled order says about how the money will be paid.
+
+    The method is recorded when the customer chooses it. Before that - an order
+    taken before the choice existed, or one whose EcoCash prompt was refused -
+    the fulfilment still says where the goods change hands, which is where the
+    money goes with them, and that is a truthful thing to promise.
+    """
+    key = _shop_payment_method(method)
+    settled_status = str(status or "").strip().lower()
+    if key == "ecocash":
+        if settled_status in ("cancelled", "failed"):
+            # A prompt that was refused or abandoned is no longer a plan.
+            key = ""
+        else:
+            return SHOP_PAYMENT_OUTLOOK["ecocash"]
+    if key in SHOP_PAYMENT_OUTLOOK:
+        return SHOP_PAYMENT_OUTLOOK[key]
+    handover = str(delivery_method or "").strip().lower()
+    if handover == "delivery":
+        return SHOP_PAYMENT_OUTLOOK["delivery"]
+    if handover == "collection":
+        return SHOP_PAYMENT_OUTLOOK["shop"]
+    return SHOP_PAYMENT_OUTLOOK_UNKNOWN
+
+
+def _shop_order_payment_badge(paid, method, delivery_method=None, status=""):
+    """The one line that says what the money is doing on an order.
+
+    Both the CRM and the chatbot read it from here, so a customer and the sales
+    person looking at the same order are never told different things.
+    """
+    if paid:
+        label = _shop_payment_method_label(method)
+        return f"Paid {label}" if label else "Paid"
+    return _shop_payment_outlook(method, delivery_method, status)
 
 
 # Delivery is quoted separately because it depends on where the goods are going
@@ -24001,6 +24062,62 @@ def order_payment_status(reference, refresh=True):
     }
 
 
+def order_payment_history(reference, limit=12):
+    """What has happened to one order's money, oldest first.
+
+    Nothing about a payment is treated as a single fact that overwrites the last
+    one: the events are kept so that a customer asking why an order is still
+    unpaid can be answered from the record rather than from memory.
+    """
+    reference = (reference or "").strip()
+    if not reference:
+        return []
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT event, status, payload, created_at
+                FROM shop_payment_events
+                WHERE reference = %s
+                ORDER BY created_at ASC NULLS LAST, id ASC
+                LIMIT %s
+            """, (reference, int(limit)))
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"payment history error: {e}")
+        return []
+    return [{"text": _shop_payment_event_text(row[0], row[1], row[2]),
+             "at": fmt_time(row[3], "%d %b %Y %H:%M")} for row in rows]
+
+
+def _shop_payment_event_text(event, status, payload):
+    """One line of that history, in the words the sales team would use."""
+    event = str(event or "").strip().lower()
+    status = str(status or "").strip().lower()
+    if event == "recorded_by_staff":
+        key = _shop_payment_method(str(payload or "").split(" ")[0])
+        return ("Marked received — paid " + SHOP_PAYMENT_METHOD_LABELS.get(key, "by hand"))
+    if event == "requested_from_portal":
+        return "EcoCash prompt sent from the portal"
+    if event == "initiate":
+        if status == "ok":
+            return "EcoCash prompt sent to the customer"
+        return ("EcoCash refused the request: "
+                + (str(payload or "").strip() or "no reason given"))
+    if event == "poll":
+        return {
+            "paid": "EcoCash confirmed the payment",
+            "pending": "Waiting for the customer to enter their PIN",
+            "cancelled": "The customer cancelled the EcoCash prompt",
+            "failed": "EcoCash reported the prompt as failed",
+        }.get(status, f"EcoCash reported “{status}”")
+    if event == "callback":
+        if status == "paid":
+            return "EcoCash reported the payment as settled"
+        return f"EcoCash sent an update: {status or 'no status'}"
+    return f"{event or 'payment'} — {status or 'no status'}".strip()
+
+
 def order_record_payment(reference, method, user=None):
     """Record money taken by hand for an order. Returns (ok, message).
 
@@ -24030,13 +24147,12 @@ def order_record_payment(reference, method, user=None):
     _shop_payment_event(reference, "recorded_by_staff", "paid",
                         f"{key} {amount if amount is not None else ''} {user or ''}".strip())
     log_activity("recorded_payment", "order",
-                 f"Recorded {reference} as paid "
+                 f"Marked {reference} received "
                  f"{SHOP_PAYMENT_METHOD_LABELS.get(key, key)}",
                  target=reference,
                  details={"method": key, "amount": amount}, user=user)
-    return True, ("Recorded as paid "
-                  f"{SHOP_PAYMENT_METHOD_LABELS.get(key, key)}. The receipt can now be "
-                  "printed or sent to the customer.")
+    return True, (f"Marked received — paid {SHOP_PAYMENT_METHOD_LABELS.get(key, key)}. "
+                  "The receipt can now be printed or sent to the customer.")
 
 
 def _shop_order_owner_key(number):
@@ -25485,6 +25601,10 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
             "items": row[5] or 0,
             "method": row[6] or "later",
             "payment_status": row[7] or "unpaid",
+            # One line for what the money is doing, so the rows, the recent list
+            # and the chatbot all read the same.
+            "payment_label": _shop_order_payment_badge(
+                (row[7] or "").lower() == "paid", row[6], row[9], row[7]),
             "amount": float(row[8]) if row[8] is not None else None,
             "delivery_method": row[9] or "delivery",
             "status": row[10] or "new",
@@ -26425,6 +26545,7 @@ def crm_order_detail_api(reference):
         return jsonify({'success': False, 'message': 'Order not found.'}), 404
     return jsonify({'success': True, 'order': detail,
                     'payment': order_payment_status(reference, refresh=False),
+                    'payment_history': order_payment_history(reference),
                     'ecocash_configured': paynow_configured()})
 
 

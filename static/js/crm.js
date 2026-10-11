@@ -282,7 +282,7 @@
         var pill = cancelled
           ? '<span class="crm-pill is-cancelled">Cancelled</span>'
           : '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
-            (paid ? 'Paid' : 'Will pay') + '</span>';
+            escapeHtml(order.payment_label || (paid ? 'Paid' : 'Will pay')) + '</span>';
         return '<div class="crm-order-row">' +
           '<div class="crm-order-row-main"><strong>' + escapeHtml(who) + '</strong>' +
           '<small>' + escapeHtml(order.reference) + ' • ' + order.items + ' items • ' +
@@ -314,7 +314,8 @@
         var paymentCell = cancelled
           ? '<span class="crm-pill is-cancelled"><i class="bi bi-x-circle"></i> Cancelled</span>'
           : '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
-            (paid ? '<i class="bi bi-check2"></i> Paid' : '<i class="bi bi-clock"></i> Will pay') +
+            '<i class="bi ' + (paid ? 'bi-check2' : 'bi-clock') + '"></i> ' +
+            escapeHtml(order.payment_label || (paid ? 'Paid' : 'Will pay')) +
             '</span>';
         var actionsCell = cancelled
           ? '<span class="crm-row-note">Cancelled by the customer' + '</span>'
@@ -383,18 +384,34 @@
       orderRef = null;
     }
 
-    function paymentPill(payment) {
-      var status = (payment && payment.status) || 'unpaid';
+    function paymentPill(order, payment) {
+      var status = (payment && payment.status) || order.payment_status || 'unpaid';
       var cls = status === 'paid' ? 'is-paid' : 'is-unpaid';
-      var label = { paid: 'Paid', pending: 'Awaiting PIN', cancelled: 'Cancelled',
-                    failed: 'Failed', unpaid: 'Not paid' }[status] || status;
-      // How the money was taken is part of what "paid" means to whoever reads
-      // the order, so it is named whenever the record has it.
-      if (status === 'paid' && payment.method_label) label = 'Paid ' + payment.method_label;
+      // The label names how the money moved, or where it is going to be taken,
+      // and comes from the server so the chatbot and the portal cannot disagree.
+      var label = order.payment_label ||
+        ({ paid: 'Paid', pending: 'Awaiting PIN', cancelled: 'Cancelled', failed: 'Failed',
+           unpaid: 'Will pay' }[status] || status);
       return '<span class="crm-pill ' + cls + '">' + escapeHtml(label) + '</span>';
     }
 
-    function renderOrder(order, payment) {
+    function renderPaymentHistory(history) {
+      // The block is written by renderOrder, so the element is looked up here
+      // rather than cached at startup, when it does not exist yet.
+      var historyEl = document.getElementById('crmOrderPayLog');
+      if (!historyEl) return;
+      if (!history || !history.length) {
+        historyEl.innerHTML =
+          '<p class="crm-paylog-empty">Nothing has been recorded against this order yet.</p>';
+        return;
+      }
+      historyEl.innerHTML = '<ol class="crm-paylog">' + history.map(function (entry) {
+        return '<li><span class="crm-paylog-text">' + escapeHtml(entry.text) + '</span>' +
+          '<span class="crm-paylog-at">' + escapeHtml(entry.at || '') + '</span></li>';
+      }).join('') + '</ol>';
+    }
+
+    function renderOrder(order, payment, history) {
       var lines = order.lines || [];
       var paid = order.payment_status === 'paid';
       var rows = lines.length ? lines.map(function (line) {
@@ -420,7 +437,7 @@
           (order.company ? '<span class="crm-sub">' + escapeHtml(order.company) + '</span>' : '') +
           (order.phone ? '<span class="crm-sub">' + escapeHtml(order.phone) + '</span>' : '') +
           '</div>' +
-          '<div class="crm-od-meta">' + paymentPill(payment) + '</div>' +
+          '<div class="crm-od-meta">' + paymentPill(order, payment) + '</div>' +
         '</div>' +
         '<dl class="crm-od-fields">' +
           '<div><dt>Placed</dt><dd>' + escapeHtml(order.created_at) + '</dd></div>' +
@@ -437,6 +454,8 @@
         '</table></div>' +
         '<div class="crm-od-total"><span>Total' + (paid ? ' paid' : ' due') + '</span>' +
           '<strong>' + escapeHtml(money(order.total)) + '</strong></div>' +
+        '<div class="crm-paylog-block"><h6>Payment history</h6>' +
+          '<div id="crmOrderPayLog"></div></div>' +
         (order.priced ? '' :
           '<p class="crm-od-warn"><i class="bi bi-info-circle"></i> This order was taken before ' +
           'line prices were recorded, so unit prices show as not recorded. The total is the amount ' +
@@ -445,6 +464,7 @@
           '<p class="crm-od-note"><i class="bi bi-hourglass-split"></i> Waiting for the customer to ' +
           'enter their EcoCash PIN. Checking automatically…</p>' : '');
 
+      renderPaymentHistory(history);
       orderTitle.textContent = 'Order ' + order.reference;
     }
 
@@ -459,6 +479,13 @@
 
       // Nothing to record once the money is already accounted for.
       if (settleEl) settleEl.hidden = paid;
+      // The method the order already records is the one to offer first, so
+      // confirming it is a single click rather than a choice every time.
+      var methodEl = document.getElementById('crmOrderMethod');
+      if (methodEl && !paid && payment && payment.method_key) {
+        var known = ['shop', 'delivery', 'ecocash', 'other'];
+        if (known.indexOf(payment.method_key) >= 0) methodEl.value = payment.method_key;
+      }
       if (requestBtn) {
         // Nothing to request once it is settled, and no point while the customer
         // already has a prompt on their handset.
@@ -481,8 +508,8 @@
           noteEl.textContent = 'An EcoCash prompt was sent to the customer.';
           noteEl.className = 'crm-od-status';
         } else {
-          noteEl.textContent = 'Not paid. Send the EcoCash prompt, or record the payment ' +
-            'here if the customer pays in person.';
+          noteEl.textContent = 'Not paid. Send the EcoCash prompt, or mark it received ' +
+            'here when the money is handed over.';
           noteEl.className = 'crm-od-status';
         }
       }
@@ -496,7 +523,7 @@
             if (!quiet) window.alert(result.message || 'Could not load that order.');
             return null;
           }
-          renderOrder(result.order, result.payment);
+          renderOrder(result.order, result.payment, result.payment_history);
           refreshOrderActions(result.order, result.payment);
           return result;
         })

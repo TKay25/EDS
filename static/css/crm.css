@@ -2012,6 +2012,44 @@ select.crm-select:focus {
   color: var(--ps-text-faint, var(--ps-text-soft));
   opacity: 0.85;
 }
+
+/* The order's own payment history. Events are listed oldest first because that
+   is the order they happened in, and a dispute is read forwards. */
+.crm-paylog-block {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ps-border);
+}
+.crm-paylog-block h6 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ps-text-soft);
+}
+.crm-paylog {
+  margin: 0;
+  padding: 0 0 0 16px;
+  list-style: decimal;
+  display: grid;
+  gap: 5px;
+}
+.crm-paylog li {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ps-text);
+}
+.crm-paylog-at {
+  display: block;
+  font-size: 11px;
+  color: var(--ps-text-soft);
+}
+.crm-paylog-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ps-text-soft);
+}
 .crm-order-actions .ps-btn { flex: 1 1 auto; justify-content: center; }
 
 @media (max-width: 640px) {
