@@ -89,6 +89,19 @@
 }
 
 .crm-tab i { font-size: 0.88rem; }
+
+/* Each tab carries a full label for wide screens and a short one for phones,
+   where all four tabs have to share a single row. */
+.crm-tab-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.crm-tab-short { display: none; }
+
 .crm-tab:hover { color: var(--ps-text); background: var(--ps-surface-alt); }
 
 .crm-tab.is-active {
@@ -1121,9 +1134,37 @@ select.crm-select:focus {
   .crm-select-wrap { width: 100%; }
   select.crm-select { flex: 1; min-width: 0; }
 
-  .crm-tab { flex: 1 1 100%; justify-content: flex-start; }
+  /* Four tabs on one row. The icon moves above a shortened label so the row
+     never needs a horizontal scroll, even on a 320px handset. */
+  .crm-tabs {
+    flex-wrap: nowrap;
+    gap: 3px;
+    padding: 4px;
+    border-radius: var(--ps-radius-sm);
+  }
 
-  .crm-tabs { border-radius: var(--ps-radius-sm); }
+  .crm-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 7px 2px;
+    font-size: 0.68rem;
+    text-align: center;
+  }
+
+  .crm-tab i { font-size: 0.95rem; }
+
+  .crm-tab-full { display: none; }
+  .crm-tab-short { display: inline; }
+
+  .crm-tab-count {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 0.62rem;
+  }
 
   .crm-filters { gap: 10px; }
   .crm-filters .crm-field { flex: 1 1 100%; }

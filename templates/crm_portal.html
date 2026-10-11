@@ -28,17 +28,29 @@
 
         <nav class="crm-tabs" role="tablist">
             <button class="crm-tab is-active" type="button" data-crm-tab="inbox" role="tab">
-                <i class="bi bi-chat-dots-fill"></i> Inbox
-                <span class="crm-tab-count" data-stat="stat_unattended">{{ stat_unattended }}</span>
+                <i class="bi bi-chat-dots-fill"></i>
+                <span class="crm-tab-text">
+                    <span class="crm-tab-full">Inbox</span><span class="crm-tab-short">Inbox</span>
+                    <span class="crm-tab-count" data-stat="stat_unattended">{{ stat_unattended }}</span>
+                </span>
             </button>
             <button class="crm-tab" type="button" data-crm-tab="analytics" role="tab">
-                <i class="bi bi-graph-up-arrow"></i> Sales analytics
+                <i class="bi bi-graph-up-arrow"></i>
+                <span class="crm-tab-text">
+                    <span class="crm-tab-full">Sales analytics</span><span class="crm-tab-short">Analytics</span>
+                </span>
             </button>
             <button class="crm-tab" type="button" data-crm-tab="products" role="tab">
-                <i class="bi bi-box-seam-fill"></i> Products &amp; pricing
+                <i class="bi bi-box-seam-fill"></i>
+                <span class="crm-tab-text">
+                    <span class="crm-tab-full">Products &amp; pricing</span><span class="crm-tab-short">Products</span>
+                </span>
             </button>
             <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity">
-                <i class="bi bi-clock-history"></i> Activity log
+                <i class="bi bi-clock-history"></i>
+                <span class="crm-tab-text">
+                    <span class="crm-tab-full">Activity log</span><span class="crm-tab-short">Activity</span>
+                </span>
             </button>
         </nav>
     </div>
