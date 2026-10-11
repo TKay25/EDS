@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delivery Note {{ order.reference }} | {{ company_name }}</title>
+    <style>
+        @page {
+            size: A5;
+            margin: 11mm 10mm 12mm 10mm;
+
+            @top-left {
+                content: "{{ company_name }} — Delivery Note {{ order.reference }}";
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 6.5pt;
+                color: #8593A5;
+                vertical-align: bottom;
+                padding-bottom: 2.6mm;
+            }
+            @bottom-left {
+                content: "Printed {{ printed_at }}{% if printed_by %} by {{ printed_by }}{% endif %}";
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 6pt;
+                color: #9AA7B6;
+                vertical-align: top;
+                padding-top: 2mm;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 6pt;
+                color: #9AA7B6;
+                vertical-align: top;
+                padding-top: 2mm;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #16283F;
+            font-size: 8.2pt;
+            line-height: 1.42;
+            margin: 0;
+        }
+
+        .masthead {
+            border-bottom: 2pt solid #DC143C;
+            padding-bottom: 2.6mm;
+            margin-bottom: 3.4mm;
+        }
+        .doc-kicker {
+            margin: 0 0 1.2mm;
+            font-size: 6.4pt;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .brand {
+            font-size: 15pt;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0;
+            line-height: 1.08;
+        }
+        .brand em { font-style: normal; color: #DC143C; }
+        .doc-title {
+            margin: 1mm 0 0;
+            font-size: 11pt;
+            font-weight: 700;
+            color: #DC143C;
+        }
+        .contact {
+            margin: 1.8mm 0 0;
+            font-size: 7pt;
+            color: #56657A;
+            line-height: 1.5;
+        }
+
+        .panel { display: flex; gap: 6mm; margin-bottom: 3.2mm; }
+        .panel > div { flex: 1; }
+        .panel h3 {
+            margin: 0 0 1mm;
+            font-size: 6.4pt;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .panel p { margin: 0; font-size: 8.4pt; }
+        .panel .muted { color: #56657A; font-size: 7.4pt; }
+
+        .fields {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 3.2mm;
+        }
+        .fields td { padding: 1mm 0; font-size: 7.9pt; vertical-align: top; }
+        .fields td.label {
+            width: 30mm;
+            color: #8593A5;
+            font-size: 6.4pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 3.2mm; }
+        table.items th {
+            text-align: left;
+            padding: 1.5mm 2mm;
+            background: #16283F;
+            color: #FFFFFF;
+            font-size: 6.4pt;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        table.items td {
+            padding: 1.5mm 2mm;
+            border-bottom: 0.5pt solid #DCE3EC;
+            font-size: 8.2pt;
+        }
+        table.items tr.alt td { background: #F7F9FC; }
+        .num { text-align: right; white-space: nowrap; }
+        .qty { text-align: center; white-space: nowrap; }
+        .product strong { font-weight: 700; }
+        .product small { color: #56657A; display: block; font-size: 6.8pt; }
+        .unpriced { color: #B45309; font-size: 6.8pt; }
+
+        .totals { width: 58mm; margin-left: auto; border-collapse: collapse; margin-bottom: 3.4mm; }
+        .totals td { padding: 1.1mm 2mm; font-size: 8.2pt; }
+        .totals td.label { color: #56657A; }
+        .totals tr.grand td {
+            border-top: 1.2pt solid #16283F;
+            font-weight: 700;
+            font-size: 10.5pt;
+        }
+
+        .note {
+            padding: 2mm 2.8mm;
+            background: #F7F9FC;
+            border-left: 2pt solid #DC143C;
+            font-size: 7.4pt;
+            line-height: 1.42;
+            color: #3F4E63;
+        }
+        .note strong { color: #16283F; }
+
+        .signatures {
+            display: flex;
+            gap: 8mm;
+            margin-top: 5mm;
+            page-break-inside: avoid;
+        }
+        .signatures > div { flex: 1; }
+        .sig-line {
+            border-bottom: 0.75pt solid #8593A5;
+            height: 9mm;
+        }
+        .sig-label {
+            margin-top: 1.2mm;
+            font-size: 6.4pt;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #8593A5;
+            font-weight: 700;
+        }
+        .sig-hint { margin-top: 0.6mm; font-size: 7.2pt; color: #56657A; }
+    </style>
+</head>
+<body>
+    <div class="masthead">
+        <p class="doc-kicker">{{ company_name }}</p>
+        <h1 class="brand">{{ company_name }} <em>(Pvt) Ltd</em></h1>
+        <p class="doc-title">Delivery Note</p>
+        <div class="contact">
+            {{ company_contact.address }}<br>
+            {{ company_contact.phones | join(' / ') }} &nbsp;•&nbsp; {{ company_contact.email }}
+        </div>
+    </div>
+
+    <div class="panel">
+        <div>
+            <h3>Deliver to</h3>
+            <p><strong>{{ order.customer_name or '—' }}</strong></p>
+            {% if order.company %}<p class="muted">{{ order.company }}</p>{% endif %}
+            {% if order.phone %}<p class="muted">{{ order.phone }}</p>{% endif %}
+        </div>
+        <div>
+            <h3>Delivery address</h3>
+            {% if order.delivery_method == 'collection' %}
+                <p>Collection from the shop</p>
+                <p class="muted">{{ company_contact.address }}</p>
+            {% elif order.address %}
+                <p>{{ order.address }}</p>
+            {% else %}
+                <p class="muted">No address was given on the order.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <table class="fields">
+        <tr>
+            <td class="label">Order ref</td>
+            <td><strong>{{ order.reference }}</strong></td>
+            <td class="label">Order placed</td>
+            <td>{{ order.created_at }}</td>
+        </tr>
+        <tr>
+            <td class="label">Method</td>
+            <td>{{ 'Delivery to the customer' if order.delivery_method == 'delivery' else 'Collection from the shop' }}</td>
+            <td class="label">Items</td>
+            <td>{{ order.item_count }}</td>
+        </tr>
+        <tr>
+            <td class="label">Payment</td>
+            <td colspan="3">
+                {% if order.payment_status == 'paid' %}
+                    Paid — a separate receipt is issued for this order.
+                {% else %}
+                    Not yet paid. Payment is due on delivery or collection.
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <table class="items">
+        <thead>
+            <tr>
+                <th style="width: 9mm;">#</th>
+                <th>Item</th>
+                <th class="qty" style="width: 16mm;">Qty</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.lines %}
+            <tr{% if loop.index0 % 2 %} class="alt"{% endif %}>
+                <td class="num">{{ loop.index }}</td>
+                <td class="product">
+                    <strong>{{ item.product }}</strong>
+                    {% if item.pack_size %}<small>{{ item.pack_size }}</small>{% endif %}
+                </td>
+                <td class="qty">{{ item.quantity }}</td>
+            </tr>
+            {% endfor %}
+            {% if not order.lines %}
+            <tr><td colspan="3">No line items were recorded for this order.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tr class="grand">
+            <td class="label">Total items</td>
+            <td class="num">{{ order.item_count }}</td>
+        </tr>
+        {% if order.priced %}
+        <tr>
+            <td class="label">Order value</td>
+            <td class="num">{{ order.currency }} {{ '%.2f' | format(order.total) }}</td>
+        </tr>
+        {% endif %}
+    </table>
+
+    <div class="note">
+        <strong>Please check the goods on delivery.</strong>
+        Count the items against this note before signing. Any shortage or damage must be noted here and
+        reported to {{ company_name }} the same day so it can be corrected.
+    </div>
+
+    <div class="signatures">
+        <div>
+            <div class="sig-line"></div>
+            <div class="sig-label">Delivered by</div>
+            <div class="sig-hint">Name, signature and date</div>
+        </div>
+        <div>
+            <div class="sig-line"></div>
+            <div class="sig-label">Received by</div>
+            <div class="sig-hint">Name, signature and date</div>
+        </div>
+    </div>
+</body>
+</html>

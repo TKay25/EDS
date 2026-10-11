@@ -338,6 +338,42 @@
                 </table>
             </div>
         </div>
+
+        {# One order in detail: the lines, the payment state, and the two printed
+           documents. Kept in the analytics view because that is where sales work
+           from. #}
+        <div class="crm-order-modal" id="crmOrderModal" hidden>
+            <div class="crm-order-card" role="dialog" aria-modal="true"
+                 aria-labelledby="crmOrderTitle">
+                <div class="crm-order-head">
+                    <h4 id="crmOrderTitle">Order</h4>
+                    <button class="crm-order-close" type="button" data-order-action="close"
+                            aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="crm-order-body" id="crmOrderBody"></div>
+                <p class="crm-od-status" id="crmOrderNote"></p>
+                <div class="crm-order-actions">
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
+                            data-order-action="delivery-note">
+                        <i class="bi bi-truck"></i> Delivery note
+                    </button>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
+                            id="crmOrderReceipt" data-order-action="receipt">
+                        <i class="bi bi-printer"></i> Print receipt
+                    </button>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
+                            id="crmOrderSendReceipt" data-order-action="send-receipt">
+                        <i class="bi bi-whatsapp"></i> Send receipt
+                    </button>
+                    <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                            id="crmOrderRequestPay" data-order-action="request-payment">
+                        <i class="bi bi-phone"></i> Request EcoCash payment
+                    </button>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- ========================================================= products -->

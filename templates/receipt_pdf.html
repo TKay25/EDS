@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt {{ order.reference }} | {{ company_name }}</title>
+    <style>
+        @page {
+            size: A5;
+            margin: 11mm 10mm 12mm 10mm;
+
+            @top-left {
+                content: "{{ company_name }} — Receipt {{ order.reference }}";
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 6.5pt;
+                color: #8593A5;
+                vertical-align: bottom;
+                padding-bottom: 2.6mm;
+            }
+            @bottom-left {
+                content: "Issued {{ printed_at }}{% if printed_by %} by {{ printed_by }}{% endif %}";
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 6pt;
+                color: #9AA7B6;
+                vertical-align: top;
+                padding-top: 2mm;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 6pt;
+                color: #9AA7B6;
+                vertical-align: top;
+                padding-top: 2mm;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #16283F;
+            font-size: 8.2pt;
+            line-height: 1.42;
+            margin: 0;
+        }
+
+        .masthead {
+            border-bottom: 2pt solid #DC143C;
+            padding-bottom: 2.6mm;
+            margin-bottom: 3.4mm;
+        }
+        .doc-kicker {
+            margin: 0 0 1.2mm;
+            font-size: 6.4pt;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .brand {
+            font-size: 15pt;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0;
+            line-height: 1.08;
+        }
+        .brand em { font-style: normal; color: #DC143C; }
+        .doc-title {
+            margin: 1mm 0 0;
+            font-size: 11pt;
+            font-weight: 700;
+            color: #DC143C;
+        }
+        .contact {
+            margin: 1.8mm 0 0;
+            font-size: 7pt;
+            color: #56657A;
+            line-height: 1.5;
+        }
+
+        .panel { display: flex; gap: 6mm; margin-bottom: 3.2mm; }
+        .panel > div { flex: 1; }
+        .panel h3 {
+            margin: 0 0 1mm;
+            font-size: 6.4pt;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .panel p { margin: 0; font-size: 8.4pt; }
+        .panel .muted { color: #56657A; font-size: 7.4pt; }
+
+        .fields {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 3.2mm;
+        }
+        .fields td { padding: 1mm 0; font-size: 7.9pt; vertical-align: top; }
+        .fields td.label {
+            width: 30mm;
+            color: #8593A5;
+            font-size: 6.4pt;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 3.2mm; }
+        table.items th {
+            text-align: left;
+            padding: 1.5mm 2mm;
+            background: #16283F;
+            color: #FFFFFF;
+            font-size: 6.4pt;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        table.items td {
+            padding: 1.5mm 2mm;
+            border-bottom: 0.5pt solid #DCE3EC;
+            font-size: 8.2pt;
+        }
+        table.items tr.alt td { background: #F7F9FC; }
+        .num { text-align: right; white-space: nowrap; }
+        .qty { text-align: center; white-space: nowrap; }
+        .product strong { font-weight: 700; }
+        .product small { color: #56657A; display: block; font-size: 6.8pt; }
+        .unpriced { color: #B45309; font-size: 6.8pt; }
+
+        .totals { width: 58mm; margin-left: auto; border-collapse: collapse; margin-bottom: 3.4mm; }
+        .totals td { padding: 1.1mm 2mm; font-size: 8.2pt; }
+        .totals td.label { color: #56657A; }
+        .totals tr.grand td {
+            border-top: 1.2pt solid #16283F;
+            font-weight: 700;
+            font-size: 10.5pt;
+        }
+
+        .note {
+            padding: 2mm 2.8mm;
+            background: #F7F9FC;
+            border-left: 2pt solid #DC143C;
+            font-size: 7.4pt;
+            line-height: 1.42;
+            color: #3F4E63;
+        }
+        .note strong { color: #16283F; }
+
+        /* The paid banner is the first thing read, so the status cannot be
+           mistaken for a pro-forma when the money has actually been taken. */
+        .paid-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2.6mm 3.4mm;
+            border-radius: 1.5mm;
+            background: #E8F7F0;
+            border: 0.75pt solid #A8DEC6;
+            margin-bottom: 3.4mm;
+        }
+        .paid-banner .label {
+            font-size: 7pt;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #1B7A52;
+        }
+        .paid-banner .amount {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #175E41;
+        }
+
+        .foot {
+            margin-top: 3.6mm;
+            padding-top: 2.4mm;
+            border-top: 0.5pt solid #DCE3EC;
+            font-size: 7pt;
+            color: #56657A;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="masthead">
+        <p class="doc-kicker">{{ company_name }}</p>
+        <h1 class="brand">{{ company_name }} <em>(Pvt) Ltd</em></h1>
+        <p class="doc-title">Receipt</p>
+        <div class="contact">
+            {{ company_contact.address }}<br>
+            {{ company_contact.phones | join(' / ') }} &nbsp;•&nbsp; {{ company_contact.email }}
+        </div>
+    </div>
+
+    <div class="paid-banner">
+        <span class="label">Paid in full</span>
+        <span class="amount">{{ order.currency }} {{ '%.2f' | format(order.total) }}</span>
+    </div>
+
+    <div class="panel">
+        <div>
+            <h3>Received from</h3>
+            <p><strong>{{ order.customer_name or '—' }}</strong></p>
+            {% if order.company %}<p class="muted">{{ order.company }}</p>{% endif %}
+            {% if order.phone %}<p class="muted">{{ order.phone }}</p>{% endif %}
+        </div>
+        <div>
+            <h3>Receipt no.</h3>
+            <p><strong>{{ order.reference }}</strong></p>
+            {% if order.paid_at %}<p class="muted">Paid {{ order.paid_at }}</p>{% endif %}
+        </div>
+    </div>
+
+    <table class="fields">
+        <tr>
+            <td class="label">Order placed</td>
+            <td>{{ order.created_at }}</td>
+            <td class="label">Status</td>
+            <td>{{ order.payment_status | capitalize }}</td>
+        </tr>
+        <tr>
+            <td class="label">Payment method</td>
+            <td>{{ 'EcoCash' if 'ecocash' in (order.payment_method or '') | lower else (order.payment_method or 'Not recorded') }}</td>
+            <td class="label">Fulfilment</td>
+            <td>{{ 'Delivery to the customer' if order.delivery_method == 'delivery' else 'Collection from the shop' }}</td>
+        </tr>
+    </table>
+
+    <table class="items">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th class="qty" style="width: 14mm;">Qty</th>
+                <th class="num" style="width: 24mm;">Unit price</th>
+                <th class="num" style="width: 26mm;">Line total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.lines %}
+            <tr{% if loop.index0 % 2 %} class="alt"{% endif %}>
+                <td class="product">
+                    <strong>{{ item.product }}</strong>
+                    {% if item.pack_size %}<small>{{ item.pack_size }}</small>{% endif %}
+                </td>
+                <td class="qty">{{ item.quantity }}</td>
+                <td class="num">
+                    {% if item.unit_price is not none %}
+                        {{ order.currency }} {{ '%.2f' | format(item.unit_price) }}
+                    {% else %}
+                        <span class="unpriced">not recorded</span>
+                    {% endif %}
+                </td>
+                <td class="num">
+                    {% if item.line_total is not none %}
+                        {{ order.currency }} {{ '%.2f' | format(item.line_total) }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not order.lines %}
+            <tr><td colspan="4">No line items were recorded for this order.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <table class="totals">
+        {% if order.priced %}
+        <tr>
+            <td class="label">Subtotal</td>
+            <td class="num">{{ order.currency }} {{ '%.2f' | format(order.subtotal) }}</td>
+        </tr>
+        {% endif %}
+        <tr class="grand">
+            <td class="label">Total paid</td>
+            <td class="num">{{ order.currency }} {{ '%.2f' | format(order.total) }}</td>
+        </tr>
+    </table>
+
+    {% if not order.priced %}
+    <div class="note">
+        <strong>Some lines have no price recorded.</strong>
+        This order was taken before line prices were stored, so the itemised unit prices are shown as
+        not recorded. The total above is the amount actually settled.
+    </div>
+    {% elif order.amount_charged is not none and order.amount_charged != order.subtotal %}
+    <div class="note">
+        <strong>Total settled differs from the itemised subtotal.</strong>
+        The lines add up to {{ order.currency }} {{ '%.2f' | format(order.subtotal) }} against
+        {{ order.currency }} {{ '%.2f' | format(order.amount_charged) }} received, which indicates a
+        discount or adjustment agreed with the customer.
+    </div>
+    {% endif %}
+
+    <div class="foot">
+        Thank you for your business. This receipt was issued electronically by {{ company_name }}.<br>
+        {{ company_contact.phones | join(' / ') }} &nbsp;•&nbsp; {{ company_contact.email }}
+    </div>
+</body>
+</html>

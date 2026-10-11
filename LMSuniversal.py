@@ -21420,6 +21420,10 @@ def ensure_shop_tables():
                 created_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        # The price the line was sold at. Without it a reprinted receipt would
+        # show whatever the catalogue says today rather than what the customer
+        # actually agreed to pay, which is the wrong answer on a money document.
+        cursor.execute("ALTER TABLE shop_order_items ADD COLUMN IF NOT EXISTS unit_price NUMERIC(12, 2);")
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS shop_payment_events (
                 id SERIAL PRIMARY KEY,
@@ -22539,10 +22543,13 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
                   method))
             order_id = cursor.fetchone()[0]
             for item in cart:
+                # The price is captured now, at the moment of sale, so the
+                # receipt stays accurate after a later repricing.
                 cursor.execute("""
-                    INSERT INTO shop_order_items (order_id, product, pack_size, quantity, created_at)
-                    VALUES (%s, %s, %s, %s, NOW())
-                """, (order_id, item["name"], item["size"], item["qty"]))
+                    INSERT INTO shop_order_items (order_id, product, pack_size, quantity,
+                                                  unit_price, created_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                """, (order_id, item["name"], item["size"], item["qty"], shop_price(item)))
             connection.commit()
     except Exception as e:
         print(f"order save error: {e}")
@@ -23249,6 +23256,129 @@ def shop_order_payment(reference):
     except Exception as e:
         print(f"payment lookup error: {e}")
         return (None, None, None, None)
+
+
+def _ecocash_msisdn(phone):
+    """A Zimbabwean mobile number in the local 07… form EcoCash expects."""
+    digits = "".join(character for character in str(phone or "") if character.isdigit())
+    if not digits:
+        return ""
+    # 00263… is the international prefix dialled from a landline.
+    if digits.startswith("00"):
+        digits = digits[2:]
+    if digits.startswith("263"):
+        digits = "0" + digits[3:]
+    elif not digits.startswith("0"):
+        digits = "0" + digits
+    return digits
+
+
+def order_request_ecocash(reference, phone=None, user=None):
+    """Send an EcoCash PIN prompt for an order. Returns (ok, message, poll_url).
+
+    The sales person triggers this when the customer says they want to pay by
+    EcoCash, so the prompt lands on the customer's own handset and they enter
+    their PIN there. The portal never sees the PIN.
+    """
+    detail = order_detail(reference)
+    if not detail:
+        return False, "That order could not be found.", ""
+    if detail["payment_status"] == "paid":
+        return False, "That order is already paid.", ""
+    if not paynow_configured():
+        return False, "EcoCash is not configured on this deployment.", ""
+
+    amount = detail.get("amount_charged")
+    if amount is None:
+        amount = detail.get("total")
+    if not amount:
+        # An unpriced order cannot be pushed to EcoCash: there is no amount to
+        # charge, and inventing one would take the wrong money.
+        return False, ("This order has no priced lines, so there is no amount to "
+                       "charge. Set pack prices in Products & pricing first."), ""
+
+    number = _ecocash_msisdn(phone or detail.get("phone"))
+    if len(number) < 9:
+        return False, "That order has no usable mobile number to send the prompt to.", ""
+
+    ok, message, poll_url = paynow_initiate(
+        reference, amount, number,
+        customer={"email": detail.get("email") or ""},
+        description=f"Brilliant Chemicals order {reference}")
+    if not ok:
+        return False, message or "EcoCash did not accept the request.", poll_url
+
+    shop_payment_update(reference, "pending", poll_url=poll_url, amount=amount)
+    _shop_payment_event(reference, "requested_from_portal", "pending",
+                        f"{number} {amount}")
+    log_activity("requested_ecocash_payment", "order",
+                 f"Sent an EcoCash prompt to {number} for {PAYNOW_CURRENCY} {amount:.2f}",
+                 target=reference,
+                 details={"phone": number, "amount": amount}, user=user)
+    return True, message or "", poll_url
+
+
+def order_payment_status(reference, refresh=True):
+    """Current payment state for an order, optionally re-checking EcoCash.
+
+    Returns None when there is no such order, so a caller cannot mistake an
+    unknown reference for an unpaid one. The customer pays on their own handset,
+    so the gateway is the source of truth: a pending order is polled rather than
+    assumed, and a confirmed payment is written back once so the receipt and the
+    order agree.
+    """
+    ensure_shop_tables()
+    reference = (reference or "").strip()
+    if not reference:
+        return None
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT payment_method, payment_status, payment_poll_url, payment_amount
+                FROM shop_orders WHERE reference = %s
+            """, (reference,))
+            row = cursor.fetchone()
+    except Exception as e:
+        print(f"payment status error: {e}")
+        return None
+    if not row:
+        return None
+    method, status, poll_url, amount = row
+    status = (status or "unpaid").strip().lower()
+    paid = status == "paid"
+
+    if refresh and not paid and poll_url:
+        ok, gateway_status, gateway_paid = paynow_poll(poll_url)
+        if ok:
+            if gateway_paid:
+                shop_payment_update(reference, "paid", amount=amount, paid=True)
+                _shop_payment_event(reference, "poll", "paid", gateway_status)
+                log_activity("payment_received", "order",
+                             f"EcoCash payment received for {reference}",
+                             target=reference,
+                             details={"amount": amount, "gateway_status": gateway_status})
+                status, paid = "paid", True
+                # The customer paid from their own handset, so the receipt goes
+                # straight to them rather than waiting for someone to send it.
+                try:
+                    shop_send_receipt(reference)
+                except Exception as e:
+                    print(f"receipt send skipped: {e}")
+            elif gateway_status and gateway_status != status:
+                # Cancelled, failed or timed out all mean the same thing to the
+                # portal: it is no longer waiting on the customer.
+                shop_payment_update(reference, gateway_status, amount=amount)
+                _shop_payment_event(reference, "poll", gateway_status, gateway_status)
+                status = gateway_status
+    return {
+        "reference": reference,
+        "method": method or "",
+        "status": status,
+        "paid": paid,
+        "amount": float(amount) if amount is not None else None,
+        "currency": PAYNOW_CURRENCY,
+        "awaiting": bool(poll_url) and not paid and status not in ("cancelled", "failed"),
+    }
 
 
 def shop_nav_block(nav, language="en"):
@@ -24443,39 +24573,50 @@ ORDER_PERIODS = {
     "last_month": ("Last month", "62 days"),
     "all": ("All time", None),
 }
-ORDER_PERIOD_WHERE = {
-    "today": "created_at::date = CURRENT_DATE",
-    "yesterday": "created_at::date = CURRENT_DATE - INTERVAL '1 day'",
-    "this_week": "created_at >= date_trunc('week', CURRENT_DATE)",
-    "last_week": ("created_at >= date_trunc('week', CURRENT_DATE) - INTERVAL '7 days' "
-                  "AND created_at < date_trunc('week', CURRENT_DATE)"),
-    "this_month": "created_at >= date_trunc('month', CURRENT_DATE)",
-    "last_month": ("created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '1 month' "
-                   "AND created_at < date_trunc('month', CURRENT_DATE)"),
-}
-PAYMENT_FILTERS = {
-    "all": "1 = 1",
-    "paid": "payment_status = 'paid'",
-    "unpaid": "COALESCE(payment_status, 'unpaid') <> 'paid'",
-}
-FULFILMENT_FILTERS = {
-    "all": "1 = 1",
-    "delivery": "COALESCE(delivery_method, 'delivery') = 'delivery'",
-    "collection": "delivery_method = 'collection'",
-    "pending": "fulfilled_at IS NULL AND status <> 'closed'",
-    "fulfilled": "fulfilled_at IS NOT NULL OR status = 'closed'",
-}
+# Timestamps are stored in UTC but the business day is Zimbabwe time, so the
+# period boundaries are shifted before the date is taken. Without the shift an
+# order taken at 22:00 local (20:00 UTC) would still count as the same day, but
+# one taken at 01:00 local belongs to the previous UTC day and would be reported
+# under the wrong date.
+ORDER_TZ_SHIFT = DISPLAY_TZ_OFFSET
+
+
+def order_period_where(alias="shop_orders"):
+    """Period filters for the orders views, as SQL over one table alias.
+
+    `created_at` must be qualified: the overview query joins whatsapp_chats,
+    which also has a created_at, so a bare reference makes the whole query fail
+    with "column reference created_at is ambiguous" and the view renders empty.
+    The alias is a parameter because one caller joins the chats table and the
+    other does not, so a single hard-coded prefix cannot serve both.
+    """
+    created = f"({alias}.created_at + INTERVAL '{ORDER_TZ_SHIFT} hours')"
+    today = f"(CURRENT_TIMESTAMP + INTERVAL '{ORDER_TZ_SHIFT} hours')::date"
+    return {
+        "today": f"{created}::date = {today}",
+        "yesterday": f"{created}::date = {today} - INTERVAL '1 day'",
+        "this_week": (f"{created} >= date_trunc('week', "
+                      f"CURRENT_TIMESTAMP + INTERVAL '{ORDER_TZ_SHIFT} hours')"),
+        "last_week": (f"{created} >= date_trunc('week', "
+                      f"CURRENT_TIMESTAMP + INTERVAL '{ORDER_TZ_SHIFT} hours') - INTERVAL '7 days' "
+                      f"AND {created} < date_trunc('week', "
+                      f"CURRENT_TIMESTAMP + INTERVAL '{ORDER_TZ_SHIFT} hours')"),
+        "this_month": (f"{created} >= date_trunc('month', "
+                       f"CURRENT_TIMESTAMP + INTERVAL '{ORDER_TZ_SHIFT} hours')"),
+        "last_month": (f"{created} >= date_trunc('month', "
+                       f"CURRENT_TIMESTAMP + INTERVAL '{ORDER_TZ_SHIFT} hours') - INTERVAL '1 month' "
+                       f"AND {created} < date_trunc('month', "
+                       f"CURRENT_TIMESTAMP + INTERVAL '{ORDER_TZ_SHIFT} hours')"),
+    }
+
 
 
 def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
     """Order rows for the CRM dashboard, filtered by period and status."""
     ensure_shop_tables()
-    where = ["1 = 1"]
-    params = []
-    if period in ORDER_PERIOD_WHERE:
-        where.append(ORDER_PERIOD_WHERE[period])
-    where.append(PAYMENT_FILTERS.get(payment) or PAYMENT_FILTERS["all"])
-    where.append(FULFILMENT_FILTERS.get(fulfilment) or FULFILMENT_FILTERS["all"])
+    # This query aliases shop_orders as `orders` and joins the chats table, so
+    # every filtered column is qualified with that alias.
+    clause = order_filter_clause(period, payment, fulfilment, "orders")
     query = f"""
         SELECT orders.reference, orders.customer_name, orders.company, orders.phone,
                orders.delivery_address, orders.item_count, orders.payment_method,
@@ -24484,13 +24625,13 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
                orders.wa_number, COALESCE(chats.wa_profile_name, chats.display_name)
         FROM shop_orders orders
         LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
-        WHERE {' AND '.join(where)}
+        WHERE {clause}
         ORDER BY orders.created_at DESC
         LIMIT {int(limit)}
     """
     try:
         with get_db() as (cursor, connection):
-            cursor.execute(query, tuple(params))
+            cursor.execute(query)
             rows = cursor.fetchall()
     except Exception as e:
         print(f"order overview error: {e}")
@@ -24516,15 +24657,150 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
     return orders
 
 
+def order_detail(reference):
+    """One order with its lines, for the sales view and the printed documents.
+
+    Line prices are read from shop_order_items.unit_price, which is written at
+    the moment of sale, so a document reprinted next month still shows what the
+    customer agreed to pay. `total` prefers the amount actually charged, because
+    that is what the payment was settled against; `subtotal` is the sum of the
+    lines and the two can differ when a discount was agreed by hand.
+    """
+    ensure_shop_tables()
+    reference = (reference or "").strip()
+    if not reference:
+        return None
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT orders.id, orders.reference, orders.customer_name, orders.company,
+                       orders.phone, orders.email, orders.delivery_address, orders.channel,
+                       orders.wa_number, orders.notes, orders.item_count,
+                       COALESCE(orders.status, 'new'),
+                       COALESCE(orders.payment_method, ''),
+                       COALESCE(orders.payment_status, 'unpaid'),
+                       orders.payment_amount, orders.paid_at,
+                       COALESCE(orders.delivery_method, 'delivery'),
+                       orders.fulfilled_at, orders.created_at,
+                       COALESCE(chats.wa_profile_name, chats.display_name)
+                FROM shop_orders orders
+                LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
+                WHERE orders.reference = %s
+            """, (reference,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            order_id = row[0]
+            cursor.execute("""
+                SELECT product, pack_size, quantity, unit_price
+                FROM shop_order_items WHERE order_id = %s ORDER BY id
+            """, (order_id,))
+            item_rows = cursor.fetchall()
+    except Exception as e:
+        print(f"order detail error: {e}")
+        return None
+
+    lines = []
+    subtotal = 0.0
+    priced = bool(item_rows)
+    for item_row in item_rows:
+        quantity = int(item_row[2] or 0)
+        unit_price = float(item_row[3]) if item_row[3] is not None else None
+        if unit_price is None:
+            priced = False
+            line_total = None
+        else:
+            line_total = round(unit_price * quantity, 2)
+            subtotal += line_total
+        lines.append({
+            "product": item_row[0] or "",
+            "pack_size": item_row[1] or "",
+            "quantity": quantity,
+            # The catalogue price is only offered as a fallback for orders taken
+            # before prices were recorded, and is labelled as such.
+            "unit_price": unit_price,
+            "line_total": line_total,
+        })
+    subtotal = round(subtotal, 2)
+    charged = float(row[14]) if row[14] is not None else None
+    return {
+        "reference": row[1],
+        "customer_name": row[2] or row[19] or "",
+        "company": row[3] or "",
+        "phone": row[4] or "",
+        "email": row[5] or "",
+        "address": row[6] or "",
+        "channel": row[7] or "",
+        "wa_number": row[8] or "",
+        "notes": row[9] or "",
+        "item_count": row[10] or 0,
+        "status": row[11],
+        "payment_method": row[12],
+        "payment_status": row[13],
+        "amount_charged": charged,
+        "paid_at": fmt_time(row[15], "%d %b %Y %H:%M"),
+        "delivery_method": row[16],
+        "fulfilled_at": fmt_time(row[17], "%d %b %Y %H:%M"),
+        "created_at": fmt_time(row[18], "%d %b %Y %H:%M"),
+        "profile_name": row[19] or "",
+        # Named `lines` rather than `items` because a dict's `.items` attribute
+        # shadows a key of that name in a template, which silently breaks the
+        # `{% for %}` over it.
+        "lines": lines,
+        "subtotal": subtotal,
+        "total": charged if charged is not None else subtotal,
+        "priced": priced and bool(lines),
+        "currency": PAYNOW_CURRENCY,
+    }
+
+
+def order_payment_filter(key, alias="shop_orders"):
+    """Payment filter for the orders views, qualified to one table alias."""
+    filters = {
+        "all": "1 = 1",
+        "paid": f"{alias}.payment_status = 'paid'",
+        "unpaid": f"COALESCE({alias}.payment_status, 'unpaid') <> 'paid'",
+    }
+    return filters.get(key) or filters["all"]
+
+
+def order_fulfilment_filter(key, alias="shop_orders"):
+    """Fulfilment filter for the orders views, qualified to one table alias.
+
+    `status` must be qualified for the same reason `created_at` must be: the
+    overview query joins whatsapp_chats, which has its own status column, so a
+    bare reference makes the filter unusable.
+    """
+    filters = {
+        "all": "1 = 1",
+        "delivery": f"COALESCE({alias}.delivery_method, 'delivery') = 'delivery'",
+        "collection": f"{alias}.delivery_method = 'collection'",
+        "pending": f"{alias}.fulfilled_at IS NULL AND {alias}.status <> 'closed'",
+        "fulfilled": f"{alias}.fulfilled_at IS NOT NULL OR {alias}.status = 'closed'",
+    }
+    return filters.get(key) or filters["all"]
+
+
+def order_filter_clause(period="today", payment="all", fulfilment="all", alias="shop_orders"):
+    """The full WHERE for a shop_orders read, as SQL over one table alias.
+
+    Every caller passes the alias its own FROM clause uses, so the same filters
+    work whether the query joins the chats table or not.
+    """
+    where = ["1 = 1"]
+    periods = order_period_where(alias)
+    if period in periods:
+        where.append(periods[period])
+    where.append(order_payment_filter(payment, alias))
+    where.append(order_fulfilment_filter(fulfilment, alias))
+    return " AND ".join(where)
+
+
 def orders_analytics(period="today", payment="all", fulfilment="all"):
     """Headline sales numbers for the selected period and status filters."""
     ensure_shop_tables()
-    where = ["1 = 1"]
-    if period in ORDER_PERIOD_WHERE:
-        where.append(ORDER_PERIOD_WHERE[period])
-    where.append(PAYMENT_FILTERS.get(payment) or PAYMENT_FILTERS["all"])
-    where.append(FULFILMENT_FILTERS.get(fulfilment) or FULFILMENT_FILTERS["all"])
-    clause = " AND ".join(where)
+    # These counts read shop_orders without an alias.
+    clause = order_filter_clause(period, payment, fulfilment, "shop_orders")
     totals = {
         "orders": _safe_scalar(f"SELECT COUNT(*) FROM shop_orders WHERE {clause}"),
         "units": _safe_scalar(
@@ -24544,16 +24820,16 @@ def orders_analytics(period="today", payment="all", fulfilment="all"):
     }
     top_items = []
     try:
+        # The top-products query joins the items table, so shop_orders is
+        # aliased as `orders` and the filters are rebuilt for that alias rather
+        # than textually rewritten, which produced invalid SQL.
+        items_clause = order_filter_clause(period, payment, fulfilment, "orders")
         with get_db() as (cursor, connection):
             cursor.execute(f"""
                 SELECT items.product, COALESCE(SUM(items.quantity), 0) AS units
                 FROM shop_order_items items
                 JOIN shop_orders orders ON orders.id = items.order_id
-                WHERE {clause.replace('created_at', 'orders.created_at')
-                             .replace('payment_status', 'orders.payment_status')
-                             .replace('delivery_method', 'orders.delivery_method')
-                             .replace('fulfilled_at', 'orders.fulfilled_at')
-                             .replace('status', 'orders.status')}
+                WHERE {items_clause}
                 GROUP BY items.product
                 ORDER BY units DESC
                 LIMIT 6
@@ -25259,6 +25535,132 @@ def crm_activity_pdf():
     return response
 
 
+# ------------------------------------------------- orders, documents, payment --
+def _pdf_download(html, filename):
+    """Render HTML to a PDF download, or a JSON error the portal can show."""
+    try:
+        pdf = HTML(string=html).write_pdf()
+    except Exception as e:
+        print(f"pdf build error ({filename}): {e}")
+        return jsonify({'success': False, 'message': 'Could not build the PDF.'}), 500
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+    return response
+
+
+def _order_document_context(order, user):
+    """Values shared by both printed documents."""
+    return {
+        'order': order,
+        'printed_at': local_time(datetime.utcnow()).strftime('%d %b %Y %H:%M'),
+        'printed_by': f"{user.get('firstname', '')} {user.get('surname', '')}".strip(),
+        'company_name': COMPANY_SYSTEM_NAME,
+        'company_contact': COMPANY_SYSTEM_CONTACT,
+    }
+
+
+@app.route('/api/crm/orders/<reference>')
+def crm_order_detail_api(reference):
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    detail = order_detail(reference)
+    if not detail:
+        return jsonify({'success': False, 'message': 'Order not found.'}), 404
+    return jsonify({'success': True, 'order': detail,
+                    'payment': order_payment_status(reference, refresh=False),
+                    'ecocash_configured': paynow_configured()})
+
+
+@app.route('/api/crm/orders/<reference>/delivery-note.pdf')
+def crm_delivery_note_pdf(reference):
+    """A delivery note, which is printed whether or not the order is paid."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    order = order_detail(reference)
+    if not order:
+        return jsonify({'success': False, 'message': 'Order not found.'}), 404
+    html = render_template('delivery_note_pdf.html',
+                           **_order_document_context(order, user))
+    log_activity("printed_delivery_note", "order",
+                 f"Printed the delivery note for {order['reference']}",
+                 target=order['reference'], user=user)
+    return _pdf_download(html, f"delivery_note_{order['reference']}.pdf")
+
+
+@app.route('/api/crm/orders/<reference>/receipt.pdf')
+def crm_receipt_pdf(reference):
+    """A receipt, issued only once the order is actually settled.
+
+    Handing a customer a document headed "paid in full" for money that has not
+    arrived is worse than refusing to print, so an unpaid order is declined and
+    the reason is stated.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    order = order_detail(reference)
+    if not order:
+        return jsonify({'success': False, 'message': 'Order not found.'}), 404
+    if order['payment_status'] != 'paid':
+        return jsonify({
+            'success': False,
+            'message': 'This order is not paid yet, so no receipt can be issued. '
+                       'Take the payment first, then print the receipt.'}), 400
+    html = render_template('receipt_pdf.html',
+                           **_order_document_context(order, user))
+    log_activity("printed_receipt", "order",
+                 f"Printed a receipt for {order['reference']}",
+                 target=order['reference'],
+                 details={"amount": order['total']}, user=user)
+    return _pdf_download(html, f"receipt_{order['reference']}.pdf")
+
+
+@app.route('/api/crm/orders/<reference>/email-receipt', methods=['POST'])
+def crm_order_send_receipt_api(reference):
+    """Send the customer their receipt on WhatsApp, with the PDF attached."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    sent, detail = shop_send_receipt(reference)
+    if not sent:
+        return jsonify({'success': False, 'message': detail}), 400
+    log_activity("sent_receipt", "order",
+                 f"Sent the receipt for {reference} to the customer on WhatsApp",
+                 target=reference, details={"detail": detail}, user=user)
+    return jsonify({'success': True, 'message': detail or 'Receipt sent to the customer.'})
+
+
+@app.route('/api/crm/orders/<reference>/request-payment', methods=['POST'])
+def crm_order_request_payment_api(reference):
+    """Send the EcoCash PIN prompt to the customer's handset."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    ok, message, _poll_url = order_request_ecocash(reference, payload.get('phone'), user)
+    if not ok:
+        return jsonify({'success': False, 'message': message,
+                        'payment': order_payment_status(reference, refresh=False)}), 400
+    return jsonify({'success': True,
+                    'message': message or 'An EcoCash prompt was sent to the customer.',
+                    'payment': order_payment_status(reference, refresh=False)})
+
+
+@app.route('/api/crm/orders/<reference>/payment-status')
+def crm_order_payment_status_api(reference):
+    """Current payment state, re-checking the gateway while it is pending."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    status = order_payment_status(reference)
+    if status is None:
+        return jsonify({'success': False, 'message': 'Order not found.'}), 404
+    return jsonify({'success': True, 'payment': status})
+
+
 @app.route('/api/crm/products/<product_id>', methods=['POST'])
 def crm_product_save_api(product_id):
     user, error = portal_api_user('crm')
@@ -25494,6 +25896,12 @@ def shop_paynow_callback(reference, data):
             "🎉 *Payment received* — thank you!\n\n"
             f"Reference *{reference}* is paid and confirmed. "
             "Our sales team will be in touch about delivery.")
+        # The receipt follows the confirmation so the customer has the itemised
+        # record of what they paid for without having to ask for it.
+        try:
+            shop_send_receipt(reference)
+        except Exception as e:
+            print(f"receipt send skipped: {e}")
     else:
         shop_payment_update(reference, status or 'pending')
     return True
@@ -25513,6 +25921,167 @@ def shop_send_whatsapp_reference(reference, message):
                        company_reg=COMPANY_SYSTEM_PREFIX, channel=row[1], delivered=sent,
                        is_staff=str(row[1] or "").endswith("staff"))
     return sent
+
+
+def wa_upload_media(payload_bytes, filename, mime_type="application/pdf", channel=None):
+    """Upload a file to Meta and return its media id, or None.
+
+    WhatsApp sends documents by media id rather than by attaching the bytes, so
+    the file is uploaded first and referenced afterwards.
+    """
+    creds = wa_outbound_credentials(channel)
+    if creds is None:
+        return None
+    try:
+        response = requests.post(
+            f"https://graph.facebook.com/v18.0/{creds['phone_id']}/media",
+            headers={"Authorization": "Bearer " + str(creds["token"])},
+            data={"messaging_product": "whatsapp", "type": mime_type},
+            files={"file": (filename, payload_bytes, mime_type)},
+            timeout=45,
+        )
+        if response.status_code >= 400:
+            print(f"media upload failed: {response.status_code} {response.text[:300]}")
+            return None
+        return (response.json() or {}).get("id")
+    except Exception as e:
+        print(f"media upload error: {e}")
+        return None
+
+
+def crm_send_whatsapp_document(wa_number, filename, payload_bytes, caption=None,
+                               mime_type="application/pdf", channel=None):
+    """Send a file to a customer on WhatsApp. Returns (ok, detail)."""
+    creds = wa_outbound_credentials(channel)
+    if creds is None:
+        return False, ("WhatsApp delivery is not configured on this deployment — open the "
+                       "inbox once so the channel credentials are registered.")
+    media_id = wa_upload_media(payload_bytes, filename, mime_type, channel)
+    if not media_id:
+        return False, "WhatsApp would not accept the file."
+    document = {"id": media_id, "filename": filename}
+    if caption:
+        document["caption"] = caption[:1024]
+    try:
+        response = requests.post(
+            f"https://graph.facebook.com/v18.0/{creds['phone_id']}/messages",
+            headers={"Authorization": "Bearer " + str(creds["token"]),
+                     "Content-Type": "application/json"},
+            json={"messaging_product": "whatsapp", "to": wa_number,
+                  "type": "document", "document": document},
+            timeout=30,
+        )
+        if response.status_code >= 400:
+            detail, _is_window = wa_error_from_response(response)
+            print(f"document send failed: {response.status_code} {response.text[:300]}")
+            return False, detail
+        return True, ""
+    except Exception as e:
+        print(f"document send error: {e}")
+        return False, str(e)
+
+
+def order_receipt_pdf(reference):
+    """The receipt PDF for an order as bytes, or None.
+
+    Rendered outside a request when a payment is confirmed by polling, so an
+    application context is pushed if the caller has none.
+    """
+    order = order_detail(reference)
+    if not order:
+        return None
+    try:
+        # Pushed defensively: a payment confirmed by polling can be handled on a
+        # background thread, where Flask has no application context to render in.
+        with app.app_context():
+            html = render_template(
+                'receipt_pdf.html',
+                order=order,
+                printed_at=local_time(datetime.utcnow()).strftime('%d %b %Y %H:%M'),
+                printed_by='',
+                company_name=COMPANY_SYSTEM_NAME,
+                company_contact=COMPANY_SYSTEM_CONTACT,
+            )
+        return HTML(string=html).write_pdf()
+    except Exception as e:
+        print(f"receipt pdf error: {e}")
+        return None
+
+
+def _receipt_caption(order):
+    """What the customer is told the receipt covers."""
+    lines = [f"🧾 *Receipt {order['reference']}*",
+             f"Thank you — we have received {order['currency']} "
+             f"{order['total']:.2f}."]
+    if order.get("lines"):
+        lines.append("")
+        lines.append("You paid for:")
+        for item in order["lines"][:20]:
+            label = item["product"]
+            if item["pack_size"]:
+                label += f" ({item['pack_size']})"
+            lines.append(f"• {label} × {item['quantity']}")
+    lines.append("")
+    lines.append("Your receipt is attached as a PDF.")
+    return "\n".join(lines)
+
+
+def shop_send_receipt(reference, wa_number=None, channel=None, force=False):
+    """Send the receipt PDF for a paid order to the customer. Returns (ok, detail).
+
+    Only sent for a settled order, and only once unless forced, so a failed poll
+    that repeats cannot spam the customer with duplicate receipts.
+    """
+    order = order_detail(reference)
+    if not order:
+        return False, "That order could not be found."
+    if order["payment_status"] != "paid":
+        return False, "That order is not paid yet, so no receipt can be issued."
+
+    number = wa_number
+    if not number:
+        try:
+            with get_db() as (cursor, connection):
+                cursor.execute("SELECT wa_number, channel FROM shop_orders WHERE reference = %s",
+                               (reference,))
+                row = cursor.fetchone()
+            if row:
+                number = number or row[0]
+                channel = channel or row[1]
+        except Exception as e:
+            print(f"receipt lookup error: {e}")
+    if not number:
+        return False, "That order has no WhatsApp number to send the receipt to."
+
+    if not force:
+        try:
+            with get_db() as (cursor, connection):
+                cursor.execute("""
+                    SELECT 1 FROM whatsapp_messages
+                    WHERE wa_number = %s AND message_type = 'document'
+                      AND body LIKE %s LIMIT 1
+                """, (str(number)[-15:], f"%Receipt {reference}%"))
+                already = cursor.fetchone() is not None
+        except Exception as e:
+            print(f"receipt history error: {e}")
+            already = False
+        if already:
+            return True, "The receipt was already sent."
+
+    pdf = order_receipt_pdf(reference)
+    if not pdf:
+        return False, "The receipt could not be built."
+
+    caption = _receipt_caption(order)
+    filename = f"receipt_{reference}.pdf"
+    sent, detail = crm_send_whatsapp_document(number, filename, pdf, caption, channel=channel)
+    if sent:
+        crm_record_message(number, "outbound", "system", caption, "document",
+                           channel=channel, delivered=True)
+        _shop_payment_event(reference, "receipt_sent", "ok", filename)
+    else:
+        _shop_payment_event(reference, "receipt_sent", "error", detail)
+    return sent, detail
 
 
 @app.route('/logout')

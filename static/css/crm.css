@@ -1425,3 +1425,150 @@ select.crm-select:focus {
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.26);
 }
+
+/* ------------------------------------------------------ one order, in detail --
+   Opened from the orders table so sales can check the lines, print the delivery
+   note or the receipt, and push an EcoCash prompt. */
+.crm-order-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4, 10, 22, 0.72);
+  backdrop-filter: blur(4px);
+}
+.crm-order-modal[hidden] { display: none; }
+
+.crm-order-card {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: crm-mode-in 140ms ease-out;
+}
+
+.crm-order-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ps-border);
+}
+.crm-order-head h4 { margin: 0; font-size: 0.9rem; color: var(--ps-text); }
+.crm-order-close {
+  border: 0;
+  background: transparent;
+  color: var(--ps-text-soft);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+  line-height: 1;
+}
+.crm-order-close:hover { background: rgba(255, 255, 255, 0.08); color: var(--ps-text); }
+
+.crm-order-body { padding: 14px 16px; overflow-y: auto; flex: 1 1 auto; }
+
+.crm-od-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 0;
+  color: var(--ps-text-soft);
+  font-size: 0.76rem;
+}
+.crm-od-loading p { margin: 0; }
+
+.crm-od-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.crm-od-head h5 { margin: 0 0 2px; font-size: 0.9rem; color: var(--ps-text); }
+.crm-od-meta { flex: 0 0 auto; }
+
+.crm-od-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px 16px;
+  margin: 0 0 14px;
+}
+.crm-od-fields dt {
+  font-size: 0.63rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ps-text-soft);
+  margin-bottom: 2px;
+}
+.crm-od-fields dd { margin: 0; font-size: 0.78rem; color: var(--ps-text); }
+
+.crm-od-table td { font-size: 0.78rem; }
+.crm-od-qty { text-align: center; white-space: nowrap; }
+.crm-od-num { text-align: right; white-space: nowrap; }
+.crm-unpriced { color: #D97706; font-size: 0.72rem; }
+
+.crm-od-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.78rem;
+  color: var(--ps-text-soft);
+}
+.crm-od-total strong { font-size: 1.05rem; color: var(--ps-text); }
+
+.crm-od-warn, .crm-od-note {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--ps-text-soft);
+  background: rgba(255, 255, 255, 0.04);
+}
+.crm-od-warn { border-left: 2px solid #D97706; }
+.crm-od-note { border-left: 2px solid var(--ps-accent-light); }
+
+.crm-od-status {
+  margin: 0;
+  padding: 0 16px 10px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--ps-text-soft);
+}
+.crm-od-status:empty { display: none; }
+.crm-od-status.is-ok { color: #34D399; }
+
+.crm-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--ps-border);
+}
+.crm-order-actions .ps-btn { flex: 1 1 auto; justify-content: center; }
+
+@media (max-width: 640px) {
+  .crm-order-modal { padding: 0; align-items: flex-end; }
+  .crm-order-card {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+  }
+  .crm-order-actions .ps-btn { flex: 1 1 100%; }
+}

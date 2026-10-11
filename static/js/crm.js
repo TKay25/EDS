@@ -254,6 +254,9 @@
           '<button class="crm-mini-btn" type="button" data-mark-done="1" ' +
           'title="Mark this order as fulfilled">' +
           '<i class="bi bi-check2-circle"></i> Done</button>' +
+          '<button class="crm-mini-btn" type="button" data-open-order="1" ' +
+          'title="Open this order to print documents or take payment">' +
+          '<i class="bi bi-receipt"></i> Open</button>' +
           '</div></td>' +
           '<td>' + escapeHtml(order.created_at) + '</td>' +
           '</tr>';
@@ -272,6 +275,228 @@
           var row = button.closest('tr');
           updateFulfilment(row.getAttribute('data-reference'), { fulfilled: true }, row);
         });
+      });
+      Array.prototype.forEach.call(bodyEl.querySelectorAll('[data-open-order]'), function (button) {
+        button.addEventListener('click', function () {
+          openOrder(button.closest('tr').getAttribute('data-reference'));
+        });
+      });
+    }
+
+    /* ------------------------------------------------------------- one order --
+       The sales view of a single order: its lines, its payment state, and the
+       two documents. Delivery notes print whether or not the order is paid,
+       because goods often travel before the money does; a receipt is issued
+       only once the order is settled. */
+    var orderModal = document.getElementById('crmOrderModal');
+    var orderBody = document.getElementById('crmOrderBody');
+    var orderTitle = document.getElementById('crmOrderTitle');
+    var orderRef = null;
+    var orderPoll = null;
+
+    function closeOrder() {
+      if (orderPoll) { window.clearInterval(orderPoll); orderPoll = null; }
+      if (orderModal) orderModal.hidden = true;
+      orderRef = null;
+    }
+
+    function paymentPill(payment) {
+      var status = (payment && payment.status) || 'unpaid';
+      var cls = status === 'paid' ? 'is-paid' : 'is-unpaid';
+      var label = { paid: 'Paid', pending: 'Awaiting PIN', cancelled: 'Cancelled',
+                    failed: 'Failed', unpaid: 'Not paid' }[status] || status;
+      return '<span class="crm-pill ' + cls + '">' + escapeHtml(label) + '</span>';
+    }
+
+    function renderOrder(order, payment) {
+      var lines = order.lines || [];
+      var paid = order.payment_status === 'paid';
+      var rows = lines.length ? lines.map(function (line) {
+        var unit = line.unit_price === null || line.unit_price === undefined
+          ? '<span class="crm-unpriced">not recorded</span>'
+          : escapeHtml(money(line.unit_price));
+        var total = line.line_total === null || line.line_total === undefined
+          ? '—' : escapeHtml(money(line.line_total));
+        return '<tr>' +
+          '<td><strong>' + escapeHtml(line.product) + '</strong>' +
+          (line.pack_size ? '<span class="crm-sub">' + escapeHtml(line.pack_size) + '</span>' : '') +
+          '</td>' +
+          '<td class="crm-od-qty">' + line.quantity + '</td>' +
+          '<td class="crm-od-num">' + unit + '</td>' +
+          '<td class="crm-od-num">' + total + '</td>' +
+          '</tr>';
+      }).join('') : '<tr><td colspan="4" class="crm-empty-cell">No line items recorded.</td></tr>';
+
+      var who = order.customer_name || ('+' + order.wa_number);
+      orderBody.innerHTML =
+        '<div class="crm-od-head">' +
+          '<div><h5>' + escapeHtml(who) + '</h5>' +
+          (order.company ? '<span class="crm-sub">' + escapeHtml(order.company) + '</span>' : '') +
+          (order.phone ? '<span class="crm-sub">' + escapeHtml(order.phone) + '</span>' : '') +
+          '</div>' +
+          '<div class="crm-od-meta">' + paymentPill(payment) + '</div>' +
+        '</div>' +
+        '<dl class="crm-od-fields">' +
+          '<div><dt>Placed</dt><dd>' + escapeHtml(order.created_at) + '</dd></div>' +
+          '<div><dt>Items</dt><dd>' + order.item_count + '</dd></div>' +
+          '<div><dt>Fulfilment</dt><dd>' +
+            (order.delivery_method === 'delivery' ? 'Delivery' : 'Collection') + '</dd></div>' +
+          '<div><dt>Delivery address</dt><dd>' +
+            (order.address ? escapeHtml(order.address) : '—') + '</dd></div>' +
+        '</dl>' +
+        '<div class="crm-table-wrap"><table class="crm-table crm-od-table">' +
+          '<thead><tr><th>Item</th><th class="crm-od-qty">Qty</th>' +
+          '<th class="crm-od-num">Unit price</th><th class="crm-od-num">Line total</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table></div>' +
+        '<div class="crm-od-total"><span>Total' + (paid ? ' paid' : ' due') + '</span>' +
+          '<strong>' + escapeHtml(money(order.total)) + '</strong></div>' +
+        (order.priced ? '' :
+          '<p class="crm-od-warn"><i class="bi bi-info-circle"></i> This order was taken before ' +
+          'line prices were recorded, so unit prices show as not recorded. The total is the amount ' +
+          'actually charged.</p>') +
+        (payment && payment.awaiting ?
+          '<p class="crm-od-note"><i class="bi bi-hourglass-split"></i> Waiting for the customer to ' +
+          'enter their EcoCash PIN. Checking automatically…</p>' : '');
+
+      orderTitle.textContent = 'Order ' + order.reference;
+    }
+
+    function refreshOrderActions(order, payment) {
+      var paid = order.payment_status === 'paid';
+      var awaiting = payment && payment.awaiting;
+      var requestBtn = document.getElementById('crmOrderRequestPay');
+      var receiptBtn = document.getElementById('crmOrderReceipt');
+      var sendBtn = document.getElementById('crmOrderSendReceipt');
+      var noteEl = document.getElementById('crmOrderNote');
+
+      if (requestBtn) {
+        // Nothing to request once it is settled, and no point while the customer
+        // already has a prompt on their handset.
+        requestBtn.disabled = paid || awaiting;
+        requestBtn.innerHTML = awaiting
+          ? '<i class="bi bi-hourglass-split"></i> Waiting for PIN'
+          : '<i class="bi bi-phone"></i> Request EcoCash payment';
+      }
+      // A receipt is proof of payment, so both the printed and the sent copy are
+      // held back until the money is actually in.
+      if (receiptBtn) receiptBtn.disabled = !paid;
+      if (sendBtn) sendBtn.disabled = !paid;
+      if (noteEl) {
+        if (paid) {
+          noteEl.textContent = 'Paid ' + (order.paid_at || '') +
+            '. The receipt can be printed or emailed to the customer.';
+          noteEl.className = 'crm-od-status is-ok';
+        } else if (awaiting) {
+          noteEl.textContent = 'An EcoCash prompt was sent to the customer.';
+          noteEl.className = 'crm-od-status';
+        } else {
+          noteEl.textContent = 'Not paid. Send the EcoCash prompt when the customer is ready to pay.';
+          noteEl.className = 'crm-od-status';
+        }
+      }
+    }
+
+    function loadOrder(reference, quiet) {
+      return fetch('/api/crm/orders/' + encodeURIComponent(reference))
+        .then(function (response) { return response.json(); })
+        .then(function (result) {
+          if (!result.success) {
+            if (!quiet) window.alert(result.message || 'Could not load that order.');
+            return null;
+          }
+          renderOrder(result.order, result.payment);
+          refreshOrderActions(result.order, result.payment);
+          return result;
+        })
+        .catch(function () {
+          if (!quiet) window.alert('Could not load that order.');
+          return null;
+        });
+    }
+
+    function openOrder(reference) {
+      if (!orderModal || !orderBody) return;
+      orderRef = reference;
+      orderBody.innerHTML = '<div class="crm-od-loading"><span class="crm-spinner"></span>' +
+        '<p>Loading order…</p></div>';
+      orderModal.hidden = false;
+      loadOrder(reference, false).then(function (result) {
+        // A pending EcoCash payment resolves on the customer's handset, so the
+        // portal watches for it rather than making the sales person refresh.
+        if (result && result.payment && result.payment.awaiting && !orderPoll) {
+          orderPoll = window.setInterval(function () {
+            if (!orderRef || document.hidden) return;
+            fetch('/api/crm/orders/' + encodeURIComponent(orderRef) + '/payment-status')
+              .then(function (response) { return response.json(); })
+              .then(function (payload) {
+                if (!payload.success) return;
+                if (payload.payment.paid) {
+                  window.clearInterval(orderPoll); orderPoll = null;
+                  window.crmToast && window.crmToast('Payment received for ' + orderRef + '.', 'success');
+                }
+                loadOrder(orderRef, true);
+              })
+              .catch(function () {});
+          }, 6000);
+        }
+      });
+    }
+
+    if (orderModal) {
+      orderModal.addEventListener('click', function (event) {
+        var action = event.target.closest('[data-order-action]');
+        if (action) {
+          var kind = action.getAttribute('data-order-action');
+          if (kind === 'close') { closeOrder(); return; }
+          if (kind === 'delivery-note') {
+            window.location.href = '/api/crm/orders/' + encodeURIComponent(orderRef) + '/delivery-note.pdf';
+            return;
+          }
+          if (kind === 'receipt') {
+            window.location.href = '/api/crm/orders/' + encodeURIComponent(orderRef) + '/receipt.pdf';
+            return;
+          }
+          if (kind === 'send-receipt') {
+            action.disabled = true;
+            postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/email-receipt', {})
+              .then(function (result) {
+                action.disabled = false;
+                window.crmToast && window.crmToast(
+                  result.message || (result.success ? 'Receipt sent.' : 'Could not send the receipt.'),
+                  result.success ? 'success' : 'error');
+                if (result.success) refresh(true);
+              })
+              .catch(function () {
+                action.disabled = false;
+                window.crmToast && window.crmToast('Could not send the receipt.', 'error');
+              });
+            return;
+          }
+          if (kind === 'request-payment') {
+            action.disabled = true;
+            postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/request-payment', {})
+              .then(function (result) {
+                action.disabled = false;
+                if (!result.success) {
+                  window.crmToast && window.crmToast(result.message || 'Could not request payment.', 'error');
+                  return;
+                }
+                window.crmToast && window.crmToast(
+                  result.message || 'An EcoCash prompt was sent to the customer.', 'success');
+                openOrder(orderRef);
+              })
+              .catch(function () {
+                action.disabled = false;
+                window.crmToast && window.crmToast('Could not request payment.', 'error');
+              });
+            return;
+          }
+        }
+        if (event.target === orderModal) closeOrder();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && orderModal && !orderModal.hidden) closeOrder();
       });
     }
 
