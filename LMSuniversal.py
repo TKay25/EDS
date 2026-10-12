@@ -21692,13 +21692,20 @@ SHOP_TRANSLATIONS = {
         "👋 Hello *": "👋 Mhoro *",
         ", welcome to *": ", mauya ku*",
         "*!\nI am the ": "*!\nNdini ",
-        " shopping assistant for ": " mubatsiri wekutengesa we",
-        ".\n\n🛍️ Browse our range and build an order\n🔎 Search for a product by name\n"
-        "🛒 Review your cart and check out\n☎️ Reach our sales team in one tap\n\n"
-        "How can I help you today?":
-            ".\n\n🛍️ Ongorora zvigadzirwa uye gadzira odha\n🔎 Tsvaga chigadzirwa nezita\n"
-            "🛒 Ona ngoro yako uye ubhadhare\n☎️ Bata boka redu rekutengesa\n\n"
-            "Ndingakubatsirei nhasi?",
+        " assistant.": " mubatsiri.",
+        # The English blurb is worded here as it is worded now. An earlier
+        # wording was left behind once already, and a key that no longer matches
+        # fails silently: the customer simply reads English.
+        "🛍️ Browse the range and build an order\n🔎 Search for a product by name\n"
+        "🛒 Review your cart and check out\n📦 Track or cancel an order\n"
+        "🙋 Ask for a person whenever you prefer":
+            "🛍️ Ongorora zvigadzirwa uye gadzira odha\n🔎 Tsvaga chigadzirwa nezita\n"
+            "🛒 Ona ngoro yako uye ubhadhare\n📦 Tevedzera kana kubvisa odha\n"
+            "🙋 Kumbira munhu chero paunoda",
+        "Browse the range or search for a product to get started.":
+            "Ongorora zvigadzirwa kana kutsvaga chigadzirwa kuti utange.",
+        "What would you like to do next, *": "Chii chaunoda kuita, *",
+        "What would you like to do next?": "Chii chaunoda kuita?",
         "I can help you browse our Knockout range, build an order and reach our sales team. "
         "Choose an option below to continue:":
             "Ndinogona kukubatsira kuona zvigadzirwa zveKnockout, kugadzira odha uye kutaura neboka redu "
@@ -21949,13 +21956,17 @@ SHOP_TRANSLATIONS = {
         "👋 Hello *": "👋 Sawubona *",
         ", welcome to *": ", siyanamukela ku*",
         "*!\nI am the ": "*!\nNgingu ",
-        " shopping assistant for ": " umsizi wokuthengisa we",
-        ".\n\n🛍️ Browse our range and build an order\n🔎 Search for a product by name\n"
-        "🛒 Review your cart and check out\n☎️ Reach our sales team in one tap\n\n"
-        "How can I help you today?":
-            ".\n\n🛍️ Bona imikhiqizo njalo wakhe i-oda\n🔎 Dinga umkhiqizo ngebizo\n"
-            "🛒 Bona inqola yakho bese ubhadala\n☎️ Xhumana leqembu lethu lezokuthengisa\n\n"
-            "Ngingakusiza ngani lamuhla?",
+        " assistant.": " umsizi.",
+        "🛍️ Browse the range and build an order\n🔎 Search for a product by name\n"
+        "🛒 Review your cart and check out\n📦 Track or cancel an order\n"
+        "🙋 Ask for a person whenever you prefer":
+            "🛍️ Bona imikhiqizo njalo wakhe i-oda\n🔎 Dinga umkhiqizo ngebizo\n"
+            "🛒 Bona inqola yakho bese ubhadala\n📦 Landela loba khansela i-oda\n"
+            "🙋 Cela umuntu noma nini lapho uthanda",
+        "Browse the range or search for a product to get started.":
+            "Bona imikhiqizo loba dinga umkhiqizo ukuze uqalise.",
+        "What would you like to do next, *": "Ufuna ukwenzani, *",
+        "What would you like to do next?": "Ufuna ukwenzani?",
         "I can help you browse our Knockout range, build an order and reach our sales team. "
         "Choose an option below to continue:":
             "Ngingakusiza ukubona imikhiqizo yeKnockout, ukwenza i-oda kanye lokuxhumana leqembu lethu "
@@ -22212,6 +22223,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "View Cart": "Ona Ngoro",
         "Contact us": "Tibatei",
         "Talk to a human": "Taura nemunhu",
+        "Talk to Support": "Taura neRubatsiro",
         "About Us": "Nezvedu",
         "Switch to Staff": "Dzokera kuvashandi",
         "Language": "Mutauro",
@@ -22247,6 +22259,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "View Cart": "Bona Inqola",
         "Contact us": "Xhumana lathi",
         "Talk to a human": "Khuluma lomuntu",
+        "Talk to Support": "Khuluma loSizo",
         "About Us": "Mayelana Lathi",
         "Switch to Staff": "Buyela Kuzisebenzi",
         "Language": "Ulimi",
