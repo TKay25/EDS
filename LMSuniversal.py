@@ -25307,19 +25307,45 @@ def company_logout():
                      user={"id": user.get('id'), "name": user.get('name'),
                            "role": user.get('role'), "email": user.get('email')})
     session.clear()
-    return redirect(url_for('company_login_page'))
+    # The hub is readable without a session, so this lands the user on the
+    # company's cards rather than a sign-in form they did not ask for.
+    return redirect(url_for('company_system'))
+
+
+def company_system_guest():
+    """The launcher as a signed-out visitor sees it.
+
+    The hub is the front door to four portals rather than a secret, so it stays
+    readable once the session is gone. That is what makes logging out land on the
+    cards instead of a bare password form, and it is what the company asked for:
+    the cards and their headline numbers stay visible, and every card still goes
+    through its own guard, so nothing behind one opens without signing in.
+    """
+    return {
+        "guest": True,
+        "id": None,
+        "firstname": "",
+        "surname": "",
+        "role": "",
+        "email": "",
+        "initials": "BC",
+        "company_name": COMPANY_SYSTEM_NAME,
+        "modules": {key: True for key in COMPANY_MODULE_KEYS},
+    }
 
 
 @app.route('/company-system')
 def company_system():
     user = company_system_user()
-    if not user:
-        return redirect(url_for('company_login_page'))
+    is_guest = user is None
+    if is_guest:
+        user = company_system_guest()
     denied = request.args.get('denied', '')
     denied_title = next((module['title'] for module in COMPANY_MODULES if module['key'] == denied), '')
     return render_template('company_portal.html', user=user, active_nav='hub',
                            nav_modules=user_modules(user),
                            modules=COMPANY_MODULES,
+                           is_guest=is_guest,
                            denied_title=denied_title,
                            channel_number=company_system_channel_label(), **company_system_stats())
 
@@ -27085,8 +27111,11 @@ def logout():
     # Clear the session data to log the user out
     session.clear()
 
-    # Redirect to the landing page or login page after logout
-    return redirect(url_for('explore_lms'))
+    # The LMS is one portal inside the Brilliant Chemicals company system, so
+    # signing out of it returns to the company hub rather than the Echelon
+    # marketing site: the user stays inside the system they were working in, and
+    # lands on the cards rather than a bare sign-in form.
+    return redirect(url_for('company_system'))
     
 #else:
 #    print('Connection to SQL failed')
