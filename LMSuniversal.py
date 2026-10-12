@@ -21330,6 +21330,92 @@ COMPANY_SYSTEM_CONTACT = {
     "hours": "Monday to Friday, 8:00 AM - 5:00 PM",
 }
 
+# The shops stock is kept in, seeded once so a fresh install has somewhere to
+# count. A shop is named after the area it stands in, because the name is what a
+# customer taps in the assistant's choice row and they think in areas rather than
+# in street numbers. Everything here is editable in the CRM portal afterwards.
+#
+# Names are kept inside WhatsApp's 24-character list-row title. There are more
+# shops than one WhatsApp list can show, which the assistant already handles by
+# offering the rest as numbers to reply with.
+BRILLIANT_SHOPS = [
+    {
+        "id": "city-centre",
+        "name": "City Centre",
+        "address": "Suite 20 Karimapondo Mall, No. 72 L Takawira, Cnr R Mugabe",
+        "phone": "+263 777 639 866",
+    },
+    {
+        "id": "city-mall-shop-36",
+        "name": "City Mall Shop 36",
+        "address": "Crn Harere Street & Charter, facing Kaguvi Street",
+        "phone": "+263 77 470 7657",
+    },
+    {
+        "id": "factory-shop",
+        "name": "Factory Shop",
+        "address": "344 Budget Close, Willowvale, Harare",
+        "phone": "+263 780 426 776",
+    },
+    {
+        "id": "tynwald-south",
+        "name": "Tynwald South",
+        "address": "1044 Tynwald Industrial Area",
+        "phone": "+263 78 991 8669",
+    },
+    {
+        "id": "machipisa",
+        "name": "Machipisa",
+        "address": "4292 Burombo St, Kendrick Complex, Shop No. 28, Opposite Machipisa Rank",
+        "phone": "+263 775 187 886",
+    },
+    {
+        "id": "chitungwiza",
+        "name": "Chitungwiza",
+        "address": "Chikwanha Shops, Rascade Complex, Opposite Musika",
+        "phone": "+263 784 713 359",
+    },
+    {
+        # The full name is "No. 54 Rezende Karimapondo Mall", four characters past
+        # what a WhatsApp row holds, so it is named for the mall and the side of it
+        # that tells it apart from the other Karimapondo shop.
+        "id": "rezende-karimapondo-mall",
+        "name": "Rezende Karimapondo Mall",
+        "address": "No. 54, Table 84, Crn R Mugabe & Rezende",
+        "phone": "+263 77 168 7079",
+    },
+    {
+        "id": "kuwadzana",
+        "name": "Kuwadzana",
+        "address": "Zvinavashe Complex, Highglen Road, Kuwadzana Turnoff",
+        "phone": "+263 78 407 1893",
+    },
+    {
+        "id": "glenview-8",
+        "name": "Glenview 8",
+        "address": "Mashwede Village, Shop No. 16, Glenview Area 8",
+        "phone": "+263 77 990 3179",
+    },
+    {
+        "id": "mbudzi-market",
+        "name": "Mbudzi Market",
+        "address": "Hall 10, Shop 19, Mbudzi Roundabout",
+        "phone": "+263 77 691 8712",
+    },
+    {
+        "id": "epworth",
+        "name": "Epworth",
+        "address": "Munyuki Service Station, Blue Bar, next to Kanga Fry",
+        "phone": "+263 779 892 384",
+    },
+    {
+        "id": "makoni-shopping-centre",
+        "name": "Makoni Shopping Centre",
+        "address": "Opposite CIMAS",
+        "phone": "+263 774 032 646",
+    },
+]
+
 BRILLIANT_PRODUCTS = [
     {
         "id": "foam-bath",
@@ -22371,6 +22457,40 @@ def shop_refresh_catalog():
                            "prices": prices, "sizes": sizes, "custom": custom,
                            "removed": removed, "shops": shops, "stock": stock}
     return _shop_catalog_cache
+
+
+def shop_seed_shops():
+    """Copy the shops shipped in code into the shops table, once.
+
+    Only runs when the table is empty, so a business that has set its own shops
+    up never has the shipped ones pushed back at it: a shop that was renamed in
+    the portal keeps the name it was given. Returns the number seeded.
+    """
+    seeded = 0
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT COUNT(*) FROM shop_shops")
+            row = cursor.fetchone()
+            if row and int(row[0] or 0):
+                return 0
+            for position, shop in enumerate(BRILLIANT_SHOPS):
+                cursor.execute("""
+                    INSERT INTO shop_shops (shop_id, name, address, phone, position,
+                                            active, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, TRUE, NOW())
+                    ON CONFLICT (shop_id) DO NOTHING
+                """, (shop["id"], shop["name"], shop.get("address") or "",
+                      shop.get("phone") or "", position))
+                seeded += 1
+            connection.commit()
+        if seeded:
+            # The cache now holds no shops, so the next read has to reload.
+            _shop_stock_bust()
+            print(f"shops seeded with {seeded} shop(s) from the code defaults")
+    except Exception as e:
+        print(f"shop seed error: {e}")
+    return seeded
 
 
 def shop_seed_catalog():
@@ -24024,7 +24144,9 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         shops = shop_shops()
         chosen = shop_by_id(low.split(":", 1)[1]) if low.startswith("shop:") else None
         if not chosen:
-            # The shop's own name is on screen, so typing it has to work too.
+            # The shop's own name is on screen, so typing it has to work too. A
+            # typed number never reaches here: the engine turns one into the id of
+            # the option it was printed against before the step is called.
             chosen = next((shop for shop in shops if shop["name"].strip().lower() == low), None)
         if not chosen:
             return result("order_shop", [_shop_shop_prompt(customer)])
@@ -27730,6 +27852,10 @@ def shop_ensure_seeded():
     if _catalog_seeded:
         return 0
     _catalog_seeded = True
+    # Shops first: the catalogue refresh that follows reads them into the cache,
+    # so the assistant has somewhere to send a collecting customer from the first
+    # order rather than only after someone has been into the portal.
+    shop_seed_shops()
     return shop_seed_catalog()
 
 
