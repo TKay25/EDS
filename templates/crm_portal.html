@@ -471,9 +471,29 @@
                 </div>
             </div>
             <div class="ps-panel-body">
+                {# The shops are a dropdown rather than a row of chips. There are
+                   more of them than fit across a screen, so chips wrapped over
+                   several lines and it stopped being obvious which one was
+                   chosen. A dropdown also stays one line on a phone. #}
+                <div class="crm-shop-picker">
+                    <label class="crm-shop-picker-label" for="crmShopSelect">Counting stock at</label>
+                    <select class="ps-input crm-shop-select" id="crmShopSelect"
+                            aria-label="Choose the shop to count"></select>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmShopEdit">
+                        <i class="bi bi-pencil"></i> Rename shop
+                    </button>
+                </div>
+                <p class="crm-shop-current" id="crmShopCurrent"></p>
+
                 <div class="crm-shop-form" id="crmShopForm" hidden>
-                    <label for="crmShopName">New shop</label>
+                    <label for="crmShopName" id="crmShopFormLabel">New shop</label>
+                    {# Carried so a rename updates the shop it started from. The id
+                       is what orders and stock rows point at, so it never changes
+                       when the name does. #}
+                    <input type="hidden" id="crmShopId" value="">
                     <div class="crm-shop-form-row">
+                        {# Capped at the limit rather than only refused afterwards, with
+                           the count shown so the cap is visible rather than mysterious. #}
                         <input class="ps-input" id="crmShopName" type="text" maxlength="24"
                                placeholder="Area, e.g. Tynwald South" autocomplete="off">
                         <input class="ps-input" id="crmShopAddress" type="text"
@@ -492,9 +512,6 @@
                         choose it on WhatsApp, which is why it is kept short enough to fit one row.
                     </p>
                 </div>
-
-                <div class="crm-shop-bar" id="crmShopBar" role="tablist"
-                     aria-label="Shops"></div>
 
                 <div class="crm-table-wrap">
                     <table class="crm-table crm-stock-table">

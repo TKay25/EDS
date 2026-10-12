@@ -27402,7 +27402,31 @@ def crm_shop_save_api():
         return jsonify({'success': False,
                         'message': f'Keep the shop name to {SHOP_NAME_LIMIT} characters '
                                    'so it fits the customer\'s choice.'}), 400
-    shop_id = (payload.get('shop_id') or '').strip().lower() or _shop_slug(name)
+    wanted_id = (payload.get('shop_id') or '').strip().lower()
+    shops = shop_shops()
+    # Two shops with the same name would be indistinguishable in the customer's
+    # choice, and typing that name would pick one of them arbitrarily — so the
+    # wrong shop's stock could come off. Refused rather than allowed to collide.
+    clash = next((shop for shop in shops
+                  if shop["id"] != wanted_id
+                  and shop["name"].strip().lower() == name.lower()), None)
+    if clash:
+        return jsonify({'success': False,
+                        'message': f'There is already a shop called “{clash["name"]}”. '
+                                   'Give this one a different area.'}), 400
+    if wanted_id:
+        # Renaming keeps the reference it already has. The reference is what
+        # orders and stock rows point at, so a rename must not move any of them.
+        shop_id = wanted_id
+    else:
+        shop_id = _shop_slug(name)
+        # A new shop whose area already has a reference would be written over the
+        # shop holding it, because the reference is the key it is stored under.
+        # Refused, so adding a shop can never quietly rename an existing one.
+        if any(shop["id"] == shop_id for shop in shops):
+            return jsonify({'success': False,
+                            'message': 'Another shop already uses that reference. '
+                                       'Rename that shop instead, or use a different area.'}), 400
     if not shop_id:
         return jsonify({'success': False, 'message': 'That name cannot be used.'}), 400
     address = (payload.get('address') or '').strip()

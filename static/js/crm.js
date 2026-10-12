@@ -696,7 +696,8 @@
      stocked yet. Only changed lines are sent, so saving is one action for a
      whole shop rather than a click per row. */
   var stockBody = document.getElementById('crmStockBody');
-  var stockBar = document.getElementById('crmShopBar');
+  var stockSelect = document.getElementById('crmShopSelect');
+  var stockCurrent = document.getElementById('crmShopCurrent');
   var stockSave = document.getElementById('crmStockSave');
   var stockHint = document.getElementById('crmStockHint');
   var stockMoves = document.getElementById('crmStockMovements');
@@ -739,21 +740,51 @@
     }
   }
 
+  var stockShops = [];
+
   function renderStockShops(shops, current) {
-    if (!stockBar) return;
-    if (!shops || !shops.length) {
-      stockBar.innerHTML = '<span class="crm-stock-empty">No shops yet. Add one to start ' +
-        'keeping stock.</span>';
+    if (!stockSelect) return;
+    stockShops = shops || [];
+    if (!stockShops.length) {
+      stockSelect.innerHTML = '<option value="">No shops yet</option>';
+      stockSelect.disabled = true;
+      if (stockCurrent) {
+        stockCurrent.textContent = 'Add a shop to start keeping stock.';
+      }
+      setShopEditEnabled(false);
       return;
     }
-    stockBar.innerHTML = shops.map(function (shop) {
-      var active = current && shop.id === current.id;
-      return '<button type="button" role="tab" aria-selected="' + (active ? 'true' : 'false') +
-        '" class="crm-shop-chip' + (active ? ' is-active' : '') + '" data-shop="' +
-        escapeHtml(shop.id) + '">' + escapeHtml(shop.name) +
-        (shop.address ? '<span class="crm-shop-addr">' + escapeHtml(shop.address) + '</span>' : '') +
-        '</button>';
+    stockSelect.disabled = false;
+    stockSelect.innerHTML = stockShops.map(function (shop) {
+      return '<option value="' + escapeHtml(shop.id) + '">' + escapeHtml(shop.name) +
+        '</option>';
     }).join('');
+    if (current) stockSelect.value = current.id;
+    setShopEditEnabled(true);
+    paintShopCurrent(current);
+  }
+
+  function selectedShop() {
+    if (!stockSelect || !stockShops.length) return null;
+    var wanted = stockSelect.value;
+    return stockShops.filter(function (shop) { return shop.id === wanted; })[0] || null;
+  }
+
+  function paintShopCurrent(current) {
+    if (!stockCurrent) return;
+    var shop = current || selectedShop();
+    if (!shop) {
+      stockCurrent.textContent = '';
+      return;
+    }
+    stockCurrent.textContent = shop.address
+      ? shop.name + ' · ' + shop.address + (shop.phone ? ' · ' + shop.phone : '')
+      : shop.name;
+  }
+
+  function setShopEditEnabled(enabled) {
+    var edit = document.getElementById('crmShopEdit');
+    if (edit) edit.disabled = !enabled;
   }
 
   function renderStockRows(rows) {
@@ -863,30 +894,34 @@
   }
 
   function saveShop() {
+    var idEl = document.getElementById('crmShopId');
     var nameEl = document.getElementById('crmShopName');
     var addressEl = document.getElementById('crmShopAddress');
     var phoneEl = document.getElementById('crmShopPhone');
     var button = document.getElementById('crmShopSave');
+    var editing = idEl ? idEl.value : '';
     var name = nameEl ? nameEl.value.trim() : '';
     if (!name) {
       window.crmToast && window.crmToast('Give the shop a name.', 'error');
       return;
     }
     setBusy(button, true, 'Saving…');
-    postJson('/api/crm/shops', {
+    var payload = {
       name: name,
       address: addressEl ? addressEl.value.trim() : '',
       phone: phoneEl ? phoneEl.value.trim() : '',
-    }).then(function (result) {
+    };
+    // Sending the id it started from turns this into a rename of that shop. The
+    // id is never derived from the new name, so orders and stock rows that point
+    // at the shop keep pointing at it.
+    if (editing) payload.shop_id = editing;
+    postJson('/api/crm/shops', payload).then(function (result) {
       setBusy(button, false);
       window.crmToast && window.crmToast(
         result.message || (result.success ? 'Shop saved.' : 'Could not save the shop.'),
         result.success ? 'success' : 'error');
       if (!result.success) return;
-      if (nameEl) nameEl.value = '';
-      if (addressEl) addressEl.value = '';
-      if (phoneEl) phoneEl.value = '';
-      if (shopForm) shopForm.hidden = true;
+      closeShopForm();
       stockShopId = result.shop ? result.shop.id : null;
       renderStockShops(result.shops, result.shop);
       renderStockRows(result.rows);
@@ -897,13 +932,50 @@
     });
   }
 
-  if (stockBar) {
-    stockBar.addEventListener('click', function (event) {
-      var chip = event.target.closest('[data-shop]');
-      if (!chip) return;
+  function openShopForm(shop) {
+    if (!shopForm) return;
+    var idEl = document.getElementById('crmShopId');
+    var nameEl = document.getElementById('crmShopName');
+    var addressEl = document.getElementById('crmShopAddress');
+    var phoneEl = document.getElementById('crmShopPhone');
+    if (idEl) idEl.value = shop ? shop.id : '';
+    if (nameEl) nameEl.value = shop ? shop.name : '';
+    if (addressEl) addressEl.value = shop ? (shop.address || '') : '';
+    if (phoneEl) phoneEl.value = shop ? (shop.phone || '') : '';
+    paintShopNameCount();
+    shopForm.hidden = false;
+    if (nameEl) nameEl.focus();
+  }
+
+  function closeShopForm() {
+    if (!shopForm) return;
+    var idEl = document.getElementById('crmShopId');
+    if (idEl) idEl.value = '';
+    shopForm.hidden = true;
+    paintShopNameCount();
+  }
+
+  // The cap is enforced on the field, so this only ever informs: it exists so the
+  // limit is visible while typing rather than discovered when the save is refused.
+  function paintShopNameCount() {
+    var nameEl = document.getElementById('crmShopName');
+    var label = document.getElementById('crmShopFormLabel');
+    var idEl = document.getElementById('crmShopId');
+    if (!nameEl || !label) return;
+    var limit = parseInt(nameEl.getAttribute('maxlength'), 10) || 24;
+    label.textContent = (idEl && idEl.value ? 'Rename or edit shop' : 'New shop') +
+      ' (' + nameEl.value.length + ' / ' + limit + ' characters)';
+  }
+
+  if (stockSelect) {
+    stockSelect.addEventListener('change', function () {
       if (stockDirtyCount() && !window.confirm(
-          'You have unsaved counts. Change shop and lose them?')) return;
-      loadStock(chip.getAttribute('data-shop'));
+          'You have unsaved counts. Change shop and lose them?')) {
+        // Put the dropdown back where it was rather than losing the counts.
+        if (stockShopId) stockSelect.value = stockShopId;
+        return;
+      }
+      loadStock(stockSelect.value);
     });
   }
   if (stockBody) {
@@ -912,13 +984,23 @@
   }
   if (stockSave) stockSave.addEventListener('click', saveStock);
   var shopNew = document.getElementById('crmShopNew');
-  if (shopNew && shopForm) {
-    shopNew.addEventListener('click', function () { shopForm.hidden = !shopForm.hidden; });
+  if (shopNew) {
+    shopNew.addEventListener('click', function () {
+      if (shopForm && !shopForm.hidden) { closeShopForm(); return; }
+      openShopForm(null);
+    });
+  }
+  var shopEdit = document.getElementById('crmShopEdit');
+  if (shopEdit) {
+    shopEdit.addEventListener('click', function () {
+      if (shopForm && !shopForm.hidden) { closeShopForm(); return; }
+      openShopForm(selectedShop());
+    });
   }
   var shopCancel = document.getElementById('crmShopCancel');
-  if (shopCancel && shopForm) {
-    shopCancel.addEventListener('click', function () { shopForm.hidden = true; });
-  }
+  if (shopCancel) shopCancel.addEventListener('click', closeShopForm);
+  var shopNameEl = document.getElementById('crmShopName');
+  if (shopNameEl) shopNameEl.addEventListener('input', paintShopNameCount);
   var shopSave = document.getElementById('crmShopSave');
   if (shopSave) shopSave.addEventListener('click', saveShop);
 
