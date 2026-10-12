@@ -492,9 +492,11 @@
                        when the name does. #}
                     <input type="hidden" id="crmShopId" value="">
                     <div class="crm-shop-form-row">
-                        {# Capped at the limit rather than only refused afterwards, with
-                           the count shown so the cap is visible rather than mysterious. #}
-                        <input class="ps-input" id="crmShopName" type="text" maxlength="24"
+                        {# Capped at the limit the endpoint enforces, with the count shown
+                           so the cap is visible while typing rather than only being
+                           discovered when a save is refused. #}
+                        <input class="ps-input" id="crmShopName" type="text"
+                               maxlength="{{ shop_name_limit }}"
                                placeholder="Area, e.g. Tynwald South" autocomplete="off">
                         <input class="ps-input" id="crmShopAddress" type="text"
                                placeholder="Street address (optional)" autocomplete="off">

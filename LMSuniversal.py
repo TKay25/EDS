@@ -25989,6 +25989,9 @@ def portal_crm():
                            catalog=catalog,
                            removed=removed,
                            limits=catalog_limits(),
+                           # Rendered so the shop name field cannot drift from the
+                           # limit the endpoint actually enforces.
+                           shop_name_limit=SHOP_NAME_LIMIT,
                            channel_number=company_system_channel_label(),
                            **company_system_stats())
 
