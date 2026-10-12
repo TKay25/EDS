@@ -23248,6 +23248,31 @@ def shop_stock_set(shop_id, product_id, pack_size, quantity, user=None, note=Non
     return True, "saved"
 
 
+def shop_stock_receive(shop_id, product_id, pack_size, quantity, user=None, note=None):
+    """Add stock that has arrived at a shop. Returns (ok, message).
+
+    Typing the new total into the count would leave the same figure behind, but
+    the movement would then say the shelf was counted - and a delivery is a
+    different event. It is the one that explains where a rise came from without
+    anyone having to walk the shelves, so it adds to what is there and files
+    itself as a delivery.
+    """
+    if not shop_id:
+        return False, "Choose a shop first."
+    if not str(product_id or "").strip() or not str(pack_size or "").strip():
+        return False, "Choose a product and a pack size."
+    try:
+        quantity = int(quantity)
+    except (TypeError, ValueError):
+        return False, "How many arrived? That is not a number."
+    if quantity <= 0:
+        return False, "How many arrived? Enter a number above zero."
+    if not _shop_stock_move(shop_id, product_id, pack_size, quantity, "delivery",
+                            note=note, user=user):
+        return False, "The stock could not be recorded."
+    return True, f"Added {quantity} × {pack_size}"
+
+
 def shop_stock_movements(shop_id=None, limit=40):
     """Recent stock changes, newest first, so a count can be explained later."""
     try:
@@ -27397,6 +27422,40 @@ def crm_stock_save_api():
     return jsonify({'success': True,
                     'message': (f"Saved {len(changed)} change(s) at {shop['name']}."
                                 if changed else "Nothing had changed."),
+                    'rows': shop_stock_table(shop['id']),
+                    'movements': shop_stock_movements(shop['id'], limit=25)})
+
+
+@app.route('/api/crm/stock/receive', methods=['POST'])
+def crm_stock_receive_api():
+    """Record stock arriving at a shop.
+
+    Kept apart from the count endpoint because the two are different events: a
+    count states what is on the shelf, a receipt says what came in. Both move the
+    same number, but only one of them explains a rise without a recount.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    shop = shop_by_id(payload.get('shop'))
+    if not shop:
+        return jsonify({'success': False, 'message': 'Choose a shop first.'}), 400
+    note = (payload.get('note') or '').strip()
+    name = f"{user.get('firstname', '')} {user.get('surname', '')}".strip()
+    ok, message = shop_stock_receive(shop['id'], payload.get('product_id'),
+                                     payload.get('pack_size'), payload.get('quantity'),
+                                     user=name, note=note or None)
+    if not ok:
+        return jsonify({'success': False, 'message': message}), 400
+    log_activity("received_stock", "stock",
+                 f"Received stock at {shop['name']}",
+                 target=shop['id'],
+                 details={"product": payload.get('product_id'),
+                          "pack_size": payload.get('pack_size'),
+                          "quantity": payload.get('quantity'), "note": note},
+                 user=user)
+    return jsonify({'success': True, 'message': f"{message} to {shop['name']}.",
                     'rows': shop_stock_table(shop['id']),
                     'movements': shop_stock_movements(shop['id'], limit=25)})
 

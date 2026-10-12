@@ -787,11 +787,106 @@
     if (edit) edit.disabled = !enabled;
   }
 
+  var stockRows = [];
+  var receiveBuilt = '';
+
+  /* The receive form offers the same products and pack sizes the table shows, so
+     a delivery can only be booked against a line the shop is actually counted on. */
+  function renderReceive(rows) {
+    var productEl = document.getElementById('crmReceiveProduct');
+    var sizeEl = document.getElementById('crmReceiveSize');
+    if (!productEl || !sizeEl) return;
+    stockRows = rows || [];
+    if (!stockRows.length) {
+      productEl.innerHTML = '';
+      sizeEl.innerHTML = '';
+      productEl.disabled = true;
+      sizeEl.disabled = true;
+      return;
+    }
+    productEl.disabled = false;
+    sizeEl.disabled = false;
+    // Rebuilt only when the catalogue itself changes, so a refresh never wipes a
+    // half-filled form.
+    var signature = stockRows.map(function (row) {
+      return row.product_id + '|' + row.pack_size;
+    }).join(',');
+    if (signature === receiveBuilt) { paintReceiveSizes(); return; }
+    receiveBuilt = signature;
+    var chosenProduct = productEl.value;
+    var products = [];
+    stockRows.forEach(function (row) {
+      if (!products.filter(function (p) { return p.id === row.product_id; }).length) {
+        products.push({ id: row.product_id, name: row.name });
+      }
+    });
+    productEl.innerHTML = products.map(function (product) {
+      return '<option value="' + escapeHtml(product.id) + '">' +
+        escapeHtml(product.name) + '</option>';
+    }).join('');
+    if (chosenProduct && products.filter(function (p) {
+      return p.id === chosenProduct; }).length) {
+      productEl.value = chosenProduct;
+    }
+    paintReceiveSizes();
+  }
+
+  function paintReceiveSizes() {
+    var productEl = document.getElementById('crmReceiveProduct');
+    var sizeEl = document.getElementById('crmReceiveSize');
+    if (!productEl || !sizeEl || !stockRows.length) return;
+    var chosenSize = sizeEl.value;
+    var sizes = stockRows.filter(function (row) {
+      return row.product_id === productEl.value;
+    }).map(function (row) { return row.pack_size; });
+    sizeEl.innerHTML = sizes.map(function (size) {
+      return '<option value="' + escapeHtml(size) + '">' + escapeHtml(size) + '</option>';
+    }).join('');
+    if (chosenSize && sizes.indexOf(chosenSize) !== -1) sizeEl.value = chosenSize;
+  }
+
+  function saveReceive() {
+    var productEl = document.getElementById('crmReceiveProduct');
+    var sizeEl = document.getElementById('crmReceiveSize');
+    var qtyEl = document.getElementById('crmReceiveQty');
+    var noteEl = document.getElementById('crmReceiveNote');
+    var button = document.getElementById('crmReceiveSave');
+    if (!productEl || !sizeEl || !stockShopId) return;
+    var quantity = qtyEl ? qtyEl.value.trim() : '';
+    if (!quantity || parseInt(quantity, 10) <= 0) {
+      window.crmToast && window.crmToast(
+        'How many arrived? Enter a number above zero.', 'error');
+      return;
+    }
+    setBusy(button, true, 'Adding…');
+    postJson('/api/crm/stock/receive', {
+      shop: stockShopId,
+      product_id: productEl.value,
+      pack_size: sizeEl.value,
+      quantity: quantity,
+      note: noteEl ? noteEl.value.trim() : '',
+    }).then(function (result) {
+      setBusy(button, false);
+      window.crmToast && window.crmToast(
+        result.message || (result.success ? 'Stock added.' : 'Could not add the stock.'),
+        result.success ? 'success' : 'error');
+      if (!result.success) return;
+      if (qtyEl) qtyEl.value = '';
+      if (noteEl) noteEl.value = '';
+      renderStockRows(result.rows);
+      renderStockMovements(result.movements);
+    }).catch(function () {
+      setBusy(button, false);
+      window.crmToast && window.crmToast('Could not add the stock.', 'error');
+    });
+  }
+
   function renderStockRows(rows) {
     if (!stockBody) return;
     if (!rows || !rows.length) {
       stockBody.innerHTML = '<tr><td colspan="3" class="crm-empty-cell">' +
         'Nothing in the catalogue to count yet.</td></tr>';
+      renderReceive([]);
       return;
     }
     stockBody.innerHTML = rows.map(function (row) {
@@ -805,6 +900,7 @@
             'aria-label="Stock of ' + escapeHtml(row.name + ' ' + row.pack_size) + '">' +
         '</td></tr>';
     }).join('');
+    renderReceive(rows);
     paintStockFoot();
   }
 
@@ -816,7 +912,10 @@
     }
     stockMoves.innerHTML = '<ul class="crm-stock-moves">' + movements.map(function (move) {
       var up = move.delta > 0;
-      var what = up ? 'Added ' : 'Took off ';
+      // A delivery and a count both raise the figure, so the log says which one
+      // it was - otherwise a rise reads as somebody having recounted the shelf.
+      var what = up ? (move.reason === 'delivery' ? 'Received ' : 'Added ')
+                    : 'Took off ';
       return '<li>' +
         '<span class="crm-stock-move-delta ' + (up ? 'is-up' : 'is-down') + '">' +
           (up ? '+' : '') + move.delta + '</span>' +
@@ -1003,6 +1102,10 @@
   if (shopNameEl) shopNameEl.addEventListener('input', paintShopNameCount);
   var shopSave = document.getElementById('crmShopSave');
   if (shopSave) shopSave.addEventListener('click', saveShop);
+  var receiveSave = document.getElementById('crmReceiveSave');
+  if (receiveSave) receiveSave.addEventListener('click', saveReceive);
+  var receiveProduct = document.getElementById('crmReceiveProduct');
+  if (receiveProduct) receiveProduct.addEventListener('change', paintReceiveSizes);
 
   function initStock() {
     // Loaded on first sight of the tab rather than on page load, so the inbox

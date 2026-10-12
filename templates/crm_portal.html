@@ -538,6 +538,45 @@
                     </span>
                 </div>
 
+                {# Stock arriving is recorded as its own event. Typing the new total into
+                   the count would leave the same figure behind, but the movement would
+                   say the shelf was counted, and a delivery is not a count. #}
+                <details class="crm-stock-receive" id="crmReceiveWrap">
+                    <summary>
+                        <i class="bi bi-box-arrow-in-down"></i> Record stock received
+                    </summary>
+                    <div class="crm-stock-receive-row">
+                        <label class="crm-field">
+                            <span>Product</span>
+                            <select class="ps-input" id="crmReceiveProduct"
+                                    aria-label="Product received"></select>
+                        </label>
+                        <label class="crm-field">
+                            <span>Pack size</span>
+                            <select class="ps-input" id="crmReceiveSize"
+                                    aria-label="Pack size received"></select>
+                        </label>
+                        <label class="crm-field">
+                            <span>How many arrived</span>
+                            <input class="ps-input" id="crmReceiveQty" type="number" min="1" step="1"
+                                   inputmode="numeric" placeholder="e.g. 40"
+                                   aria-label="How many arrived">
+                        </label>
+                        <label class="crm-field">
+                            <span>Note <em>optional</em></span>
+                            <input class="ps-input" id="crmReceiveNote" type="text"
+                                   placeholder="e.g. supplier delivery"
+                                   aria-label="Note about the delivery">
+                        </label>
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmReceiveSave">
+                            <i class="bi bi-plus-lg"></i> Add stock
+                        </button>
+                    </div>
+                    <p class="crm-shop-form-hint">
+                        This adds to what the shop already holds, so nothing has to be recounted.
+                    </p>
+                </details>
+
                 <h4 class="crm-section-sub">
                     <i class="bi bi-clock-history"></i> Recent movements
                 </h4>

@@ -2131,6 +2131,38 @@ select.crm-select:focus {
   gap: 12px;
   margin-top: 12px;
 }
+/* Receiving stock is a different event from counting it, so it sits apart from
+   the count rather than being another column in the table. */
+.crm-stock-receive {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px dashed var(--ps-line);
+  border-radius: var(--ps-radius-md);
+  background: var(--ps-surface-soft, rgba(0, 0, 0, 0.015));
+}
+.crm-stock-receive > summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ps-text-soft);
+  list-style: none;
+}
+.crm-stock-receive > summary::-webkit-details-marker { display: none; }
+.crm-stock-receive > summary::before {
+  content: "▸ ";
+  color: var(--ps-accent);
+}
+.crm-stock-receive[open] > summary::before { content: "▾ "; }
+.crm-stock-receive > summary:hover { color: var(--ps-text); }
+.crm-stock-receive-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+.crm-stock-receive-row .crm-field { flex: 1 1 150px; min-width: 0; margin: 0; }
+.crm-stock-receive-row .ps-input { width: 100%; }
 .crm-stock-hint {
   font-size: 11.5px;
   line-height: 1.45;
