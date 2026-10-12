@@ -191,8 +191,8 @@
         <div>
             <h3>Delivery address</h3>
             {% if order.delivery_method == 'collection' %}
-                <p>Collection from the shop</p>
-                <p class="muted">{{ company_contact.address }}</p>
+                <p>Collection from {{ order.shop or 'the shop' }}</p>
+                <p class="muted">{{ order.shop_address or company_contact.address }}</p>
             {% elif order.address %}
                 <p>{{ order.address }}</p>
             {% else %}
@@ -210,10 +210,19 @@
         </tr>
         <tr>
             <td class="label">Method</td>
-            <td>{{ 'Delivery to the customer' if order.delivery_method == 'delivery' else 'Collection from the shop' }}</td>
+            <td>{{ 'Delivery to the customer' if order.delivery_method == 'delivery' else 'Collection from ' + (order.shop or 'the shop') }}</td>
             <td class="label">Items</td>
             <td>{{ order.item_count }}</td>
         </tr>
+        {% if order.shop %}
+        <tr>
+            <td class="label">{{ 'Supplying shop' if order.delivery_method == 'delivery' else 'Collect from' }}</td>
+            <td colspan="3">
+                <strong>{{ order.shop }}</strong>
+                {% if order.shop_address %} — {{ order.shop_address }}{% endif %}
+            </td>
+        </tr>
+        {% endif %}
         <tr>
             <td class="label">Payment</td>
             <td colspan="3">

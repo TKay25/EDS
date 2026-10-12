@@ -21485,6 +21485,50 @@ def ensure_shop_tables():
                 PRIMARY KEY (product_id, pack_size)
             );
         """)
+        # The shops a customer can collect from, or that deliver from. They are
+        # business data rather than deployment data, so they are managed in the
+        # portal and the assistant reads whatever is there.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_shops (
+                shop_id VARCHAR(60) PRIMARY KEY,
+                name VARCHAR(200),
+                address TEXT,
+                phone VARCHAR(40),
+                position INTEGER DEFAULT 0,
+                active BOOLEAN DEFAULT TRUE,
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        # Stock of one pack size at one shop. A row only exists once someone has
+        # counted it, so a product that has never been stocked is untracked rather
+        # than zero - the difference between "none left" and "nobody has said".
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_stock (
+                shop_id VARCHAR(60),
+                product_id VARCHAR(80),
+                pack_size VARCHAR(100),
+                quantity INTEGER DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT NOW(),
+                PRIMARY KEY (shop_id, product_id, pack_size)
+            );
+        """)
+        # Every change to a shop's stock, so a count can be explained later. A
+        # deduction from an order is only trustworthy if the movement is recorded.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_stock_movements (
+                id SERIAL PRIMARY KEY,
+                shop_id VARCHAR(60),
+                product_id VARCHAR(80),
+                pack_size VARCHAR(100),
+                delta INTEGER,
+                quantity_after INTEGER,
+                reason VARCHAR(40),
+                reference VARCHAR(32),
+                note TEXT,
+                created_by VARCHAR(200),
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
         cursor.execute("""
             ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS delivery_method VARCHAR(24)
             DEFAULT 'delivery';
@@ -21505,6 +21549,13 @@ def ensure_shop_tables():
         # rather than only a status value so the cancellation is datable and can
         # be filtered on without reinterpreting the status vocabulary.
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP;")
+        # The shop that will hand the goods over, and that the stock comes off. It
+        # is picked by the customer, so it is part of the order rather than
+        # something inferred later.
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS shop_id VARCHAR(60);")
+        # Set once the order has taken its stock off a shop. It is what makes the
+        # deduction happen exactly once, however many of the payment routes fire.
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS stock_deducted_at TIMESTAMP;")
         connection.commit()
     _shop_tables_ready = True
 
@@ -21641,6 +21692,21 @@ SHOP_TRANSLATIONS = {
         "Will pay on collection from the shop": "Uchabhadhara paunotora kuchitoro",
         "Will pay on delivery": "Uchabhadhara pakusvitswa",
         "Will pay by other means": "Uchabhadhara neimwe nzira",
+        "🚚 *Which shop is closest to you?*": "🚚 *Chitoro chipi chiri padyo newe?*",
+        "We deliver from the shop nearest your address, so choose the one that suits you.":
+            "Tinotakura kubva kuchitoro chiri padyo nekwaunogara, saka sarudza chaunoda.",
+        "🏬 *Which shop will you collect from?*": "🏬 *Uchatore kuchitoro chipi?*",
+        "Choose the shop that is easiest for you to reach.":
+            "Sarudza chitoro chiri nyore kusvika kwauri.",
+        " does not have everything you asked for.":
+            " hachina zvose zvawakumbira.",
+        ": you asked for ": ": wakumbira ",
+        " left there.": " zvasara ipapo.",
+        "You can take what is available there, or choose a different shop.":
+            "Unogona kutora zviriho ipapo, kana kusarudza chimwe chitoro.",
+        "*Delivering from:*": "*Kunotumirwa kubva:*",
+        "*Collect from:*": "*Unotora ku:*",
+        "*Shop address:*": "*Kero yechitoro:*",
         "🚚 *Delivery is charged separately*":
             "🚚 *Kutakura kunobhadharwa kwakasiyana*",
         "The amount above covers the goods only. Our sales agent will send you the "
@@ -22027,6 +22093,21 @@ SHOP_TRANSLATIONS = {
         "Will pay on collection from the shop": "Uzabhadala lapho uthatha esitolo",
         "Will pay on delivery": "Uzabhadala lapho kulethwa",
         "Will pay by other means": "Uzabhadala ngendlela enye",
+        "🚚 *Which shop is closest to you?*": "🚚 *Yisiphi isitolo esiseduze lawe?*",
+        "We deliver from the shop nearest your address, so choose the one that suits you.":
+            "Siletha sisuka esitolo esiseduze lekheli lakho, ngakho khetha okukufaneleyo.",
+        "🏬 *Which shop will you collect from?*": "🏬 *Uzathatha esitolo sini?*",
+        "Choose the shop that is easiest for you to reach.":
+            "Khetha isitolo elula ukusifinyelela kuwe.",
+        " does not have everything you asked for.":
+            " asinakho konke okucelile.",
+        ": you asked for ": ": ucele ",
+        " left there.": " kusele lapho.",
+        "You can take what is available there, or choose a different shop.":
+            "Ungathatha okukhona lapho, loba ukhethe esinye isitolo.",
+        "*Delivering from:*": "*Kuthunyelwa kusuka:*",
+        "*Collect from:*": "*Uthatha ku:*",
+        "*Shop address:*": "*Ikheli lesitolo:*",
         "🚚 *Delivery is charged separately*":
             "🚚 *Ukulethwa kubhadalwa ngokwehlukile*",
         "The amount above covers the goods only. Our sales agent will send you the "
@@ -22142,12 +22223,16 @@ def _shop_translate_option(label, language):
             "Qty — ": "Huwandu — ",
             "Remove — ": "Bvisa — ",
             "Cancel ": "Bvisa ",
+            "Use what is available": "Shandisa zviriho",
+            "Choose another shop": "Sarudza chimwe chitoro",
         },
         "nd": {
             "Change quantity — ": "Ntshintsha inani — ",
             "Qty — ": "Inani — ",
             "Remove — ": "Khupha — ",
             "Cancel ": "Khansela ",
+            "Use what is available": "Sebenzisa okukhona",
+            "Choose another shop": "Khetha esinye isitolo",
         },
     }
     for source, target in prefixes.get(language, {}).items():
@@ -22224,6 +22309,7 @@ def shop_refresh_catalog():
     names, summaries, prices = {}, {}, {}
     sizes, custom = {}, []
     removed = set()
+    shops, stock = [], {}
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
@@ -22265,13 +22351,25 @@ def shop_refresh_catalog():
             # honour them, not just the editor.
             cursor.execute("SELECT product_id FROM shop_product_removed")
             removed = {str(row[0]) for row in cursor.fetchall()}
+            # Shops the business has opened, in the order it wants them offered.
+            cursor.execute("""
+                SELECT shop_id, name, address, phone FROM shop_shops
+                WHERE active IS NOT FALSE ORDER BY position, name
+            """)
+            for row in cursor.fetchall():
+                shops.append({"id": str(row[0]), "name": (row[1] or "").strip() or str(row[0]),
+                              "address": (row[2] or "").strip(), "phone": (row[3] or "").strip()})
+            # Stock, keyed the same way a cart line is, so a lookup needs no join.
+            cursor.execute("SELECT shop_id, product_id, pack_size, quantity FROM shop_stock")
+            for row in cursor.fetchall():
+                stock[f"{row[0]}|{row[1]}|{row[2]}"] = int(row[3] or 0)
     except Exception as e:
         print(f"catalog load error: {e}")
     for product in custom:
         product["sizes"] = sizes.get(product["id"], [])
     _shop_catalog_cache = {"loaded": True, "names": names, "summaries": summaries,
                            "prices": prices, "sizes": sizes, "custom": custom,
-                           "removed": removed}
+                           "removed": removed, "shops": shops, "stock": stock}
     return _shop_catalog_cache
 
 
@@ -22718,6 +22816,9 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
     # Collection orders have no address, so the delivery column must be set even
     # when the customer never typed one.
     method = delivery_method or customer.get("delivery_method") or "collection"
+    # The shop the customer chose. It is what the stock comes off when the order
+    # is paid, so it is stored with the order rather than worked out later.
+    shop = shop_by_id(customer.get("shop_id"))
     try:
         # The order needs its own tables plus the conversation index it links to;
         # both are created here so a fresh worker can still take an order.
@@ -22729,22 +22830,22 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
         if not typed_name:
             typed_name = crm_best_display_name(wa_number) or ""
         chat_id = crm_chat_id(wa_number,
-                              display_name=typed_name or customer.get("company"),
-                              channel=channel) if wa_number else None
+                             display_name=typed_name or customer.get("company"),
+                             channel=channel) if wa_number else None
         address = (customer.get("delivery_address") or "").strip() or None
         with get_db() as (cursor, connection):
             cursor.execute("""
                 INSERT INTO shop_orders (reference, customer_name, company, phone, email,
-                                         delivery_address, channel, wa_number, chat_id, notes,
-                                         item_count, payment_method, payment_status, payment_amount,
-                                         delivery_method, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                                        delivery_address, channel, wa_number, chat_id, notes,
+                                        item_count, payment_method, payment_status, payment_amount,
+                                        delivery_method, shop_id, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 RETURNING id
             """, (reference, typed_name or None, customer.get("company"), customer.get("phone"),
                   customer.get("email"), address if method == "delivery" else None, channel,
                   wa_number, chat_id, customer.get("notes"),
                   sum(item["qty"] for item in cart), payment_method, payment_status, amount,
-                  method))
+                  method, shop["id"] if shop else None))
             order_id = cursor.fetchone()[0]
             for item in cart:
                 # The price is captured now, at the moment of sale, so the
@@ -22796,6 +22897,267 @@ def _shop_preserved_command(command):
 # Every order reference begins with this. It is also how a reference is
 # recognised when a customer types or pastes one back into the chat.
 SHOP_ORDER_PREFIX = "BC-"
+
+
+def shop_shops():
+    """The shops a customer can choose from, as the catalogue knows them."""
+    return list(_shop_catalog().get("shops") or [])
+
+
+def shop_by_id(shop_id):
+    """One shop, or None. Matched case-insensitively because the id is typed."""
+    wanted = str(shop_id or "").strip().lower()
+    return next((shop for shop in shop_shops() if shop["id"].lower() == wanted), None)
+
+
+def shop_stock_of(shop_id, product_id, pack_size):
+    """What one shop holds of one pack size.
+
+    Returns None when the line is not tracked at all, which is not the same as
+    zero: a product nobody has counted must not read as sold out.
+    """
+    key = f"{shop_id}|{product_id}|{pack_size}"
+    value = _shop_catalog().get("stock", {}).get(key)
+    return None if value is None else int(value)
+
+
+def shop_cart_shortfall(shop_id, cart):
+    """Cart lines the shop cannot cover, with what it holds.
+
+    Only tracked lines can be short: a line with no stock row at that shop is not
+    counted against it, because nothing has said how many there are. Two lines of
+    the same product in different pack sizes are looked at separately, which is
+    how the stock is kept.
+    """
+    short = []
+    for item in cart or []:
+        held = shop_stock_of(shop_id, item.get("id"), item.get("size"))
+        if held is None:
+            continue
+        wanted = int(item.get("qty") or 0)
+        if wanted > held:
+            short.append({"id": item.get("id"), "name": item.get("name"),
+                          "size": item.get("size"), "wanted": wanted, "held": held})
+    return short
+
+
+def _shop_shortfall_text(shop, short):
+    """What the customer is told when a shop cannot cover their cart."""
+    lines = [f"📦 *{shop['name']}* does not have everything you asked for.", ""]
+    for line in short:
+        if line["held"] <= 0:
+            # Saying "you asked for 2, 0 left there" leaves the customer to work
+            # out what happens to that line; naming it as dropped does not.
+            lines.append(f"*{line['name']}* ({line['size']}): none left there, "
+                         "so it will be left out.")
+        else:
+            lines.append(f"*{line['name']}* ({line['size']}): you asked for "
+                         f"{line['wanted']}, {line['held']} left there.")
+    lines.append("")
+    lines.append("You can take what is available there, or choose a different shop.")
+    return "\n".join(lines)
+
+
+def _shop_fit_cart(cart, short):
+    """The cart reduced to what the shop holds, dropping lines it has none of.
+
+    A line with nothing left is removed rather than left at zero, because a zero
+    quantity is not an order line and would be wrong on the confirmation.
+    """
+    remaining = {f"{line['id']}|{line['size']}": line["held"] for line in short}
+    fitted = []
+    for item in cart or []:
+        key = f"{item.get('id')}|{item.get('size')}"
+        if key not in remaining:
+            fitted.append(item)
+            continue
+        held = remaining[key]
+        if held > 0:
+            fitted.append(dict(item, qty=held))
+    return fitted
+
+
+def _shop_stock_bust():
+    """Mark the cached counts stale so the next check reloads them.
+
+    A write cannot leave the cache holding the old figure, because the assistant
+    decides what a shop can cover from that cache and would keep offering stock
+    that has already gone. Marked rather than reloaded in place: a deduction
+    writes one line at a time, and one reload on the next read costs less than
+    one per line.
+    """
+    _shop_catalog_cache["loaded"] = False
+
+
+def _shop_stock_move(shop_id, product_name, pack_size, delta, reason,
+                     reference=None, note=None, user=None):
+    """Apply one change to a shop's stock and record why. Returns True if applied."""
+    if not shop_id or not delta:
+        return False
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            # The order captured a product name, so it is resolved back to an id
+            # here: a product renamed in the catalogue afterwards must still
+            # deduct from the row its stock is actually kept on.
+            cursor.execute("""
+                SELECT product_id FROM shop_products
+                WHERE product_id = %s OR display_name = %s LIMIT 1
+            """, (str(product_name or "").strip(), str(product_name or "").strip()))
+            row = cursor.fetchone()
+            product_id = str(row[0]) if row else str(product_name or "").strip()
+            cursor.execute("""
+                INSERT INTO shop_stock (shop_id, product_id, pack_size, quantity, updated_at)
+                VALUES (%s, %s, %s, %s, NOW())
+                ON CONFLICT (shop_id, product_id, pack_size)
+                DO UPDATE SET quantity = COALESCE(shop_stock.quantity, 0) + %s,
+                              updated_at = NOW()
+                RETURNING quantity
+            """, (shop_id, product_id, pack_size, delta, delta))
+            after = cursor.fetchone()[0]
+            cursor.execute("""
+                INSERT INTO shop_stock_movements (shop_id, product_id, pack_size, delta,
+                                                  quantity_after, reason, reference, note,
+                                                  created_by, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (shop_id, product_id, pack_size, delta, after, reason, reference,
+                  note, str(user or "")[:200] or None))
+            connection.commit()
+        # Counts live in the catalogue cache, so a written change has to be
+        # marked stale or the next check would still sell stock that has gone.
+        _shop_stock_bust()
+        return True
+    except Exception as e:
+        print(f"stock move error: {e}")
+        return False
+
+
+def shop_stock_deduct(reference, user=None, reason="order_paid"):
+    """Take an order's stock off its shop, exactly once. Returns (ok, message).
+
+    Several routes can report the same payment - the gateway callback, the poll
+    the portal runs, and a member of staff marking the order received - so the
+    claim is one conditional UPDATE. Only the caller that manages to set
+    stock_deducted_at moves any stock, which is what stops a callback and a poll
+    both taking the same goods off the shelf.
+    """
+    reference = (reference or "").strip()
+    if not reference:
+        return False, "there is no order to deduct against"
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_orders SET stock_deducted_at = NOW()
+                WHERE reference = %s AND shop_id IS NOT NULL AND stock_deducted_at IS NULL
+                RETURNING id, shop_id
+            """, (reference,))
+            claimed = cursor.fetchone()
+            if not claimed:
+                # Either it is already done, or the order names no shop - one
+                # taken before shops existed - and so has nothing to deduct from.
+                connection.commit()
+                return False, "already deducted, or the order names no shop"
+            order_id, shop_id = claimed[0], str(claimed[1])
+            cursor.execute("""
+                SELECT product, pack_size, quantity FROM shop_order_items WHERE order_id = %s
+            """, (order_id,))
+            lines = cursor.fetchall()
+            connection.commit()
+    except Exception as e:
+        print(f"stock deduct error: {e}")
+        return False, "the deduction could not be claimed"
+
+    moved = 0
+    for product, pack_size, quantity in lines:
+        if _shop_stock_move(shop_id, product, pack_size, -int(quantity or 0),
+                            reason, reference=reference, user=user):
+            moved += 1
+    return True, f"stock taken off {shop_id} ({moved} line(s))"
+
+
+def shop_stock_set(shop_id, product_id, pack_size, quantity, user=None, note=None):
+    """Set a shop's count for one pack size to an exact figure.
+
+    A corrected count is recorded as a movement of its own: the difference from
+    what was there before is the only way to explain a later shortage.
+    """
+    before = shop_stock_of(shop_id, product_id, pack_size)
+    try:
+        quantity = int(quantity)
+    except (TypeError, ValueError):
+        return False, "That is not a number."
+    if quantity < 0:
+        return False, "Stock cannot be negative."
+    if before == quantity:
+        return True, "unchanged"
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_stock (shop_id, product_id, pack_size, quantity, updated_at)
+                VALUES (%s, %s, %s, %s, NOW())
+                ON CONFLICT (shop_id, product_id, pack_size)
+                DO UPDATE SET quantity = %s, updated_at = NOW()
+            """, (shop_id, product_id, pack_size, quantity, quantity))
+            cursor.execute("""
+                INSERT INTO shop_stock_movements (shop_id, product_id, pack_size, delta,
+                                                  quantity_after, reason, note, created_by,
+                                                  created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (shop_id, product_id, pack_size, quantity - (before or 0), quantity,
+                  "count", note, str(user or "")[:200] or None))
+            connection.commit()
+    except Exception as e:
+        print(f"stock set error: {e}")
+        return False, "The count could not be saved."
+    _shop_stock_bust()
+    return True, "saved"
+
+
+def shop_stock_movements(shop_id=None, limit=40):
+    """Recent stock changes, newest first, so a count can be explained later."""
+    try:
+        ensure_shop_tables()
+        where, params = [], []
+        if shop_id:
+            where.append("shop_id = %s")
+            params.append(shop_id)
+        params.append(int(limit))
+        with get_db() as (cursor, connection):
+            cursor.execute(f"""
+                SELECT shop_id, product_id, pack_size, delta, quantity_after, reason,
+                       reference, created_by, created_at
+                FROM shop_stock_movements
+                {('WHERE ' + ' AND '.join(where)) if where else ''}
+                ORDER BY created_at DESC NULLS LAST, id DESC
+                LIMIT %s
+            """, tuple(params))
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"stock movements error: {e}")
+        return []
+    return [{
+        "shop_id": row[0], "product_id": row[1], "pack_size": row[2],
+        "delta": int(row[3] or 0), "after": None if row[4] is None else int(row[4]),
+        "reason": row[5] or "", "reference": row[6] or "",
+        "by": row[7] or "", "at": fmt_time(row[8], "%d %b %Y %H:%M"),
+    } for row in rows]
+
+
+def shop_stock_table(shop_id):
+    """One row per product and pack size for the stock screen.
+
+    Built from the catalogue rather than from the stock table, so everything the
+    business sells can be counted, including lines nobody has stocked yet.
+    """
+    rows = []
+    for product in shop_all_products():
+        for size in product["sizes"]:
+            held = shop_stock_of(shop_id, product["id"], size)
+            rows.append({"product_id": product["id"], "name": product["name"],
+                         "pack_size": size, "quantity": held, "tracked": held is not None})
+    return rows
 
 
 def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
@@ -22863,6 +23225,10 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
                                ("collection", "Collect from the shop")])]
     if step == "order_address":
         return [_shop_order_address_prompt(customer)]
+    if step == "order_shop":
+        return [_shop_shop_prompt(customer)]
+    if step == "order_shop_short":
+        return [_shop_short_prompt(customer, cart)]
     if step == "order_confirm":
         return _shop_order_confirmation(cart, customer)
     if step == "payment":
@@ -22877,6 +23243,7 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
 def _shop_order_confirmation(cart, customer):
     summary = _shop_cart_summary(cart) or "—"
     delivering = (customer.get("delivery_method") or "collection") == "delivery"
+    shop = shop_by_id(customer.get("shop_id"))
     lines = [
         "✅ *Please confirm your order*",
         "",
@@ -22885,6 +23252,12 @@ def _shop_order_confirmation(cart, customer):
         f"*Phone:* {customer.get('phone', '')}",
         f"*Receive by:* {'Delivery to your address' if delivering else 'Collection from our shop'}",
     ]
+    # Which shop is named matters to the customer: for a collection it is where
+    # they are going, and for a delivery it is who is sending the goods.
+    if shop:
+        lines.append(f"*{'Delivering from' if delivering else 'Collect from'}:* {shop['name']}")
+        if shop.get("address"):
+            lines.append(f"*Shop address:* {shop['address']}")
     if delivering:
         lines.append(f"*Delivery address:* {customer.get('delivery_address', '')}")
     lines += ["", f"*Items:*\n{summary}", "", _shop_cart_total_line(cart)]
@@ -22947,6 +23320,11 @@ def _shop_pay_later_method(customer):
 # record has to say which one - otherwise neither a receipt nor the chatbot can
 # tell a customer where the money they handed over was taken.
 SHOP_PAYMENT_METHODS = ("ecocash", "shop", "delivery", "other")
+
+# A shop name is shown on a WhatsApp choice, which caps a list row at 24
+# characters, so the portal refuses a name longer than that rather than letting
+# the customer see it cut off.
+SHOP_NAME_LIMIT = 24
 
 SHOP_PAYMENT_METHOD_LABELS = {
     "ecocash": "via EcoCash",
@@ -23055,6 +23433,39 @@ def _shop_order_address_prompt(customer):
         "📍 What is the *delivery address* for this order?\n\n"
         "Please include the suburb and any landmark that helps our driver find you.",
         _shop_delivery_note(customer))
+
+
+def _shop_shop_prompt(customer):
+    """Asking which shop hands the order over.
+
+    A delivery order needs a shop just as much as a collection one: it is the
+    shop that sends the driver, and therefore the one the goods come off.
+    """
+    if _shop_paying_on_delivery(customer):
+        prompt = ("🚚 *Which shop is closest to you?*\n\n"
+                  "We deliver from the shop nearest your address, so choose the one "
+                  "that suits you.")
+    else:
+        prompt = ("🏬 *Which shop will you collect from?*\n\n"
+                  "Choose the shop that is easiest for you to reach.")
+    return _shop_options(prompt, [(f"shop:{shop['id']}", shop["name"])
+                                  for shop in shop_shops()])
+
+
+def _shop_short_prompt(customer, cart):
+    """The shop cannot cover the cart, so what is left there is spelled out."""
+    shop = shop_by_id(customer.get("shop_id"))
+    short = shop_cart_shortfall(customer.get("shop_id"), cart)
+    if not shop or not short:
+        return _shop_shop_prompt(customer)
+    return _shop_options(_shop_shortfall_text(shop, short),
+                         [("stock_fit", "Use what is available"),
+                          ("order_shop", "Choose another shop")])
+
+
+def _shop_next_after_shop(customer):
+    """The step after a shop is settled: an address only when it is delivered."""
+    return "order_address" if _shop_paying_on_delivery(customer) else "order_confirm"
 
 
 def _shop_text_with_note(text, note):
@@ -23593,15 +24004,66 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if step == "order_fulfilment":
         if low in ("delivery", "deliver", "1") or "deliver" in low:
             customer["delivery_method"] = "delivery"
-            return result("order_address", [_shop_order_address_prompt(customer)])
+            if not shop_shops():
+                # No shops are configured, so the question would have no answers.
+                # The order carries on exactly as it did before shops existed.
+                return result("order_address", [_shop_order_address_prompt(customer)])
+            return result("order_shop", [_shop_shop_prompt(customer)])
         if low in ("collection", "collect", "pickup", "pick up", "2") or "collect" in low:
             # No address to collect: the customer comes to us.
             customer["delivery_method"] = "collection"
             customer["delivery_address"] = ""
-            return result("order_confirm", _shop_order_confirmation(cart, customer))
+            if not shop_shops():
+                return result("order_confirm", _shop_order_confirmation(cart, customer))
+            return result("order_shop", [_shop_shop_prompt(customer)])
         return result("order_fulfilment", [_shop_options(
             "Please choose how you would like to receive this order.",
             [("delivery", "Deliver to my address"), ("collection", "Collect from the shop")])])
+
+    if step == "order_shop":
+        shops = shop_shops()
+        chosen = shop_by_id(low.split(":", 1)[1]) if low.startswith("shop:") else None
+        if not chosen:
+            # The shop's own name is on screen, so typing it has to work too.
+            chosen = next((shop for shop in shops if shop["name"].strip().lower() == low), None)
+        if not chosen:
+            return result("order_shop", [_shop_shop_prompt(customer)])
+        customer["shop_id"] = chosen["id"]
+        if shop_cart_shortfall(chosen["id"], cart):
+            return result("order_shop_short", [_shop_short_prompt(customer, cart)],
+                          new_customer=customer)
+        if _shop_paying_on_delivery(customer):
+            return result("order_address", [_shop_order_address_prompt(customer)],
+                          new_customer=customer)
+        return result("order_confirm", _shop_order_confirmation(cart, customer),
+                      new_customer=customer)
+
+    if step == "order_shop_short":
+        if low in ("stock_fit", "fit", "use what is available", "available"):
+            fitted = _shop_fit_cart(cart, shop_cart_shortfall(customer.get("shop_id"), cart))
+            if not fitted:
+                # That shop has nothing for them at all, so the choice has to be
+                # made again. The cart is left alone: emptying it here would throw
+                # away an order the customer never agreed to lose.
+                customer.pop("shop_id", None)
+                return result("order_shop", [_shop_shop_prompt(customer)],
+                              new_customer=customer)
+            cart = fitted
+            if _shop_paying_on_delivery(customer):
+                return result("order_address", [_shop_order_address_prompt(customer)],
+                              new_customer=customer)
+            return result("order_confirm", _shop_order_confirmation(cart, customer),
+                          new_customer=customer)
+            if _shop_paying_on_delivery(customer):
+                return result("order_address", [_shop_order_address_prompt(customer)],
+                              new_customer=customer)
+            return result("order_confirm", _shop_order_confirmation(cart, customer),
+                          new_customer=customer)
+        if low in ("order_shop", "shop", "another", "change shop", "change"):
+            customer.pop("shop_id", None)
+            return result("order_shop", [_shop_shop_prompt(customer)], new_customer=customer)
+        return result("order_shop_short", [_shop_short_prompt(customer, cart)],
+                      new_customer=customer)
 
     if step == "order_address":
         customer["delivery_address"] = (raw_input or "").strip()
@@ -23715,6 +24177,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         ok, paynow_status, _payload = paynow_poll(poll_url)
         if ok and paynow_status == "paid":
             shop_payment_update(reference, "paid", paid=True, method="ecocash")
+            shop_stock_deduct(reference)
             cart = []
             return result("menu", [
                 _shop_text(f"🎉 *Payment received* — thank you!\n\n"
@@ -24030,6 +24493,8 @@ def order_payment_status(reference, refresh=True):
                 # Settled by the gateway, so the money came in through EcoCash
                 # even if the order had been recorded as a pay-later one.
                 shop_payment_update(reference, "paid", amount=amount, paid=True, method="ecocash")
+                # The goods leave the shop now, so the count comes down with them.
+                shop_stock_deduct(reference)
                 _shop_payment_event(reference, "poll", "paid", gateway_status)
                 log_activity("payment_received", "order",
                              f"EcoCash payment received for {reference}",
@@ -24144,6 +24609,9 @@ def order_record_payment(reference, method, user=None):
         amount = detail.get("total")
     if not shop_payment_update(reference, "paid", amount=amount, paid=True, method=key):
         return False, "The payment could not be recorded just now."
+    # Whoever hands the goods over is the one who takes them off the shelf, so the
+    # count moves with the money rather than waiting for a separate stock-keeping.
+    shop_stock_deduct(reference, user=user, reason="marked_received")
     _shop_payment_event(reference, "recorded_by_staff", "paid",
                         f"{key} {amount if amount is not None else ''} {user or ''}".strip())
     log_activity("recorded_payment", "order",
@@ -25648,7 +26116,8 @@ def order_detail(reference):
                        orders.payment_amount, orders.paid_at,
                        COALESCE(orders.delivery_method, 'delivery'),
                        orders.fulfilled_at, orders.created_at,
-                       COALESCE(chats.wa_profile_name, chats.display_name)
+                       COALESCE(chats.wa_profile_name, chats.display_name),
+                       orders.shop_id, orders.stock_deducted_at
                 FROM shop_orders orders
                 LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
                 WHERE orders.reference = %s
@@ -25689,6 +26158,9 @@ def order_detail(reference):
         })
     subtotal = round(subtotal, 2)
     charged = float(row[14]) if row[14] is not None else None
+    # Only looked up when the order actually names a shop, so an order taken
+    # before shops existed costs no extra query.
+    fulfilling_shop = shop_by_id(row[20]) if row[20] else None
     return {
         "reference": row[1],
         "customer_name": row[2] or row[19] or "",
@@ -25709,6 +26181,10 @@ def order_detail(reference):
         "fulfilled_at": fmt_time(row[17], "%d %b %Y %H:%M"),
         "created_at": fmt_time(row[18], "%d %b %Y %H:%M"),
         "profile_name": row[19] or "",
+        "shop_key": row[20],
+        "shop": (fulfilling_shop or {}).get("name", ""),
+        "shop_address": (fulfilling_shop or {}).get("address", ""),
+        "stock_deducted_at": fmt_time(row[21], "%d %b %Y %H:%M"),
         # Named `lines` rather than `items` because a dict's `.items` attribute
         # shadows a key of that name in a template, which silently breaks the
         # `{% for %}` over it.
@@ -26719,6 +27195,126 @@ def crm_price_save_api(product_id):
                     'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
 
 
+@app.route('/api/crm/stock')
+def crm_stock_api():
+    """Stock across the shops, for one shop at a time.
+
+    The table is built from the catalogue rather than from the stock rows, so a
+    product nobody has counted yet still appears and can be counted.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    shops = shop_shops()
+    wanted = (request.args.get('shop') or '').strip()
+    shop = shop_by_id(wanted) or (shops[0] if shops else None)
+    return jsonify({
+        'success': True,
+        'shops': shops,
+        'shop': shop,
+        'rows': shop_stock_table(shop['id']) if shop else [],
+        'movements': shop_stock_movements(shop['id'] if shop else None, limit=25),
+        'name_limit': SHOP_NAME_LIMIT,
+    })
+
+
+@app.route('/api/crm/stock', methods=['POST'])
+def crm_stock_save_api():
+    """Save the counts on screen for one shop.
+
+    Sent as one payload so a count of a whole shop is a single action: saving
+    line by line would leave the screen disagreeing with itself if one failed
+    half way through.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    shop = shop_by_id(payload.get('shop'))
+    if not shop:
+        return jsonify({'success': False, 'message': 'Choose a shop first.'}), 400
+    entries = payload.get('counts') or []
+    if not isinstance(entries, list) or not entries:
+        return jsonify({'success': False, 'message': 'There is nothing to save.'}), 400
+    name = f"{user.get('firstname', '')} {user.get('surname', '')}".strip()
+    changed = []
+    for entry in entries:
+        product_id = str((entry or {}).get('product_id') or '').strip()
+        pack_size = str((entry or {}).get('pack_size') or '').strip()
+        if not product_id or not pack_size:
+            continue
+        ok, message = shop_stock_set(shop['id'], product_id, pack_size,
+                                     (entry or {}).get('quantity'), user=name,
+                                     note='counted in the portal')
+        if not ok:
+            return jsonify({'success': False,
+                            'message': f"{pack_size} could not be saved: {message}"}), 400
+        if message == 'saved':
+            changed.append(f"{product_id} {pack_size}")
+    if changed:
+        log_activity("counted_stock", "stock",
+                     f"Counted {len(changed)} line(s) at {shop['name']}",
+                     target=shop['id'],
+                     details={"lines": changed}, user=user)
+    return jsonify({'success': True,
+                    'message': (f"Saved {len(changed)} change(s) at {shop['name']}."
+                                if changed else "Nothing had changed."),
+                    'rows': shop_stock_table(shop['id']),
+                    'movements': shop_stock_movements(shop['id'], limit=25)})
+
+
+@app.route('/api/crm/shops', methods=['POST'])
+def crm_shop_save_api():
+    """Add or update a shop. A shop is what stock is kept against, so it has to
+    exist before anything can be counted there."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    name = (payload.get('name') or '').strip()
+    if not name:
+        return jsonify({'success': False, 'message': 'Give the shop a name.'}), 400
+    if len(name) > SHOP_NAME_LIMIT:
+        # The name is what a WhatsApp choice row shows, so a name that does not fit
+        # one would reach the customer cut off.
+        return jsonify({'success': False,
+                        'message': f'Keep the shop name to {SHOP_NAME_LIMIT} characters '
+                                   'so it fits the customer\'s choice.'}), 400
+    shop_id = (payload.get('shop_id') or '').strip().lower() or _shop_slug(name)
+    if not shop_id:
+        return jsonify({'success': False, 'message': 'That name cannot be used.'}), 400
+    address = (payload.get('address') or '').strip()
+    phone = (payload.get('phone') or '').strip()
+    position = len(shop_shops())
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_shops (shop_id, name, address, phone, position, active, updated_at)
+                VALUES (%s, %s, %s, %s, %s, TRUE, NOW())
+                ON CONFLICT (shop_id) DO UPDATE
+                SET name = %s, address = %s, phone = %s, updated_at = NOW()
+            """, (shop_id, name, address, phone, position, name, address, phone))
+            connection.commit()
+    except Exception as e:
+        print(f"shop save error: {e}")
+        return jsonify({'success': False, 'message': 'The shop could not be saved.'}), 500
+    shop_refresh_catalog()
+    log_activity("saved_shop", "stock", f"Saved the shop “{name}”", target=shop_id,
+                 details={"address": address, "phone": phone}, user=user)
+    return jsonify({'success': True, 'message': f"“{name}” saved.",
+                    'shops': shop_shops(), 'shop': shop_by_id(shop_id),
+                    'rows': shop_stock_table(shop_id),
+                    'movements': shop_stock_movements(shop_id, limit=25),
+                    'name_limit': SHOP_NAME_LIMIT})
+
+
+def _shop_slug(name):
+    """A stable id from a shop name, so the assistant's choice ids stay readable."""
+    slug = re.sub(r"[^a-z0-9]+", "-", str(name or "").strip().lower()).strip("-")
+    return slug[:60]
+
+
 @app.route('/api/crm/orders/<reference>/fulfilment', methods=['POST'])
 def crm_order_fulfilment_api(reference):
     user, error = portal_api_user('crm')
@@ -26889,6 +27485,9 @@ def shop_paynow_callback(reference, data):
     _shop_payment_event(reference, "callback", status, data)
     if status == 'paid':
         shop_payment_update(reference, 'paid', paid=True, method="ecocash")
+        # Same claim as the poll uses, so a callback and a poll cannot both take
+        # the goods off the shelf.
+        shop_stock_deduct(reference)
         shop_send_whatsapp_reference(
             reference,
             "🎉 *Payment received* — thank you!\n\n"

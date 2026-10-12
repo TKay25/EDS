@@ -55,6 +55,14 @@
                         <span class="crm-tab-full">Products &amp; pricing</span><span class="crm-tab-short">Products</span>
                     </span>
                 </button>
+                <button class="crm-tab" type="button" id="crmTabStock"
+                        data-crm-tab="stock" role="tab" aria-selected="false" tabindex="-1"
+                        aria-controls="crmViewStock">
+                    <i class="bi bi-boxes"></i>
+                    <span class="crm-tab-text">
+                        <span class="crm-tab-full">Stock</span><span class="crm-tab-short">Stock</span>
+                    </span>
+                </button>
             </div>
             <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity"
                     aria-haspopup="dialog">
@@ -445,6 +453,81 @@
     </section>
 
     <!-- ========================================================= products -->
+
+    <!-- =========================================================== stock -->
+    <section class="crm-view" id="crmViewStock" data-crm-view="stock"
+             role="tabpanel" aria-labelledby="crmTabStock">
+        {# Stock is kept per shop, because the same product sits in different
+           quantities in different places and it is the shop that hands the goods
+           over. The table is built from the catalogue, so a line nobody has
+           counted yet still appears and can be counted. #}
+        <div class="ps-panel">
+            <div class="ps-panel-head">
+                <h3><i class="bi bi-boxes"></i> Stock by shop</h3>
+                <div class="ps-panel-actions">
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmShopNew">
+                        <i class="bi bi-plus-lg"></i> Add a shop
+                    </button>
+                </div>
+            </div>
+            <div class="ps-panel-body">
+                <div class="crm-shop-form" id="crmShopForm" hidden>
+                    <label for="crmShopName">New shop</label>
+                    <div class="crm-shop-form-row">
+                        <input class="ps-input" id="crmShopName" type="text" maxlength="24"
+                               placeholder="Shop name" autocomplete="off">
+                        <input class="ps-input" id="crmShopAddress" type="text"
+                               placeholder="Address (optional)" autocomplete="off">
+                        <input class="ps-input" id="crmShopPhone" type="text"
+                               placeholder="Phone (optional)" autocomplete="off">
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmShopSave">
+                            <i class="bi bi-check2"></i> Save shop
+                        </button>
+                        <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmShopCancel">
+                            Cancel
+                        </button>
+                    </div>
+                    <p class="crm-shop-form-hint" id="crmShopHint">
+                        The name is what the customer sees on WhatsApp, so it is kept short
+                        enough to fit their choice.
+                    </p>
+                </div>
+
+                <div class="crm-shop-bar" id="crmShopBar" role="tablist"
+                     aria-label="Shops"></div>
+
+                <div class="crm-table-wrap">
+                    <table class="crm-table crm-stock-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Pack size</th>
+                                <th class="crm-od-num">Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crmStockBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="crm-stock-foot">
+                    <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmStockSave">
+                        <i class="bi bi-check2"></i> Save counts
+                    </button>
+                    <span class="crm-stock-hint" id="crmStockHint">
+                        Leave a line blank for a product this shop does not hold — blank
+                        means nobody has counted it, which is not the same as none left.
+                    </span>
+                </div>
+
+                <h4 class="crm-section-sub">
+                    <i class="bi bi-clock-history"></i> Recent movements
+                </h4>
+                <div id="crmStockMovements"></div>
+            </div>
+        </div>
+
+    </section>
+
     <section class="crm-view" id="crmViewProducts" data-crm-view="products"
              role="tabpanel" aria-labelledby="crmTabProducts">
         <div class="ps-panel">

@@ -127,6 +127,12 @@
       });
       if (shell) shell.classList.toggle('ps-shell-tight', name === 'inbox');
       if (name === 'analytics') analytics.load(false);
+      if (name === 'stock' && !stockLoaded) {
+        stockLoaded = true;
+        // Once, on the first sight of the tab: a later visit keeps whatever the
+        // screen already shows rather than throwing away unsaved counts.
+        initStock();
+      }
       if (name === 'inbox') sizeInbox();
     }
 
@@ -682,6 +688,246 @@
 
     return { load: load, isLoaded: function () { return loaded; } };
   })();
+
+  /* ----------------------------------------------------------------- stock --
+     Stock lives per shop, and the shop the customer chose is the one the goods
+     come off when they pay. The table is built from the catalogue server-side,
+     so every line the business sells can be counted, including ones nobody has
+     stocked yet. Only changed lines are sent, so saving is one action for a
+     whole shop rather than a click per row. */
+  var stockBody = document.getElementById('crmStockBody');
+  var stockBar = document.getElementById('crmShopBar');
+  var stockSave = document.getElementById('crmStockSave');
+  var stockHint = document.getElementById('crmStockHint');
+  var stockMoves = document.getElementById('crmStockMovements');
+  var shopForm = document.getElementById('crmShopForm');
+  var stockShopId = null;
+  var stockLoaded = false;
+
+  function stockDirtyCount() {
+    if (!stockBody) return 0;
+    var changed = 0;
+    Array.prototype.forEach.call(stockBody.querySelectorAll('input[data-line]'), function (input) {
+      if (input.value.trim() !== (input.getAttribute('data-was') || '')) changed += 1;
+    });
+    return changed;
+  }
+
+  var stockLastPainted = null;
+
+  function paintStockFoot() {
+    var changed = stockDirtyCount();
+    // Only touch the button when its label really changes: rewriting it on
+    // every keystroke replaces the node under the pointer, which makes the
+    // button feel unstable to click.
+    if (changed === stockLastPainted) return;
+    stockLastPainted = changed;
+    if (stockSave) {
+      stockSave.disabled = !changed;
+      stockSave.innerHTML = changed
+        ? '<i class="bi bi-check2"></i> Save ' + changed + ' change' + (changed === 1 ? '' : 's')
+        : '<i class="bi bi-check2"></i> Save counts';
+    }
+    if (changed) {
+      stockHint.textContent = changed + ' line' + (changed === 1 ? '' : 's') +
+        ' not saved yet.';
+      stockHint.className = 'crm-stock-hint is-dirty';
+    } else {
+      stockHint.textContent = 'Leave a line blank for a product this shop does not hold — ' +
+        'blank means nobody has counted it, which is not the same as none left.';
+      stockHint.className = 'crm-stock-hint';
+    }
+  }
+
+  function renderStockShops(shops, current) {
+    if (!stockBar) return;
+    if (!shops || !shops.length) {
+      stockBar.innerHTML = '<span class="crm-stock-empty">No shops yet. Add one to start ' +
+        'keeping stock.</span>';
+      return;
+    }
+    stockBar.innerHTML = shops.map(function (shop) {
+      var active = current && shop.id === current.id;
+      return '<button type="button" role="tab" aria-selected="' + (active ? 'true' : 'false') +
+        '" class="crm-shop-chip' + (active ? ' is-active' : '') + '" data-shop="' +
+        escapeHtml(shop.id) + '">' + escapeHtml(shop.name) +
+        (shop.address ? '<span class="crm-shop-addr">' + escapeHtml(shop.address) + '</span>' : '') +
+        '</button>';
+    }).join('');
+  }
+
+  function renderStockRows(rows) {
+    if (!stockBody) return;
+    if (!rows || !rows.length) {
+      stockBody.innerHTML = '<tr><td colspan="3" class="crm-empty-cell">' +
+        'Nothing in the catalogue to count yet.</td></tr>';
+      return;
+    }
+    stockBody.innerHTML = rows.map(function (row) {
+      var value = row.quantity === null || row.quantity === undefined ? '' : String(row.quantity);
+      return '<tr><td><strong>' + escapeHtml(row.name) + '</strong></td>' +
+        '<td>' + escapeHtml(row.pack_size) + '</td>' +
+        '<td class="crm-od-num">' +
+          '<input class="crm-stock-input" type="number" min="0" step="1" inputmode="numeric" ' +
+            'value="' + escapeHtml(value) + '" data-was="' + escapeHtml(value) + '" ' +
+            'data-line="' + escapeHtml(row.product_id + '|' + row.pack_size) + '" ' +
+            'aria-label="Stock of ' + escapeHtml(row.name + ' ' + row.pack_size) + '">' +
+        '</td></tr>';
+    }).join('');
+    paintStockFoot();
+  }
+
+  function renderStockMovements(movements) {
+    if (!stockMoves) return;
+    if (!movements || !movements.length) {
+      stockMoves.innerHTML = '<p class="crm-stock-empty">Nothing has moved yet.</p>';
+      return;
+    }
+    stockMoves.innerHTML = '<ul class="crm-stock-moves">' + movements.map(function (move) {
+      var up = move.delta > 0;
+      var what = up ? 'Added ' : 'Took off ';
+      return '<li>' +
+        '<span class="crm-stock-move-delta ' + (up ? 'is-up' : 'is-down') + '">' +
+          (up ? '+' : '') + move.delta + '</span>' +
+        '<span class="crm-stock-move-text">' + what + escapeHtml(String(Math.abs(move.delta))) +
+          ' × ' + escapeHtml(move.pack_size) +
+          (move.reference ? ' for <strong>' + escapeHtml(move.reference) + '</strong>' : '') +
+          (move.by ? ' — ' + escapeHtml(move.by) : '') + '</span>' +
+        '<span class="crm-stock-move-at">' + escapeHtml(move.at || '') + '</span>' +
+        '</li>';
+    }).join('') + '</ul>';
+  }
+
+  function loadStock(shopId) {
+    if (!stockBody) return;
+    if (shopId) stockShopId = shopId;
+    stockBody.innerHTML = '<tr><td colspan="3" class="crm-empty-cell">' +
+      '<span class="crm-spinner"></span> Loading stock…</td></tr>';
+    fetch('/api/crm/stock' + (stockShopId ? '?shop=' + encodeURIComponent(stockShopId) : ''))
+      .then(function (response) { return response.json(); })
+      .then(function (result) {
+        if (!result.success) {
+          stockBody.innerHTML = '<tr><td colspan="3" class="crm-empty-cell">' +
+            'Could not load stock.</td></tr>';
+          return;
+        }
+        stockShopId = result.shop ? result.shop.id : null;
+        renderStockShops(result.shops, result.shop);
+        renderStockRows(result.rows);
+        renderStockMovements(result.movements);
+      })
+      .catch(function () {
+        stockBody.innerHTML = '<tr><td colspan="3" class="crm-empty-cell">' +
+          'Could not load stock.</td></tr>';
+      });
+  }
+
+  function saveStock() {
+    if (!stockBody || !stockShopId) return;
+    var counts = [];
+    Array.prototype.forEach.call(stockBody.querySelectorAll('input[data-line]'), function (input) {
+      var was = input.getAttribute('data-was') || '';
+      if (input.value.trim() === was) return;
+      var parts = (input.getAttribute('data-line') || '').split('|');
+      counts.push({ product_id: parts[0], pack_size: parts.slice(1).join('|'),
+                    quantity: input.value.trim() === '' ? '' : input.value.trim() });
+    });
+    if (!counts.length) return;
+    // A blank line means "nobody has counted this", so it is sent as nothing
+    // rather than as a zero the shop would then be held to.
+    var sendable = counts.filter(function (entry) { return entry.quantity !== ''; });
+    if (!sendable.length) {
+      window.crmToast && window.crmToast(
+        'A blank line means the shop does not hold it. Enter a number to count it.', 'error');
+      return;
+    }
+    setBusy(stockSave, true, 'Saving…');
+    postJson('/api/crm/stock', { shop: stockShopId, counts: sendable })
+      .then(function (result) {
+        setBusy(stockSave, false);
+        window.crmToast && window.crmToast(
+          result.message || (result.success ? 'Stock saved.' : 'Could not save the stock.'),
+          result.success ? 'success' : 'error');
+        if (result.success) {
+          renderStockRows(result.rows);
+          renderStockMovements(result.movements);
+        } else {
+          paintStockFoot();
+        }
+      })
+      .catch(function () {
+        setBusy(stockSave, false);
+        window.crmToast && window.crmToast('Could not save the stock.', 'error');
+        paintStockFoot();
+      });
+  }
+
+  function saveShop() {
+    var nameEl = document.getElementById('crmShopName');
+    var addressEl = document.getElementById('crmShopAddress');
+    var phoneEl = document.getElementById('crmShopPhone');
+    var button = document.getElementById('crmShopSave');
+    var name = nameEl ? nameEl.value.trim() : '';
+    if (!name) {
+      window.crmToast && window.crmToast('Give the shop a name.', 'error');
+      return;
+    }
+    setBusy(button, true, 'Saving…');
+    postJson('/api/crm/shops', {
+      name: name,
+      address: addressEl ? addressEl.value.trim() : '',
+      phone: phoneEl ? phoneEl.value.trim() : '',
+    }).then(function (result) {
+      setBusy(button, false);
+      window.crmToast && window.crmToast(
+        result.message || (result.success ? 'Shop saved.' : 'Could not save the shop.'),
+        result.success ? 'success' : 'error');
+      if (!result.success) return;
+      if (nameEl) nameEl.value = '';
+      if (addressEl) addressEl.value = '';
+      if (phoneEl) phoneEl.value = '';
+      if (shopForm) shopForm.hidden = true;
+      stockShopId = result.shop ? result.shop.id : null;
+      renderStockShops(result.shops, result.shop);
+      renderStockRows(result.rows);
+      renderStockMovements(result.movements);
+    }).catch(function () {
+      setBusy(button, false);
+      window.crmToast && window.crmToast('Could not save the shop.', 'error');
+    });
+  }
+
+  if (stockBar) {
+    stockBar.addEventListener('click', function (event) {
+      var chip = event.target.closest('[data-shop]');
+      if (!chip) return;
+      if (stockDirtyCount() && !window.confirm(
+          'You have unsaved counts. Change shop and lose them?')) return;
+      loadStock(chip.getAttribute('data-shop'));
+    });
+  }
+  if (stockBody) {
+    stockBody.addEventListener('input', paintStockFoot);
+    stockBody.addEventListener('change', paintStockFoot);
+  }
+  if (stockSave) stockSave.addEventListener('click', saveStock);
+  var shopNew = document.getElementById('crmShopNew');
+  if (shopNew && shopForm) {
+    shopNew.addEventListener('click', function () { shopForm.hidden = !shopForm.hidden; });
+  }
+  var shopCancel = document.getElementById('crmShopCancel');
+  if (shopCancel && shopForm) {
+    shopCancel.addEventListener('click', function () { shopForm.hidden = true; });
+  }
+  var shopSave = document.getElementById('crmShopSave');
+  if (shopSave) shopSave.addEventListener('click', saveShop);
+
+  function initStock() {
+    // Loaded on first sight of the tab rather than on page load, so the inbox
+    // does not wait on a stock read it may never be asked for.
+    loadStock(null);
+  }
+
 
   /* ------------------------------------------------------------- catalogue */
   function initCatalog() {
