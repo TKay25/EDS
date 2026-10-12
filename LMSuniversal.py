@@ -25312,40 +25312,19 @@ def company_logout():
     return redirect(url_for('company_system'))
 
 
-def company_system_guest():
-    """The launcher as a signed-out visitor sees it.
-
-    The hub is the front door to four portals rather than a secret, so it stays
-    readable once the session is gone. That is what makes logging out land on the
-    cards instead of a bare password form, and it is what the company asked for:
-    the cards and their headline numbers stay visible, and every card still goes
-    through its own guard, so nothing behind one opens without signing in.
-    """
-    return {
-        "guest": True,
-        "id": None,
-        "firstname": "",
-        "surname": "",
-        "role": "",
-        "email": "",
-        "initials": "BC",
-        "company_name": COMPANY_SYSTEM_NAME,
-        "modules": {key: True for key in COMPANY_MODULE_KEYS},
-    }
-
-
 @app.route('/company-system')
 def company_system():
     user = company_system_user()
-    is_guest = user is None
-    if is_guest:
-        user = company_system_guest()
+    if not user:
+        # The hub is what a signed-in member of staff sees, so a sign-out is sent
+        # through here and on to the sign-in page: there is no signed-out version
+        # of this page to show.
+        return redirect(url_for('company_login_page'))
     denied = request.args.get('denied', '')
     denied_title = next((module['title'] for module in COMPANY_MODULES if module['key'] == denied), '')
     return render_template('company_portal.html', user=user, active_nav='hub',
                            nav_modules=user_modules(user),
                            modules=COMPANY_MODULES,
-                           is_guest=is_guest,
                            denied_title=denied_title,
                            channel_number=company_system_channel_label(), **company_system_stats())
 

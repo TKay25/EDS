@@ -20,12 +20,6 @@
 <main class="ps-shell">
     <header class="ps-hero ps-hero-compact">
         <span class="ps-eyebrow"><i class="bi bi-buildings-fill"></i> Brilliant Chemicals (Pvt) Ltd</span>
-        {% if is_guest %}
-        {# Signed out, the hub is a launcher: there is no name to greet, and the
-           cards below are the way in. #}
-        <h1>Brilliant Chemicals company system</h1>
-        <p>Sign in to open a portal.</p>
-        {% else %}
         <h1>Welcome back, {{ user.firstname }}.</h1>
         <p>
             {% if nav_modules | length == 1 %}
@@ -34,15 +28,7 @@
             {{ nav_modules | map(attribute='title') | join(' · ') }}
             {% endif %}
         </p>
-        {% endif %}
     </header>
-
-    {% if is_guest %}
-    <div class="ps-alert is-info">
-        <i class="bi bi-info-circle"></i>
-        <span>You are signed out. Choose a portal below and you will be asked to sign in.</span>
-    </div>
-    {% endif %}
 
     {% if denied_title %}
     <div class="ps-alert is-error">

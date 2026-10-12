@@ -22,12 +22,6 @@
     </div>
 
     <div class="ps-nav-right">
-        {% if is_guest %}
-        {# No session to show a menu for, so the only useful action is signing in. #}
-        <a class="ps-btn ps-btn-primary ps-btn-sm" href="/company-login">
-            <i class="bi bi-box-arrow-in-right"></i> Sign in
-        </a>
-        {% else %}
         <div class="ps-usermenu" id="psUserMenu">
             <button class="ps-usermenu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
                 <span class="ps-nav-avatar">{{ user.initials | default('BC') }}</span>
@@ -66,6 +60,5 @@
                 </a>
             </div>
         </div>
-        {% endif %}
     </div>
 </nav>

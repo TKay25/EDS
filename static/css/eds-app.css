@@ -159,7 +159,8 @@ a:hover {
   gap: 12px;
 }
 
-.eds-nav-link-top {
+.eds-nav-link-top,
+.eds-nav-home {
   padding: 8px 16px;
   border-radius: var(--eds-radius-md);
   font-size: 0.85rem;
@@ -177,6 +178,20 @@ a:hover {
 .eds-nav-link-top:hover {
   background: var(--eds-blue-bg);
   color: var(--eds-primary);
+}
+
+/* The link out to the company hub. It shares the nav link look but is not a view
+   switch, so it is kept out of .eds-nav-link-top: eds-app.js resets the active
+   state of every one of those on each click, and this is a navigation, not a tab. */
+.eds-nav-home {
+  text-decoration: none;
+  background: var(--eds-blue-bg);
+}
+
+.eds-nav-home:hover {
+  background: var(--eds-accent);
+  color: var(--eds-white);
+  box-shadow: var(--eds-shadow-accent);
 }
 
 .eds-nav-link-top.active {

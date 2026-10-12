@@ -1,7 +1,14 @@
 <!-- ===== EDS Top Navbar Component ===== -->
 <nav class="eds-navbar-top" id="eds-navbar">
     <div class="eds-navbar-left">
-        <span class="eds-navbar-brand">EDS <span class="eds-navbar-brand-accent">LMS</span></span>
+        <span class="eds-navbar-brand"><span class="eds-navbar-brand-accent">LMS</span></span>
+        {# The way back to the company hub, the page with a card for every portal.
+           Deliberately not .eds-nav-link-top: those buttons switch between the
+           Leave Portal / Payroll / Attendance views, and eds-app.js resets their
+           active state on every one of them. #}
+        <a class="eds-nav-home" href="/company-system">
+            <i class="bi bi-grid-1x2-fill"></i> Company Home
+        </a>
     </div>
     
     <div class="eds-navbar-center">
