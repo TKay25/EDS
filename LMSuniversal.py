@@ -21642,6 +21642,18 @@ def ensure_shop_tables():
         # Set once the order has taken its stock off a shop. It is what makes the
         # deduction happen exactly once, however many of the payment routes fire.
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS stock_deducted_at TIMESTAMP;")
+        # Reminders a customer has asked for from the assistant. Kept as their own
+        # rows rather than a flag on the order so the reason and the moment are
+        # both on record when the sales team follows one up.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_order_reminders (
+                id SERIAL PRIMARY KEY,
+                reference VARCHAR(32),
+                wa_number VARCHAR(32),
+                reason VARCHAR(60),
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
         connection.commit()
     _shop_tables_ready = True
 
@@ -21697,10 +21709,10 @@ SHOP_TRANSLATIONS = {
         # wording was left behind once already, and a key that no longer matches
         # fails silently: the customer simply reads English.
         "🛍️ Browse the range and build an order\n🔎 Search for a product by name\n"
-        "🛒 Review your cart and check out\n📦 Track or cancel an order\n"
+        "🛒 Review your cart and buy\n📦 Track or cancel an order\n"
         "🙋 Ask for a person whenever you prefer":
             "🛍️ Ongorora zvigadzirwa uye gadzira odha\n🔎 Tsvaga chigadzirwa nezita\n"
-            "🛒 Ona ngoro yako uye ubhadhare\n📦 Tevedzera kana kubvisa odha\n"
+            "🛒 Ona ngoro yako uye utenge\n📦 Tevedzera kana kubvisa odha\n"
             "🙋 Kumbira munhu chero paunoda",
         "Browse the range or search for a product to get started.":
             "Ongorora zvigadzirwa kana kutsvaga chigadzirwa kuti utange.",
@@ -21740,7 +21752,8 @@ SHOP_TRANSLATIONS = {
         " items": " zvinhu",
         " item": " chinhu",
         "Add more products": "Wedzera zvimwe",
-        "Check out": "Pedzisa kutenga",
+        "Check out": "Buy now",
+        "Buy now": "Tenga izvozvi",
         "What would you like to do?": "Chii chaunoda kuita?",
         "Empty the cart": "Bvisa zvose mungoro",
         "Change quantity — ": "Chinja huwandu — ",
@@ -21855,12 +21868,16 @@ SHOP_TRANSLATIONS = {
         "*Call:* ": "*Foni:* ",
         "*Email:* ": "*Email:* ",
         "Let's set up your order.": "Ngatigadzirirei odha yako.",
-        "What is your *full name*?": "Ndeapi *mazita ako ose*?",
-        "Please type your full name so we can process your order.":
-            "Nyora mazita ako ose kuti tikwanise kugadzirisa odha yako.",
-        "Which *company* are you ordering for? (Type *none* if you are buying for yourself.)":
-            "Uri kuodha uchimiririra *kambani* ipi? (Nyora *none* kana uchizvitengera.)",
-        "What is the best *phone number* to reach you on?": "Ndeipi *nhamba yefoni* yatingakubata nayo?",
+        "Please send your *full name* and the best *phone number* to reach you on, "
+        "for example:":
+            "Ndapota tumirai *mazita ako ose* uye *nhamba yefoni* yatingakubata nayo, "
+            "semuenzaniso:",
+        "Please type your full name so we can process your order, "
+        "followed by the phone number we should call.":
+            "Ndapota nyora mazita ako ose kuti tikwanise kugadzirisa odha yako, "
+            "wobva wawedzera nhamba yefoni yatinofanira kufonera.",
+        "Please add the *phone number* we should reach you on, for example ":
+            "Ndapota wedzera *nhamba yefoni* yatingakubata nayo, semuenzaniso ",
         "What is the *delivery address* for this order?": "Ndeipi *kero yekuendesa* odha iyi?",
         "How would you like to receive this order?": "Unoda kuti odha iyi iende sei?",
         "Please choose how you would like to receive this order.":
@@ -21948,6 +21965,44 @@ SHOP_TRANSLATIONS = {
         "Choose an option": "Sarudza",
         "Choose an option:": "Sarudza:",
         "Reply with a number for the rest:": "Pindura nenhamba kune dzasara:",
+        "🚚 *Order ": "🚚 *Odha ",
+        "*Status:* ": "*Mamiriro:* ",
+        "*Placed:* ": "*Yakaiswa:* ",
+        "*Items:* ": "*Zvinhu:* ",
+        "*Amount:* ": "*Mari:* ",
+        "This order was cancelled, so nothing is being sent for it. "
+        "You can place a new order whenever you like.":
+            "Odha iyi yakabviswa, saka hapana chiri kutumirwa. Unogona kuisa odha itsva chero paunoda.",
+        "This order has been paid for and handed over. Nothing more is outstanding.":
+            "Odha iyi yabhadharwa uye yapiwa. Hapana chimwe chasara.",
+        "This order has been handed over. If you did not receive it, reply *help* and "
+        "our sales team will look into it.":
+            "Odha iyi yapiwa. Kana usina kuigamuchira, pindura *help* uye boka redu rekutengesa "
+            "richaongorora.",
+        "Your payment has been received. The sales team is getting the goods ready "
+        "and will arrange the delivery.":
+            "Kubhadhara kwako kwagamuchirwa. Boka rekutengesa riri kugadzira zvinhu uye "
+            "richaronga kutakura.",
+        "Your payment has been received. The sales team is getting the goods ready "
+        "for you to collect.":
+            "Kubhadhara kwako kwagamuchirwa. Boka rekutengesa riri kugadzira zvinhu kuti "
+            "uzotora.",
+        "An EcoCash prompt is on your phone for this order. Enter your PIN to pay, "
+        "or reply *pay later* to settle it another way.":
+            "Chikumbiro cheEcoCash chiri pafoni yako cheodha iyi. Isa PIN yako kubhadhara, "
+            "kana pindura *pay later* kubhadhara neimwe nzira.",
+        "This order is with our sales team. They are confirming it, and will come back "
+        "to you within one working day.":
+            "Odha iyi iri kuboka redu rekutengesa. Vari kuisimbisa, uye vachakudzokera "
+            "mukati mezuva rimwe rebasa.",
+        "What would you like to do next?": "Chii chaunoda kuita zvino?",
+        "I have asked our sales team to update you on ": "Ndakumbira boka redu rekutengesa kukuzivisa nezve ",
+        "Someone will reply here as soon as they have looked into it.":
+            "Mumwe munhu achapindura pano kana vangoongorora.",
+        "Remind them again": "Vayeuchidze zvakare",
+        "Track another order": "Tevedzera imwe odha",
+        "📦 *Track my order*": "📦 *Tevedzera odha yangu*",
+        "What would you like to do?": "Chii chaunoda kuita?",
     },
     "nd": {
         "Welcome to Brilliant Chemicals Online Shopping Bot! 👋":
@@ -21958,10 +22013,10 @@ SHOP_TRANSLATIONS = {
         "*!\nI am the ": "*!\nNgingu ",
         " assistant.": " umsizi.",
         "🛍️ Browse the range and build an order\n🔎 Search for a product by name\n"
-        "🛒 Review your cart and check out\n📦 Track or cancel an order\n"
+        "🛒 Review your cart and buy\n📦 Track or cancel an order\n"
         "🙋 Ask for a person whenever you prefer":
             "🛍️ Bona imikhiqizo njalo wakhe i-oda\n🔎 Dinga umkhiqizo ngebizo\n"
-            "🛒 Bona inqola yakho bese ubhadala\n📦 Landela loba khansela i-oda\n"
+            "🛒 Bona inqola yakho bese uthenga\n📦 Landela loba khansela i-oda\n"
             "🙋 Cela umuntu noma nini lapho uthanda",
         "Browse the range or search for a product to get started.":
             "Bona imikhiqizo loba dinga umkhiqizo ukuze uqalise.",
@@ -22002,7 +22057,8 @@ SHOP_TRANSLATIONS = {
         " items": " izinto",
         " item": " into",
         "Add more products": "Faka eminye imikhiqizo",
-        "Check out": "Qedela ukuthenga",
+        "Check out": "Buy now",
+        "Buy now": "Thenga khathesi",
         "What would you like to do?": "Ufuna ukwenzani?",
         "Empty the cart": "Khupha konke enqoleni",
         "Change quantity — ": "Ntshintsha inani — ",
@@ -22087,12 +22143,16 @@ SHOP_TRANSLATIONS = {
         "*Call:* ": "*Ucingo:* ",
         "*Email:* ": "*I-email:* ",
         "Let's set up your order.": "Asilungise i-oda lakho.",
-        "What is your *full name*?": "Ungubani *ibizo lakho elipheleleyo*?",
-        "Please type your full name so we can process your order.":
-            "Bhala ibizo lakho elipheleleyo ukuze silungise i-oda lakho.",
-        "Which *company* are you ordering for? (Type *none* if you are buying for yourself.)":
-            "Ubhadela *yiphi inkampani*? (Bhala *none* nxa uzithengela wena.)",
-        "What is the best *phone number* to reach you on?": "Yiphi *inombolo yocingo* esingakuthola kuyo?",
+        "Please send your *full name* and the best *phone number* to reach you on, "
+        "for example:":
+            "Sicela uthumele *ibizo lakho elipheleleyo* lenombolo *yocingo* esingakuthola kuyo, "
+            "ngokwesibonelo:",
+        "Please type your full name so we can process your order, "
+        "followed by the phone number we should call.":
+            "Sicela ubhale ibizo lakho elipheleleyo ukuze silungise i-oda lakho, "
+            "ubusufaka inombolo yocingo esingatshayela kuyo.",
+        "Please add the *phone number* we should reach you on, for example ":
+            "Sicela ufake inombolo *yocingo* esingakuthola kuyo, ngokwesibonelo ",
         "What is the *delivery address* for this order?": "Yiphi *ikheli yokuletha* i-oda leli?",
         "How would you like to receive this order?": "Ungathanda ukuthi i-oda leli lithathwe njani?",
         "Please choose how you would like to receive this order.":
@@ -22211,6 +22271,44 @@ SHOP_TRANSLATIONS = {
         "delivery cost for your area here on WhatsApp before it is arranged.":
             "Imali engenhla ihlanganisa impahla kuphela. Umthengisi wethu uzakuthumelela "
             "imali yokulethwa yendawo yakho lapha kuWhatsApp ngaphambi kokuba kuhlelwe.",
+        "🚚 *Order ": "🚚 *I-oda ",
+        "*Status:* ": "*Isimo:* ",
+        "*Placed:* ": "*Yafakwa:* ",
+        "*Items:* ": "*Impahla:* ",
+        "*Amount:* ": "*Imali:* ",
+        "This order was cancelled, so nothing is being sent for it. "
+        "You can place a new order whenever you like.":
+            "I-oda leli lakhanselwa, ngakho akukho okuthunyelwayo. Ungafaka i-oda elitsha noma nini.",
+        "This order has been paid for and handed over. Nothing more is outstanding.":
+            "I-oda leli selsibhadalwe sanikezwa. Akukho okunye okuseleyo.",
+        "This order has been handed over. If you did not receive it, reply *help* and "
+        "our sales team will look into it.":
+            "I-oda leli selinikeziwe. Nxa ungazange ulithole, phendula *help* njalo iqembu lethu "
+            "lezokuthengisa lizakulibona.",
+        "Your payment has been received. The sales team is getting the goods ready "
+        "and will arrange the delivery.":
+            "Ukubhadala kwakho kwamukelwe. Iqembu lezokuthengisa lilungisa impahla njalo "
+            "lizahlela ukulethwa.",
+        "Your payment has been received. The sales team is getting the goods ready "
+        "for you to collect.":
+            "Ukubhadala kwakho kwamukelwe. Iqembu lezokuthengisa lilungisa impahla ukuze "
+            "uzolithatha.",
+        "An EcoCash prompt is on your phone for this order. Enter your PIN to pay, "
+        "or reply *pay later* to settle it another way.":
+            "Isicelo seEcoCash sisefonini yakho sale i-oda. Faka iPIN yakho ukuze ubhadale, "
+            "loba uphendule *pay later* ukuze ukhokhe ngenye indlela.",
+        "This order is with our sales team. They are confirming it, and will come back "
+        "to you within one working day.":
+            "I-oda leli lisiqembu lethu lezokuthengisa. Liyaliqinisekisa, njalo lizabuya "
+            "kuwe phakathi kosuku olulodwa lomsebenzi.",
+        "What would you like to do next?": "Yini ofuna ukuyenza okulandelayo?",
+        "I have asked our sales team to update you on ": "Ngicele iqembu lethu lezokuthengisa ukukwazisa nge ",
+        "Someone will reply here as soon as they have looked into it.":
+            "Omunye uzaphendula lapha ngokushesha nxa sebeyihlolile.",
+        "Remind them again": "Bakhumbuze futhi",
+        "Track another order": "Landela enye i-oda",
+        "📦 *Track my order*": "📦 *Landela i-oda lami*",
+        "What would you like to do?": "Yini ofuna ukuyenza?",
     },
 }
 
@@ -22250,6 +22348,11 @@ SHOP_OPTION_TRANSLATIONS = {
         "My orders": "Maodha angu",
         "Yes, cancel it": "Hongu, bvisa odha",
         "Keep it": "Sirasiya odha",
+        "Track my order": "Tevedzera odha",
+        "Send a reminder about it": "Yeuchidza nezvayo",
+        "Send reminder about it": "Yeuchidza nezvayo",
+        "Track another order": "Tevedzera imwe odha",
+        "Remind them again": "Vayeuchidze zvakare",
     },
     "nd": {
         "Shop": "Thenga",
@@ -22286,6 +22389,11 @@ SHOP_OPTION_TRANSLATIONS = {
         "My orders": "Ama-oda ami",
         "Yes, cancel it": "Yebo, khansela i-oda",
         "Keep it": "Yigcine i-oda",
+        "Track my order": "Landela i-oda",
+        "Send a reminder about it": "Khumbuza ngayo",
+        "Send reminder about it": "Khumbuza ngayo",
+        "Track another order": "Landela enye i-oda",
+        "Remind them again": "Bakhumbuze futhi",
     },
 }
 
@@ -22755,7 +22863,7 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
         f"I am the {COMPANY_SYSTEM_CONTACT['name']} assistant.\n\n"
         "🛍️ Browse the range and build an order\n"
         "🔎 Search for a product by name\n"
-        "🛒 Review your cart and check out\n"
+        "🛒 Review your cart and buy\n"
         "📦 Track or cancel an order\n"
         "🙋 Ask for a person whenever you prefer\n\n"
         "What would you like to do?"
@@ -22866,7 +22974,7 @@ def _shop_cart_message(cart):
         )
     total = sum(item["qty"] for item in cart)
     labels = _shop_cart_line_labels(cart)
-    options = [("shop", "Add more products"), ("checkout", "Check out")]
+    options = [("shop", "Add more products"), ("checkout", "Buy")]
     options += [(f"qty:{index}", labels[f"qty:{index}"]) for index in range(len(cart))]
     options += [(f"rm:{index}", labels[f"rm:{index}"]) for index in range(len(cart))]
     options.append(("clear", "Empty the cart"))
@@ -22999,11 +23107,11 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
 # Customers can always step back one menu or jump straight to the main menu.
 SHOP_BACK_WORDS = ("b", "back", "previous", "previous menu", "go back", "return")
 SHOP_MENU_WORDS = ("m", "menu", "main menu", "mainmenu", "home", "reset", "start", "restart", "0")
-# The cart's checkout choice is labelled in the customer's own language, so the
-# words on the button have to work when typed as well as tapped - the same
-# courtesy the menu and order-list words already get. Only the words that are
-# actually printed on the button, so nothing else gains a new meaning.
-SHOP_CHECKOUT_WORDS = ("check out", "pedzisa kutenga", "qedela ukuthenga")
+# The cart's buy choice is labelled in the customer's own language, so the words
+# on the button have to work when typed as well as tapped - the same courtesy the
+# menu and order-list words already get. Only the words that are actually printed
+# on the button, so nothing else gains a new meaning.
+SHOP_CHECKOUT_WORDS = ("buy", "buy now", "tenga", "thema")
 
 # Button ids and navigation words are the assistant's own vocabulary, not
 # something a customer typed. Shielding them from translation hides them from it:
@@ -23015,7 +23123,7 @@ SHOP_RESERVED_WORDS = frozenset({
     "paynow", "paylater", "confirm_order", "support_human", "paid_check",
     "delivery", "collection", "none", "back", "previous", "menu", "home", "reset",
     "restart", "start", "b", "m", "yes", "y", "no", "n", "ok", "later", "cancel",
-    "skip", "help", "en", "sn", "nd",
+    "skip", "help", "en", "sn", "nd", "track", "nudge", "buy", "remind",
 })
 
 
@@ -23030,6 +23138,11 @@ def _shop_preserved_command(command):
 # Every order reference begins with this. It is also how a reference is
 # recognised when a customer types or pastes one back into the chat.
 SHOP_ORDER_PREFIX = "BC-"
+
+# How far back an order is looked for when a customer names a reference. Wider
+# than the five the menu lists, because a customer chasing an older order knows
+# the reference they mean even when it is not on the list.
+SHOP_TRACK_LOOKUP_LIMIT = 20
 
 
 def shop_shops():
@@ -23352,6 +23465,13 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
         return [_shop_cart_message(cart)]
     if step == "orders":
         return [_shop_orders_menu(wa_number)]
+    if step == "track":
+        return _shop_track_entry(wa_number)
+    if step == "track_view":
+        order = shop_order_for(wa_number, ctx.get("track_reference"))
+        if order:
+            return _shop_track_view(order, wa_number)
+        return [shop_greeting(cart, staff, display_name, language, short=True)]
     if step == "order_cancel_confirm":
         reference = ctx.get("cancel_reference") or ""
         order = next((row for row in shop_customer_orders(wa_number, limit=10)
@@ -23372,15 +23492,9 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
     if step == "language":
         return [_shop_language_options()]
     if step == "order_name":
-        return [_shop_text("📝 Let's set up your order.\n\nWhat is your *full name*?")]
-    if step == "order_company":
-        return [_shop_text("Which *company* are you ordering for? (Type *none* if you are buying for yourself.)")]
-    if step == "order_phone":
-        return [_shop_text("What is the best *phone number* to reach you on?")]
+        return [_shop_text(_shop_prompt_for_missing_details(customer))]
     if step == "order_fulfilment":
-        return [_shop_options("How would you like to receive this order?",
-                              [("delivery", "Deliver to my address"),
-                               ("collection", "Collect from the shop")])]
+        return [_shop_fulfilment_prompt()]
     if step == "order_address":
         return [_shop_order_address_prompt(customer)]
     if step == "order_shop":
@@ -23580,6 +23694,70 @@ def _shop_delivery_note(customer):
     return SHOP_DELIVERY_NOTE if _shop_paying_on_delivery(customer) else ""
 
 
+def _shop_fulfilment_prompt():
+    """The delivery-or-collection question, built in one place.
+
+    The same two choices are offered by the engine, by the rewind renderer and
+    after an invalid answer, so the wording can never drift between them.
+    """
+    return _shop_options("How would you like to receive this order?",
+                         [("delivery", "Deliver to my address"),
+                          ("collection", "Collect from the shop")])
+
+
+def _shop_name_phone_prompt():
+    """The opening question of an order, asking for both details at once."""
+    return ("📝 Let's set up your order.\n\n"
+            "Please send your *full name* and the best *phone number* to reach you on, "
+            "for example:\n\n"
+            "*Tendai Moyo, 0771234567*")
+
+
+def _shop_prompt_for_missing_details(customer):
+    """Re-ask for the detail that is still missing, and only that one."""
+    if not customer.get("name"):
+        return ("Please type your full name so we can process your order, "
+                "followed by the phone number we should call.")
+    return ("Please add the *phone number* we should reach you on, for example "
+            "*0771234567*.")
+
+
+# A Zimbabwean mobile number at its shortest: 07 then seven digits. The parser
+# accepts the international 263 form too and normalises it, because a number
+# copied from a contact list usually arrives that way.
+SHOP_PHONE_DIGITS = 10
+
+
+def _shop_parse_name_phone(raw_input):
+    """Split one typed line into (name, phone).
+
+    The number is found anywhere in the line rather than assumed to be last, so
+    "0771234567 Tendai Moyo" works as well as "Tendai Moyo 0771234567". Only the
+    first number is taken, and whatever surrounds it becomes the name, which
+    keeps a comma, a dash or a newline from needing its own rule. A line with no
+    number yields a name and no phone, which is exactly what the caller needs to
+    know to ask for the half that is missing.
+    """
+    text = " ".join(str(raw_input or "").split())
+    if not text:
+        return "", ""
+    match = re.search(r"\+?\d[\d\s\-()]{7,}\d", text)
+    if not match:
+        # A bare run of digits still reads as an attempt at a number, so it is
+        # not mistaken for a name.
+        if re.fullmatch(r"[^\w]*\d+[^\w]*", text):
+            return "", text.strip()
+        return text.strip(), ""
+    digits = re.sub(r"\D", "", match.group(0))
+    if digits.startswith("263"):
+        digits = "0" + digits[3:]
+    elif digits.startswith("00263"):
+        digits = "0" + digits[5:]
+    phone = digits if (digits.startswith("07") and len(digits) >= SHOP_PHONE_DIGITS) else ""
+    name = (text[:match.start()] + " " + text[match.end():]).strip(" ,-–—:;/\t")
+    return name.strip(), phone
+
+
 def _shop_order_address_prompt(customer):
     """The delivery-address question, with the delivery-cost note attached.
 
@@ -23698,9 +23876,85 @@ def _shop_orders_menu(wa_number):
         lines.append("Choose an order below to cancel it. Cancelling cannot be undone.")
     else:
         lines.append("None of these can be cancelled here. Ask for a person and we will help.")
+    # Tracking comes first: an open order is far more likely to be chased than
+    # cancelled, and the track prompt can find any reference the customer knows.
+    options.insert(0, ("track", "Track my order"))
     options.append(("support_human", "Talk to a human"))
     options.append(("shop", "Browse products"))
     return _shop_options("\n".join(lines), options)
+
+
+def _shop_track_prompt(wa_number):
+    """Asking which order to track.
+
+    A customer with exactly one open order is taken straight to it, because
+    asking which one would be a question with a single answer. Any reference can
+    still be typed, so the prompt says so.
+    """
+    orders = shop_customer_orders(wa_number, limit=SHOP_TRACK_LOOKUP_LIMIT)
+    if not orders:
+        return None, _shop_options(
+            "📦 *Track my order*\n\nYou have not placed an order yet.",
+            [("shop", "Browse products"), ("cart", "View Cart")])
+    lines = ["📦 *Track my order*", ""]
+    options = []
+    for order in orders[:5]:
+        count = order["items"]
+        lines.append(f"*{order['reference']}* — {count} item"
+                     f"{'s' if count != 1 else ''}, {_shop_order_state_text(order)}")
+        options.append((f"track:{order['reference']}", f"Track {order['reference']}"))
+    options.append(("orders", "My orders"))
+    options.append(("m", "Main menu"))
+    if len(orders) == 1:
+        return orders[0], None
+    lines.append("")
+    lines.append("Choose an order below, or paste its reference.")
+    return None, _shop_options("\n".join(lines), options)
+
+
+def _shop_track_view(order, wa_number):
+    """The tracking reply for one order, with its next-step choices."""
+    options = [("nudge", "Send a reminder about it")]
+    if order["cancellable"]:
+        options.append(("support_human", "Talk to a human"))
+    else:
+        options.append(("orders", "My orders"))
+    return [_shop_options(shop_order_track_text(order), options)]
+
+
+def _shop_track_entry(wa_number):
+    """The messages to show when tracking is opened. Returns a message list."""
+    order, prompt = _shop_track_prompt(wa_number)
+    if order is None:
+        return [prompt]
+    return _shop_track_view(order, wa_number)
+
+
+def _shop_track_nudge(wa_number, ctx):
+    """Record the reminder the customer asked for and answer for it.
+
+    The reminder is a real request to a person, so the escalation that reaches
+    the sales team is raised by the caller; everything the customer is told here
+    comes from what the reminder row proves.
+    """
+    reference = (ctx or {}).get("track_reference") or ""
+    order = shop_order_for(wa_number, reference)
+    if not order:
+        return [
+            _shop_text("😕 I could not find that order on this number, so I could not pass "
+                       "your reminder on."),
+            _shop_options("What would you like to do?",
+                          [("track", "Track my order"),
+                           ("support_human", "Talk to a human")]),
+        ]
+    ok, message = shop_order_reminder_send(wa_number, order["reference"])
+    return [
+        _shop_text(("✅ " if ok else "⚠️ ") + message),
+        _shop_options("What would you like to do next?",
+                      [("nudge", "Remind them again"),
+                       ("track", "Track another order"),
+                       ("shop", "Browse products")]),
+    ]
 
 
 def _shop_cancel_prompt(order):
@@ -23804,11 +24058,15 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     # A conversation with no history is brand new, so its first menu is the full
     # welcome. Any later return to the menu is abbreviated.
     conversation_started = bool(history) or step != "menu"
+    # Set once the customer has actually placed an order. The conversation then
+    # stops opening with the welcome: an order that has just been confirmed does
+    # not need the whole introduction printed over the top of it.
+    ordered = bool(state.get("ordered"))
 
     def greet():
         """The menu shown when a conversation returns to the start."""
         return shop_greeting(cart, staff, display_name, language,
-                             short=conversation_started)
+                             short=conversation_started or ordered)
 
     def welcome():
         """The full introduction, used to open a conversation."""
@@ -23859,6 +24117,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         state["ctx"]["last_options"] = shop_option_ids(messages)
         state["customer"] = saved_customer
         state["language"] = language
+        state["ordered"] = ordered
         kept = history if new_history is None else list(new_history)
         state["history"] = kept[-12:]
         state["nav"] = {"back": bool(state["history"]), "menu": new_step != "menu"}
@@ -23984,6 +24243,51 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if low in ("orders", "my orders", "order history", "maodha angu", "ama-oda ami"):
         return result("orders", [_shop_orders_menu(wa_number)])
 
+    # Tracking and chasing an order the customer already placed. Both live on the
+    # main menu's "Track or cancel an order" promise, so they are reachable from
+    # anywhere rather than only from the order list.
+    if low in ("track", "track my order", "track order", "track my orders", "my order status",
+               "order status"):
+        # Only one open order means there is nothing to choose, so the engine goes
+        # straight to it. The reference is carried in the context here rather than
+        # discovered later, because the order view's reminder choice reads it.
+        order, prompt = _shop_track_prompt(wa_number)
+        if order is None:
+            return result("track", [prompt], new_ctx={})
+        return result("track_view", _shop_track_view(order, wa_number),
+                      new_ctx=dict(ctx, track_reference=order["reference"]))
+
+    if step in ("track", "track_view") and low in ("nudge", "remind", "reminder",
+                                                   "send reminder", "send a reminder",
+                                                   "chase", "follow up"):
+        return result("track_view", _shop_track_nudge(wa_number, ctx),
+                      actions=[{"type": "escalate",
+                                "reason": f"Customer asked for an update on order "
+                                          f"{ctx.get('track_reference') or ''}".strip(),
+                                "message": f"The customer used the assistant to chase "
+                                           f"{ctx.get('track_reference') or 'their order'}."}])
+
+    # A reference the customer typed or pasted back into the chat while tracking,
+    # or a track choice from the list.
+    track_reference = ""
+    if low.startswith("track:"):
+        track_reference = command.split(":", 1)[1].strip()
+    elif step in ("menu", "orders", "track") and command.upper().startswith(SHOP_ORDER_PREFIX):
+        track_reference = command.strip().upper()
+    if track_reference:
+        order = shop_order_for(wa_number, track_reference)
+        if not order:
+            return result("track", [
+                _shop_text(f"😕 I could not find order *{track_reference}* on this number.\n\n"
+                           "Please check the reference, or ask for a person and we will look "
+                           "it up for you."),
+                _shop_options("What would you like to do?",
+                              [("track", "Track another order"),
+                               ("support_human", "Talk to a human")]),
+            ])
+        return result("track_view", _shop_track_view(order, wa_number),
+                      new_ctx=dict(ctx, track_reference=order["reference"]))
+
     # A cancel choice from the list, or a reference the customer typed or pasted
     # back into the chat. Only their own open orders are offered, and a reference
     # is only read as one when it looks like one.
@@ -24027,10 +24331,19 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if step == "orders":
         return result("orders", [_shop_orders_menu(wa_number)])
 
-    if low in ("checkout", "order") or low in SHOP_CHECKOUT_WORDS:
+    if step == "track":
+        return result("track", _shop_track_entry(wa_number))
+
+    if step == "track_view":
+        order = shop_order_for(wa_number, ctx.get("track_reference"))
+        if order:
+            return result("track_view", _shop_track_view(order, wa_number))
+        return result("track", _shop_track_entry(wa_number))
+
+    if low in ("checkout", "order", "buy") or low in SHOP_CHECKOUT_WORDS:
         if not cart:
             return result("cart", [_shop_cart_message(cart)])
-        return result("order_name", [_shop_text("📝 Let's set up your order.\n\nWhat is your *full name*?")])
+        return result("order_name", [_shop_text(_shop_name_phone_prompt())])
 
     # A number that is not on the current menu should never silently jump levels.
     if unmatched_number and step in ("category", "product", "size", "search_results", "cart", "about", "support", "orders", "order_cancel_confirm"):
@@ -24141,23 +24454,21 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             new_history=[])
 
     if step == "order_name":
-        customer["name"] = (raw_input or "").strip()
-        if not customer["name"]:
-            return result("order_name", [_shop_text("Please type your full name so we can process your order.")])
-        return result("order_company", [
-            _shop_text("Which *company* are you ordering for? (Type *none* if you are buying for yourself.)")])
-
-    if step == "order_company":
-        customer["company"] = (raw_input or "").strip()
-        return result("order_phone", [_shop_text("What is the best *phone number* to reach you on?")])
-
-    if step == "order_phone":
-        customer["phone"] = (raw_input or "").strip()
+        # Name and phone arrive in one turn, so one step fills both and the
+        # customer is not asked the same question twice over.
+        name, phone = _shop_parse_name_phone(raw_input)
+        if name:
+            customer["name"] = name
+        if phone:
+            customer["phone"] = phone
+        if not customer.get("name") or not customer.get("phone"):
+            # Only the half that is missing is named, so a customer who typed
+            # their name but no number is not asked for the name again.
+            return result("order_name", [_shop_text(
+                _shop_prompt_for_missing_details(customer))])
         # How the order reaches the customer changes what we still need to ask,
         # so ask it before the address rather than after.
-        return result("order_fulfilment", [_shop_options(
-            "How would you like to receive this order?",
-            [("delivery", "Deliver to my address"), ("collection", "Collect from the shop")])])
+        return result("order_fulfilment", [_shop_fulfilment_prompt()])
 
     if step == "order_fulfilment":
         if low in ("delivery", "deliver", "1") or "deliver" in low:
@@ -24256,8 +24567,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 ], new_ctx=ctx)
 
             cart = []
-            return result("menu", _shop_order_placed(reference, customer, total, staff=staff,
-                                                     display_name=display_name, language=language),
+            ordered = True
+            return result("menu", _shop_order_placed(reference, customer, total),
                           actions=[
                 {"type": "escalate", "reason": f"New order enquiry {reference}"}],
                 new_ctx=ctx, new_history=[])
@@ -24274,9 +24585,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             # to be corrected rather than left claiming EcoCash.
             shop_payment_update(reference, "pay_later", method=_shop_pay_later_method(customer))
             cart = []
-            return result("menu", _shop_order_placed(reference, customer, ctx.get("amount"),
-                                                     staff=staff, display_name=display_name,
-                                                     language=language),
+            ordered = True
+            return result("menu", _shop_order_placed(reference, customer, ctx.get("amount")),
                           actions=[{"type": "escalate",
                                     "reason": f"New order enquiry {reference}"}],
                           new_history=[])
@@ -24322,27 +24632,26 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         method, status, poll_url, amount = shop_order_payment(reference)
         if (status or "").lower() == "paid":
             cart = []
+            ordered = True
             return result("menu", [
                 _shop_text(f"🎉 *Payment received* — thank you!\n\n"
                            f"Reference *{reference}* is paid and confirmed."),
-                greet(),
             ], new_history=[])
         if low in ("paylater", "later", "pay later") or low in negative_words:
             shop_payment_update(reference, "pay_later", method=_shop_pay_later_method(customer))
             cart = []
-            return result("menu", _shop_order_placed(reference, customer, amount, paid=False,
-                                                     staff=staff, display_name=display_name,
-                                                     language=language),
+            ordered = True
+            return result("menu", _shop_order_placed(reference, customer, amount, paid=False),
                           new_history=[])
         ok, paynow_status, _payload = paynow_poll(poll_url)
         if ok and paynow_status == "paid":
             shop_payment_update(reference, "paid", paid=True, method="ecocash")
             shop_stock_deduct(reference)
             cart = []
+            ordered = True
             return result("menu", [
                 _shop_text(f"🎉 *Payment received* — thank you!\n\n"
                            f"Reference *{reference}* is paid and confirmed."),
-                greet(),
             ], new_history=[])
         if ok and paynow_status in ("cancelled", "failed", "error"):
             shop_payment_update(reference, paynow_status or "failed")
@@ -24364,8 +24673,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     return finish("menu", [greet()], new_history=[])
 
 
-def _shop_order_placed(reference, customer, amount=None, paid=False, staff=False, display_name=None,
-                       language="en"):
+def _shop_order_placed(reference, customer, amount=None, paid=False):
     """The confirmation shown once an order exists, paid or not.
 
     An unpaid order still has to be collectable, so the customer is told exactly
@@ -24405,7 +24713,13 @@ def _shop_order_placed(reference, customer, amount=None, paid=False, staff=False
     lines.append("")
     lines.append(f"Any questions? Call {COMPANY_SYSTEM_CONTACT['phones'][0]} or email "
                  f"{COMPANY_SYSTEM_CONTACT['email']}.")
-    return [_shop_text("\n".join(lines)), shop_greeting(None, staff, display_name, language)]
+    # The confirmation is the last thing the customer sees for this order, so the
+    # two things they will want next are offered here rather than left to the
+    # main menu: where the order has got to, and a way to chase it.
+    return [_shop_options(
+        "\n".join(lines),
+        [("track", "Track my order"),
+         ("nudge", "Send a reminder about it")])]
 
 
 def _shop_payment_event(reference, event, status, payload=""):
@@ -24819,7 +25133,9 @@ def shop_customer_orders(wa_number, limit=5):
                        (SELECT COUNT(*) FROM shop_order_items items
                          WHERE items.order_id = orders.id
                            AND items.unit_price IS NULL),
-                       orders.payment_method
+                       orders.payment_method,
+                       COALESCE(orders.delivery_method, 'delivery'), orders.shop_id,
+                       orders.delivery_address
                 FROM shop_orders orders
                 WHERE orders.wa_number = %s
                 ORDER BY orders.created_at DESC NULLS LAST, orders.id DESC
@@ -24866,6 +25182,11 @@ def shop_customer_orders(wa_number, limit=5):
             "awaiting_pin": bool(row[9]) and not paid,
             "cancellable": not (cancelled or paid or fulfilled),
             "blocked_reason": reason,
+            "delivery": (row[13] or "delivery") == "delivery",
+            "shop": (shop_by_id(row[14]) or {}).get("name", "") if row[14] else "",
+            # Named for tracking, because "collection" with no shop reads as if
+            # nobody has said where the goods are.
+            "source": (row[15] or "").strip(),
         })
     return orders
 
@@ -24936,6 +25257,101 @@ def shop_cancel_order(reference, wa_number, user=None):
     # between the two statements. Sending the customer to a person is the only
     # honest answer rather than assuming which.
     return False, "error", {}
+
+
+def shop_order_for(wa_number, reference):
+    """One of the customer's own orders, or None.
+
+    Tracking and reminders both start here, so the lookup is scoped to the number
+    the order was placed from and a reference belonging to someone else reads
+    exactly like one that does not exist.
+    """
+    reference = (reference or "").strip().upper()
+    owner = _shop_order_owner_key(wa_number)
+    if not reference or not owner:
+        return None
+    return next((row for row in shop_customer_orders(owner, limit=SHOP_TRACK_LOOKUP_LIMIT)
+                 if row["reference"] == reference), None)
+
+
+def shop_order_stage(order):
+    """Where an order has got to, as one plain sentence.
+
+    Only the states the business actually records are named, and the last
+    fallback says what is true of every open order: it is with the sales team.
+    Guessing at a stage the records do not carry would tell a customer something
+    nobody has confirmed.
+    """
+    if order.get("cancelled"):
+        return ("This order was cancelled, so nothing is being sent for it. "
+                "You can place a new order whenever you like.")
+    if order.get("paid") and order.get("fulfilled"):
+        return "This order has been paid for and handed over. Nothing more is outstanding."
+    if order.get("fulfilled"):
+        return ("This order has been handed over. If you did not receive it, reply *help* and "
+                "our sales team will look into it.")
+    if order.get("paid"):
+        return ("Your payment has been received. The sales team is getting the goods ready "
+                + ("and will arrange the delivery." if order.get("delivery") else
+                   "for you to collect."))
+    if order.get("awaiting_pin"):
+        return ("An EcoCash prompt is on your phone for this order. Enter your PIN to pay, "
+                "or reply *pay later* to settle it another way.")
+    return ("This order is with our sales team. They are confirming it, and will come back "
+            "to you within one working day.")
+
+
+def shop_order_track_text(order):
+    """The tracking reply for one order, with its next step spelled out."""
+    lines = [f"🚚 *Order {order['reference']}*", "",
+             f"*Status:* {_shop_order_state_text(order)}",
+             f"*Placed:* {order['created_at']}",
+             f"*Items:* {order['items']} item{'s' if order['items'] != 1 else ''}",
+             f"*Amount:* {_shop_money_text(order['amount'])}"]
+    if order.get("shop"):
+        lines.append(f"*{'Delivering from' if order.get('delivery') else 'Collect from'}:* "
+                     f"{order['shop']}")
+    lines += ["", shop_order_stage(order)]
+    return "\n".join(lines)
+
+
+SHOP_REMINDER_REASON = "order_progress"
+
+
+def shop_order_reminder_send(wa_number, reference, reason=SHOP_REMINDER_REASON):
+    """Ask a person to chase an order on the customer's behalf. (ok, message).
+
+    A reminder is a request to a person, not a promise the assistant can keep, so
+    the row is written first and the reply only claims what the row proves. The
+    escalation raised alongside it is what actually reaches the sales team.
+    """
+    order = shop_order_for(wa_number, reference)
+    if not order:
+        return False, "I could not find that order on this number."
+    if order["cancelled"]:
+        return False, (f"*{order['reference']}* was cancelled, so there is nothing to chase. "
+                       "You can place a new order whenever you like.")
+    if order["paid"] and order["fulfilled"]:
+        return False, (f"*{order['reference']}* is paid for and handed over, so there is "
+                       "nothing left to follow up.")
+    owner = _shop_order_owner_key(wa_number)
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_order_reminders (reference, wa_number, reason, created_at)
+                VALUES (%s, %s, %s, NOW())
+            """, (order["reference"], owner, reason))
+            connection.commit()
+    except Exception as e:
+        print(f"order reminder error: {e}")
+        return False, "I could not pass that on just now. Please try once more."
+    log_activity("customer_order_reminder", "order",
+                 f"Customer asked for an update on {order['reference']}",
+                 target=order["reference"], details={"wa_number": owner, "reason": reason})
+    return True, (f"🙋 I have asked our sales team to update you on *{order['reference']}*.\n\n"
+                  f"{shop_order_stage(order)}\n\n"
+                  "Someone will reply here as soon as they have looked into it.")
 
 
 def shop_nav_block(nav, language="en"):
