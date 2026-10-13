@@ -24067,11 +24067,22 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     # stops opening with the welcome: an order that has just been confirmed does
     # not need the whole introduction printed over the top of it.
     ordered = bool(state.get("ordered"))
+    # Set while the customer is waiting for an agent. Their last turn was the
+    # handover notice, so the menu that follows it is abbreviated rather than
+    # prefaced with a second welcome.
+    handed_over = bool(state.get("handed_over"))
 
     def greet():
-        """The menu shown when a conversation returns to the start."""
+        """The menu shown when a conversation returns to the start.
+
+        A conversation that has already begun never reprints the whole welcome:
+        the full introduction belongs to the turn that opens the thread. That
+        covers the customer who has placed an order and the customer the
+        assistant has just handed to an agent, as well as the ordinary return to
+        the menu.
+        """
         return shop_greeting(cart, staff, display_name, language,
-                             short=conversation_started or ordered)
+                             short=conversation_started or ordered or handed_over)
 
     def welcome():
         """The full introduction, used to open a conversation."""
@@ -24123,6 +24134,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         state["customer"] = saved_customer
         state["language"] = language
         state["ordered"] = ordered
+        state["handed_over"] = handed_over
         kept = history if new_history is None else list(new_history)
         state["history"] = kept[-12:]
         state["nav"] = {"back": bool(state["history"]), "menu": new_step != "menu"}
@@ -24224,14 +24236,16 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if low in ("support_human", "human", "talk to a human", "speak to a human"):
         # Hand the conversation to a person: the caller escalates it and the
-        # assistant stays silent until an agent hands it back.
+        # assistant stays silent until an agent hands it back. The handover says
+        # the assistant is going quiet, so no menu follows it - printing one
+        # would contradict the sentence above it and bury the reassurance.
+        handed_over = True
         return result("menu", [
             _shop_text(
                 "🙋 *Connecting you to a person*\n\n"
                 "A member of our sales team has been notified and will reply here shortly.\n\n"
                 "You can keep browsing in the meantime — the assistant will stay quiet "
                 "while an agent is with you."),
-            greet(),
         ], actions=[{"type": "escalate", "reason": "Customer asked for a human agent"}],
             new_history=[])
 
@@ -24331,7 +24345,10 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         if low == "cancel_yes" or low in affirmative_words or low in ("hongu", "ehe", "yebo"):
             ok, reason, detail = shop_cancel_order(reference, wa_number)
             messages, actions = _shop_cancel_result(ok, reason, detail, order)
-            return result("menu", messages + [greet()], actions=actions, new_history=[])
+            # A cancellation result already names the order and what happens next,
+            # so only a failure that needs a person's help is not a dead end - and
+            # even then the escalation is the way forward, not the menu.
+            return result("menu", messages, actions=actions, new_history=[])
         if low == "orders" or low in negative_words or low in ("kwete", "cha", "hayi"):
             return result("orders", [
                 _shop_text(f"👍 *{reference}* is unchanged."),
@@ -24459,10 +24476,12 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         message = (raw_input or "").strip()
         if not message:
             return result("support_msg", [_shop_text("Please type your message so our sales team can help you.")])
+        # The customer has just been told their message is with the sales team,
+        # so the menu is dropped for the same reason as the handover above: it
+        # would sit between the thanks and the reply the customer is waiting for.
         return result("menu", [
             _shop_text("✅ Thank you — your message has been passed to our sales team. 🙏 "
                        "Someone will come back to you shortly."),
-            greet(),
         ], actions=[{"type": "escalate", "reason": "Customer requested support", "message": message}],
             new_history=[])
 
