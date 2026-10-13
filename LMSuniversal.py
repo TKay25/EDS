@@ -23124,6 +23124,7 @@ SHOP_RESERVED_WORDS = frozenset({
     "delivery", "collection", "none", "back", "previous", "menu", "home", "reset",
     "restart", "start", "b", "m", "yes", "y", "no", "n", "ok", "later", "cancel",
     "skip", "help", "en", "sn", "nd", "track", "nudge", "buy", "remind",
+    "cancel order", "cancel my order", "cancel an order",
 })
 
 
@@ -23915,8 +23916,12 @@ def _shop_track_prompt(wa_number):
 def _shop_track_view(order, wa_number):
     """The tracking reply for one order, with its next-step choices."""
     options = [("nudge", "Send a reminder about it")]
+    # A cancellable order still has the cancel choice one screen away, so it is
+    # offered here rather than making the customer go back to the order list.
     if order["cancellable"]:
-        options.append(("support_human", "Talk to a human"))
+        options.append((f"cancel:{order['reference']}", f"Cancel {order['reference']}"))
+        if not order["fulfilled"] and not order["paid"]:
+            options.append(("support_human", "Talk to a human"))
     else:
         options.append(("orders", "My orders"))
     return [_shop_options(shop_order_track_text(order), options)]
@@ -24256,6 +24261,14 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             return result("track", [prompt], new_ctx={})
         return result("track_view", _shop_track_view(order, wa_number),
                       new_ctx=dict(ctx, track_reference=order["reference"]))
+
+    # Cancelling is promised on the same line of the welcome, so "cancel" typed on
+    # its own has to work too. The order list is where a cancellation already
+    # starts - it is the screen that knows which of the customer's orders can
+    # still be cancelled - so the word opens that rather than a second route.
+    if low in ("cancel", "cancel order", "cancel my order", "cancel an order",
+               "cancel order(s)", "bvisa odha", "khansela i-oda"):
+        return result("orders", [_shop_orders_menu(wa_number)])
 
     if step in ("track", "track_view") and low in ("nudge", "remind", "reminder",
                                                    "send reminder", "send a reminder",
