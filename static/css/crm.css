@@ -482,10 +482,14 @@ select.ps-input {
 /* --------------------------------------------------------- stat cards
    The icon becomes a tinted chip so the card reads as an icon, a number and a
    caption rather than three grey lines. */
-.crm-view[data-crm-view="analytics"] .ps-stats { gap: 14px; margin-bottom: 20px; }
+/* The figures are reference numbers an agent glances at, not a dashboard
+   headline: at 1.6rem they were the largest text in the portal and pushed the
+   real content - the orders table - below the fold. Sized to sit just above the
+   labels they belong to. */
+.crm-view[data-crm-view="analytics"] .ps-stats { gap: 10px; margin-bottom: 13px; }
 
 .crm-view[data-crm-view="analytics"] .ps-stat {
-  padding: 16px 18px;
+  padding: 10px 12px;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
@@ -497,22 +501,22 @@ select.ps-input {
 
 .crm-view[data-crm-view="analytics"] .ps-stat-label {
   gap: 0;
-  margin-bottom: 12px;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  font-size: 0.63rem;
+  letter-spacing: 0.09em;
 }
 
 .crm-view[data-crm-view="analytics"] .ps-stat-label i {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-right: 10px;
-  border-radius: 9px;
+  width: 20px;
+  height: 20px;
+  margin-right: 7px;
+  border-radius: 6px;
   background: var(--ps-accent-soft);
   color: var(--ps-accent);
-  font-size: 0.85rem;
+  font-size: 0.68rem;
 }
 
 .crm-view[data-crm-view="analytics"] .ps-stat:nth-child(2) .ps-stat-label i {
@@ -529,13 +533,13 @@ select.ps-input {
 }
 
 .crm-view[data-crm-view="analytics"] .ps-stat-value {
-  font-size: 1.6rem;
-  letter-spacing: -0.04em;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
 }
 
 .crm-view[data-crm-view="analytics"] .ps-stat-note {
-  margin-top: 8px;
-  font-size: 0.73rem;
+  margin-top: 4px;
+  font-size: 0.66rem;
 }
 
 .crm-top-items { display: flex; flex-direction: column; gap: 14px; flex: 1 1 auto; }
@@ -1254,14 +1258,14 @@ select.ps-input {
 }
 
 /* --------------------------------------------------------- type floors
-   The shared portal styles run slightly small for a dense inbox. Nudge the
-   components the CRM leans on so nothing sits below ~12px, without touching
-   the other portals that reuse the same classes. */
-.crm-view[data-crm-view="inbox"] .ps-chat-preview { font-size: 0.75rem; }
-.crm-view[data-crm-view="inbox"] .ps-chat-time { font-size: 0.75rem; }
+   The shared portal styles run slightly small for a dense inbox, so the
+   components the CRM leans on are nudged up to where they stay readable. */
+.crm-view[data-crm-view="inbox"] .ps-chat-preview { font-size: 0.73rem; }
+.crm-view[data-crm-view="inbox"] .ps-chat-time { font-size: 0.66rem; }
 
-#crmInbox .ps-stat-label { font-size: 0.75rem; }
-#crmInbox .ps-stat-note { font-size: 0.75rem; }
+#crmInbox .ps-stat-label { font-size: 0.63rem; }
+#crmInbox .ps-stat-note { font-size: 0.66rem; }
+#crmInbox .ps-stat-value { font-size: 1rem; }
 
 /* ------------------------------------------------------ filter dropdown */
 .crm-select-wrap {
@@ -1385,9 +1389,9 @@ select.crm-select:focus {
     gap: 12px;
   }
 
-  .crm-view[data-crm-view="analytics"] .ps-stat { padding: 14px 16px; }
-  .crm-view[data-crm-view="analytics"] .ps-stat-value { font-size: 1.4rem; }
-  .crm-view[data-crm-view="analytics"] .ps-stat-label i { width: 24px; height: 24px; }
+  .crm-view[data-crm-view="analytics"] .ps-stat { padding: 9px 11px; }
+  .crm-view[data-crm-view="analytics"] .ps-stat-value { font-size: 0.94rem; }
+  .crm-view[data-crm-view="analytics"] .ps-stat-label i { width: 18px; height: 18px; }
 }
 
 @media (max-width: 620px) {
