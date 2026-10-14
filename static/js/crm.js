@@ -115,7 +115,111 @@
     });
   }
 
-  /* ------------------------------------------------------------------ tabs */
+  /* ---------------------------------------------- catalogue: search + logo */
+  function initBranding() {
+    var wrap = document.getElementById('crmBranding');
+    if (!wrap) return;
+    var preview = document.getElementById('crmBrandingPreview');
+    var fileInput = document.getElementById('crmBrandingFile');
+    var clearButton = document.getElementById('crmBrandingClear');
+    var pickLabel = document.getElementById('crmBrandingPickLabel');
+    var noteEl = document.getElementById('crmBrandingNote');
+
+    function note(message, kind) {
+      if (!noteEl) return;
+      noteEl.textContent = message;
+      noteEl.classList.remove('is-ok', 'is-error');
+      if (kind) noteEl.classList.add(kind);
+      window.setTimeout(function () {
+        if (noteEl.textContent === message) noteEl.textContent = '';
+      }, 4000);
+    }
+
+    function paint(url) {
+      if (preview) {
+        preview.innerHTML = url
+          ? '<img src="' + escapeHtml(url) + '" alt="Company logo">'
+          : '<span class="crm-branding-empty"><i class="bi bi-image"></i> No logo yet</span>';
+      }
+      if (clearButton) clearButton.hidden = !url;
+      if (pickLabel) pickLabel.textContent = url ? 'Replace logo' : 'Upload logo';
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function () {
+        var file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        var allowed = ['png', 'jpg', 'jpeg', 'webp'];
+        var extension = (file.name.split('.').pop() || '').toLowerCase();
+        if (allowed.indexOf(extension) === -1) {
+          note('Use a ' + allowed.join(', ') + ' file.', 'is-error');
+          toast('That file type is not supported.', 'error',
+                'The logo must be one of: ' + allowed.join(', ') + '.');
+          fileInput.value = '';
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          note('That file is larger than 5 MB.', 'is-error');
+          toast('That logo is too large.', 'error',
+                'The limit is 5 MB; this file is ' + (file.size / 1048576).toFixed(1) + ' MB.');
+          fileInput.value = '';
+          return;
+        }
+        var formData = new FormData();
+        formData.append('logo', file);
+        note('Uploading…');
+        postForm('/api/crm/branding/logo', formData)
+          .then(function (result) {
+            fileInput.value = '';
+            if (!result.success) {
+              note(result.message || 'Could not save the logo.', 'is-error');
+              toast(result.message || 'Could not save the logo.', 'error');
+              return;
+            }
+            paint(result.logo_url || '');
+            note('Logo saved', 'is-ok');
+            toast('Logo saved.', 'ok',
+                  'It will appear on the next receipt or delivery note you print.');
+          })
+          .catch(function () {
+            fileInput.value = '';
+            note('Could not save the logo.', 'is-error');
+            toast('Could not save the logo. Check your connection and try again.', 'error');
+          });
+      });
+    }
+
+    if (clearButton) {
+      clearButton.addEventListener('click', function () {
+        if (!window.confirm('Remove the company logo?\n\n' +
+                            'Receipts and delivery notes will be printed without it.')) {
+          return;
+        }
+        var formData = new FormData();
+        formData.append('clear', '1');
+        setBusy(clearButton, true, 'Removing…');
+        postForm('/api/crm/branding/logo', formData)
+          .then(function (result) {
+            setBusy(clearButton, false);
+            if (!result.success) {
+              note(result.message || 'Could not remove the logo.', 'is-error');
+              toast(result.message || 'Could not remove the logo.', 'error');
+              return;
+            }
+            paint('');
+            note('Logo removed', 'is-ok');
+            toast('Logo removed.', 'ok');
+          })
+          .catch(function () {
+            setBusy(clearButton, false);
+            note('Could not remove the logo.', 'is-error');
+            toast('Could not remove the logo.', 'error');
+          });
+      });
+    }
+  }
+
+  /* ------------------------------------------------------------- tabs */
   function initTabs() {
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-crm-tab]'));
     var views = Array.prototype.slice.call(root.querySelectorAll('[data-crm-view]'));
@@ -2182,6 +2286,66 @@
 
     applyLimits(null);
 
+    /* ------------------------------------------------------- search filter */
+    // The whole catalogue is already on the page, so the filter runs here rather
+    // than over the network: a round trip per keystroke would be slower, and it
+    // would also discard any edits the agent has not saved yet. Hidden cards are
+    // filtered out of the count shown, so the figure always describes what is on
+    // screen.
+    (function initCatalogSearch() {
+      var input = document.getElementById('crmCatalogSearch');
+      var clearBtn = document.getElementById('crmCatalogSearchClear');
+      var noteEl = document.getElementById('crmCatalogSearchNote');
+      if (!input) return;
+
+      function haystack(product) {
+        var nameField = product.querySelector('[data-role="name"]');
+        var summaryField = product.querySelector('[data-role="summary"]');
+        var sizesField = product.querySelector('[data-role="sizes"]');
+        return [
+          nameField ? nameField.value : '',
+          summaryField ? summaryField.value : '',
+          sizesField ? sizesField.value : '',
+        ].join(' ').toLowerCase();
+      }
+
+      function apply() {
+        var needle = (input.value || '').trim().toLowerCase();
+        var shown = 0;
+        Array.prototype.forEach.call(grid.querySelectorAll('.crm-product'), function (product) {
+          var match = !needle || haystack(product).indexOf(needle) !== -1;
+          product.hidden = !match;
+          if (match) shown += 1;
+        });
+        if (clearBtn) clearBtn.hidden = !needle;
+        if (noteEl) {
+          if (!needle) {
+            noteEl.hidden = true;
+            noteEl.textContent = '';
+          } else {
+            noteEl.hidden = false;
+            noteEl.textContent = shown === 0
+              ? 'No product matches “' + input.value.trim() + '”.'
+              : 'Showing ' + shown + ' of ' + grid.querySelectorAll('.crm-product').length +
+                ' products matching “' + input.value.trim() + '”.';
+          }
+        }
+      }
+
+      input.addEventListener('input', apply);
+      input.addEventListener('search', apply);
+      if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+          input.value = '';
+          apply();
+          input.focus();
+        });
+      }
+      // A product added or restored arrives by reload, so the filter only has to
+      // be honoured on the way in.
+      apply();
+    })();
+
     // Closing the tab or reloading with unsaved catalogue edits loses them
     // silently, so the browser is asked to confirm first.
     window.addEventListener('beforeunload', function (event) {
@@ -2359,5 +2523,6 @@
 
   initTabs();
   initCatalog();
+  initBranding();
   initActivityLog();
 })();

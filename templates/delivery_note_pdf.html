@@ -4,33 +4,38 @@
     <meta charset="UTF-8">
     <title>Delivery Note {{ order.reference }} | {{ company_name }}</title>
     <style>
+        {# Shares the receipt's palette and rhythm so the two documents a customer
+           receives look like they came from one business. The delivery note is
+           the working document of the pair, so it keeps the signature block and
+           the goods-check instruction. #}
         @page {
             size: A5;
-            margin: 11mm 10mm 12mm 10mm;
+            margin: 12mm 11mm 13mm 11mm;
 
             @top-left {
-                content: "{{ company_name }} — Delivery Note {{ order.reference }}";
+                content: "{{ company_name }}  ·  Delivery Note {{ order.reference }}";
                 font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-                font-size: 6.5pt;
-                color: #8593A5;
+                font-size: 6.2pt;
+                letter-spacing: 0.04em;
+                color: #9AA7B6;
                 vertical-align: bottom;
-                padding-bottom: 2.6mm;
+                padding-bottom: 3mm;
             }
             @bottom-left {
                 content: "Printed {{ printed_at }}{% if printed_by %} by {{ printed_by }}{% endif %}";
                 font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-                font-size: 6pt;
-                color: #9AA7B6;
+                font-size: 5.9pt;
+                color: #AEB9C6;
                 vertical-align: top;
-                padding-top: 2mm;
+                padding-top: 2.4mm;
             }
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
                 font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-                font-size: 6pt;
-                color: #9AA7B6;
+                font-size: 5.9pt;
+                color: #AEB9C6;
                 vertical-align: top;
-                padding-top: 2mm;
+                padding-top: 2.4mm;
             }
         }
 
@@ -39,146 +44,354 @@
         body {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             color: #16283F;
-            font-size: 8.2pt;
-            line-height: 1.42;
+            font-size: 8pt;
+            line-height: 1.4;
             margin: 0;
         }
 
+        /* ---------------------------------------------------------- masthead */
         .masthead {
-            border-bottom: 2pt solid #DC143C;
+            position: relative;
             padding-bottom: 2.6mm;
-            margin-bottom: 3.4mm;
+            margin-bottom: 3.2mm;
+            border-bottom: 2.4pt solid #DC143C;
+        }
+        .masthead:after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -2.4pt;
+            width: 26mm;
+            height: 2.4pt;
+            background: #16283F;
+        }
+        .brand-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 6mm;
+        }
+        /* The logo sits beside the wordmark rather than replacing it: a mark on
+           its own would leave a document that is photocopied or faxed with no
+           readable name on it at all. */
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 2.8mm;
+        }
+        .brand-logo {
+            height: 11mm;
+            width: auto;
+            max-width: 26mm;
+            object-fit: contain;
         }
         .doc-kicker {
-            margin: 0 0 1.2mm;
-            font-size: 6.4pt;
+            margin: 0 0 1.4mm;
+            font-size: 6pt;
             font-weight: 700;
-            letter-spacing: 0.16em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
             color: #8593A5;
         }
         .brand {
-            font-size: 15pt;
+            font-size: 16pt;
             font-weight: 700;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.025em;
             margin: 0;
-            line-height: 1.08;
+            line-height: 1.05;
         }
         .brand em { font-style: normal; color: #DC143C; }
-        .doc-title {
-            margin: 1mm 0 0;
-            font-size: 11pt;
+        .brand-sub {
+            margin: 1.4mm 0 0;
+            font-size: 6.6pt;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .stamp {
+            text-align: right;
+            min-width: 34mm;
+            padding: 2mm 2.6mm;
+            border: 0.75pt solid #DCE3EC;
+            border-radius: 1.4mm;
+            background: #FBFCFE;
+        }
+        .stamp .kind {
+            margin: 0;
+            font-size: 6pt;
             font-weight: 700;
-            color: #DC143C;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .stamp .ref {
+            margin: 0.8mm 0 0;
+            font-size: 12pt;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            color: #16283F;
         }
         .contact {
-            margin: 1.8mm 0 0;
-            font-size: 7pt;
-            color: #56657A;
+            margin: 2.4mm 0 0;
+            font-size: 6.8pt;
+            color: #5C6B80;
             line-height: 1.5;
         }
 
-        .panel { display: flex; gap: 6mm; margin-bottom: 3.2mm; }
-        .panel > div { flex: 1; }
-        .panel h3 {
-            margin: 0 0 1mm;
-            font-size: 6.4pt;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: #8593A5;
-        }
-        .panel p { margin: 0; font-size: 8.4pt; }
-        .panel .muted { color: #56657A; font-size: 7.4pt; }
-
-        .fields {
-            width: 100%;
-            border-collapse: collapse;
+        /* --------------------------------------------------- payment status */
+        /* The note is a working document, so the money is stated plainly rather
+           than celebrated: staff and customer both need to know what is still
+           owed before the goods change hands. */
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4mm;
+            padding: 2.4mm 3.2mm;
+            border-radius: 1.6mm;
             margin-bottom: 3.2mm;
+            border-left: 2.4pt solid #8593A5;
+            background: #F7F9FC;
+            border-top: 0.5pt solid #E4E9F0;
+            border-right: 0.5pt solid #E4E9F0;
+            border-bottom: 0.5pt solid #E4E9F0;
         }
-        .fields td { padding: 1mm 0; font-size: 7.9pt; vertical-align: top; }
-        .fields td.label {
-            width: 30mm;
-            color: #8593A5;
-            font-size: 6.4pt;
+        .status.is-paid {
+            background: #EAF8F1;
+            border-color: #A8DEC6;
+            border-left-color: #10B981;
+        }
+        .status.is-due {
+            background: #FFF8EC;
+            border-color: #F3D9A8;
+            border-left-color: #F59E0B;
+        }
+        .status .label {
+            font-size: 6pt;
             font-weight: 700;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.15em;
             text-transform: uppercase;
+            color: #8593A5;
+            display: block;
+        }
+        .status .value {
+            font-size: 9.4pt;
+            font-weight: 700;
+            color: #16283F;
+            display: block;
+            margin-top: 0.4mm;
+        }
+        .status .detail {
+            font-size: 6.8pt;
+            color: #5C6B80;
+            display: block;
+            margin-top: 0.4mm;
+        }
+        .status .amount {
+            font-size: 13pt;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+            color: #16283F;
+        }
+        .status .amount.is-paid { color: #175E41; }
+        .status .amount.is-due { color: #9A6408; }
+
+        /* ---------------------------------------------------------- parties */
+        /* A delivery note with several items plus a signature block is close to
+           a full A5 sheet, so the vertical rhythm here is deliberately tighter
+           than the receipt's: every millimetre spent on air is a millimetre the
+           signatures lose, and a note whose signature lines spill onto a second
+           page is awkward to sign on a delivery run. */
+        .panel { display: flex; gap: 5mm; margin-bottom: 2.2mm; }
+        .panel > div {
+            flex: 1;
+            padding: 1.8mm 2.4mm;
+            border: 0.5pt solid #E4E9F0;
+            border-radius: 1.4mm;
+            background: #FCFDFE;
+        }
+        .panel h3 {
+            margin: 0 0 1.4mm;
+            font-size: 6pt;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .panel p { margin: 0; font-size: 8.4pt; line-height: 1.45; }
+        .panel .muted { color: #5C6B80; font-size: 7.3pt; }
+
+        /* ----------------------------------------------------------- fields */
+        .fields { width: 100%; border-collapse: collapse; margin-bottom: 2.6mm; }
+        .fields td {
+            padding: 0.9mm 0;
+            font-size: 7.6pt;
+            vertical-align: top;
+            border-bottom: 0.4pt solid #F0F3F7;
+        }
+        .fields tr:last-child td { border-bottom: 0; }
+        .fields td.label {
+            width: 27mm;
+            color: #8593A5;
+            font-size: 6pt;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            padding-right: 2mm;
         }
 
-        table.items { width: 100%; border-collapse: collapse; margin-bottom: 3.2mm; }
+        /* ------------------------------------------------------------ items */
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
         table.items th {
             text-align: left;
-            padding: 1.5mm 2mm;
+            padding: 1.6mm 2.2mm;
             background: #16283F;
             color: #FFFFFF;
-            font-size: 6.4pt;
+            font-size: 6pt;
             font-weight: 700;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.11em;
             text-transform: uppercase;
         }
+        table.items th.num { text-align: right; }
+        table.items th.qty { text-align: center; }
         table.items td {
-            padding: 1.5mm 2mm;
-            border-bottom: 0.5pt solid #DCE3EC;
-            font-size: 8.2pt;
+            padding: 0.9mm 2.2mm;
+            border-bottom: 0.5pt solid #E4E9F0;
+            font-size: 8pt;
+            vertical-align: top;
         }
-        table.items tr.alt td { background: #F7F9FC; }
+        table.items tr.alt td { background: #F8FAFC; }
+        table.items tbody tr:last-child td { border-bottom: 0.75pt solid #C9D3DF; }
         .num { text-align: right; white-space: nowrap; }
         .qty { text-align: center; white-space: nowrap; }
         .product strong { font-weight: 700; }
-        .product small { color: #56657A; display: block; font-size: 6.8pt; }
-        .unpriced { color: #B45309; font-size: 6.8pt; }
+        /* The pack size rides on the same line as the product rather than under
+           it: on a full A5 note the extra line per item is what pushes the
+           signature block onto a second page. */
+        .product small {
+            color: #5C6B80;
+            font-size: 6.8pt;
+            font-weight: 400;
+            margin-left: 1.6mm;
+        }
 
-        .totals { width: 58mm; margin-left: auto; border-collapse: collapse; margin-bottom: 3.4mm; }
-        .totals td { padding: 1.1mm 2mm; font-size: 8.2pt; }
-        .totals td.label { color: #56657A; }
+        /* ----------------------------------------------------------- totals */
+        .totals { width: 62mm; margin-left: auto; border-collapse: collapse; margin-bottom: 2.6mm; }
+        .totals td { padding: 1mm 2.2mm; font-size: 8pt; }
+        .totals td.label { color: #5C6B80; }
         .totals tr.grand td {
-            border-top: 1.2pt solid #16283F;
+            border-top: 1.4pt solid #16283F;
             font-weight: 700;
             font-size: 10.5pt;
+            color: #16283F;
+            padding-top: 1.6mm;
         }
 
+        /* ------------------------------------------------------------ notes */
         .note {
-            padding: 2mm 2.8mm;
-            background: #F7F9FC;
-            border-left: 2pt solid #DC143C;
-            font-size: 7.4pt;
+            padding: 2mm 2.6mm;
+            background: #F8FAFC;
+            border-left: 2.2pt solid #DC143C;
+            border-radius: 0 1.4mm 1.4mm 0;
+            font-size: 7.1pt;
             line-height: 1.42;
-            color: #3F4E63;
+            color: #45566B;
         }
-        .note strong { color: #16283F; }
+        .note strong { color: #16283F; display: block; margin-bottom: 0.4mm; }
+        .note { page-break-inside: avoid; }
 
+        /* ------------------------------------------------------- signatures */
         .signatures {
             display: flex;
-            gap: 8mm;
-            margin-top: 5mm;
+            gap: 9mm;
+            margin-top: 3mm;
             page-break-inside: avoid;
         }
         .signatures > div { flex: 1; }
         .sig-line {
             border-bottom: 0.75pt solid #8593A5;
-            height: 9mm;
+            height: 6.5mm;
         }
         .sig-label {
-            margin-top: 1.2mm;
-            font-size: 6.4pt;
-            letter-spacing: 0.08em;
+            margin-top: 1mm;
+            font-size: 6pt;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
             color: #8593A5;
             font-weight: 700;
         }
-        .sig-hint { margin-top: 0.6mm; font-size: 7.2pt; color: #56657A; }
+        .sig-hint { margin-top: 0.5mm; font-size: 6.8pt; color: #5C6B80; }
+
+        /* One unbreakable unit, so the closing cannot be split. */
+        .closing { page-break-inside: avoid; margin-top: 2.4mm; }
+
+        .foot {
+            margin-top: 2.6mm;
+            padding-top: 2mm;
+            border-top: 0.5pt solid #E4E9F0;
+            text-align: center;
+            font-size: 6.4pt;
+            color: #8593A5;
+            line-height: 1.45;
+            page-break-inside: avoid;
+            page-break-before: avoid;
+        }
     </style>
 </head>
 <body>
     <div class="masthead">
-        <p class="doc-kicker">{{ company_name }}</p>
-        <h1 class="brand">{{ company_name }} <em>(Pvt) Ltd</em></h1>
-        <p class="doc-title">Delivery Note</p>
+        <div class="brand-row">
+            <div>
+                <p class="doc-kicker">Delivery note</p>
+                <div class="brand-lockup">
+                    {% if company_logo %}
+                    <img class="brand-logo" src="{{ company_logo }}" alt="">
+                    {% endif %}
+                    <h1 class="brand">{{ company_name }} <em>(Pvt) Ltd</em></h1>
+                </div>
+                <p class="brand-sub">Household · Cleaning · Personal care</p>
+            </div>
+            <div class="stamp">
+                <p class="kind">Order ref.</p>
+                <p class="ref">{{ order.reference }}</p>
+            </div>
+        </div>
         <div class="contact">
             {{ company_contact.address }}<br>
-            {{ company_contact.phones | join(' / ') }} &nbsp;•&nbsp; {{ company_contact.email }}
+            {{ company_contact.phones | join('  ·  ') }} &nbsp;·&nbsp; {{ company_contact.email }}
         </div>
+    </div>
+
+    {# The money is stated plainly rather than celebrated: this document travels
+       with the goods, so both the deliverer and the customer need to know what is
+       still owed before anything changes hands. #}
+    <div class="status {{ 'is-paid' if order.payment_status == 'paid' else 'is-due' }}">
+        <div>
+            <span class="label">Payment status</span>
+            {% if order.payment_status == 'paid' %}
+            <span class="value">Paid{% if payment_method_label %} — {{ payment_method_label }}{% endif %}</span>
+            <span class="detail">A separate receipt is issued for this order.</span>
+            {% else %}
+            <span class="value">Not yet paid</span>
+            <span class="detail">
+                {%- if payment_method_key == 'delivery' -%}
+                    Cash is due on delivery.
+                {%- elif payment_method_key == 'shop' -%}
+                    Payment is due when the order is collected.
+                {%- elif payment_method_key == 'ecocash' -%}
+                    An EcoCash payment is arranged with the customer.
+                {%- else -%}
+                    Payment is due on delivery or collection.
+                {%- endif -%}
+            </span>
+            {% endif %}
+        </div>
+        {% if order.priced %}
+        <div class="amount {{ 'is-paid' if order.payment_status == 'paid' else 'is-due' }}">
+            {{ order.currency }} {{ '%.2f' | format(order.total) }}
+        </div>
+        {% endif %}
     </div>
 
     <div class="panel">
@@ -189,9 +402,9 @@
             {% if order.phone %}<p class="muted">{{ order.phone }}</p>{% endif %}
         </div>
         <div>
-            <h3>Delivery address</h3>
+            <h3>{{ 'Delivery address' if order.delivery_method == 'delivery' else 'Collect from' }}</h3>
             {% if order.delivery_method == 'collection' %}
-                <p>Collection from {{ order.shop or 'the shop' }}</p>
+                <p><strong>{{ order.shop or 'Our shop' }}</strong></p>
                 <p class="muted">{{ order.shop_address or company_contact.address }}</p>
             {% elif order.address %}
                 <p>{{ order.address }}</p>
@@ -203,43 +416,16 @@
 
     <table class="fields">
         <tr>
-            <td class="label">Order ref</td>
-            <td><strong>{{ order.reference }}</strong></td>
             <td class="label">Order placed</td>
             <td>{{ order.created_at }}</td>
-        </tr>
-        <tr>
-            <td class="label">Method</td>
-            <td>{{ 'Delivery to the customer' if order.delivery_method == 'delivery' else 'Collection from ' + (order.shop or 'the shop') }}</td>
             <td class="label">Items</td>
             <td>{{ order.item_count }}</td>
         </tr>
-        {% if order.shop %}
         <tr>
-            <td class="label">{{ 'Supplying shop' if order.delivery_method == 'delivery' else 'Collect from' }}</td>
+            <td class="label">Method</td>
             <td colspan="3">
-                <strong>{{ order.shop }}</strong>
-                {% if order.shop_address %} — {{ order.shop_address }}{% endif %}
-            </td>
-        </tr>
-        {% endif %}
-        <tr>
-            <td class="label">Payment</td>
-            <td colspan="3">
-                {# Whitespace is controlled so the source stays readable while the
-                   sentence still renders as one line, which is what the test that
-                   reads this text looks for. #}
-                {%- if order.payment_status == 'paid' -%}
-                    Paid{% if payment_method_label %} {{ payment_method_label }}{% endif %} — a separate receipt is issued for this order.
-                {%- elif payment_method_key == 'delivery' -%}
-                    Not yet paid. Cash is due on delivery.
-                {%- elif payment_method_key == 'shop' -%}
-                    Not yet paid. Payment is due when the order is collected.
-                {%- elif payment_method_key == 'ecocash' -%}
-                    Not yet paid. An EcoCash payment is arranged with the customer.
-                {%- else -%}
-                    Not yet paid. Payment is due on delivery or collection.
-                {%- endif %}
+                {{ 'Delivery to the customer' if order.delivery_method == 'delivery'
+                   else 'Collection from ' + (order.shop or 'the shop') }}
             </td>
         </tr>
     </table>
@@ -282,22 +468,32 @@
         {% endif %}
     </table>
 
-    <div class="note">
-        <strong>Please check the goods on delivery.</strong>
-        Count the items against this note before signing. Any shortage or damage must be noted here and
-        reported to {{ company_name }} the same day so it can be corrected.
-    </div>
-
-    <div class="signatures">
-        <div>
-            <div class="sig-line"></div>
-            <div class="sig-label">Delivered by</div>
-            <div class="sig-hint">Name, signature and date</div>
+    {# The note, the signature lines and the closing line are one unit: a
+       signature block split across a page break would be useless on the goods
+       run, and the note is the instruction that goes with the signature. #}
+    <div class="closing">
+        <div class="note">
+            <strong>Please check the goods before signing</strong>
+            Count the items against this note as they are handed over. Any shortage or damage must be
+            noted here and reported to {{ company_name }} the same day.
         </div>
-        <div>
-            <div class="sig-line"></div>
-            <div class="sig-label">Received by</div>
-            <div class="sig-hint">Name, signature and date</div>
+
+        <div class="signatures">
+            <div>
+                <div class="sig-line"></div>
+                <div class="sig-label">Delivered by</div>
+                <div class="sig-hint">Name, signature and date</div>
+            </div>
+            <div>
+                <div class="sig-line"></div>
+                <div class="sig-label">Received by</div>
+                <div class="sig-hint">Name, signature and date</div>
+            </div>
+        </div>
+
+        <div class="foot">
+            Signed copy is proof of delivery for order {{ order.reference }}.
+            {{ company_contact.phones | join('  ·  ') }} &nbsp;·&nbsp; {{ company_contact.email }}
         </div>
     </div>
 </body>

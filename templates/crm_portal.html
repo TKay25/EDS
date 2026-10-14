@@ -710,6 +710,54 @@
                     WhatsApp allows {{ limits.max_products }} products in one browse list, and each
                     product or pack name must be {{ limits.name_limit }} characters or fewer.
                 </p>
+                {# Filtering happens in the browser: the whole catalogue is already on
+                   the page, so a round trip per keystroke would be slower and would
+                   throw away any edits the agent has not saved yet. #}
+                <div class="crm-catalog-search">
+                    <i class="bi bi-search"></i>
+                    <input class="ps-input" type="search" id="crmCatalogSearch"
+                           autocomplete="off" placeholder="Search products by name or pack size…"
+                           aria-label="Search products">
+                    <button class="crm-catalog-search-clear" type="button" id="crmCatalogSearchClear"
+                            aria-label="Clear the search" hidden>
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <p class="ps-muted crm-hint" id="crmCatalogSearchNote" hidden></p>
+            </div>
+
+            {# The logo is set once and appears on every document the customer
+               receives, so it belongs with the catalogue rather than inside any one
+               document's settings. #}
+            <div class="crm-branding" id="crmBranding">
+                <div class="crm-branding-preview" id="crmBrandingPreview">
+                    {% if logo_url %}
+                    <img src="{{ logo_url }}" alt="Company logo">
+                    {% else %}
+                    <span class="crm-branding-empty">
+                        <i class="bi bi-image"></i> No logo yet
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="crm-branding-body">
+                    <h4><i class="bi bi-badge-tm"></i> Company logo</h4>
+                    <p class="ps-muted">
+                        Shown at the top of every receipt and delivery note sent to a customer.
+                        PNG, JPG or WEBP, up to {{ logo_max_mb }} MB. A transparent PNG looks best.
+                    </p>
+                    <div class="crm-branding-tools">
+                        <label class="ps-btn ps-btn-primary ps-btn-sm crm-branding-pick">
+                            <i class="bi bi-upload"></i> <span id="crmBrandingPickLabel">Upload logo</span>
+                            <input type="file" id="crmBrandingFile" hidden
+                                   accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+                        </label>
+                        <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmBrandingClear"
+                                {% if not logo_url %}hidden{% endif %}>
+                            <i class="bi bi-x-lg"></i> Remove
+                        </button>
+                        <span class="crm-save-note" id="crmBrandingNote"></span>
+                    </div>
+                </div>
             </div>
 
             <!-- Only shown when the catalogue is full, so the limit is explained

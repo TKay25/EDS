@@ -21625,6 +21625,18 @@ def ensure_shop_tables():
                 updated_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        # The company's own branding, stored as one row rather than a settings
+        # table: there is exactly one set of these and a single row makes that
+        # explicit. The logo path follows the product pictures - a file under the
+        # static folder, referenced by path - so the same asset serves the portal
+        # and every document a customer receives.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_branding (
+                brand_key VARCHAR(40) PRIMARY KEY,
+                logo_path VARCHAR(300),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
         # The people at a shop who are told when an order lands there. Kept per
         # shop rather than as system users: a shop's staff are not the same as the
         # portal's users, and most of them will never sign in to anything.
@@ -23036,6 +23048,122 @@ PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "")
 # The glyphs the assistant puts in front of a heading. Stripped from an image
 # caption, where the picture already says what the heading does.
 _SHOP_PROMPT_GLYPHS = "🧴🛍️📦🛒🔎🙋👋💳✅⚠️❌🎉"
+
+# ------------------------------------------------------------ company logo --
+# The logo sits at the top of every document a customer receives, so it is stored
+# once and referenced by both the portal's preview and the printed documents.
+# Only the raster formats are accepted: WeasyPrint renders SVG through an
+# optional dependency that may not be installed, and a logo that silently fails
+# to appear on a delivery note is worse than refusing the upload.
+LOGO_DIR = os.path.join("images", "brand")
+LOGO_EXTENSIONS = {"png": "image/png", "jpg": "image/jpeg",
+                   "jpeg": "image/jpeg", "webp": "image/webp"}
+# Generous compared with a product picture because a logo is often supplied at
+# print resolution, and a low ceiling would force it to be downscaled first.
+LOGO_MAX_BYTES = 5 * 1024 * 1024
+# The row key. One row holds the company's branding; the column exists so the
+# schema can grow to per-document marks later without a migration.
+LOGO_BRAND_KEY = "primary"
+# Whether the logo column has been read yet, and what it held. Cleared by the
+# upload so a replacement logo is picked up immediately.
+_company_logo_cache = {"loaded": False, "path": ""}
+
+
+def _logo_absolute_path(logo_path):
+    """Where the stored logo actually sits on disk, or '' when it is not there."""
+    path = str(logo_path or "").strip().lstrip("/")
+    if not path:
+        return ""
+    # Confined to the brand folder, so a stored value can never name a file
+    # outside it no matter what was written to the column.
+    full = os.path.abspath(os.path.join(app.static_folder, path))
+    root = os.path.abspath(os.path.join(app.static_folder, LOGO_DIR))
+    if not full.startswith(root + os.sep):
+        return ""
+    return full if os.path.isfile(full) else ""
+
+
+def company_logo_path():
+    """The stored logo path, or '' when none has been uploaded.
+
+    Cached like the catalogue because it is read on every document render, and a
+    document is produced far more often than a logo changes. The cache is dropped
+    by the upload, so a new logo appears on the very next document.
+    """
+    global _company_logo_cache
+    if _company_logo_cache.get("loaded"):
+        cached = _company_logo_cache.get("path") or ""
+        # Re-checked even when cached, because the file can vanish without the
+        # app being told - an ephemeral disk cleared by a redeploy is the usual
+        # way. A document then renders without a logo rather than with a broken
+        # image, and the next read reads through to the database.
+        if not cached:
+            return ""
+        if _logo_absolute_path(cached):
+            return cached
+        _company_logo_cache = {"loaded": False, "path": ""}
+    path = ""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT logo_path FROM shop_branding WHERE brand_key = %s",
+                           (LOGO_BRAND_KEY,))
+            row = cursor.fetchone()
+            path = str(row[0]).strip() if row and row[0] else ""
+    except Exception as e:
+        print(f"logo lookup error: {e}")
+    # A path whose file has gone is treated as no logo, so a document renders
+    # without one rather than with a broken image placeholder.
+    if path and not _logo_absolute_path(path):
+        path = ""
+    _company_logo_cache = {"loaded": True, "path": path}
+    return path
+
+
+def company_logo_url():
+    """An absolute URL for the logo, or '' when there is not one."""
+    return product_image_public_url(company_logo_path())
+
+
+def company_logo_data():
+    """(bytes, mime_type, extension) for the logo, or (None, '', '').
+
+    Read at document-render time and embedded as a data URI, so a printed
+    document never depends on the machine that renders it being able to fetch
+    the file over the network.
+    """
+    path = company_logo_path()
+    full = _logo_absolute_path(path)
+    if not full:
+        return None, "", ""
+    extension = full.rsplit(".", 1)[-1].lower() if "." in full else ""
+    mime = LOGO_EXTENSIONS.get(extension)
+    if not mime:
+        return None, "", ""
+    try:
+        with open(full, "rb") as handle:
+            return handle.read(), mime, extension
+    except Exception as e:
+        print(f"logo read error: {e}")
+        return None, "", ""
+
+
+def company_logo_data_uri():
+    """The logo as a data URI for embedding in a printed document, or ''.
+
+    Embedded rather than linked because the PDF is produced on the server and
+    then travels: a linked file would have to remain fetchable from wherever the
+    document is later opened, which it would not be once it is a WhatsApp
+    attachment or an emailed file.
+    """
+    data, mime, _extension = company_logo_data()
+    if not data:
+        return ""
+    try:
+        return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
+    except Exception as e:
+        print(f"logo encode error: {e}")
+        return ""
 
 
 def product_image_public_url(image_path):
@@ -25084,9 +25212,13 @@ def shop_order_stage_notice(reference, order, stage):
         lines.append("")
         lines.append(f"Bring your reference *{reference}* with you when you come.")
         if not order.get("paid"):
-            # The live message carries the same buttons as its template, so the
-            # customer is pointed at the button rather than told a bare fact.
-            lines.append("Payment is taken at the shop, or tap *Pay via EcoCash* below.")
+            # The same message carries a Pay button, so the body points at it
+            # rather than also claiming payment is taken at the shop: saying both
+            # left the customer unsure which they were meant to do.
+            lines.append("It is still unpaid — tap *Pay via EcoCash* below, or settle it "
+                         "in person.")
+        lines.append("Tap *Deliver to me* below if you would rather have it sent to an "
+                     "address instead.")
     elif stage == "enroute":
         lines.append("🚚 *Order is en route to the given address for delivery*"
                      + (f": {address}" if address else "")
@@ -26043,6 +26175,116 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                       new_ctx=dict(ctx, reference=order["reference"], amount=amount,
                                    phone=phone))
 
+    # Changing how an order is received, from the "ready for collection" notice.
+    # Like the pay button, the id carries the reference because a tap restores no
+    # context. A customer who cannot get to the shop needs this more than any
+    # other choice on that message.
+    fulfilment_reference = ""
+    fulfilment_method = ""
+    if low.startswith("deliver:"):
+        fulfilment_reference = command.split(":", 1)[1].strip().upper()
+        fulfilment_method = "delivery"
+    elif low.startswith("collect:"):
+        fulfilment_reference = command.split(":", 1)[1].strip().upper()
+        fulfilment_method = "collection"
+
+    if fulfilment_reference:
+        order = shop_order_for(wa_number, fulfilment_reference)
+        if not order:
+            return result("orders", [
+                _shop_text(f"😕 I could not find order *{fulfilment_reference}* on this "
+                           "number.\n\nPlease check the reference, or ask for a person "
+                           "and we will look it up for you."),
+                _shop_options("What would you like to do?",
+                              [("orders", "Track my orders"),
+                               ("support_human", "Talk to a human")]),
+            ])
+        # Switching to delivery needs somewhere to deliver to. An order that
+        # already carries an address can reuse it, so the customer is only asked
+        # when there is genuinely nothing on file.
+        existing_address = str(order.get("address") or "").strip()
+        if fulfilment_method == "delivery" and not existing_address:
+            return result("order_address", [_shop_text(
+                f"🚚 *Deliver to which address?*\n\n"
+                f"Please send the full delivery address for order "
+                f"*{order['reference']}*, including the suburb and anything the "
+                f"deliverer needs to find you."
+            )], new_ctx=dict(ctx, change_reference=order["reference"],
+                             change_method="delivery"))
+        ok, reason, fresh = shop_order_fulfilment_set(
+            order["reference"], wa_number, fulfilment_method,
+            address=existing_address or None)
+        if not ok:
+            if reason == "staged":
+                stage_word = ("being delivered" if
+                              (fresh.get("delivery_method") == "delivery")
+                              else "ready for collection")
+                return result("orders", [
+                    _shop_text(f"⚠️ Order *{order['reference']}* is already "
+                               f"{stage_word}, so it cannot be changed here. "
+                               "Our sales team will help — I have passed this on."),
+                    _shop_options("What would you like to do?",
+                                  [("orders", "Track my orders"),
+                                   ("support_human", "Talk to a human")]),
+                ], actions=[{"type": "escalate",
+                             "reason": f"Customer could not change fulfilment on "
+                                       f"{order['reference']} ({reason})"}])
+            if reason == "cancelled":
+                return result("orders", [
+                    _shop_text(f"Order *{order['reference']}* was cancelled, so there is "
+                               "nothing to change."),
+                    _shop_orders_menu(wa_number),
+                ])
+            if reason == "fulfilled":
+                return result("orders", [
+                    _shop_text(f"Order *{order['reference']}* has already been completed, "
+                               "so it cannot be changed here. Our sales team will help — "
+                               "I have passed this on."),
+                    _shop_options("What would you like to do?",
+                                  [("orders", "Track my orders"),
+                                   ("support_human", "Talk to a human")]),
+                ], actions=[{"type": "escalate",
+                             "reason": f"Customer could not change fulfilment on "
+                                       f"{order['reference']} ({reason})"}])
+            return result("orders", [
+                _shop_text("😕 Something went wrong, so *nothing was changed*. Our "
+                           "sales team will sort it out — I have passed this on."),
+                _shop_options("What would you like to do?",
+                              [("orders", "Track my orders"),
+                               ("support_human", "Talk to a human")]),
+            ], actions=[{"type": "escalate",
+                         "reason": f"Fulfilment change failed on {order['reference']}"}])
+        if reason == "unchanged":
+            return result("track_view", [
+                _shop_text(f"👍 Order *{order['reference']}* is already set to "
+                           f"*{'delivery' if fulfilment_method == 'delivery' else 'collection'}*."),
+            ] + _shop_track_view(fresh, wa_number),
+                new_ctx=dict(ctx, track_reference=fresh["reference"]))
+        # Tell the customer what was recorded, and what happens next, in the
+        # terms they care about rather than restating the field that changed.
+        if fulfilment_method == "delivery":
+            where = str(fresh.get("address") or existing_address or "").strip()
+            body = ("✅ *Changed to delivery*\n\n"
+                    f"Order *{fresh['reference']}* will be delivered"
+                    + (f" to:\n📍 {where}" if where else "")
+                    + ".\n\nWe will message you when it is on its way. If the shop has "
+                      "already prepared it for collection, our sales team will contact "
+                      "you to arrange the delivery.")
+        else:
+            shop_name = fresh.get("shop") or ""
+            body = ("✅ *Changed to collection*\n\n"
+                    f"Order *{fresh['reference']}* is set for collection"
+                    + (f" at *{shop_name}*" if shop_name else "")
+                    + ". Please bring your reference with you.")
+        return result("track_view", [_shop_text(body)] + _shop_track_view(fresh, wa_number),
+                      new_ctx=dict(ctx, track_reference=fresh["reference"]),
+                      actions=[{"type": "escalate",
+                                "reason": f"Customer changed {fresh['reference']} to "
+                                          f"{fulfilment_method}",
+                                "message": f"The customer switched "
+                                           f"{fresh['reference']} to {fulfilment_method} "
+                                           f"from the assistant."}])
+
     # A reference the customer typed or pasted back into the chat while tracking,
     # or a track choice from the list.
     track_reference = ""
@@ -26197,7 +26439,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if unmatched_number or (
             command and step in _SHOP_FEEDBACK_STEPS
             and not low.startswith(("cat:", "prod:", "size:", "qty:", "rm:", "cancel:",
-                                    "paynow:", "track:"))):
+                                    "paynow:", "track:", "deliver:", "collect:"))):
         typed = (raw_input or "").strip()
         if typed:
             problem = f"🤔 *{typed}* is not one of the options above."
@@ -26417,6 +26659,72 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                       new_customer=customer)
 
     if step == "order_address":
+        # An address given to change an existing order's fulfilment is a
+        # different thing from one given while placing a new order, so the order
+        # is detected from the context rather than the step alone.
+        change_reference = ctx.get("change_reference")
+        if change_reference and ctx.get("change_method") == "delivery":
+            typed = " ".join((raw_input or "").split()).strip()
+            if len(typed) < 5:
+                return result("order_address", [_shop_text(
+                    "Please send a fuller address — the street, the suburb, and "
+                    "anything the deliverer needs to find you."
+                )], new_ctx=ctx)
+            ok, reason, fresh = shop_order_fulfilment_set(
+                change_reference, wa_number, "delivery", address=typed)
+            if not ok:
+                if reason == "staged":
+                    return result("orders", [
+                        _shop_text(f"⚠️ Order *{change_reference}* has already moved on, so "
+                                   "it cannot be changed here. Our sales team will help — "
+                                   "I have passed this on."),
+                        _shop_options("What would you like to do?",
+                                      [("orders", "Track my orders"),
+                                       ("support_human", "Talk to a human")]),
+                    ], actions=[{"type": "escalate",
+                                 "reason": f"Customer could not change fulfilment on "
+                                           f"{change_reference} ({reason})"}])
+                if reason in ("cancelled", "fulfilled"):
+                    return result("orders", [
+                        _shop_text(f"Order *{change_reference}* is {reason}, so it cannot "
+                                   "be changed here. Our sales team will help — I have "
+                                   "passed this on."),
+                        _shop_options("What would you like to do?",
+                                      [("orders", "Track my orders"),
+                                       ("support_human", "Talk to a human")]),
+                    ], actions=[{"type": "escalate",
+                                 "reason": f"Customer could not change fulfilment on "
+                                           f"{change_reference} ({reason})"}])
+                if reason == "not_found":
+                    return result("orders", [
+                        _shop_text(f"😕 I could not find order *{change_reference}* on this "
+                                   "number."),
+                        _shop_options("What would you like to do?",
+                                      [("orders", "Track my orders"),
+                                       ("support_human", "Talk to a human")]),
+                    ])
+                return result("orders", [
+                    _shop_text("😕 Something went wrong, so *nothing was changed*. Our "
+                               "sales team will sort it out — I have passed this on."),
+                    _shop_options("What would you like to do?",
+                                  [("orders", "Track my orders"),
+                                   ("support_human", "Talk to a human")]),
+                ], actions=[{"type": "escalate",
+                             "reason": f"Fulfilment change failed on {change_reference}"}])
+            body = ("✅ *Changed to delivery*\n\n"
+                    f"Order *{fresh['reference']}* will be delivered to:\n📍 {typed}\n\n"
+                    "We will message you when it is on its way. If the shop has already "
+                    "prepared it for collection, our sales team will contact you to "
+                    "arrange the delivery.")
+            return result("track_view", [_shop_text(body)] + _shop_track_view(fresh, wa_number),
+                          new_ctx=dict(ctx, track_reference=fresh["reference"],
+                                       change_reference=None, change_method=None),
+                          actions=[{"type": "escalate",
+                                    "reason": f"Customer changed {fresh['reference']} to "
+                                              f"delivery",
+                                    "message": f"The customer switched "
+                                               f"{fresh['reference']} to delivery from the "
+                                               f"assistant: {typed}"}])
         customer["delivery_address"] = (raw_input or "").strip()
         return result("order_confirm", _shop_order_confirmation(cart, customer))
 
@@ -26954,6 +27262,12 @@ def _shop_payment_event_text(event, status, payload):
         if status == "paid":
             return "EcoCash reported the payment as settled"
         return f"EcoCash sent an update: {status or 'no status'}"
+    if event == "fulfilment_change":
+        where = str(payload or "").strip()
+        if status == "delivery":
+            return ("Customer changed this to delivery from the assistant"
+                    + (f": {where}" if where else ""))
+        return "Customer changed this to collection from the assistant"
     return f"{event or 'payment'} — {status or 'no status'}".strip()
 
 
@@ -27176,6 +27490,69 @@ def shop_order_for(wa_number, reference):
         return None
     return next((row for row in shop_customer_orders(owner, limit=SHOP_TRACK_LOOKUP_LIMIT)
                  if row["reference"] == reference), None)
+
+
+def shop_order_fulfilment_set(reference, wa_number, method, address=None, user=None):
+    """Change how a customer receives their own order. Returns (ok, reason, order).
+
+    Scoped to the ordering number, so a reference belonging to somebody else
+    reads exactly like one that does not exist and cannot be probed. Once the
+    order has moved past being prepared - set aside for collection, or loaded for
+    delivery - the choice is refused, because the goods are already on one path
+    and telling the customer otherwise would be a lie. Before that the switch is
+    free, which is the whole point of offering it on the ready-for-collection
+    notice: a customer who cannot get to the shop needs to say so.
+    """
+    method = (method or "").strip().lower()
+    if method not in ("delivery", "collection"):
+        return False, "invalid", {}
+    reference = (reference or "").strip().upper()
+    order = shop_order_for(wa_number, reference)
+    if not order:
+        return False, "not_found", {}
+    if order.get("cancelled"):
+        return False, "cancelled", {}
+    if order.get("fulfilled"):
+        return False, "fulfilled", {}
+    if (order.get("delivery_method") or "collection") == method:
+        # Already how they wanted it, so nothing is written and nothing is sent.
+        return True, "unchanged", order
+    current_stage = (order.get("stage") or "").strip().lower()
+    # The gate is on the stage the order is ALREADY in, not on the one wanted.
+    # An order that has left the shop for delivery, or been set aside for
+    # collection, has crossed a line the customer cannot un-cross from a chat
+    # message: the goods are physically on one path. Asking whether the stage
+    # suits the target method would let "en route" become a delivery order, which
+    # is precisely the case that must be refused.
+    if current_stage and current_stage not in ("preparing", "none"):
+        return False, "staged", order
+    address = " ".join(str(address or "").split()).strip()
+    if method == "delivery" and not address:
+        address = str(order.get("address") or "").strip()
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_orders
+                SET delivery_method = %s, delivery_address = COALESCE(NULLIF(%s, ''), delivery_address)
+                WHERE reference = %s AND wa_number = %s
+                RETURNING reference
+            """, (method, address, reference, _shop_order_owner_key(wa_number)))
+            if not cursor.fetchone():
+                return False, "not_found", {}
+            connection.commit()
+    except Exception as e:
+        print(f"order fulfilment change error: {e}")
+        return False, "error", {}
+    log_activity("customer_changed_fulfilment", "order",
+                 f"Customer switched {reference} to "
+                 f"{'delivery' if method == 'delivery' else 'collection'} from the assistant",
+                 target=reference,
+                 details={"delivery_method": method, "address": address,
+                          "wa_number": wa_number}, user=user)
+    _shop_payment_event(reference, "fulfilment_change", method, address)
+    fresh = shop_order_for(wa_number, reference)
+    return True, "changed", fresh or order
 
 
 def shop_order_stage_set(reference, stage, user=None, notify=True):
@@ -28429,6 +28806,11 @@ def portal_crm():
                            catalog=catalog,
                            removed=removed,
                            limits=catalog_limits(),
+                           # The logo is rendered on the page rather than fetched
+                           # by the browser, so a missing file shows as no logo
+                           # instead of a broken image.
+                           logo_url=company_logo_url(),
+                           logo_max_mb=LOGO_MAX_BYTES // (1024 * 1024),
                            # Rendered so the shop name field cannot drift from the
                            # limit the endpoint actually enforces.
                            shop_name_limit=SHOP_NAME_LIMIT,
@@ -29458,6 +29840,94 @@ def crm_clear_product_image(product_id):
         return False, "The image could not be removed just now."
 
 
+def crm_save_company_logo(upload):
+    """Store the company logo. Returns (path, error).
+
+    Validated the same way a product picture is, with the reason stated rather
+    than left to Meta or WeasyPrint to fail on later.
+    """
+    global _company_logo_cache
+    if upload is None or not getattr(upload, "filename", ""):
+        return "", "Choose a logo file first."
+    filename = str(upload.filename).strip()
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if extension not in LOGO_EXTENSIONS:
+        allowed = ", ".join(sorted(LOGO_EXTENSIONS))
+        return "", f"That file type is not supported — use one of: {allowed}."
+    try:
+        data = upload.read()
+    except Exception as e:
+        print(f"logo upload error: {e}")
+        return "", "That file could not be read."
+    if not data:
+        return "", "That file is empty."
+    if len(data) > LOGO_MAX_BYTES:
+        limit = LOGO_MAX_BYTES // (1024 * 1024)
+        return "", f"The logo must be {limit} MB or smaller."
+    stored = f"logo.{extension}"
+    folder = os.path.join(app.static_folder, LOGO_DIR)
+    try:
+        os.makedirs(folder, exist_ok=True)
+        # The previous logo goes first, whatever extension it used, so switching
+        # from png to jpg cannot leave the old file serving alongside the new one.
+        for existing in os.listdir(folder):
+            if existing.startswith("logo.") and existing != stored:
+                try:
+                    os.remove(os.path.join(folder, existing))
+                except OSError:
+                    pass
+        with open(os.path.join(folder, stored), "wb") as handle:
+            handle.write(data)
+    except Exception as e:
+        print(f"logo save error: {e}")
+        return "", "That logo could not be saved."
+    relative = f"{LOGO_DIR}/{stored}".replace(os.sep, "/")
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_branding (brand_key, logo_path, updated_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (brand_key) DO UPDATE
+                SET logo_path = EXCLUDED.logo_path, updated_at = NOW()
+            """, (LOGO_BRAND_KEY, relative))
+            connection.commit()
+        _company_logo_cache = {"loaded": True, "path": relative}
+        return relative, ""
+    except Exception as e:
+        print(f"logo save error: {e}")
+        return "", "The logo was stored but the setting could not be updated."
+
+
+def crm_clear_company_logo():
+    """Remove the company logo. Returns (ok, error)."""
+    global _company_logo_cache
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT logo_path FROM shop_branding WHERE brand_key = %s",
+                           (LOGO_BRAND_KEY,))
+            row = cursor.fetchone()
+            stored = str(row[0]).strip() if row and row[0] else ""
+            cursor.execute("UPDATE shop_branding SET logo_path = NULL, updated_at = NOW() "
+                           "WHERE brand_key = %s", (LOGO_BRAND_KEY,))
+            connection.commit()
+        if stored:
+            full = _logo_absolute_path(stored)
+            if full:
+                try:
+                    os.remove(full)
+                except OSError as e:
+                    # The row no longer references it, so this is untidiness
+                    # rather than a failure worth reporting to the user.
+                    print(f"logo delete error: {e}")
+        _company_logo_cache = {"loaded": True, "path": ""}
+        return True, ""
+    except Exception as e:
+        print(f"logo clear error: {e}")
+        return False, "The logo could not be removed just now."
+
+
 def crm_save_product_sizes(product_id, sizes):
     """Replace the pack sizes shown for a product.
 
@@ -29801,6 +30271,10 @@ def _order_document_context(order, user):
         'printed_by': f"{user.get('firstname', '')} {user.get('surname', '')}".strip(),
         'company_name': COMPANY_SYSTEM_NAME,
         'company_contact': COMPANY_SYSTEM_CONTACT,
+        # Embedded as a data URI rather than linked: the PDF travels once it is
+        # rendered, and a link would need the file to stay fetchable from
+        # wherever the customer later opens it.
+        'company_logo': company_logo_data_uri(),
     }
 
 
@@ -29952,6 +30426,35 @@ def crm_product_save_api(product_id):
                  user=user)
     return jsonify({'success': True, 'products': crm_catalog(),
                     'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
+
+
+@app.route('/api/crm/branding/logo', methods=['POST'])
+def crm_company_logo_save_api():
+    """Upload or clear the company logo.
+
+    The logo heads every document a customer receives, so it is managed as one
+    setting rather than per document. A form upload because the payload is a file.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    if request.form.get('clear') in ('1', 'true', 'yes'):
+        ok, message = crm_clear_company_logo()
+        if not ok:
+            return jsonify({'success': False, 'message': message,
+                            'logo_url': company_logo_url()}), 400
+        log_activity("removed_company_logo", "catalogue",
+                     "Removed the company logo from customer documents",
+                     target="branding", user=user)
+        return jsonify({'success': True, 'logo_url': '', 'logo_path': ''})
+    stored, message = crm_save_company_logo(request.files.get('logo'))
+    if message:
+        return jsonify({'success': False, 'message': message,
+                        'logo_url': company_logo_url()}), 400
+    log_activity("changed_company_logo", "catalogue",
+                 "Updated the company logo used on customer documents",
+                 target="branding", details={"logo_path": stored}, user=user)
+    return jsonify({'success': True, 'logo_url': company_logo_url(), 'logo_path': stored})
 
 
 @app.route('/api/crm/products/<product_id>/image', methods=['POST'])
@@ -30550,6 +31053,19 @@ def shop_send_whatsapp_reference(reference, message):
     return sent
 
 
+def _order_first_name(order):
+    """Just the customer's first name for a greeting, or 'there' as a fallback.
+
+    A template slot cannot be blank, and addressing someone by their full name
+    reads like a form letter, so only the first word is used and a missing name
+    becomes a neutral greeting rather than an empty slot.
+    """
+    name = " ".join(str((order or {}).get("customer_name") or "").split()).strip()
+    if not name:
+        return "Hello"
+    return name.split()[0][:40]
+
+
 def _stage_template_for(stage, order):
     """Which template carries this stage, and with what values.
 
@@ -30560,7 +31076,11 @@ def _stage_template_for(stage, order):
     shop = order.get("shop") or ""
     address = (order.get("address") or "").strip()
     if stage == "ready":
-        return ("order_ready_collection", {"reference": order.get("reference"),
+        # The customer is addressed by name on this one because it is the message
+        # that asks them to change their mind about how they receive the order: a
+        # personal greeting reads as a person asking, not a system announcing.
+        return ("order_ready_collection", {"customer": _order_first_name(order),
+                                           "reference": order.get("reference"),
                                            "shop": shop or "-"})
     if stage == "enroute":
         if address:
@@ -30687,6 +31207,9 @@ def order_receipt_pdf(reference):
                 printed_by='',
                 company_name=COMPANY_SYSTEM_NAME,
                 company_contact=COMPANY_SYSTEM_CONTACT,
+                # The receipt a customer receives on WhatsApp is the same document
+                # as the one printed at the counter, logo included.
+                company_logo=company_logo_data_uri(),
             )
         return HTML(string=html).write_pdf()
     except Exception as e:

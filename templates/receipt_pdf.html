@@ -4,33 +4,37 @@
     <meta charset="UTF-8">
     <title>Receipt {{ order.reference }} | {{ company_name }}</title>
     <style>
+        {# Print styling only, so the two customer documents share one voice. The
+           palette is the same one the CRM portal and the chatbot use, so a
+           customer who saw the assistant recognises the paperwork. #}
         @page {
             size: A5;
-            margin: 11mm 10mm 12mm 10mm;
+            margin: 12mm 11mm 13mm 11mm;
 
             @top-left {
-                content: "{{ company_name }} — Receipt {{ order.reference }}";
+                content: "{{ company_name }}  ·  Receipt {{ order.reference }}";
                 font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-                font-size: 6.5pt;
-                color: #8593A5;
+                font-size: 6.2pt;
+                letter-spacing: 0.04em;
+                color: #9AA7B6;
                 vertical-align: bottom;
-                padding-bottom: 2.6mm;
+                padding-bottom: 3mm;
             }
             @bottom-left {
                 content: "Issued {{ printed_at }}{% if printed_by %} by {{ printed_by }}{% endif %}";
                 font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-                font-size: 6pt;
-                color: #9AA7B6;
+                font-size: 5.9pt;
+                color: #AEB9C6;
                 vertical-align: top;
-                padding-top: 2mm;
+                padding-top: 2.4mm;
             }
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
                 font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-                font-size: 6pt;
-                color: #9AA7B6;
+                font-size: 5.9pt;
+                color: #AEB9C6;
                 vertical-align: top;
-                padding-top: 2mm;
+                padding-top: 2.4mm;
             }
         }
 
@@ -39,164 +43,311 @@
         body {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             color: #16283F;
-            font-size: 8.2pt;
-            line-height: 1.42;
+            font-size: 8pt;
+            line-height: 1.4;
             margin: 0;
         }
 
+        /* ---------------------------------------------------------- masthead */
+        /* A crimson rule under the identity, with the reference set as a receipt
+           number on the right: who issued this, and which order it covers, are
+           the two things a customer looks for first. */
         .masthead {
-            border-bottom: 2pt solid #DC143C;
+            position: relative;
             padding-bottom: 2.6mm;
-            margin-bottom: 3.4mm;
+            margin-bottom: 3.2mm;
+            border-bottom: 2.4pt solid #DC143C;
+        }
+        .masthead:after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -2.4pt;
+            width: 26mm;
+            height: 2.4pt;
+            background: #16283F;
+        }
+        .brand-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 6mm;
+        }
+        /* The logo sits beside the wordmark rather than replacing it: a mark on
+           its own would leave a document that is photocopied or faxed with no
+           readable name on it at all. */
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 2.8mm;
+        }
+        .brand-logo {
+            height: 11mm;
+            width: auto;
+            max-width: 26mm;
+            object-fit: contain;
         }
         .doc-kicker {
-            margin: 0 0 1.2mm;
-            font-size: 6.4pt;
+            margin: 0 0 1.4mm;
+            font-size: 6pt;
             font-weight: 700;
-            letter-spacing: 0.16em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
             color: #8593A5;
         }
         .brand {
-            font-size: 15pt;
+            font-size: 16pt;
             font-weight: 700;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.025em;
             margin: 0;
-            line-height: 1.08;
+            line-height: 1.05;
         }
         .brand em { font-style: normal; color: #DC143C; }
-        .doc-title {
-            margin: 1mm 0 0;
-            font-size: 11pt;
+        .brand-sub {
+            margin: 1.4mm 0 0;
+            font-size: 6.6pt;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .stamp {
+            text-align: right;
+            min-width: 34mm;
+            padding: 2mm 2.6mm;
+            border: 0.75pt solid #DCE3EC;
+            border-radius: 1.4mm;
+            background: #FBFCFE;
+        }
+        .stamp .kind {
+            margin: 0;
+            font-size: 6pt;
             font-weight: 700;
-            color: #DC143C;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .stamp .ref {
+            margin: 0.8mm 0 0;
+            font-size: 12pt;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            color: #16283F;
         }
         .contact {
-            margin: 1.8mm 0 0;
-            font-size: 7pt;
-            color: #56657A;
+            margin: 2.4mm 0 0;
+            font-size: 6.8pt;
+            color: #5C6B80;
             line-height: 1.5;
         }
 
-        .panel { display: flex; gap: 6mm; margin-bottom: 3.2mm; }
-        .panel > div { flex: 1; }
-        .panel h3 {
-            margin: 0 0 1mm;
-            font-size: 6.4pt;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: #8593A5;
-        }
-        .panel p { margin: 0; font-size: 8.4pt; }
-        .panel .muted { color: #56657A; font-size: 7.4pt; }
-
-        .fields {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 3.2mm;
-        }
-        .fields td { padding: 1mm 0; font-size: 7.9pt; vertical-align: top; }
-        .fields td.label {
-            width: 30mm;
-            color: #8593A5;
-            font-size: 6.4pt;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        table.items { width: 100%; border-collapse: collapse; margin-bottom: 3.2mm; }
-        table.items th {
-            text-align: left;
-            padding: 1.5mm 2mm;
-            background: #16283F;
-            color: #FFFFFF;
-            font-size: 6.4pt;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-        table.items td {
-            padding: 1.5mm 2mm;
-            border-bottom: 0.5pt solid #DCE3EC;
-            font-size: 8.2pt;
-        }
-        table.items tr.alt td { background: #F7F9FC; }
-        .num { text-align: right; white-space: nowrap; }
-        .qty { text-align: center; white-space: nowrap; }
-        .product strong { font-weight: 700; }
-        .product small { color: #56657A; display: block; font-size: 6.8pt; }
-        .unpriced { color: #B45309; font-size: 6.8pt; }
-
-        .totals { width: 58mm; margin-left: auto; border-collapse: collapse; margin-bottom: 3.4mm; }
-        .totals td { padding: 1.1mm 2mm; font-size: 8.2pt; }
-        .totals td.label { color: #56657A; }
-        .totals tr.grand td {
-            border-top: 1.2pt solid #16283F;
-            font-weight: 700;
-            font-size: 10.5pt;
-        }
-
-        .note {
-            padding: 2mm 2.8mm;
-            background: #F7F9FC;
-            border-left: 2pt solid #DC143C;
-            font-size: 7.4pt;
-            line-height: 1.42;
-            color: #3F4E63;
-        }
-        .note strong { color: #16283F; }
-
-        /* The paid banner is the first thing read, so the status cannot be
-           mistaken for a pro-forma when the money has actually been taken. */
+        /* ------------------------------------------------------------- paid */
+        /* The banner is the first thing read, so a settled order can never be
+           mistaken for a pro-forma. The tick is a drawn shape rather than an
+           icon font, which WeasyPrint would have to fetch. */
         .paid-banner {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 4mm;
             padding: 2.6mm 3.4mm;
-            border-radius: 1.5mm;
-            background: #E8F7F0;
+            border-radius: 1.6mm;
+            background: #EAF8F1;
             border: 0.75pt solid #A8DEC6;
-            margin-bottom: 3.4mm;
+            border-left: 2.4pt solid #10B981;
+            margin-bottom: 3.2mm;
+        }
+        .paid-banner .left { display: flex; align-items: center; gap: 2.6mm; }
+        .paid-banner .tick {
+            width: 7mm;
+            height: 7mm;
+            border-radius: 50%;
+            background: #10B981;
+            color: #FFFFFF;
+            font-size: 9pt;
+            font-weight: 700;
+            text-align: center;
+            line-height: 7mm;
         }
         .paid-banner .label {
-            font-size: 7pt;
+            font-size: 7.4pt;
             font-weight: 700;
-            letter-spacing: 0.14em;
+            letter-spacing: 0.13em;
             text-transform: uppercase;
             color: #1B7A52;
+            display: block;
+        }
+        .paid-banner .sub {
+            font-size: 6.8pt;
+            color: #3D8A66;
+            display: block;
+            margin-top: 0.5mm;
         }
         .paid-banner .amount {
-            font-size: 12pt;
+            font-size: 14pt;
             font-weight: 700;
+            letter-spacing: -0.02em;
             color: #175E41;
+            white-space: nowrap;
         }
 
+        /* ---------------------------------------------------------- parties */
+        .panel { display: flex; gap: 5mm; margin-bottom: 3mm; }
+        .panel > div {
+            flex: 1;
+            padding: 2.2mm 2.8mm;
+            border: 0.5pt solid #E4E9F0;
+            border-radius: 1.4mm;
+            background: #FCFDFE;
+        }
+        .panel h3 {
+            margin: 0 0 1.4mm;
+            font-size: 6pt;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #8593A5;
+        }
+        .panel p { margin: 0; font-size: 8.4pt; line-height: 1.45; }
+        .panel .muted { color: #5C6B80; font-size: 7.3pt; }
+
+        /* ----------------------------------------------------------- fields */
+        .fields { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
+        .fields td {
+            padding: 1mm 0;
+            font-size: 7.7pt;
+            vertical-align: top;
+            border-bottom: 0.4pt solid #F0F3F7;
+        }
+        .fields tr:last-child td { border-bottom: 0; }
+        .fields td.label {
+            width: 27mm;
+            color: #8593A5;
+            font-size: 6pt;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            padding-right: 2mm;
+        }
+
+        /* ------------------------------------------------------------ items */
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
+        table.items th {
+            text-align: left;
+            padding: 1.6mm 2.2mm;
+            background: #16283F;
+            color: #FFFFFF;
+            font-size: 6pt;
+            font-weight: 700;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+        }
+        table.items th.num { text-align: right; }
+        table.items th.qty { text-align: center; }
+        table.items td {
+            padding: 1.4mm 2.2mm;
+            border-bottom: 0.5pt solid #E4E9F0;
+            font-size: 8pt;
+            vertical-align: top;
+        }
+        table.items tr.alt td { background: #F8FAFC; }
+        table.items tbody tr:last-child td { border-bottom: 0.75pt solid #C9D3DF; }
+        .num { text-align: right; white-space: nowrap; }
+        .qty { text-align: center; white-space: nowrap; }
+        .product strong { font-weight: 700; }
+        .product small { color: #5C6B80; display: block; font-size: 6.6pt; margin-top: 0.3mm; }
+        .unpriced { color: #B45309; font-size: 6.6pt; font-style: italic; }
+
+        /* ----------------------------------------------------------- totals */
+        .totals { width: 62mm; margin-left: auto; border-collapse: collapse; margin-bottom: 3.4mm; }
+        .totals td { padding: 1.1mm 2.2mm; font-size: 8pt; }
+        .totals td.label { color: #5C6B80; }
+        .totals tr.grand td {
+            border-top: 1.4pt solid #16283F;
+            font-weight: 700;
+            font-size: 10.5pt;
+            color: #16283F;
+            padding-top: 1.8mm;
+        }
+        .totals tr.grand td.label { color: #16283F; letter-spacing: 0.02em; }
+
+        /* ------------------------------------------------------------ notes */
+        .note {
+            padding: 2.4mm 3mm;
+            background: #F8FAFC;
+            border-left: 2.2pt solid #DC143C;
+            border-radius: 0 1.4mm 1.4mm 0;
+            font-size: 7.3pt;
+            line-height: 1.48;
+            color: #45566B;
+            page-break-inside: avoid;
+        }
+        .note strong { color: #16283F; display: block; margin-bottom: 0.5mm; }
+
+        /* ------------------------------------------------------------- foot */
         .foot {
-            margin-top: 3.6mm;
+            margin-top: 3.4mm;
             padding-top: 2.4mm;
-            border-top: 0.5pt solid #DCE3EC;
-            font-size: 7pt;
-            color: #56657A;
+            border-top: 0.5pt solid #E4E9F0;
             text-align: center;
+            page-break-inside: avoid;
+            page-break-before: avoid;
+        }
+        .foot .rule {
+            width: 16mm;
+            height: 1.6pt;
+            background: #DC143C;
+            margin: 0 auto 2.2mm;
+        }
+        .foot .thanks {
+            margin: 0;
+            font-size: 9pt;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: #16283F;
+        }
+        .foot .fine {
+            margin: 1.6mm 0 0;
+            font-size: 6.6pt;
+            color: #8593A5;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
     <div class="masthead">
-        <p class="doc-kicker">{{ company_name }}</p>
-        <h1 class="brand">{{ company_name }} <em>(Pvt) Ltd</em></h1>
-        <p class="doc-title">Receipt</p>
+        <div class="brand-row">
+            <div>
+                <p class="doc-kicker">Official receipt</p>
+                <div class="brand-lockup">
+                    {% if company_logo %}
+                    <img class="brand-logo" src="{{ company_logo }}" alt="">
+                    {% endif %}
+                    <h1 class="brand">{{ company_name }} <em>(Pvt) Ltd</em></h1>
+                </div>
+                <p class="brand-sub">Household · Cleaning · Personal care</p>
+            </div>
+            <div class="stamp">
+                <p class="kind">Receipt no.</p>
+                <p class="ref">{{ order.reference }}</p>
+            </div>
+        </div>
         <div class="contact">
             {{ company_contact.address }}<br>
-            {{ company_contact.phones | join(' / ') }} &nbsp;•&nbsp; {{ company_contact.email }}
+            {{ company_contact.phones | join('  ·  ') }} &nbsp;·&nbsp; {{ company_contact.email }}
         </div>
     </div>
 
     <div class="paid-banner">
-        <span class="label">Paid in full</span>
-        <span class="amount">{{ order.currency }} {{ '%.2f' | format(order.total) }}</span>
+        <div class="left">
+            <div class="tick">✓</div>
+            <div>
+                <span class="label">Paid in full</span>
+                <span class="sub">
+                    {% if order.paid_at %}Settled {{ order.paid_at }}{% else %}Settled and confirmed{% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="amount">{{ order.currency }} {{ '%.2f' | format(order.total) }}</div>
     </div>
 
     <div class="panel">
@@ -207,9 +358,9 @@
             {% if order.phone %}<p class="muted">{{ order.phone }}</p>{% endif %}
         </div>
         <div>
-            <h3>Receipt no.</h3>
-            <p><strong>{{ order.reference }}</strong></p>
-            {% if order.paid_at %}<p class="muted">Paid {{ order.paid_at }}</p>{% endif %}
+            <h3>Payment</h3>
+            <p><strong>{{ payment_method_label or (order.payment_method or 'Not recorded') }}</strong></p>
+            <p class="muted">{{ order.payment_status | capitalize }}{% if order.paid_at %} on {{ order.paid_at }}{% endif %}</p>
         </div>
     </div>
 
@@ -217,22 +368,25 @@
         <tr>
             <td class="label">Order placed</td>
             <td>{{ order.created_at }}</td>
-            <td class="label">Status</td>
-            <td>{{ order.payment_status | capitalize }}</td>
-        </tr>
-        <tr>
-            <td class="label">Payment method</td>
-            <td>{{ ('Paid ' + payment_method_label) if payment_method_label else (order.payment_method or 'Not recorded') }}</td>
             <td class="label">Fulfilment</td>
-            <td>{{ ('Delivery to the customer' if order.delivery_method == 'delivery' else 'Collection from ') + (order.shop or 'the shop') }}</td>
+            <td>
+                {{ 'Delivered to the customer' if order.delivery_method == 'delivery'
+                   else 'Collected in person' }}
+            </td>
         </tr>
         {% if order.shop %}
         <tr>
             <td class="label">{{ 'Supplying shop' if order.delivery_method == 'delivery' else 'Collect from' }}</td>
             <td colspan="3">
                 <strong>{{ order.shop }}</strong>
-                {% if order.shop_address %} — {{ order.shop_address }}{% endif %}
+                {% if order.shop_address %}<span class="muted"> — {{ order.shop_address }}</span>{% endif %}
             </td>
+        </tr>
+        {% endif %}
+        {% if order.delivery_method == 'delivery' and order.address %}
+        <tr>
+            <td class="label">Delivery address</td>
+            <td colspan="3">{{ order.address }}</td>
         </tr>
         {% endif %}
     </table>
@@ -291,22 +445,28 @@
 
     {% if not order.priced %}
     <div class="note">
-        <strong>Some lines have no price recorded.</strong>
-        This order was taken before line prices were stored, so the itemised unit prices are shown as
-        not recorded. The total above is the amount actually settled.
+        <strong>Some lines have no price recorded</strong>
+        This order was taken before line prices were stored, so the itemised unit prices are
+        shown as not recorded. The total above is the amount actually settled.
     </div>
     {% elif order.amount_charged is not none and order.amount_charged != order.subtotal %}
     <div class="note">
-        <strong>Total settled differs from the itemised subtotal.</strong>
+        <strong>Total settled differs from the itemised subtotal</strong>
         The lines add up to {{ order.currency }} {{ '%.2f' | format(order.subtotal) }} against
-        {{ order.currency }} {{ '%.2f' | format(order.amount_charged) }} received, which indicates a
-        discount or adjustment agreed with the customer.
+        {{ order.currency }} {{ '%.2f' | format(order.amount_charged) }} received, which indicates
+        a discount or adjustment agreed with the customer.
     </div>
     {% endif %}
 
     <div class="foot">
-        Thank you for your business. This receipt was issued electronically by {{ company_name }}.<br>
-        {{ company_contact.phones | join(' / ') }} &nbsp;•&nbsp; {{ company_contact.email }}
+        <div class="rule"></div>
+        <p class="thanks">Thank you for your business.</p>
+        <p class="fine">
+            This receipt was issued electronically by {{ company_name }} and is valid without a
+            signature. Keep it as proof of payment — please quote {{ order.reference }} in any
+            correspondence about this order.<br>
+            {{ company_contact.phones | join('  ·  ') }} &nbsp;·&nbsp; {{ company_contact.email }}
+        </p>
     </div>
 </body>
 </html>
