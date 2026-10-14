@@ -24143,7 +24143,7 @@ SHOP_TEMPLATES = {
         # to say so far more than they need a support button on this message.
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
                     ("deliver:{{reference}}", "Deliver to me"),
-                    ("collect:{{reference}}", "I will collect"), ],
+                    ("collect:{{reference}}", "I will collect")],
     },
     "order_enroute": {
         "name": "bchem_order_enroute",
