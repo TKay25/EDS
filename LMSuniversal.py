@@ -21585,6 +21585,27 @@ def ensure_shop_tables():
                 updated_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        # The people at a shop who are told when an order lands there. Kept per
+        # shop rather than as system users: a shop's staff are not the same as the
+        # portal's users, and most of them will never sign in to anything.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_staff (
+                id SERIAL PRIMARY KEY,
+                shop_id VARCHAR(60),
+                name VARCHAR(200),
+                wa_number VARCHAR(32),
+                position INTEGER DEFAULT 0,
+                active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        # The staff number is unique per shop, so the same person is not messaged
+        # twice about one order because they were entered under two names.
+        cursor.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS shop_staff_shop_number
+            ON shop_staff (shop_id, wa_number);
+        """)
         # Stock of one pack size at one shop. A row only exists once someone has
         # counted it, so a product that has never been stocked is untracked rather
         # than zero - the difference between "none left" and "nobody has said".
@@ -23171,6 +23192,10 @@ def shop_agent_order_create(wa_number, lines, user=None, note=None, channel=None
                  details={"wa_number": owner, "items": len(cart), "by": user},
                  user=user)
 
+    # The shop is told as soon as the order exists, so it is not waiting on the
+    # customer's confirmation to start getting ready.
+    _shop_notify_shop_of_order(reference)
+
     # The customer is sent the order to accept or decline. The draft is already
     # stored, so a delivery failure leaves it recoverable rather than lost.
     notice = shop_agent_order_notice(reference, {
@@ -23420,6 +23445,330 @@ def shop_by_id(shop_id):
     """One shop, or None. Matched case-insensitively because the id is typed."""
     wanted = str(shop_id or "").strip().lower()
     return next((shop for shop in shop_shops() if shop["id"].lower() == wanted), None)
+
+
+def shop_staff_counts():
+    """How many active staff each shop has, keyed by shop id.
+
+    One query for the whole list, so showing the count beside every shop does not
+    become one query per shop.
+    """
+    ensure_shop_tables()
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT shop_id, COUNT(*) FROM shop_staff
+                WHERE active IS NOT FALSE
+                GROUP BY shop_id
+            """)
+            return {row[0]: int(row[1] or 0) for row in cursor.fetchall()}
+    except Exception as e:
+        print(f"shop staff counts error: {e}")
+        return {}
+
+
+# ---------------------------------------------------------- shop staff --
+def shop_staff(shop_id, active_only=True):
+    """The people at a shop, in the order the shop wants them listed."""
+    ensure_shop_tables()
+    try:
+        with get_db() as (cursor, connection):
+            clause = "AND active IS NOT FALSE" if active_only else ""
+            cursor.execute(f"""
+                SELECT id, shop_id, name, wa_number, position, active
+                FROM shop_staff
+                WHERE shop_id = %s {clause}
+                ORDER BY position, id
+            """, (str(shop_id or "").strip(),))
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"shop staff error: {e}")
+        return []
+    return [{
+        "id": row[0], "shop_id": row[1] or "", "name": row[2] or "",
+        "wa_number": row[3] or "", "position": row[4] or 0, "active": row[5] is not False,
+    } for row in rows]
+
+
+def shop_staff_save(shop_id, staff, user=None):
+    """Replace a shop's staff list. Returns (ok, message).
+
+    The list is replaced rather than merged, because the portal shows exactly the
+    people who will be messaged and a save has to leave the two matching. Numbers
+    are normalised first so the same person entered as 0771… and +263 771… counts
+    as one entry rather than two.
+    """
+    shop = shop_by_id(shop_id)
+    if not shop:
+        return False, "That shop was not found."
+    cleaned = []
+    seen = set()
+    for entry in (staff or []):
+        name = " ".join(str(entry.get("name") or "").split()).strip()
+        number = shop_staff_number(entry.get("wa_number"))
+        if not name and not number:
+            continue
+        if not name:
+            return False, "Every staff member needs a name."
+        if not number:
+            return False, f"“{name}” needs a valid Zimbabwean WhatsApp number."
+        if number in seen:
+            # The same number twice would message one person twice for one order.
+            return False, f"{number} is listed twice. Keep one entry per person."
+        seen.add(number)
+        cleaned.append((name, number))
+    if len(cleaned) > SHOP_STAFF_LIMIT:
+        return False, (f"A shop can have up to {SHOP_STAFF_LIMIT} staff. "
+                       f"{len(cleaned)} were given.")
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            # Deactivated rather than deleted, so an order that already names a
+            # person still reads sensibly after they leave.
+            cursor.execute("UPDATE shop_staff SET active = FALSE, updated_at = NOW() "
+                           "WHERE shop_id = %s", (shop["id"],))
+            for position, (name, number) in enumerate(cleaned):
+                cursor.execute("""
+                    INSERT INTO shop_staff (shop_id, name, wa_number, position, active,
+                                            created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, TRUE, NOW(), NOW())
+                    ON CONFLICT (shop_id, wa_number) DO UPDATE
+                    SET name = EXCLUDED.name, position = EXCLUDED.position,
+                        active = TRUE, updated_at = NOW()
+                """, (shop["id"], name, number, position))
+            connection.commit()
+    except Exception as e:
+        print(f"shop staff save error: {e}")
+        return False, "Could not save the staff list just now."
+    log_activity("shop_staff_saved", "shop",
+                 f"Set {len(cleaned)} staff for {shop['name']}",
+                 target=shop["id"], details={"count": len(cleaned)}, user=user)
+    return True, f"{len(cleaned)} staff saved for {shop['name']}."
+
+
+def shop_staff_number(value):
+    """A Zimbabwean mobile number in the 07… form the sender expects, or ''.
+
+    Accepts the international 263 form too, because a number copied from a
+    contact list usually arrives that way.
+    """
+    digits = re.sub(r"\D", "", str(value or ""))
+    if digits.startswith("00263"):
+        digits = "0" + digits[5:]
+    elif digits.startswith("263"):
+        digits = "0" + digits[3:]
+    if digits.startswith("07") and len(digits) >= 10:
+        return digits
+    return ""
+
+
+def shop_staff_for_number(wa_number):
+    """The shop a WhatsApp number belongs to, or None.
+
+    Used to recognise a reply from a shop's own handset. Matched on the last
+    fifteen digits because that is how every other WhatsApp number is stored.
+    """
+    owner = str(wa_number or "")[-15:]
+    if not owner:
+        return None
+    ensure_shop_tables()
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT id, shop_id, name, wa_number
+                FROM shop_staff
+                WHERE wa_number = %s AND active IS NOT FALSE
+                ORDER BY position, id LIMIT 1
+            """, (owner,))
+            row = cursor.fetchone()
+    except Exception as e:
+        print(f"shop staff lookup error: {e}")
+        return None
+    if not row:
+        return None
+    return {"id": row[0], "shop_id": row[1] or "", "name": row[2] or "",
+            "wa_number": row[3] or "", "shop": shop_by_id(row[1])}
+
+
+def _shop_order_notice_for_staff(reference, order):
+    """What a shop's staff are told when an order lands there.
+
+    Written for the person who has to act on it: what is wanted, how it leaves,
+    and who to contact - not the customer's own wording.
+    """
+    lines = [f"🔔 *New order at your shop — {reference}*", ""]
+    if order.get("shop"):
+        lines.append(f"*Shop:* {order['shop']}")
+    if order.get("customer_name"):
+        lines.append(f"*Customer:* {order['customer_name']}")
+    lines.append(f"*Items:* {order.get('item_count') or 0}")
+    lines.append(f"*Receive by:* "
+                 + ("Delivery to the customer" if order.get("delivery_method") == "delivery"
+                    else "Collection from your shop"))
+    if order.get("delivery_method") == "delivery" and order.get("address"):
+        lines.append(f"*Deliver to:* {order['address']}")
+    for line in order.get("lines") or []:
+        lines.append(f"    • {line.get('product')} ({line.get('pack_size')}) × "
+                     f"{line.get('quantity')}")
+    if order.get("payment_status_label"):
+        lines.append("")
+        lines.append(f"*Payment:* {order['payment_status_label']}")
+    lines.append("")
+    lines.append("Tap *Working on it* and the customer is told their order is being "
+                 "worked on.")
+    return "\n".join(lines)
+
+
+def _shop_staff_buttons_payload(body, reference):
+    """The staff notification as WhatsApp buttons.
+
+    The button id carries the order, so a reply can be matched to it without the
+    staff member typing or selecting anything.
+    """
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body[:1024]},
+            "action": {
+                "buttons": [
+                    {"type": "reply",
+                     "reply": {"id": f"staffwork:{reference}", "title": "Working on it"}},
+                    {"type": "reply",
+                     "reply": {"id": f"staffdone:{reference}", "title": "Ready / done"}},
+                ]
+            },
+        },
+    }
+
+
+def _shop_notify_shop_of_order(reference):
+    """Tell the fulfilling shop's staff about an order. Returns how many were told.
+
+    Runs from the order paths rather than from a scheduler, so a shop hears about
+    an order at the moment it becomes real. Never raises: a notification failing
+    must not undo an order the customer has already placed.
+    """
+    try:
+        order = order_detail(reference)
+        if not order or order.get("cancelled"):
+            return 0
+        return shop_notify_staff_of_order(reference, order)
+    except Exception as e:
+        print(f"shop notify error for {reference}: {e}")
+        return 0
+
+
+def shop_notify_staff_of_order(reference, order):
+    """Tell every staff member at the fulfilling shop about an order. Returns the count.
+
+    Sent to each person separately rather than to a group, because a reply has to
+    identify which shop's handset it came from and a group gives no such signal.
+    """
+    shop_id = order.get("shop_key")
+    if not shop_id:
+        return 0
+    staff = shop_staff(shop_id)
+    if not staff:
+        return 0
+    body = _shop_order_notice_for_staff(reference, order)
+    payload = _shop_staff_buttons_payload(body, reference)
+    sent = 0
+    for person in staff:
+        try:
+            ok, detail = crm_send_whatsapp_payload(person["wa_number"], payload,
+                                                   order.get("channel") or None)
+            if not ok:
+                # A button message can be refused where plain text is not, so the
+                # same notice is retried as text rather than dropped.
+                ok, detail = crm_send_whatsapp(person["wa_number"], body,
+                                               order.get("channel") or None)
+                if not ok:
+                    print(f"staff notice failed for {person['wa_number']}: {detail}")
+            if ok:
+                sent += 1
+        except Exception as e:
+            print(f"staff notice error: {e}")
+    if sent:
+        log_activity("notified_shop_staff", "order",
+                     f"Told {sent} staff at the shop about {reference}",
+                     target=reference, details={"shop_id": shop_id, "sent": sent})
+    return sent
+
+
+def shop_order_claim(reference, staff):
+    """A staff member takes an order, and the customer is told. Returns (ok, message).
+
+    Idempotent: a second person tapping the same button is told it is already
+    taken rather than the customer being messaged twice.
+    """
+    reference = (reference or "").strip().upper()
+    if not reference or not staff:
+        return False, "That order could not be matched."
+    order = order_detail(reference)
+    if not order:
+        return False, "That order was not found."
+    if order.get("cancelled"):
+        return False, f"Order {reference} was cancelled."
+    if (order.get("stage") or "").strip().lower() == "preparing":
+        return True, f"{reference} is already being worked on."
+    ok, _message = shop_order_stage_set(reference, "preparing",
+                                        user=staff.get("name") or "Shop staff",
+                                        notify=True)
+    if not ok:
+        return False, f"Could not update {reference}."
+    return True, (f"👍 Thank you. *{reference}* is marked as being worked on and the "
+                  f"customer has been told.")
+
+
+def shop_order_ready(reference, staff):
+    """A staff member marks an order ready. Returns (ok, message)."""
+    reference = (reference or "").strip().upper()
+    order = order_detail(reference) if reference else None
+    if not order:
+        return False, "That order was not found."
+    if order.get("cancelled"):
+        return False, f"Order {reference} was cancelled."
+    # Which stage "done" means depends on how the order leaves, so the staff
+    # button does the right thing without them having to choose.
+    stage = "collected" if order.get("delivery_method") != "delivery" else "delivered"
+    ok, _message = shop_order_stage_set(reference, stage,
+                                        user=staff.get("name") or "Shop staff",
+                                        notify=True)
+    if not ok:
+        return False, f"Could not update {reference}."
+    return True, (f"✅ *{reference}* is marked as {SHOP_STAGE_STAFF_LABELS[stage].lower()}, "
+                  f"and the customer has been told.")
+
+
+def shop_staff_reply(sender_id, button_id, staff):
+    """Handle a button reply from a shop's own number. Returns True if handled.
+
+    Returns False when the id is not one of the shop's own buttons, or when the
+    sender is not recognised as staff, so the caller can carry on with the
+    ordinary handling rather than the message vanishing. The staff check is
+    repeated here rather than trusted from the caller: a customer echoing one of
+    the shop's button ids back must never move an order.
+    """
+    if not isinstance(staff, dict) or not staff.get("shop_id"):
+        return False
+    button_id = str(button_id or "").strip()
+    for prefix, handler in (("staffwork:", shop_order_claim),
+                            ("staffdone:", shop_order_ready)):
+        if button_id.startswith(prefix):
+            reference = button_id.split(":", 1)[1].strip()
+            ok, message = handler(reference, staff)
+            crm_send_whatsapp(sender_id, message)
+            crm_record_message(sender_id, "outbound", "staff", message, "text",
+                               sender_name=staff.get("name") or "Shop staff",
+                               is_staff=True)
+            log_activity("shop_staff_replied", "order",
+                         f"{staff.get('name') or 'Shop staff'} tapped {prefix.rstrip(':')} "
+                         f"on {reference}",
+                         target=reference,
+                         details={"button": button_id, "shop_id": staff.get("shop_id")})
+            return True
+    return False
 
 
 def shop_stock_of(shop_id, product_id, pack_size):
@@ -24027,6 +24376,11 @@ SHOP_PAYMENT_METHODS = ("ecocash", "shop", "delivery", "other")
 # characters, so the portal refuses a name longer than that rather than letting
 # the customer see it cut off.
 SHOP_NAME_LIMIT = 24
+
+# How many people at one shop are told about a new order. A shop that could list
+# twenty numbers would notify twenty people for one order, so the list is capped
+# rather than left open.
+SHOP_STAFF_LIMIT = 3
 
 SHOP_PAYMENT_METHOD_LABELS = {
     "ecocash": "via EcoCash",
@@ -25165,6 +25519,9 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                     "😕 Sorry, we could not save your order just now. Please try once more, or call "
                     f"{COMPANY_SYSTEM_CONTACT['phones'][0]}.")])
             ctx = {"reference": reference, "amount": total}
+            # The shop that has to hand the goods over is told straight away, so
+            # the notification does not wait on the customer paying.
+            _shop_notify_shop_of_order(reference)
             if can_pay:
                 return result("payment", [
                     _shop_text_with_note(
@@ -26447,6 +26804,17 @@ def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=
     lowered = (text or "").strip().lower()
     wants_human = any(keyword in lowered for keyword in _CUSTOMER_HUMAN_KEYWORDS)
 
+    # A shop's own handset replying to a notification is handled before anything
+    # else. Checked by number rather than by the button id alone, so a customer
+    # cannot move an order along by echoing one of the shop's button ids back.
+    staff_member = shop_staff_for_number(sender_id)
+    if staff_member and shop_staff_reply(sender_id, reply_id, staff_member):
+        crm_record_message(sender_id, "inbound", "staff", text or f"[{mtype}]", mtype,
+                           company_reg=COMPANY_SYSTEM_PREFIX,
+                           channel=display_phone_number, is_staff=True,
+                           display_name=staff_member.get("name"))
+        return
+
     crm_record_message(sender_id, "inbound", "customer", text or f"[{mtype}]", mtype,
                        display_name=(profile_name or "").strip() or None,
                        company_reg=COMPANY_SYSTEM_PREFIX, channel=display_phone_number)
@@ -27424,6 +27792,14 @@ def order_detail(reference):
         "status": row[11],
         "payment_method": row[12],
         "payment_status": row[13],
+        # One line the shop's staff can act on: whether the money is settled or
+        # has to be taken at hand-over.
+        "payment_status_label": (
+            f"Paid {SHOP_PAYMENT_METHOD_LABELS.get(_shop_payment_method(row[12]), '')}".strip()
+            if (row[13] or "").lower() == "paid"
+            else ("Unpaid — collect "
+                  + ("on delivery" if row[16] == "delivery" else "at the shop")
+                  if (row[13] or "unpaid").lower() != "paid" else "Unpaid")),
         "amount_charged": charged,
         "paid_at": fmt_time(row[15], "%d %b %Y %H:%M"),
         "delivery_method": row[16],
@@ -28630,6 +29006,28 @@ def crm_stock_receive_api():
                     'movements': shop_stock_movements(shop['id'], limit=25)})
 
 
+@app.route('/api/crm/shops/<shop_id>/staff', methods=['GET', 'POST'])
+def crm_shop_staff_api(shop_id):
+    """Read or replace a shop's staff list, capped at SHOP_STAFF_LIMIT."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    shop = shop_by_id(shop_id)
+    if not shop:
+        return jsonify({'success': False, 'message': 'That shop was not found.'}), 404
+    if request.method == 'GET':
+        return jsonify({'success': True, 'shop': {'id': shop['id'], 'name': shop['name']},
+                        'staff': shop_staff(shop['id'], active_only=False),
+                        'limit': SHOP_STAFF_LIMIT})
+    payload = request.get_json(silent=True) or {}
+    ok, message = shop_staff_save(shop['id'], payload.get('staff') or [], user=user)
+    if not ok:
+        return jsonify({'success': False, 'message': message,
+                        'staff': shop_staff(shop['id'], active_only=False)}), 400
+    return jsonify({'success': True, 'message': message,
+                    'staff': shop_staff(shop['id'], active_only=False)})
+
+
 @app.route('/api/crm/shops', methods=['GET'])
 def crm_shops_list_api():
     """The shops a customer can collect from, for the order composer."""
@@ -28639,7 +29037,9 @@ def crm_shops_list_api():
     return jsonify({'success': True,
                     'shops': [{'id': shop['id'], 'name': shop['name'],
                                'address': shop.get('address', '')}
-                              for shop in shop_shops()]})
+                              for shop in shop_shops()],
+                    'staff_counts': shop_staff_counts(),
+                    'staff_limit': SHOP_STAFF_LIMIT})
 
 
 @app.route('/api/crm/shops', methods=['POST'])

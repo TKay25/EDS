@@ -1270,17 +1270,37 @@
     // id is never derived from the new name, so orders and stock rows that point
     // at the shop keep pointing at it.
     if (editing) payload.shop_id = editing;
-    postJson('/api/crm/shops', payload).then(function (result) {
-      setBusy(button, false);
+    // The staff are collected before the shop is saved, so a validation failure
+    // on them stops the shop being renamed around a list that never saved.
+    var staff = collectShopStaff();
+    if (staff.length > STAFF_LIMIT) {
       window.crmToast && window.crmToast(
-        result.message || (result.success ? 'Shop saved.' : 'Could not save the shop.'),
-        result.success ? 'success' : 'error');
-      if (!result.success) return;
-      closeShopForm();
-      stockShopId = result.shop ? result.shop.id : null;
-      renderStockShops(result.shops, result.shop);
-      renderStockRows(result.rows);
-      renderStockMovements(result.movements);
+        'A shop can have up to ' + STAFF_LIMIT + ' staff.', 'error');
+      return;
+    }
+    postJson('/api/crm/shops', payload).then(function (result) {
+      if (!result.success) {
+        setBusy(button, false);
+        window.crmToast && window.crmToast(
+          result.message || 'Could not save the shop.', 'error');
+        return;
+      }
+      var shopId = result.shop ? result.shop.id : '';
+      // The staff are saved against the shop that was just written, so a brand
+      // new shop takes its people in the same action as its name.
+      saveShopStaff(shopId).then(function (staffOk) {
+        setBusy(button, false);
+        window.crmToast && window.crmToast(
+          staffOk && staff.length
+            ? (result.message || 'Shop saved.') + ' Staff notified of new orders.'
+            : (result.message || (result.success ? 'Shop saved.' : 'Could not save the shop.')),
+          'success');
+        closeShopForm();
+        stockShopId = result.shop ? result.shop.id : null;
+        renderStockShops(result.shops, result.shop);
+        renderStockRows(result.rows);
+        renderStockMovements(result.movements);
+      });
     }).catch(function () {
       setBusy(button, false);
       window.crmToast && window.crmToast('Could not save the shop.', 'error');
@@ -1298,6 +1318,8 @@
     if (addressEl) addressEl.value = shop ? (shop.address || '') : '';
     if (phoneEl) phoneEl.value = shop ? (shop.phone || '') : '';
     paintShopNameCount();
+    // An existing shop loads its saved staff; a new one starts with a blank row.
+    loadShopStaff(shop ? shop.id : null);
     shopForm.hidden = false;
     if (nameEl) nameEl.focus();
   }
@@ -1320,6 +1342,121 @@
     var limit = parseInt(nameEl.getAttribute('maxlength'), 10) || 24;
     label.textContent = (idEl && idEl.value ? 'Rename or edit shop' : 'New shop') +
       ' (' + nameEl.value.length + ' / ' + limit + ' characters)';
+  }
+
+  /* --------------------------------------------------------- shop staff --
+     Up to SHOP_STAFF_LIMIT people per shop, each with a name and a WhatsApp
+     number. They are saved with the shop, so the list on screen is exactly who
+     gets messaged when an order lands there. */
+  var STAFF_LIMIT = 3;
+  var shopStaffRows = document.getElementById('crmShopStaffRows');
+  var shopStaffCount = document.getElementById('crmShopStaffCount');
+  var shopStaffAdd = document.getElementById('crmShopStaffAdd');
+  // The numbers already saved for the shop being edited, so a re-open shows the
+  // real list rather than whatever was typed and abandoned.
+  var shopStaffSaved = [];
+
+  function staffRowMarkup(name, number, index) {
+    return '<div class="crm-shop-staff-row" data-staff-row="' + index + '">' +
+      '<input class="ps-input" type="text" data-staff-name="1" value="' +
+        escapeHtml(name || '') + '" placeholder="Name" autocomplete="off">' +
+      '<input class="ps-input" type="text" data-staff-number="1" value="' +
+        escapeHtml(number || '') + '" placeholder="07… WhatsApp number" autocomplete="off">' +
+      '<button class="crm-mini-btn" type="button" data-staff-remove="' + index + '" ' +
+        'title="Remove this person"><i class="bi bi-x-lg"></i></button>' +
+      '</div>';
+  }
+
+  function paintShopStaff() {
+    if (!shopStaffRows) return;
+    var rows = shopStaffRows.querySelectorAll('[data-staff-row]');
+    Array.prototype.forEach.call(rows, function (row) {
+      var button = row.querySelector('[data-staff-remove]');
+      if (button) button.disabled = rows.length <= 1;
+    });
+    if (shopStaffCount) {
+      shopStaffCount.textContent = rows.length + ' of ' + STAFF_LIMIT;
+    }
+    if (shopStaffAdd) shopStaffAdd.disabled = rows.length >= STAFF_LIMIT;
+  }
+
+  function renderShopStaff(list) {
+    if (!shopStaffRows) return;
+    shopStaffSaved = (list || []).filter(function (person) { return person.active !== false; });
+    var shown = shopStaffSaved.length ? shopStaffSaved : [{ name: '', wa_number: '' }];
+    shopStaffRows.innerHTML = shown.map(function (person, index) {
+      return staffRowMarkup(person.name, person.wa_number, index);
+    }).join('');
+    paintShopStaff();
+  }
+
+  function addShopStaffRow() {
+    if (!shopStaffRows) return;
+    var rows = shopStaffRows.querySelectorAll('[data-staff-row]');
+    if (rows.length >= STAFF_LIMIT) return;
+    shopStaffRows.insertAdjacentHTML('beforeend',
+      staffRowMarkup('', '', rows.length));
+    paintShopStaff();
+  }
+
+  function collectShopStaff() {
+    if (!shopStaffRows) return [];
+    var out = [];
+    Array.prototype.forEach.call(shopStaffRows.querySelectorAll('[data-staff-row]'),
+      function (row) {
+        var name = row.querySelector('[data-staff-name]');
+        var number = row.querySelector('[data-staff-number]');
+        var nameValue = name ? name.value.trim() : '';
+        var numberValue = number ? number.value.trim() : '';
+        if (!nameValue && !numberValue) return;
+        out.push({ name: nameValue, wa_number: numberValue });
+      });
+    return out;
+  }
+
+  function loadShopStaff(shopId) {
+    if (!shopStaffRows) return Promise.resolve();
+    if (!shopId) { renderShopStaff([]); return Promise.resolve(); }
+    return fetch('/api/crm/shops/' + encodeURIComponent(shopId) + '/staff')
+      .then(function (response) { return response.json(); })
+      .then(function (result) {
+        renderShopStaff(result && result.success ? result.staff : []);
+      })
+      .catch(function () { renderShopStaff([]); });
+  }
+
+  function saveShopStaff(shopId) {
+    if (!shopId) return Promise.resolve(true);
+    return postJson('/api/crm/shops/' + encodeURIComponent(shopId) + '/staff',
+                    { staff: collectShopStaff() })
+      .then(function (result) {
+        if (!result.success) {
+          window.crmToast && window.crmToast(result.message || 'Could not save the staff.', 'error');
+          return false;
+        }
+        renderShopStaff(result.staff || []);
+        window.crmToast && window.crmToast(result.message || 'Staff saved.', 'success');
+        return true;
+      })
+      .catch(function () {
+        window.crmToast && window.crmToast('Could not save the staff.', 'error');
+        return false;
+      });
+  }
+
+  if (shopStaffRows) {
+    shopStaffRows.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-staff-remove]');
+      if (!button || button.disabled) return;
+      var row = button.closest('[data-staff-row]');
+      if (row) { row.remove(); paintShopStaff(); }
+    });
+  }
+  if (shopStaffAdd) {
+    shopStaffAdd.addEventListener('click', function () {
+      if (shopStaffAdd.disabled) return;
+      addShopStaffRow();
+    });
   }
 
   if (stockSelect) {

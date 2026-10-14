@@ -2118,6 +2118,37 @@ select.crm-select:focus {
 .crm-build-fields select,
 .crm-build-fields input { min-height: 34px; }
 
+/* The shop's staff list. Kept as plain rows so the name and number stay side by
+   side and the remove button lines up down the list. */
+.crm-shop-staff {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ps-line);
+}
+.crm-shop-staff-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ps-text-soft);
+}
+.crm-shop-staff-count {
+  font-weight: 500;
+  color: var(--ps-text-faint, var(--ps-text-soft));
+  opacity: 0.85;
+}
+.crm-shop-staff-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.crm-shop-staff-row input { flex: 1 1 0; min-width: 0; min-height: 34px; }
+.crm-shop-staff-row input[data-staff-number] { flex: 1.2 1 0; }
+.crm-shop-staff-row .crm-mini-btn { flex: 0 0 auto; }
+
 /* The order's own payment history. Events are listed oldest first because that
    is the order they happened in, and a dispute is read forwards. */
 .crm-paylog-block {

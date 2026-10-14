@@ -597,6 +597,23 @@
                         Name a shop after the area it is in — that is what the customer taps to
                         choose it on WhatsApp, which is why it is kept short enough to fit one row.
                     </p>
+                    {# The people who are messaged when an order lands at this shop. Capped,
+                       because one order should not become twenty notifications. The list is
+                       saved with the shop, so what is shown is exactly who will be told. #}
+                    <div class="crm-shop-staff" id="crmShopStaff">
+                        <div class="crm-shop-staff-head">
+                            <span>Staff told about new orders</span>
+                            <span class="crm-shop-staff-count" id="crmShopStaffCount"></span>
+                        </div>
+                        <div id="crmShopStaffRows"></div>
+                        <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmShopStaffAdd">
+                            <i class="bi bi-person-plus"></i> Add staff member
+                        </button>
+                        <p class="crm-shop-form-hint">
+                            Each of them gets a WhatsApp message when an order is placed at this
+                            shop, with a button to say they are working on it.
+                        </p>
+                    </div>
                 </div>
 
                 <div class="crm-table-wrap">
