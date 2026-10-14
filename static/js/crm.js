@@ -102,6 +102,19 @@
     });
   }
 
+  // A file upload cannot be sent as JSON, so the picture goes up as form data
+  // with the same result shape the JSON helpers return.
+  function postForm(url, formData) {
+    return fetch(url, {
+      method: 'POST',
+      body: formData,
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return { success: false, message: 'Unexpected server response.' };
+      });
+    });
+  }
+
   /* ------------------------------------------------------------------ tabs */
   function initTabs() {
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-crm-tab]'));
@@ -1790,8 +1803,118 @@
           });
       });
 
-      var deleteButton = product.querySelector('[data-role="delete"]');
-      if (deleteButton) {
+      // The picture saves on its own rather than with the card, because a file
+      // picker cannot be part of one JSON payload and an upload that fails should
+      // not take the name and description edits down with it.
+      function nameOf(node) {
+        var field = node.querySelector('[data-role="name"]');
+        return field ? field.value.trim() : '';
+      }
+
+      function paintImage(wrapper, imagePath, imageUrl) {
+        wrapper.setAttribute('data-image-path', imagePath || '');
+        var preview = wrapper.querySelector('[data-role="imagepreview"]');
+        if (preview) {
+          preview.innerHTML = imageUrl
+            ? '<img src="' + escapeHtml(imageUrl) + '" alt="">'
+            : '<span class="crm-product-image-empty"><i class="bi bi-image"></i> No picture yet</span>';
+        }
+        var clearButton = wrapper.querySelector('[data-role="imageclear"]');
+        if (clearButton) clearButton.hidden = !imagePath;
+      }
+
+      function imageNote(wrapper, message, kind) {
+        var node = wrapper.querySelector('[data-role="imagenote"]');
+        if (!node) return;
+        node.textContent = message;
+        node.classList.remove('is-ok', 'is-error');
+        if (kind) node.classList.add(kind);
+        window.setTimeout(function () {
+          if (node.textContent === message) node.textContent = '';
+        }, 4000);
+      }
+
+      var imageWrapper = product.querySelector('[data-role="imagewrap"]');
+      var imageFile = product.querySelector('[data-role="imagefile"]');
+      if (imageWrapper && imageFile) {
+        imageFile.addEventListener('change', function () {
+          var file = imageFile.files && imageFile.files[0];
+          if (!file) return;
+          // Checked here as well as on the server so the size limit is explained
+          // without a round trip wasted on a file that cannot be accepted.
+          var extension = (file.name.split('.').pop() || '').toLowerCase();
+          var allowed = limits.image_extensions || ['png', 'jpg', 'jpeg', 'webp'];
+          if (allowed.indexOf(extension) === -1) {
+            imageNote(imageWrapper, 'Use a ' + allowed.join(', ') + ' file.', 'is-error');
+            toast('That file type is not supported.', 'error',
+                  'Product pictures must be one of: ' + allowed.join(', ') + '.');
+            imageFile.value = '';
+            return;
+          }
+          if (limits.image_max_bytes && file.size > limits.image_max_bytes) {
+            imageNote(imageWrapper, 'That file is larger than ' + limits.image_max_mb + ' MB.',
+                      'is-error');
+            toast('That picture is too large.', 'error',
+                  'The limit is ' + limits.image_max_mb + ' MB; this file is ' +
+                  (file.size / 1048576).toFixed(1) + ' MB.');
+            imageFile.value = '';
+            return;
+          }
+          var formData = new FormData();
+          formData.append('image', file);
+          imageNote(imageWrapper, 'Uploading…');
+          postForm('/api/crm/products/' + encodeURIComponent(id) + '/image', formData)
+            .then(function (result) {
+              imageFile.value = '';
+              if (!result.success) {
+                imageNote(imageWrapper, result.message || 'Could not save the picture.', 'is-error');
+                toast(result.message || 'Could not save the picture.', 'error');
+                return;
+              }
+              paintImage(imageWrapper, result.image_url ? true : '', result.image_url || '');
+              imageNote(imageWrapper, 'Picture saved', 'is-ok');
+              toast('Picture saved for “' + nameOf(product) + '”.', 'ok');
+              if (result.limits) applyLimits(result.limits);
+            })
+            .catch(function () {
+              imageFile.value = '';
+              imageNote(imageWrapper, 'Could not save the picture.', 'is-error');
+              toast('Could not save the picture. Check your connection and try again.', 'error');
+            });
+        });
+
+        var imageClear = imageWrapper.querySelector('[data-role="imageclear"]');
+        if (imageClear) {
+          imageClear.addEventListener('click', function () {
+            if (!window.confirm('Remove the picture for “' + nameOf(product) + '”?\n\n' +
+                                'The assistant will describe the product without a picture.')) {
+              return;
+            }
+            var formData = new FormData();
+            formData.append('clear', '1');
+            setBusy(imageClear, true, 'Removing…');
+            postForm('/api/crm/products/' + encodeURIComponent(id) + '/image', formData)
+              .then(function (result) {
+                setBusy(imageClear, false);
+                if (!result.success) {
+                  imageNote(imageWrapper, result.message || 'Could not remove it.', 'is-error');
+                  toast(result.message || 'Could not remove the picture.', 'error');
+                  return;
+                }
+                paintImage(imageWrapper, '', '');
+                imageNote(imageWrapper, 'Picture removed', 'is-ok');
+                toast('Picture removed.', 'ok');
+              })
+              .catch(function () {
+                setBusy(imageClear, false);
+                imageNote(imageWrapper, 'Could not remove the picture.', 'is-error');
+                toast('Could not remove the picture.', 'error');
+              });
+          });
+        }
+      }
+
+      var deleteButton = product.querySelector('[data-role="delete"]');      if (deleteButton) {
         deleteButton.addEventListener('click', function () {
           var productName = product.querySelector('[data-role="name"]').value.trim();
           if (!window.confirm('Remove “' + productName + '” from the catalogue?\n\n' +

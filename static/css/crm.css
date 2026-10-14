@@ -900,6 +900,51 @@ select.ps-input {
   padding-top: 4px;
 }
 
+/* The product picture: preview beside its controls, so the uploaded image and
+   the button that changes it read as one field. */
+.crm-product-image {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 10px 12px;
+  align-items: start;
+  margin-top: 10px;
+}
+
+.crm-product-image-preview {
+  grid-row: span 2;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px dashed var(--ps-line);
+  border-radius: 10px;
+  background: var(--ps-surface-alt);
+}
+
+.crm-product-image-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+.crm-product-image-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.62rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--ps-text-soft);
+}
+
+.crm-product-image-empty i { font-size: 1rem; }
+
+.crm-product-image-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* A file input inside a label keeps the native picker without a custom button. */
+.crm-product-image-pick { cursor: pointer; margin-bottom: 0; }
+
+.crm-product-image-hint { margin: 0; font-size: 0.72rem; }
+.crm-product-image .crm-save-note { grid-column: 2; }
+
 .crm-save-note { font-size: 0.77rem; font-weight: 600; color: var(--ps-text-soft); }
 .crm-save-note.is-ok { color: #047857; }
 .crm-save-note.is-error { color: #B91C1C; }

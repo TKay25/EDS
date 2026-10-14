@@ -21330,6 +21330,42 @@ COMPANY_SYSTEM_CONTACT = {
     "hours": "Monday to Friday, 8:00 AM - 5:00 PM",
 }
 
+# ------------------------------------------------------- alert recipients --
+# Where the business wants to be told about money and about customers asking for
+# a person. Numbers are held in the local 07… form the sender expects, and are
+# overridable from the environment so a deployment can point them elsewhere
+# without a code change.
+SHOP_HQ_WA_NUMBER = os.getenv("SHOP_HQ_WA_NUMBER", "0784752545")
+SHOP_SALES_AGENT_WA_NUMBER = os.getenv("SHOP_SALES_AGENT_WA_NUMBER", "0774121556")
+
+
+def _alert_numbers(*values):
+    """The distinct, valid numbers from a set of raw values, order kept.
+
+    One person holding two of these roles would otherwise be messaged twice for
+    the same event, so the list is de-duplicated by number.
+    """
+    out = []
+    for value in values:
+        for candidate in str(value or "").split(","):
+            number = shop_staff_number(candidate)
+            if number and number not in out:
+                out.append(number)
+    return out
+
+
+def shop_hq_numbers():
+    """Who is told about payments and unattended customer requests."""
+    configured = os.getenv("SHOP_HQ_WA_NUMBERS", "")
+    return _alert_numbers(*(configured.split(",") if configured else [SHOP_HQ_WA_NUMBER]))
+
+
+def shop_sales_agent_numbers():
+    """Who is told when a customer asks for a person."""
+    configured = os.getenv("SHOP_SALES_AGENT_WA_NUMBERS", "")
+    return _alert_numbers(*(configured.split(",") if configured
+                            else [SHOP_SALES_AGENT_WA_NUMBER]))
+
 # The shops stock is kept in, seeded once so a fresh install has somewhere to
 # count. A shop is named after the area it stands in, because the name is what a
 # customer taps in the assistant's choice row and they think in areas rather than
@@ -21539,6 +21575,10 @@ def ensure_shop_tables():
         # need an order position so the browse list stays stable between edits.
         cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS is_custom BOOLEAN DEFAULT FALSE;")
         cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0;")
+        # The product's picture, as a path under the app's static folder rather
+        # than a URL: the file is uploaded here, so a deployment that moves domain
+        # does not leave every product pointing at the old host.
+        cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS image_path VARCHAR(300);")
         # Pack sizes for products added in the portal. Built-in products keep the
         # sizes declared in code and have no rows here.
         cursor.execute("""
@@ -22561,7 +22601,9 @@ def _shop_language_options():
 SHOP_LABEL_OVERRIDES = {
     "Toilet Cleaner & Sanitizer": "Toilet Cleaner",
 }
-_shop_catalog_cache = {"loaded": False, "names": {}, "summaries": {}, "prices": {}}
+_shop_catalog_cache = {"loaded": False, "names": {}, "summaries": {}, "prices": {},
+                       "images": {}, "sizes": {}, "custom": [], "removed": set(),
+                       "shops": [], "stock": {}}
 
 
 def _shop_catalog():
@@ -22584,18 +22626,22 @@ def shop_refresh_catalog():
     """Reload product names, summaries, sizes and prices edited in the CRM portal."""
     global _shop_catalog_cache
     names, summaries, prices = {}, {}, {}
+    images = {}
     sizes, custom = {}, []
     removed = set()
     shops, stock = [], {}
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
-            cursor.execute("SELECT product_id, display_name, summary FROM shop_products")
+            cursor.execute("SELECT product_id, display_name, summary, image_path "
+                           "FROM shop_products")
             for row in cursor.fetchall():
                 if row[1]:
                     names[row[0]] = str(row[1]).strip()
                 if row[2]:
                     summaries[row[0]] = str(row[2]).strip()
+                if row[3]:
+                    images[row[0]] = str(row[3]).strip()
             cursor.execute("SELECT product_id, pack_size, price FROM shop_product_prices")
             for row in cursor.fetchall():
                 if row[2] is not None:
@@ -22645,7 +22691,8 @@ def shop_refresh_catalog():
     for product in custom:
         product["sizes"] = sizes.get(product["id"], [])
     _shop_catalog_cache = {"loaded": True, "names": names, "summaries": summaries,
-                           "prices": prices, "sizes": sizes, "custom": custom,
+                           "prices": prices, "images": images, "sizes": sizes,
+                           "custom": custom,
                            "removed": removed, "shops": shops, "stock": stock}
     return _shop_catalog_cache
 
@@ -22814,6 +22861,8 @@ def _shop_product(category_index):
         "base_name": entry["base_name"],
         "summary": catalog["summaries"].get(entry["id"]) or entry["summary"],
         "sizes": list(entry["sizes"]),
+        # The picture to show with the product, when one has been uploaded.
+        "image": (catalog.get("images") or {}).get(entry["id"]) or "",
     }
 
 
@@ -22953,11 +23002,127 @@ def _shop_category_list():
 
 def _shop_product_list(category_index):
     product = _shop_product(category_index)
-    return _shop_options(
+    prompt = _shop_options(
         f"🧴 *{product['name']}*\n\n{product['summary']}\n\n"
         f"Available pack sizes: {', '.join(product['sizes'])}",
         [(f"prod:{category_index}", "Choose pack size")],
     )
+    # The picture goes above the prompt rather than inside it: WhatsApp renders
+    # an image with its own caption, so the choices still arrive as buttons on
+    # the message that follows. Set here rather than at send time so a restored
+    # prompt (Back, or a language change) shows the picture again too.
+    if product.get("image"):
+        prompt["image"] = product["image"]
+    return prompt
+
+
+# ---------------------------------------------------------- product images --
+# A product picture is stored under the app's static folder and referenced by a
+# path, so the same file serves the portal's editor and the customer's WhatsApp
+# message. WhatsApp fetches an image by URL, so the path is turned into an
+# absolute one at send time; a path that cannot be made absolute simply means the
+# image is left out rather than the message failing.
+PRODUCT_IMAGE_DIR = os.path.join("images", "products")
+PRODUCT_IMAGE_EXTENSIONS = {"png": "image/png", "jpg": "image/jpeg",
+                            "jpeg": "image/jpeg", "webp": "image/webp"}
+# WhatsApp accepts up to 5 MB for an image, and the upload is refused here rather
+# than at Meta so the reason is visible in the portal.
+PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024
+# The public origin of this deployment, used only to build the preview URL the
+# portal shows for an uploaded picture. WhatsApp is sent the file itself, so the
+# assistant works without it; set it when the portal is reached through a proxy
+# or host name the request does not report.
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "")
+# The glyphs the assistant puts in front of a heading. Stripped from an image
+# caption, where the picture already says what the heading does.
+_SHOP_PROMPT_GLYPHS = "🧴🛍️📦🛒🔎🙋👋💳✅⚠️❌🎉"
+
+
+def product_image_public_url(image_path):
+    """An absolute URL for a product image, or '' when there is not one.
+
+    Built from the request when one is in flight, and otherwise from the
+    configured base URL. WhatsApp will not fetch a relative path, so a path that
+    cannot be made absolute is treated as no image.
+    """
+    path = str(image_path or "").strip().lstrip("/")
+    if not path:
+        return ""
+    base = (PUBLIC_BASE_URL or "").strip().rstrip("/")
+    if not base:
+        try:
+            base = request.host_url.rstrip("/")
+        except Exception:
+            base = ""
+    if not base:
+        return ""
+    return f"{base}/static/{path}"
+
+
+def _product_image_absolute_path(image_path):
+    """Where a stored image actually sits on disk, or '' when it is not there."""
+    path = str(image_path or "").strip().lstrip("/")
+    if not path:
+        return ""
+    # The path is built from the upload, never from input at read time, but it is
+    # still confined to the images folder so a stored value can never name a file
+    # outside it.
+    full = os.path.abspath(os.path.join(app.static_folder, path))
+    root = os.path.abspath(os.path.join(app.static_folder, PRODUCT_IMAGE_DIR))
+    if not full.startswith(root + os.sep):
+        return ""
+    return full if os.path.isfile(full) else ""
+
+
+def product_image_data(image_path):
+    """(bytes, mime_type) for a product image, or (None, '')."""
+    full = _product_image_absolute_path(image_path)
+    if not full:
+        return None, ""
+    extension = full.rsplit(".", 1)[-1].lower() if "." in full else ""
+    mime = PRODUCT_IMAGE_EXTENSIONS.get(extension)
+    if not mime:
+        return None, ""
+    try:
+        with open(full, "rb") as handle:
+            return handle.read(), mime
+    except Exception as e:
+        print(f"product image read error: {e}")
+        return None, ""
+
+
+def product_image_payload(image_path, caption=None):
+    """A WhatsApp image message payload for a product, or None.
+
+    Uploaded by file rather than linked, because Meta fetches a link itself and a
+    deployment behind a sign-in or on a private host would give it nothing to
+    fetch.
+    """
+    data, mime = product_image_data(image_path)
+    if not data:
+        return None
+    media_id = wa_upload_media(data, os.path.basename(image_path), mime)
+    if not media_id:
+        return None
+    image = {"id": media_id}
+    if caption:
+        image["caption"] = caption[:1024]
+    return {"type": "image", "image": image}
+
+
+def _shop_image_caption(message):
+    """A short caption for a product picture, taken from the prompt it precedes.
+
+    The first line of the prompt is the product's name, which is what a picture
+    on its own would otherwise leave the customer to guess. The leading glyph is
+    dropped because it is decoration on a prompt, not part of the name.
+    """
+    text = str((message or {}).get("text") or "").strip()
+    if not text:
+        return None
+    caption = text.splitlines()[0].strip()
+    caption = caption.lstrip("".join(_SHOP_PROMPT_GLYPHS)).strip()
+    return caption[:1024] or None
 
 
 def _shop_size_list(product, category_index):
@@ -23278,7 +23443,14 @@ def shop_agent_order_create(wa_number, lines, user=None, note=None, channel=None
         "address": (delivery_address or "").strip(), "note": (note or "").strip(),
         "created_by_name": (user or "").strip(),
     })
-    sent = shop_send_whatsapp_reference(reference, notice)
+    # An agent order is sent unprompted, so it is the notice most likely to be
+    # refused by the 24-hour window. The template carries the same ask.
+    number, channel = shop_order_number_and_channel(reference)
+    sent, detail, used_template = shop_send_notice(
+        number, notice, "agent_order_to_confirm",
+        {"reference": reference, "agent": (user or "").strip() or "our sales team"},
+        channel) if number else (False, "No number on the order.", False)
+    _record_outbound(reference, notice, sent, used_template)
     if not sent:
         return True, (f"{reference} was saved, but the WhatsApp message did not go out. "
                       "The customer can still confirm it from Track my order."), reference
@@ -23487,7 +23659,7 @@ SHOP_RESERVED_WORDS = frozenset({
     "delivery", "collection", "none", "back", "previous", "menu", "home", "reset",
     "restart", "start", "b", "m", "yes", "y", "no", "n", "ok", "later", "cancel",
     "skip", "help", "en", "sn", "nd", "track", "nudge", "buy", "remind",
-    "cancel order", "cancel my order", "cancel an order",
+    "cancel order", "cancel my order", "cancel an order", "ack", "acknowledge",
 })
 
 
@@ -23715,6 +23887,515 @@ def _shop_staff_buttons_payload(body, reference):
     }
 
 
+def shop_notify_hq_of_payment(reference, order, amount=None, method=None):
+    """Tell headquarters that an order has been paid. Returns how many were told.
+
+    Raised for every payment, whether the gateway settled it or a member of staff
+    recorded cash as received, because the business wants one record of money
+    coming in rather than only the part that settles itself.
+    """
+    numbers = shop_hq_numbers()
+    if not numbers:
+        return 0
+    key = _shop_payment_method(method or order.get("payment_method"))
+    shop = order.get("shop") or ""
+    lines = [f"💰 *Payment received — {reference}*", ""]
+    if amount is not None:
+        lines.append(f"*Amount:* {PAYNOW_CURRENCY} {float(amount):.2f}")
+    elif order.get("amount_charged") is not None:
+        lines.append(f"*Amount:* {PAYNOW_CURRENCY} {float(order['amount_charged']):.2f}")
+    else:
+        lines.append("*Amount:* not recorded")
+    lines.append(f"*Paid:* {SHOP_PAYMENT_METHOD_LABELS.get(key, 'by other means')}")
+    if order.get("customer_name"):
+        lines.append(f"*Customer:* {order['customer_name']}")
+    if order.get("phone"):
+        lines.append(f"*Phone:* {order['phone']}")
+    if shop:
+        lines.append(f"*Shop:* {shop}")
+    lines.append(f"*Items:* {order.get('item_count') or 0}")
+    if order.get("origin") == "agent":
+        lines.append(f"*Order taken by:* {order.get('created_by_name') or 'an agent'}")
+    lines.append("")
+    lines.append("Tap *Acknowledge* below once you have seen it.")
+    body = "\n".join(lines)
+    template_values = {
+        "reference": reference,
+        "amount": (f"{PAYNOW_CURRENCY} {float(amount):.2f}" if amount is not None
+                   else (f"{PAYNOW_CURRENCY} {float(order['amount_charged']):.2f}"
+                         if order.get("amount_charged") is not None else "not recorded")),
+        "method": SHOP_PAYMENT_METHOD_LABELS.get(key, "by other means"),
+        "customer": order.get("customer_name") or "-",
+        "shop": shop or "-",
+    }
+    sent = 0
+    for number in numbers:
+        try:
+            ok, detail, _used = shop_send_notice(
+                number, body, "hq_payment_received", template_values,
+                order.get("channel") or None)
+            if not ok:
+                print(f"HQ payment notice failed for {number}: {detail}")
+            else:
+                sent += 1
+        except Exception as e:
+            print(f"HQ payment notice error: {e}")
+    if sent:
+        log_activity("notified_hq_payment", "order",
+                     f"Told HQ about the payment for {reference}",
+                     target=reference, details={"sent": sent, "method": key})
+    return sent
+
+
+def shop_notify_agent_of_handover(wa_number, reason=None, display_name=None, channel=None):
+    """Tell the sales agent a customer wants a person. Returns how many were told.
+
+    Sent alongside the in-portal escalation rather than instead of it, so a
+    customer asking for a person reaches someone on WhatsApp even when nobody is
+    watching the inbox. The notice names the customer and gives the number to
+    reply on, because those are the two things the agent needs to pick it up.
+    """
+    numbers = shop_sales_agent_numbers()
+    if not numbers:
+        return 0
+    local = str(wa_number or "")[-15:]
+    # The profile name is looked up here too, so the notice carries a real name
+    # even when the caller did not know one. Both lines are always printed: in
+    # WhatsApp the agent can tap the number, and a name is what tells them who
+    # they are about to reply to.
+    name = (display_name or "").strip() or (crm_best_display_name(wa_number) or "").strip()
+    lines = ["🙋 *A customer is asking for a person*", "",
+             f"*Customer name:* {name or 'not given'}",
+             f"*WhatsApp number:* +{local}"]
+    if reason:
+        lines.append(f"*Reason:* {reason}")
+    lines.append("")
+    lines.append("Reply to them in the CRM inbox, then tap *Acknowledge* below.")
+    body = "\n".join(lines)
+    template_values = {
+        "customer": name or "not given",
+        "number": f"+{local}",
+        "reason": reason or "the customer did not say",
+    }
+    sent = 0
+    for number in numbers:
+        try:
+            ok, detail, _used = shop_send_notice(
+                number, body, "sales_agent_handover", template_values, channel)
+            if not ok:
+                print(f"agent handover notice failed for {number}: {detail}")
+            else:
+                sent += 1
+        except Exception as e:
+            print(f"agent handover notice error: {e}")
+    if sent:
+        log_activity("notified_sales_agent", "chat",
+                     f"Told the sales agent that {name or 'a customer'} (+{local}) "
+                     f"wants a person",
+                     target=f"+{local}",
+                     details={"sent": sent, "name": name})
+    return sent
+    sent = 0
+    for number in numbers:
+        try:
+            ok, detail = crm_send_whatsapp(number, body, channel)
+            if not ok:
+                print(f"agent handover notice failed for {number}: {detail}")
+            else:
+                sent += 1
+        except Exception as e:
+            print(f"agent handover notice error: {e}")
+    if sent:
+        log_activity("notified_sales_agent", "chat",
+                     f"Told the sales agent that +{str(wa_number or '')[-15:]} wants a person",
+                     target=f"+{str(wa_number or '')[-15:]}",
+                     details={"sent": sent})
+    return sent
+
+
+# WhatsApp allows at most three quick-reply buttons on a message, and a button
+# title is capped at 20 characters. The buttons are declared once per template so
+# the free-form message and its template fallback offer the same choices: a
+# customer who taps "Track my order" inside the window gets the same result as
+# one who taps it from the template an hour later.
+WA_TEMPLATE_BUTTON_LIMIT = 3
+WA_TEMPLATE_BUTTON_TITLE_LIMIT = 20
+
+
+def shop_template_buttons(key):
+    """The quick-reply buttons for a template, as (id, title) pairs.
+
+    An id is what the reply carries back, so it is written to be understood by
+    the assistant's own handlers rather than being a label in disguise.
+    """
+    return [tuple(button) for button in SHOP_TEMPLATES.get(key, {}).get("buttons", [])]
+
+
+def _wa_buttons_payload(body, buttons):
+    """A free-form message with quick-reply buttons.
+
+    Mirrors the template's buttons so a customer sees the same choices whichever
+    route the message takes. Meta caps a button message body at 1024 characters,
+    which every notice here is well inside.
+    """
+    trimmed = [(button_id, title[:WA_TEMPLATE_BUTTON_TITLE_LIMIT])
+               for button_id, title in buttons[:WA_TEMPLATE_BUTTON_LIMIT]]
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body[:1024]},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {"id": button_id, "title": title}}
+                    for button_id, title in trimmed
+                ]
+            },
+        },
+    }
+
+
+def shop_send_notice(to_number, text, template_key, values, channel=None, buttons=None):
+    """Send a notice with its buttons, falling back to its template.
+
+    The buttons are attached to the free-form message first, so the interaction
+    is exercised on the ordinary path rather than only appearing when the window
+    has already closed. A button message can be refused where plain text is not,
+    so the plain text is tried before the template is reached.
+
+    Returns (ok, detail, used_template).
+    """
+    # The buttons go on the ordinary message first. Their ids are resolved from
+    # the same values the template body uses, because a free-form button carries
+    # its id back to the assistant verbatim: an unresolved {{reference}} would
+    # come back as a literal placeholder and name no order at all.
+    buttons = buttons if buttons is not None else shop_template_buttons(template_key)
+    resolved = [(shop_template_button_id(button_id, values), title)
+                for button_id, title in buttons]
+    if resolved:
+        ok, detail = crm_send_whatsapp_payload(
+            to_number, _wa_buttons_payload(text, resolved), channel)
+        if ok:
+            return True, "", False
+    # Plain text, then its template if the window has closed.
+    return shop_send_with_template_fallback(to_number, text, template_key, values, channel)
+
+
+# --------------------------------------------------------- meta templates --
+# WhatsApp only lets a business send free-form text inside the 24 hours after the
+# customer last wrote in. Past that, a send is refused with error 131047 and the
+# only way through is an approved template. Every notice below therefore has a
+# template twin, so a notification that falls outside the window still arrives
+# rather than being lost.
+#
+# Each entry is the message as Meta will show it, with the variable slots
+# numbered in the order they are filled. The language code is the one the
+# template is registered under, and the components list is what the send call
+# builds its parameters from.
+#
+# Category: Utility for all of these. Each is tied to something the customer
+# already did - an order they placed, a payment they made, a status change on
+# their own order - which is what Meta expects a Utility template to be.
+SHOP_TEMPLATES = {
+    # Customer-facing order notifications. Bodies mirror the live text so a
+    # customer reading the template sees the same wording they would have had.
+    "order_confirmation": {
+        "name": "bchem_order_confirmation",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Thank you {{1}}. Your order {{2}} has been received. "
+                 "Amount due: {{3}}. Tap *Track my order* below to see where it has got "
+                 "to, or *Pay via EcoCash* to settle it now."),
+        "fields": ["customer", "reference", "amount"],
+        # The button id carries the reference so a tap names the order to pay.
+        # A bare "paynow" would arrive with nothing to pay against: the engine
+        # only knows the order from the context of a live conversation, and a
+        # template tap restores no context at all.
+        "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
+                    ("orders", "Track my order"), ("shop", "Shop more")],
+    },
+    "order_confirmation_unpriced": {
+        "name": "bchem_order_received_unpriced",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Thank you {{1}}. Your order {{2}} has been received. "
+                 "Our sales team will confirm the prices and total on quotation. "
+                 "Tap *Track my order* below to see where it has got to, or "
+                 "*Pay via EcoCash* to settle it once the total is confirmed."),
+        "fields": ["customer", "reference"],
+        "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
+                    ("orders", "Track my order"), ("shop", "Shop more")],
+    },
+    "order_ready_collection": {
+        "name": "bchem_order_ready_for_collection",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Order {{1}} is ready for collection at {{2}}. Please bring your "
+                 "reference with you. If you have not paid yet, payment is taken at the "
+                 "shop."),
+        "fields": ["reference", "shop"],
+        "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
+                    ("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_enroute": {
+        "name": "bchem_order_enroute",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Order {{1}} is on its way to {{2}}. Please have your reference and "
+                 "payment ready for the deliverer."),
+        "fields": ["reference", "address"],
+        "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
+                    ("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_enroute_no_address": {
+        "name": "bchem_order_enroute_noaddress",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Order {{1}} is on its way to you. Please have your reference and "
+                 "payment ready for the deliverer."),
+        "fields": ["reference"],
+        "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
+                    ("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_delivered": {
+        "name": "bchem_order_delivered",
+        "language": "en",
+        "category": "UTILITY",
+        "body": "Order {{1}} has been delivered. Thank you for your business.",
+        "fields": ["reference"],
+        "buttons": [("shop", "Shop again"), ("support_human", "Talk to a human")],
+    },
+    "order_collected": {
+        "name": "bchem_order_collected",
+        "language": "en",
+        "category": "UTILITY",
+        "body": "Order {{1}} has been collected. Thank you for your business.",
+        "fields": ["reference"],
+        "buttons": [("shop", "Shop again"), ("support_human", "Talk to a human")],
+    },
+    "order_being_processed": {
+        "name": "bchem_order_being_processed",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Order {{1}} is being processed at {{2}}. We will tell you as soon as "
+                 "there is a change."),
+        "fields": ["reference", "shop"],
+        "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
+                    ("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_being_processed_noshop": {
+        "name": "bchem_order_being_processed_anon",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Order {{1}} is being processed. We will tell you as soon as there is a "
+                 "change."),
+        "fields": ["reference"],
+        "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
+                    ("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_cancelled": {
+        "name": "bchem_order_cancelled",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Order {{1}} has been cancelled. Nothing will be delivered and no "
+                 "payment is due for it."),
+        "fields": ["reference"],
+        "buttons": [("shop", "Shop again"), ("support_human", "Talk to a human")],
+    },
+    "payment_received_customer": {
+        "name": "bchem_payment_received_customer",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Payment received for order {{1}}. Thank you. Your reference is "
+                 "confirmed and our sales team will be in touch about {{2}}."),
+        "fields": ["reference", "fulfilment"],
+        "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "agent_order_to_confirm": {
+        "name": "bchem_order_needs_confirmation",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Order {{1}} has been put together for you by {{2}} and is waiting for "
+                 "your confirmation. Tap *Confirm order* below to accept or decline it. "
+                 "Nothing is arranged until you do."),
+        "fields": ["reference", "agent"],
+        "buttons": [("agent_orders", "Confirm order"), ("support_human", "Talk to a human")],
+    },
+    # Staff-facing notifications. The shop team and the office are also messaging
+    # contacts, so they are outside the window for the same reason a customer is.
+    "staff_new_order": {
+        "name": "bchem_staff_new_order",
+        "language": "en",
+        "category": "UTILITY",
+        # The reference is carried in the button id rather than in the body, so a
+        # tap identifies the order without the staff member typing anything.
+        "body": ("New order at your shop. Reference {{1}}. Customer {{2}}. Items {{3}}. "
+                 "Receive by {{4}}. Tap *Working on it* below so the customer is told."),
+        "fields": ["reference", "customer", "items", "fulfilment"],
+        "buttons": [("staffwork:{{reference}}", "Working on it"),
+                    ("staffdone:{{reference}}", "Ready / done")],
+    },
+    "hq_payment_received": {
+        "name": "bchem_hq_payment_received",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Payment received. Reference {{1}}. Amount {{2}}. Paid {{3}}. "
+                 "Customer {{4}}. Shop {{5}}. Tap *Acknowledge* below to confirm you have "
+                 "seen it."),
+        "fields": ["reference", "amount", "method", "customer", "shop"],
+        "buttons": [("ack", "Acknowledge")],
+    },
+    "sales_agent_handover": {
+        "name": "bchem_sales_agent_handover",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("A customer is asking for a person. Name {{1}}. WhatsApp {{2}}. "
+                 "Reason {{3}}. Reply to them from the CRM inbox, then tap *Acknowledge* "
+                 "below."),
+        "fields": ["customer", "number", "reason"],
+        "buttons": [("ack", "Acknowledge")],
+    },
+}
+
+# The language the templates above are registered under. Overridable so a
+# deployment that has them approved in another locale can say so.
+SHOP_TEMPLATE_LANGUAGE = os.getenv("SHOP_TEMPLATE_LANGUAGE", "en")
+
+
+def shop_template_parameters(key, values):
+    """The ordered values for a template, from a mapping.
+
+    Meta takes positional parameters, so a missing value would shift every later
+    one and put the reference where the customer's name belongs. A field with no
+    value is therefore sent as a dash rather than dropped.
+    """
+    spec = SHOP_TEMPLATES.get(key)
+    if not spec:
+        return []
+    return [str(values.get(field) or "-") for field in spec["fields"]]
+
+
+def shop_template_button_id(raw_id, values):
+    """A button id with any {{field}} placeholders filled in.
+
+    A staff button carries the order reference so a tap identifies the order
+    without the staff member typing anything. A missing value is dropped rather
+    than sent as a placeholder, because an unfilled id would be unreadable - and
+    a caller that omits the field altogether would otherwise leak the braces
+    into the id, so any placeholder left over is stripped at the end.
+    """
+    text = str(raw_id or "")
+    for field, value in (values or {}).items():
+        text = text.replace("{{" + field + "}}", str(value or ""))
+    return re.sub(r"\{\{[^}]*\}\}", "", text)
+
+
+def shop_send_template(to_number, key, values, channel=None):
+    """Send an approved template, with its buttons. Returns (ok, detail).
+
+    Used when free-form text is refused because the 24-hour window has closed.
+    """
+    spec = SHOP_TEMPLATES.get(key)
+    if not spec:
+        return False, f"No template is defined for {key!r}."
+    creds = wa_outbound_credentials(channel)
+    if creds is None:
+        return False, "WhatsApp delivery is not configured on this deployment."
+    parameters = [{"type": "text", "text": value}
+                  for value in shop_template_parameters(key, values)]
+    components = []
+    if parameters:
+        components.append({"type": "body", "parameters": parameters})
+    # A quick-reply button returns a payload, which is what the assistant's own
+    # handlers read. The index identifies which button was tapped.
+    buttons = shop_template_buttons(key)
+    if buttons:
+        components.append({
+            "type": "button",
+            "sub_type": "quick_reply",
+            "index": 0,
+            "parameters": [
+                {"type": "payload",
+                 "payload": shop_template_button_id(button_id, values)}
+                for button_id, _title in buttons[:WA_TEMPLATE_BUTTON_LIMIT]
+            ],
+        })
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to_number,
+        "type": "template",
+        "template": {
+            "name": spec["name"],
+            "language": {"code": SHOP_TEMPLATE_LANGUAGE},
+            "components": components,
+        },
+    }
+    try:
+        response = requests.post(
+            f"https://graph.facebook.com/v18.0/{creds['phone_id']}/messages",
+            headers={"Authorization": "Bearer " + str(creds["token"]),
+                     "Content-Type": "application/json"},
+            json=payload,
+            timeout=20,
+        )
+        if response.status_code >= 400:
+            detail, _is_window = wa_error_from_response(response)
+            print(f"template send failed ({spec['name']}): {response.status_code} "
+                  f"{response.text}")
+            return False, detail
+        return True, ""
+    except Exception as e:
+        print(f"template send error ({spec['name']}): {e}")
+        return False, str(e)
+
+
+def _wa_is_window_error(detail, response=None):
+    """Whether a failed send failed because the 24-hour window had closed.
+
+    Classified from the raw response when one is available, and otherwise from
+    the refusal text. Kept separate from wa_error_from_response so the fallback
+    can ask the question without inventing a response object to ask it with.
+    """
+    if response is not None:
+        try:
+            payload = response.json()
+        except Exception:
+            payload = None
+        error = payload.get("error") if isinstance(payload, dict) else None
+        if isinstance(error, dict):
+            for key in ("code", "error_subcode"):
+                try:
+                    if int(error.get(key)) in WA_WINDOW_ERROR_CODES:
+                        return True
+                except (TypeError, ValueError):
+                    pass
+    lowered = str(detail or "").lower()
+    return ("24 hour" in lowered or "24-hour" in lowered
+            or "re-engagement" in lowered or "window" in lowered)
+
+
+def shop_send_with_template_fallback(to_number, text, template_key, values,
+                                     channel=None):
+    """Send free-form text, falling back to its template when the window has closed.
+
+    Returns (ok, detail, used_template). This is the single place the fallback
+    lives, so every notification behaves the same way rather than each one
+    inventing its own retry.
+    """
+    ok, detail = crm_send_whatsapp(to_number, text, channel)
+    if ok:
+        return True, "", False
+    # Only the window closing is worth a template: any other failure (a bad
+    # number, credentials) would fail for the template too, and sending it would
+    # just bury the real reason.
+    if not _wa_is_window_error(detail):
+        return False, detail, False
+    sent, template_detail = shop_send_template(to_number, template_key, values, channel)
+    if sent:
+        print(f"sent template {template_key} to {to_number} (24h window closed)")
+    return sent, template_detail or detail, sent
+
+
 def _shop_notify_shop_of_order(reference):
     """Tell the fulfilling shop's staff about an order. Returns how many were told.
 
@@ -23746,6 +24427,15 @@ def shop_notify_staff_of_order(reference, order):
         return 0
     body = _shop_order_notice_for_staff(reference, order)
     payload = _shop_staff_buttons_payload(body, reference)
+    # The template's slots, kept beside the live text so the two cannot drift.
+    template_values = {
+        "reference": reference,
+        "customer": order.get("customer_name") or "-",
+        "items": order.get("item_count") or 0,
+        "fulfilment": ("Delivery to the customer"
+                       if order.get("delivery_method") == "delivery"
+                       else "Collection from your shop"),
+    }
     sent = 0
     for person in staff:
         try:
@@ -23754,8 +24444,9 @@ def shop_notify_staff_of_order(reference, order):
             if not ok:
                 # A button message can be refused where plain text is not, so the
                 # same notice is retried as text rather than dropped.
-                ok, detail = crm_send_whatsapp(person["wa_number"], body,
-                                               order.get("channel") or None)
+                ok, detail, _used = shop_send_notice(
+                    person["wa_number"], body, "staff_new_order", template_values,
+                    order.get("channel") or None)
                 if not ok:
                     print(f"staff notice failed for {person['wa_number']}: {detail}")
             if ok:
@@ -24385,7 +25076,9 @@ def shop_order_stage_notice(reference, order, stage):
         lines.append("")
         lines.append(f"Bring your reference *{reference}* with you when you come.")
         if not order.get("paid"):
-            lines.append("Payment is taken at the shop.")
+            # The live message carries the same buttons as its template, so the
+            # customer is pointed at the button rather than told a bare fact.
+            lines.append("Payment is taken at the shop, or tap *Pay via EcoCash* below.")
     elif stage == "enroute":
         lines.append("🚚 *Order is en route to the given address for delivery*"
                      + (f": {address}" if address else "")
@@ -24393,7 +25086,8 @@ def shop_order_stage_notice(reference, order, stage):
         lines.append("")
         lines.append(f"Quote your reference *{reference}* to the deliverer.")
         if not order.get("paid"):
-            lines.append("Please have the payment ready on delivery.")
+            lines.append("Please have the payment ready on delivery, or tap "
+                         "*Pay via EcoCash* below.")
     elif stage == "delivered":
         lines.append("📦 *Order delivered.*")
         lines.append("")
@@ -24407,6 +25101,9 @@ def shop_order_stage_notice(reference, order, stage):
         if shop and not delivering:
             lines.append(f"📍 {shop}")
         lines.append("")
+        if not order.get("paid"):
+            lines.append("Tap *Pay via EcoCash* below to settle it while you wait.")
+            lines.append("")
         lines.append("We will send you another update as soon as there is a change.")
     else:
         return ""
@@ -25224,6 +25921,14 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if low in ("orders", "my orders", "order history", "maodha angu", "ama-oda ami"):
         return result("orders", [_shop_orders_menu(wa_number)])
 
+    # Staff and the office acknowledge a notification with a button. It is a
+    # courtesy reply, not a command, so it only confirms and leaves the menu
+    # where it is - the assistant must not start a shopping conversation with
+    # someone who is answering a work notification.
+    if low in ("ack", "acknowledge", "acknowledged", "seen", "noted"):
+        return finish(step, [_shop_text(
+            "👍 Noted. Thank you.")], new_history=history)
+
     # Tracking and chasing an order the customer already placed. Both live on the
     # main menu's "Track or cancel an order" promise, so they are reachable from
     # anywhere rather than only from the order list.
@@ -25255,6 +25960,60 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                                           f"{ctx.get('track_reference') or ''}".strip(),
                                 "message": f"The customer used the assistant to chase "
                                            f"{ctx.get('track_reference') or 'their order'}."}])
+
+    # Paying from a notification. A template or notice button carries the
+    # reference because a tap restores no conversation context, so the order has
+    # to be named in the id itself - a bare "paynow" would arrive with nothing to
+    # pay against. The customer's own order is looked up, so a reference
+    # belonging to someone else reads exactly like one that does not exist.
+    pay_reference = ""
+    if low.startswith("paynow:") or low.startswith("pay:"):
+        pay_reference = command.split(":", 1)[1].strip().upper()
+
+    if pay_reference:
+        order = shop_order_for(wa_number, pay_reference)
+        if not order:
+            # Deliberately NOT the payment step: the number prompt leads to a
+            # gateway call against the order in context, and there is no order
+            # here. Sending the customer down that path would try to charge for
+            # a reference that does not exist.
+            return result("orders", [
+                _shop_text(f"😕 I could not find order *{pay_reference}* on this "
+                           "number.\n\nPlease check the reference, or ask for a person "
+                           "and we will look it up for you."),
+                _shop_options("What would you like to do?",
+                              [("track", "Track an order"),
+                               ("support_human", "Talk to a human")]),
+            ])
+        if order.get("paid"):
+            return result("track_view", [
+                _shop_text(f"🎉 Order *{order['reference']}* is already paid — "
+                           "thank you!"),
+            ] + _shop_track_view(order, wa_number),
+                new_ctx=dict(ctx, track_reference=order["reference"]))
+        if order.get("cancelled"):
+            return result("orders", [
+                _shop_text(f"Order *{order['reference']}* was cancelled, so there is "
+                           "nothing to pay for it."),
+                _shop_orders_menu(wa_number),
+            ])
+        # An unpriced order has no total to send to the gateway yet.
+        amount = order.get("amount")
+        if not amount:
+            return result("orders", [
+                _shop_text(f"Order *{order['reference']}* has no total yet — our sales "
+                           "team is still pricing it. Tap *Track my order* to see where "
+                           "it has got to, or ask for a person."),
+                _shop_options("What would you like to do?",
+                              [("track", "Track my order"),
+                               ("support_human", "Talk to a human")]),
+            ])
+        # Put the customer on the payment step with the order loaded, so the rest
+        # of the pay flow runs exactly as it does inside a live conversation.
+        phone = str(customer.get("phone") or "").strip() or str(wa_number or "")
+        return result("pay_phone", [_shop_pay_phone_prompt(phone)],
+                      new_ctx=dict(ctx, reference=order["reference"], amount=amount,
+                                   phone=phone))
 
     # A reference the customer typed or pasted back into the chat while tracking,
     # or a track choice from the list.
@@ -25901,6 +26660,13 @@ def shop_payment_update(reference, status, poll_url=None, amount=None, paid=Fals
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
+            # The previous paid state is read first, so the HQ notice fires once
+            # when an order first becomes paid rather than on every later payment
+            # status write (a poll, a cancellation, a re-record).
+            cursor.execute("SELECT paid_at FROM shop_orders WHERE reference = %s",
+                           (reference,))
+            before = cursor.fetchone()
+            already_paid = bool(before and before[0] is not None)
             cursor.execute("""
                 UPDATE shop_orders
                 SET payment_status = %s,
@@ -25911,10 +26677,20 @@ def shop_payment_update(reference, status, poll_url=None, amount=None, paid=Fals
                 WHERE reference = %s
             """, (status, method, poll_url, amount, paid, reference))
             connection.commit()
-        return True
     except Exception as e:
         print(f"payment update error: {e}")
         return False
+
+    # Headquarters is told once, when an order first becomes paid. Guarded so a
+    # notification failing can never report the payment itself as unsuccessful.
+    if paid and not already_paid:
+        try:
+            order = order_detail(reference)
+            if order:
+                shop_notify_hq_of_payment(reference, order, amount=amount, method=method)
+        except Exception as e:
+            print(f"HQ payment notify error for {reference}: {e}")
+    return True
 
 
 def shop_order_payment(reference):
@@ -26394,7 +27170,7 @@ def shop_order_stage_set(reference, stage, user=None, notify=True):
         fresh = order_detail(reference)
         notice = shop_order_stage_notice(reference, fresh, stage) if fresh else ""
         if notice:
-            sent = shop_send_whatsapp_reference(reference, notice)
+            sent = shop_send_stage_notice(reference, stage, fresh, notice)
             if not sent:
                 # The stage is saved either way: the update is real business
                 # state, and a customer who has not opted in on WhatsApp simply
@@ -26696,6 +27472,11 @@ def crm_escalate_chat(wa_number, reason, channel=None, display_name=None):
     raised and pushed to staff devices; whatever the customer sends next is
     still answered, so waiting for a person never means being ignored.
     """
+    # The name is resolved here rather than left to each caller: the WhatsApp
+    # profile name is what tells the sales agent who is waiting, and a caller
+    # that omits it would otherwise send them a bare phone number. An explicit
+    # name still wins, because a caller may know better than the stored one.
+    display_name = (display_name or "").strip() or crm_best_display_name(wa_number)
     crm_record_message(wa_number, "inbound", "system", reason, "system",
                        display_name=display_name, company_reg=COMPANY_SYSTEM_PREFIX,
                        escalate=True, reason=reason, channel=channel)
@@ -26714,6 +27495,13 @@ def crm_escalate_chat(wa_number, reason, channel=None, display_name=None):
     except Exception as e:
         print(f"CRM escalate error: {e}")
     _push_alert_unattended(wa_number, reason, display_name)
+    # The sales agent is told on WhatsApp as well, so a customer asking for a
+    # person still reaches someone when nobody is watching the inbox. Guarded, so
+    # a messaging failure cannot undo the escalation that was just recorded.
+    try:
+        shop_notify_agent_of_handover(wa_number, reason, display_name, channel)
+    except Exception as e:
+        print(f"agent handover notify error: {e}")
 
 
 def _push_alert_unattended(wa_number, reason, display_name=None):
@@ -26867,6 +27655,25 @@ def shop_send_whatsapp(wa_number, messages, nav, channel=None, staff=False, lang
     if not payloads and not readable:
         return False
 
+    # A product picture is sent as a message of its own, before the prompt that
+    # carries the choices, because a WhatsApp image and its caption cannot hold
+    # reply buttons. A picture that cannot be uploaded is simply left out: an
+    # illustration is never worth losing the prompt over.
+    for message in messages or []:
+        image_path = (message or {}).get("image")
+        if not image_path:
+            continue
+        try:
+            image_payload = product_image_payload(image_path, _shop_image_caption(message))
+        except Exception as e:
+            print(f"product image skipped: {e}")
+            image_payload = None
+        if not image_payload:
+            continue
+        sent_image, image_detail = crm_send_whatsapp_payload(wa_number, image_payload, channel)
+        if not sent_image:
+            print(f"product image send failed: {image_detail}")
+
     kind = "text"
     ok = True
     for payload in payloads:
@@ -26918,7 +27725,8 @@ def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=
     if wants_human:
         _crm_reply(sender_id, "Of course — I am connecting you with a member of our sales team. "
                               "Someone will reply here shortly. 🙏", display_phone_number)
-        crm_escalate_chat(sender_id, "Customer requested a human agent", display_phone_number)
+        crm_escalate_chat(sender_id, "Customer requested a human agent", display_phone_number,
+                          display_name=(profile_name or "").strip() or None)
         return
 
     actions = shop_webhook_turn(sender_id, display_phone_number, message, staff=False,
@@ -26926,7 +27734,8 @@ def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=
     for action in actions:
         if action.get("type") == "escalate":
             crm_escalate_chat(sender_id, action.get("reason") or "Customer enquiry",
-                              display_phone_number)
+                              display_phone_number,
+                              display_name=(profile_name or "").strip() or None)
 
 
 def _safe_scalar(query, params=None, default=0):
@@ -28125,6 +28934,7 @@ def crm_catalog():
     catalog = _shop_catalog()
     names = catalog.get("names") or {}
     summaries = catalog.get("summaries") or {}
+    images = catalog.get("images") or {}
     rows = []
 
     for entry in shop_all_products():
@@ -28143,6 +28953,8 @@ def crm_catalog():
             "priced": bool(sizes) and all(item["price"] is not None for item in sizes),
             "custom": entry["custom"],
             "incomplete": False,
+            "image_path": images.get(entry["id"]) or "",
+            "image_url": product_image_public_url(images.get(entry["id"])),
         })
 
     # Products added here that cannot be sold yet: no name, or no pack sizes.
@@ -28165,6 +28977,8 @@ def crm_catalog():
             "priced": False,
             "custom": True,
             "incomplete": True,
+            "image_path": images.get(product["id"]) or "",
+            "image_url": product_image_public_url(images.get(product["id"])),
         })
     return rows
 
@@ -28185,6 +28999,11 @@ def catalog_limits():
         "product_count": len(shop_all_products()),
         # Shown in the editor so the figure is explainable rather than magic.
         "body_limit": WA_BODY_LIMIT,
+        # The picture editor refuses anything else up front, so the portal can
+        # name the same limits rather than only reporting the refusal.
+        "image_extensions": sorted(PRODUCT_IMAGE_EXTENSIONS),
+        "image_max_bytes": PRODUCT_IMAGE_MAX_BYTES,
+        "image_max_mb": PRODUCT_IMAGE_MAX_BYTES // (1024 * 1024),
     }
 
 def _clean_text(value, limit, field):
@@ -28342,10 +29161,14 @@ def crm_delete_product(product_id, user=None):
                  or any(product["id"] == product_id
                         for product in (catalog.get("custom") or [])))
         with get_db() as (cursor, connection):
-            cursor.execute("SELECT display_name FROM shop_products WHERE product_id = %s",
-                           (product_id,))
+            cursor.execute("SELECT display_name, image_path FROM shop_products "
+                           "WHERE product_id = %s", (product_id,))
             row = cursor.fetchone()
             name = (row[0] if row and row[0] else product_id)
+            # Captured before the delete so the file can go with the row: the
+            # picture has no other route back into the catalogue once its product
+            # is gone, so leaving it would be an orphan nobody could clean up.
+            stored_image = str(row[1]).strip() if row and len(row) > 1 and row[1] else ""
             if not row and not known:
                 return False, "That product is no longer in the catalogue."
             # The tombstone is written before the delete so an interrupted run
@@ -28364,6 +29187,14 @@ def crm_delete_product(product_id, user=None):
             cursor.execute("DELETE FROM shop_product_sizes WHERE product_id = %s", (product_id,))
             cursor.execute("DELETE FROM shop_products WHERE product_id = %s", (product_id,))
             connection.commit()
+        if stored_image:
+            full = _product_image_absolute_path(stored_image)
+            if full:
+                try:
+                    os.remove(full)
+                except OSError as e:
+                    # The row is gone, so the picture is unreachable either way.
+                    print(f"product image delete error: {e}")
         shop_refresh_catalog()
         return True, ""
     except Exception as e:
@@ -28469,6 +29300,100 @@ def crm_save_product(product_id, display_name=None, summary=None):
     except Exception as e:
         print(f"catalog save error: {e}")
         return False, "The product could not be saved just now."
+
+
+def crm_save_product_image(product_id, upload):
+    """Store a product picture and point the catalogue at it. Returns (path, error).
+
+    The file is written under the app's static folder with a name derived from
+    the product id, so replacing a picture replaces the file rather than leaving
+    the old one behind, and the stored path never has to be guessed at read time.
+    """
+    if not any(product["id"] == product_id for product in shop_all_products()):
+        return "", "That product is no longer in the catalogue."
+    if upload is None or not getattr(upload, "filename", ""):
+        return "", "Choose an image file first."
+    filename = str(upload.filename).strip()
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if extension not in PRODUCT_IMAGE_EXTENSIONS:
+        allowed = ", ".join(sorted(PRODUCT_IMAGE_EXTENSIONS))
+        return "", f"That file type is not supported — use one of: {allowed}."
+    # Read before writing so an oversized upload is refused without touching the
+    # folder, and measure the bytes rather than trusting a Content-Length header.
+    try:
+        data = upload.read()
+    except Exception as e:
+        print(f"product image upload error: {e}")
+        return "", "That file could not be read."
+    if not data:
+        return "", "That file is empty."
+    if len(data) > PRODUCT_IMAGE_MAX_BYTES:
+        limit = PRODUCT_IMAGE_MAX_BYTES // (1024 * 1024)
+        return "", f"Images must be {limit} MB or smaller."
+    # A product id is admin-supplied free text but is also used as a filename, so
+    # it is reduced to characters that cannot climb out of the folder.
+    safe_id = re.sub(r"[^A-Za-z0-9_-]+", "-", str(product_id)).strip("-") or "product"
+    stored = f"{safe_id}.{extension}"
+    folder = os.path.join(app.static_folder, PRODUCT_IMAGE_DIR)
+    try:
+        os.makedirs(folder, exist_ok=True)
+        # The previous picture, whatever extension it used, goes first: a product
+        # that switches from png to jpg would otherwise keep serving the old one.
+        for existing in os.listdir(folder):
+            if os.path.splitext(existing)[0] == safe_id and existing != stored:
+                try:
+                    os.remove(os.path.join(folder, existing))
+                except OSError:
+                    pass
+        with open(os.path.join(folder, stored), "wb") as handle:
+            handle.write(data)
+    except Exception as e:
+        print(f"product image save error: {e}")
+        return "", "That image could not be saved."
+    relative = f"{PRODUCT_IMAGE_DIR}/{stored}".replace(os.sep, "/")
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_products (product_id, image_path, updated_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (product_id) DO UPDATE
+                SET image_path = EXCLUDED.image_path, updated_at = NOW()
+            """, (product_id, relative))
+            connection.commit()
+        shop_refresh_catalog()
+        return relative, ""
+    except Exception as e:
+        print(f"product image save error: {e}")
+        return "", "The image was stored but the catalogue could not be updated."
+
+
+def crm_clear_product_image(product_id):
+    """Remove a product's picture. Returns (ok, error)."""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT image_path FROM shop_products WHERE product_id = %s",
+                           (product_id,))
+            row = cursor.fetchone()
+            stored = str(row[0]).strip() if row and row[0] else ""
+            cursor.execute("UPDATE shop_products SET image_path = NULL, updated_at = NOW() "
+                           "WHERE product_id = %s", (product_id,))
+            connection.commit()
+        if stored:
+            full = _product_image_absolute_path(stored)
+            if full:
+                try:
+                    os.remove(full)
+                except OSError as e:
+                    # The catalogue no longer references it, so a file that will
+                    # not delete is untidy rather than a failure.
+                    print(f"product image delete error: {e}")
+        shop_refresh_catalog()
+        return True, ""
+    except Exception as e:
+        print(f"product image clear error: {e}")
+        return False, "The image could not be removed just now."
 
 
 def crm_save_product_sizes(product_id, sizes):
@@ -28967,6 +29892,42 @@ def crm_product_save_api(product_id):
                     'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
 
 
+@app.route('/api/crm/products/<product_id>/image', methods=['POST'])
+def crm_product_image_save_api(product_id):
+    """Upload a product picture.
+
+    Sent as a form upload rather than as JSON, because the picture is a file.
+    Results return the whole catalogue, like the other product routes, so the
+    editor never has to guess what the save did.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    upload = request.files.get('image')
+    product_name = next((product['name'] for product in crm_catalog()
+                         if product['id'] == product_id), product_id)
+    if request.form.get('clear') in ('1', 'true', 'yes'):
+        ok, message = crm_clear_product_image(product_id)
+        if not ok:
+            return jsonify({'success': False, 'message': message,
+                            'products': crm_catalog(), 'limits': catalog_limits()}), 400
+        log_activity("removed_product_image", "catalogue",
+                     f"Removed the picture for “{product_name}”", target=product_name,
+                     details={"product_id": product_id}, user=user)
+        return jsonify({'success': True, 'products': crm_catalog(),
+                        'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
+    stored, message = crm_save_product_image(product_id, upload)
+    if message:
+        return jsonify({'success': False, 'message': message,
+                        'products': crm_catalog(), 'limits': catalog_limits()}), 400
+    log_activity("changed_product_image", "catalogue",
+                 f"Updated the picture for “{product_name}”", target=product_name,
+                 details={"product_id": product_id, "image_path": stored}, user=user)
+    return jsonify({'success': True, 'products': crm_catalog(), 'image_url':
+                    product_image_public_url(stored),
+                    'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
+
+
 @app.route('/api/crm/products/<product_id>/prices', methods=['POST'])
 def crm_price_save_api(product_id):
     user, error = portal_api_user('crm')
@@ -29423,11 +30384,7 @@ def shop_paynow_callback(reference, data):
         # Same claim as the poll uses, so a callback and a poll cannot both take
         # the goods off the shelf.
         shop_stock_deduct(reference)
-        shop_send_whatsapp_reference(
-            reference,
-            "🎉 *Payment received* — thank you!\n\n"
-            f"Reference *{reference}* is paid and confirmed. "
-            "Our sales team will be in touch about delivery.")
+        shop_send_payment_confirmation(reference)
         # The receipt follows the confirmation so the customer has the itemised
         # record of what they paid for without having to ask for it.
         try:
@@ -29437,6 +30394,82 @@ def shop_paynow_callback(reference, data):
     else:
         shop_payment_update(reference, status or 'pending')
     return True
+
+
+def shop_send_payment_confirmation(reference):
+    """Tell the customer their payment landed, with a template fallback.
+
+    A customer who has just paid is often the one furthest from the 24-hour
+    window, so this is exactly the notice that needs a template behind it.
+    """
+    order = order_detail(reference) or {}
+    delivering = (order.get("delivery_method") or "collection") == "delivery"
+    fulfilment = "the delivery" if delivering else "collection"
+    message = ("🎉 *Payment received* — thank you!\n\n"
+               f"Reference *{reference}* is paid and confirmed. "
+               f"Our sales team will be in touch about {fulfilment}.")
+    number, channel = shop_order_number_and_channel(reference)
+    if not number:
+        return False
+    sent, _detail, used_template = shop_send_notice(
+        number, message, "payment_received_customer",
+        {"reference": reference, "fulfilment": fulfilment}, channel)
+    _record_outbound(reference, message, sent, used_template)
+    return sent
+
+
+def shop_order_number_and_channel(reference):
+    """(wa_number, channel) for an order, or (None, None)."""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT wa_number, channel FROM shop_orders WHERE reference = %s",
+                           (reference,))
+            row = cursor.fetchone()
+        return ((row[0], row[1]) if row and row[0] else (None, None))
+    except Exception as e:
+        print(f"order number lookup error: {e}")
+        return (None, None)
+
+
+def _record_outbound(reference, message, sent, used_template=False):
+    """Record what the customer was told for an order, whatever route it took."""
+    number, channel = shop_order_number_and_channel(reference)
+    if not number:
+        return
+    crm_record_message(number, "outbound", "system", message,
+                       "template" if used_template else "text",
+                       company_reg=COMPANY_SYSTEM_PREFIX, channel=channel,
+                       delivered=sent, is_staff=str(channel or "").endswith("staff"))
+
+
+def shop_send_order_confirmation(reference, customer_name=None, amount=None):
+    """Tell the customer their order was received, with a template fallback.
+
+    An unpriced order has its own template, because a slot for an amount that
+    does not exist would print whatever filled it in the wrong place.
+    """
+    number, channel = shop_order_number_and_channel(reference)
+    if not number:
+        return False
+    name = " ".join(str(customer_name or "").split()).strip() or "there"
+    if amount is None:
+        message = ("✅ *Order placed*\n\n"
+                   f"Thank you {name}! Your reference is *{reference}*.\n"
+                   "Our sales team will confirm the prices and the total on quotation.")
+        key, values = "order_confirmation_unpriced", {"customer": name,
+                                                     "reference": reference}
+    else:
+        formatted = f"{PAYNOW_CURRENCY} {float(amount):.2f}"
+        message = ("✅ *Order placed*\n\n"
+                   f"Thank you {name}! Your reference is *{reference}*.\n"
+                   f"Amount due: *{formatted}*")
+        key, values = ("order_confirmation",
+                       {"customer": name, "reference": reference, "amount": formatted})
+    sent, _detail, used_template = shop_send_notice(
+        number, message, key, values, channel)
+    _record_outbound(reference, message, sent, used_template)
+    return sent
 
 
 def shop_send_whatsapp_reference(reference, message):
@@ -29452,6 +30485,62 @@ def shop_send_whatsapp_reference(reference, message):
     crm_record_message(row[0], "outbound", "system", message, "text",
                        company_reg=COMPANY_SYSTEM_PREFIX, channel=row[1], delivered=sent,
                        is_staff=str(row[1] or "").endswith("staff"))
+    return sent
+
+
+def _stage_template_for(stage, order):
+    """Which template carries this stage, and with what values.
+
+    A stage whose line needs a shop or an address has a fallback for when the
+    order does not carry one, because a template's slots are positional and an
+    empty one would put the reference where the shop belongs.
+    """
+    shop = order.get("shop") or ""
+    address = (order.get("address") or "").strip()
+    if stage == "ready":
+        return ("order_ready_collection", {"reference": order.get("reference"),
+                                           "shop": shop or "-"})
+    if stage == "enroute":
+        if address:
+            return ("order_enroute", {"reference": order.get("reference"),
+                                      "address": address})
+        return ("order_enroute_no_address", {"reference": order.get("reference")})
+    if stage == "delivered":
+        return ("order_delivered", {"reference": order.get("reference")})
+    if stage == "collected":
+        return ("order_collected", {"reference": order.get("reference")})
+    if stage == "preparing":
+        if shop and not order.get("delivery"):
+            return ("order_being_processed", {"reference": order.get("reference"),
+                                              "shop": shop})
+        return ("order_being_processed_noshop", {"reference": order.get("reference")})
+    return ("order_cancelled", {"reference": order.get("reference")})
+
+
+def shop_send_stage_notice(reference, stage, order, message):
+    """Send a stage update, falling back to its template outside the 24h window.
+
+    The customer is the one person a stage change must reach, and a customer who
+    has not written in for a day is exactly who the window locks out — so this is
+    the notification the fallback matters most for.
+    """
+    ensure_shop_tables()
+    with get_db() as (cursor, connection):
+        cursor.execute("SELECT wa_number, channel FROM shop_orders WHERE reference = %s",
+                       (reference,))
+        row = cursor.fetchone()
+    if not row or not row[0]:
+        return False
+    key, values = _stage_template_for(stage, order or {})
+    values.setdefault("reference", reference)
+    # The buttons go on the ordinary message as well, so the customer sees the
+    # same choices whether or not the window has closed.
+    sent, _detail, used_template = shop_send_notice(
+        row[0], message, key, values, row[1])
+    crm_record_message(row[0], "outbound", "system", message,
+                       "template" if used_template else "text",
+                       company_reg=COMPANY_SYSTEM_PREFIX, channel=row[1],
+                       delivered=sent, is_staff=str(row[1] or "").endswith("staff"))
     return sent
 
 

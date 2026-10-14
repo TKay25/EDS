@@ -787,6 +787,36 @@
                         <textarea class="ps-input crm-product-summary" rows="2"
                                   data-role="summary">{{ product.summary }}</textarea>
                     </label>
+                    {# The picture is sent to the customer with the product prompt, so it
+                       is edited beside the description rather than in a separate screen. #}
+                    <div class="crm-product-image" data-role="imagewrap"
+                         data-image-path="{{ product.image_path }}">
+                        <div class="crm-product-image-preview" data-role="imagepreview">
+                            {% if product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                            {% else %}
+                            <span class="crm-product-image-empty">
+                                <i class="bi bi-image"></i> No picture yet
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="crm-product-image-tools">
+                            <label class="ps-btn ps-btn-ghost ps-btn-sm crm-product-image-pick">
+                                <i class="bi bi-upload"></i> Choose picture
+                                <input type="file" data-role="imagefile" hidden
+                                       accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+                            </label>
+                            <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
+                                    data-role="imageclear" {% if not product.image_path %}hidden{% endif %}>
+                                <i class="bi bi-x-lg"></i> Remove
+                            </button>
+                        </div>
+                        <p class="ps-muted crm-product-image-hint">
+                            PNG, JPG or WEBP, up to {{ limits.image_max_mb }} MB. Shown to the
+                            customer when they open this product.
+                        </p>
+                        <span class="crm-save-note" data-role="imagenote"></span>
+                    </div>
                     <div class="crm-price-grid">
                         {% for size in product.sizes %}
                         <label class="crm-price">
