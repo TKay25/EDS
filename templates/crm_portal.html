@@ -223,8 +223,70 @@
                             <i class="bi bi-send-fill"></i> Send
                         </button>
                     </div>
+                    <div class="crm-composer-tools">
+                        <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmBuildOrder"
+                                data-order-action="build-order">
+                            <i class="bi bi-cart-plus"></i> Build an order
+                        </button>
+                    </div>
                     <div class="crm-composer-note" id="crmComposerNote"></div>
                 </form>
+
+                {# An order built here is sent to the customer to accept or decline,
+                   so it is a draft until they answer. The picker is filled from the
+                   same catalogue the assistant sells from, so an agent cannot offer
+                   a product or a pack size the chatbot would refuse. #}
+                <div class="crm-order-modal" id="crmBuildOrderModal" hidden>
+                    <div class="crm-order-card" role="dialog" aria-modal="true"
+                         aria-labelledby="crmBuildOrderTitle">
+                        <div class="crm-order-head">
+                            <h4 id="crmBuildOrderTitle">Build an order</h4>
+                            <button class="crm-order-close" type="button"
+                                    data-order-action="close-build" aria-label="Close">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div class="crm-order-body">
+                            <div class="crm-build-row">
+                                <select id="crmBuildProduct" class="ps-input"></select>
+                                <select id="crmBuildSize" class="ps-input"></select>
+                                <input class="ps-input crm-build-qty" type="number" min="1" value="1"
+                                       id="crmBuildQty" aria-label="Quantity">
+                                <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
+                                        id="crmBuildAdd" data-order-action="build-add">
+                                    <i class="bi bi-plus-lg"></i> Add
+                                </button>
+                            </div>
+                            <ul class="crm-build-lines" id="crmBuildLines"></ul>
+                            <div class="crm-build-fields">
+                                <label for="crmBuildFulfil">How they will receive it</label>
+                                <select id="crmBuildFulfil" class="ps-input">
+                                    <option value="collection">Collect from the shop</option>
+                                    <option value="delivery">Deliver to their address</option>
+                                </select>
+                                <label for="crmBuildShop">Shop</label>
+                                <select id="crmBuildShop" class="ps-input"></select>
+                                <label for="crmBuildAddress">Delivery address</label>
+                                <input class="ps-input" type="text" id="crmBuildAddress"
+                                       placeholder="Only needed for a delivery">
+                                <label for="crmBuildNote">Note to the customer</label>
+                                <input class="ps-input" type="text" id="crmBuildNote"
+                                       placeholder="Optional — shown on the confirmation">
+                            </div>
+                            <p class="crm-order-settle-hint">
+                                The customer is sent this order to confirm or decline. It stays a
+                                draft until they answer, so it cannot be picked or paid for yet.
+                            </p>
+                        </div>
+                        <p class="crm-od-status" id="crmBuildNote-status"></p>
+                        <div class="crm-order-actions">
+                            <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                                    id="crmBuildSend" data-order-action="build-send">
+                                <i class="bi bi-send"></i> Send for confirmation
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -371,6 +433,8 @@
                             <th>Customer</th>
                             <th class="crm-col-num">Items</th>
                             <th>Payment</th>
+                            <th>Status</th>
+                            <th>Source</th>
                             <th class="crm-col-num">Amount</th>
                             <th>Fulfilment</th>
                             <th class="crm-col-date">Placed</th>
@@ -407,6 +471,26 @@
                 </div>
                 <div class="crm-order-body" id="crmOrderBody"></div>
                 <p class="crm-od-status" id="crmOrderNote"></p>
+                {# Where the order has got to, in the business's own words. Only
+                   the stages that match the order's fulfilment are offered, so a
+                   delivery cannot be marked ready for collection at a shop. #}
+                <div class="crm-order-settle crm-order-stage" id="crmOrderStageBlock">
+                    <label for="crmOrderStage">Order status</label>
+                    <div class="crm-order-settle-row">
+                        <select id="crmOrderStage" class="ps-input"></select>
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                                id="crmOrderStageSave" data-order-action="set-stage">
+                            <i class="bi bi-signpost-split"></i> Update status
+                        </button>
+                    </div>
+                    <label class="crm-order-notify" for="crmOrderStageNotify">
+                        <input type="checkbox" id="crmOrderStageNotify" checked>
+                        Notify the customer on WhatsApp
+                    </label>
+                    <p class="crm-order-settle-hint" id="crmOrderStageHint">
+                        The customer is sent a message describing what this status means for them.
+                    </p>
+                </div>
                 {# EcoCash settles itself through the gateway, but cash at the counter
                    and cash on the doorstep are taken by a person, so the sales team
                    says which one happened. Without it the record cannot tell the two

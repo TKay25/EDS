@@ -323,6 +323,24 @@
             '<i class="bi ' + (paid ? 'bi-check2' : 'bi-clock') + '"></i> ' +
             escapeHtml(order.payment_label || (paid ? 'Paid' : 'Will pay')) +
             '</span>';
+        // The stage the sales team last set, so a row says where the order has
+        // got to without having to open it. An unmoved order shows nothing
+        // rather than a stage nobody set.
+        var stageCell = order.stage_label
+          ? '<span class="crm-stage is-' + escapeHtml(order.stage || 'set') + '">' +
+            '<i class="bi bi-signpost-split"></i> ' + escapeHtml(order.stage_label) + '</span>'
+          : '<span class="crm-sub">—</span>';
+        // Who placed the order. An agent order still waiting on the customer is
+        // called out, because it is not work to act on yet and would otherwise
+        // read like a customer order.
+        var sourceCell = order.draft
+          ? '<span class="crm-origin is-draft"><i class="bi bi-hourglass-split"></i> ' +
+            'Agent · awaiting</span>'
+          : (order.agent_created
+              ? '<span class="crm-origin is-agent"><i class="bi bi-person-badge"></i> ' +
+                'Agent</span>'
+              : '<span class="crm-origin is-customer"><i class="bi bi-person"></i> ' +
+                'Customer</span>');
         var actionsCell = cancelled
           ? '<span class="crm-row-note">Cancelled by the customer' + '</span>'
           : '<div class="crm-row-actions">' +
@@ -343,6 +361,8 @@
           '<td><span class="crm-who">' + escapeHtml(who) + '</span>' + contact + '</td>' +
           '<td class="crm-col-num">' + order.items + '</td>' +
           '<td>' + paymentCell + '</td>' +
+          '<td>' + stageCell + '</td>' +
+          '<td>' + sourceCell + '</td>' +
           '<td class="crm-col-num crm-amount">' +
           (order.amount === null || order.amount === undefined
             ? '<span class="crm-amount-unset">Not priced</span>'
@@ -452,6 +472,20 @@
             (order.delivery_method === 'delivery' ? 'Delivery' : 'Collection') + '</dd></div>' +
           '<div><dt>Delivery address</dt><dd>' +
             (order.address ? escapeHtml(order.address) : '—') + '</dd></div>' +
+          '<div><dt>Status</dt><dd>' +
+            (order.stage_label ? escapeHtml(order.stage_label) : 'Not set') +
+            (order.stage_at ? '<span class="crm-sub">updated ' + escapeHtml(order.stage_at) +
+                              (order.stage_by ? ' by ' + escapeHtml(order.stage_by) : '') +
+                              '</span>' : '') +
+          '</dd></div>' +
+          '<div><dt>Created by</dt><dd>' +
+            (order.agent_created ? 'Agent' : 'Customer') +
+            (order.created_by_name ? '<span class="crm-sub">' +
+                                     escapeHtml(order.created_by_name) + '</span>' : '') +
+            (order.draft ? '<span class="crm-sub">Awaiting the customer\'s confirmation</span>' : '') +
+            (order.declined_at ? '<span class="crm-sub">Declined ' +
+                                 escapeHtml(order.declined_at) + '</span>' : '') +
+          '</dd></div>' +
         '</dl>' +
         '<div class="crm-table-wrap"><table class="crm-table crm-od-table">' +
           '<thead><tr><th>Item</th><th class="crm-od-qty">Qty</th>' +
@@ -471,7 +505,36 @@
           'enter their EcoCash PIN. Checking automatically…</p>' : '');
 
       renderPaymentHistory(history);
+      renderStagePicker(order);
       orderTitle.textContent = 'Order ' + order.reference;
+    }
+
+    /* The stage picker offers only what this order's fulfilment allows, so a
+       delivery is never offered "ready for collection at the shop". The labels
+       come from the server so the two cannot drift. */
+    function renderStagePicker(order) {
+      var select = document.getElementById('crmOrderStage');
+      var notify = document.getElementById('crmOrderStageNotify');
+      var hint = document.getElementById('crmOrderStageHint');
+      if (!select) return;
+      var current = order.stage || '';
+      var stages = order.stages || [];
+      var markup = ['<option value="">No status set</option>'];
+      stages.forEach(function (stage) {
+        markup.push('<option value="' + escapeHtml(stage.value) + '"' +
+          (stage.value === current ? ' selected' : '') + '>' +
+          escapeHtml(stage.label) + '</option>');
+      });
+      select.innerHTML = markup.join('');
+      select.disabled = !!order.cancelled;
+      var saveBtn = document.getElementById('crmOrderStageSave');
+      if (saveBtn) saveBtn.disabled = !!order.cancelled;
+      if (notify) notify.disabled = !!order.cancelled;
+      if (hint) {
+        hint.textContent = order.cancelled
+          ? 'This order is cancelled, so its status cannot be changed.'
+          : 'The customer is sent a WhatsApp message describing what this status means for them.';
+      }
     }
 
     function refreshOrderActions(order, payment) {
@@ -567,6 +630,172 @@
       });
     }
 
+    /* ------------------------------------------------------ build an order --
+       An order an agent builds here is sent to the customer to accept or decline.
+       The catalogue is read from the same endpoint the products tab uses, so a
+       product or pack size the assistant would refuse cannot be offered. */
+    var buildModal = document.getElementById('crmBuildOrderModal');
+    var buildProductEl = document.getElementById('crmBuildProduct');
+    var buildSizeEl = document.getElementById('crmBuildSize');
+    var buildQtyEl = document.getElementById('crmBuildQty');
+    var buildLinesEl = document.getElementById('crmBuildLines');
+    var buildFulfilEl = document.getElementById('crmBuildFulfil');
+    var buildShopEl = document.getElementById('crmBuildShop');
+    var buildAddressEl = document.getElementById('crmBuildAddress');
+    var buildNoteEl = document.getElementById('crmBuildNote');
+    var buildSendBtn = document.getElementById('crmBuildSend');
+    var buildLines = [];
+    var buildCatalog = null;
+    var buildShops = [];
+
+    function loadBuildCatalog() {
+      if (buildCatalog) return Promise.resolve(buildCatalog);
+      return fetch('/api/crm/catalog')
+        .then(function (response) { return response.json(); })
+        .then(function (result) {
+          buildCatalog = (result && result.products) || [];
+          return buildCatalog;
+        });
+    }
+
+    function loadBuildShops() {
+      return fetch('/api/crm/shops')
+        .then(function (response) { return response.json(); })
+        .then(function (result) {
+          buildShops = (result && result.shops) || [];
+          if (!buildShopEl) return buildShops;
+          buildShopEl.innerHTML = ['<option value="">No particular shop</option>']
+            .concat(buildShops.map(function (shop) {
+              return '<option value="' + escapeHtml(shop.id) + '">' +
+                escapeHtml(shop.name) + '</option>';
+            })).join('');
+          return buildShops;
+        })
+        .catch(function () { return []; });
+    }
+
+    function renderBuildSizes() {
+      if (!buildSizeEl || !buildProductEl) return;
+      var product = buildCatalog[Number(buildProductEl.value)] || { sizes: [] };
+      buildSizeEl.innerHTML = (product.sizes || []).map(function (size) {
+        return '<option value="' + escapeHtml(size.size) + '">' + escapeHtml(size.size) +
+          (size.price === null || size.price === undefined
+            ? ' — price on request' : ' — ' + money(size.price)) + '</option>';
+      }).join('');
+    }
+
+    function renderBuildLines() {
+      if (!buildLinesEl) return;
+      if (!buildLines.length) {
+        buildLinesEl.innerHTML = '<li class="crm-build-empty">No products added yet.</li>';
+      } else {
+        buildLinesEl.innerHTML = buildLines.map(function (line, index) {
+          return '<li><span>' + escapeHtml(line.name) + ' (' + escapeHtml(line.size) + ')' +
+            ' × ' + line.qty + '</span>' +
+            '<button class="crm-mini-btn" type="button" data-build-remove="' + index + '">' +
+            '<i class="bi bi-x-lg"></i></button></li>';
+        }).join('');
+      }
+      Array.prototype.forEach.call(
+        buildLinesEl.querySelectorAll('[data-build-remove]'), function (button) {
+          button.addEventListener('click', function () {
+            buildLines.splice(Number(button.getAttribute('data-build-remove')), 1);
+            renderBuildLines();
+          });
+        });
+    }
+
+    function openBuildOrder() {
+      if (!buildModal) return;
+      buildLines = [];
+      renderBuildLines();
+      buildModal.hidden = false;
+      loadBuildCatalog().then(function () {
+        if (!buildProductEl) return;
+        buildProductEl.innerHTML = buildCatalog.map(function (product, index) {
+          return '<option value="' + index + '">' + escapeHtml(product.name) + '</option>';
+        }).join('');
+        renderBuildSizes();
+      });
+      loadBuildShops();
+    }
+
+    function addBuildLine() {
+      if (!buildProductEl || !buildSizeEl) return;
+      var index = Number(buildProductEl.value);
+      var product = buildCatalog[index];
+      if (!product) return;
+      var size = buildSizeEl.value;
+      var qty = parseInt(buildQtyEl ? buildQtyEl.value : '1', 10) || 1;
+      if (qty < 1) qty = 1;
+      // The same product in the same pack size is one line, so adding it twice
+      // raises the quantity rather than producing two lines to keep in step.
+      var existing = buildLines.filter(function (line) {
+        return line.product === index && line.size === size;
+      })[0];
+      if (existing) {
+        existing.qty += qty;
+      } else {
+        buildLines.push({ product: index, name: product.name, size: size, qty: qty });
+      }
+      if (buildQtyEl) buildQtyEl.value = '1';
+      renderBuildLines();
+    }
+
+    function sendBuildOrder() {
+      if (!buildLines.length) {
+        window.crmToast && window.crmToast('Add at least one product first.', 'error');
+        return;
+      }
+      var delivering = buildFulfilEl && buildFulfilEl.value === 'delivery';
+      var payload = {
+        lines: buildLines.map(function (line) {
+          return { product: line.product, size: line.size, qty: line.qty };
+        }),
+        delivery_method: delivering ? 'delivery' : 'collection',
+        shop: buildShopEl ? buildShopEl.value : '',
+        address: delivering && buildAddressEl ? buildAddressEl.value : '',
+        note: buildNoteEl ? buildNoteEl.value : ''
+      };
+      buildSendBtn.disabled = true;
+      postJson('/api/crm/chats/' + encodeURIComponent(activeId) + '/order', payload)
+        .then(function (result) {
+          buildSendBtn.disabled = false;
+          window.crmToast && window.crmToast(
+            result.message || (result.success ? 'Order sent for confirmation.' : 'Could not create the order.'),
+            result.success ? 'success' : 'error');
+          if (result.success) {
+            if (buildModal) buildModal.hidden = true;
+            if (result.orders) { renderRecent(result.orders); renderTable(result.orders); }
+            loadMessages();
+          }
+        })
+        .catch(function () {
+          buildSendBtn.disabled = false;
+          window.crmToast && window.crmToast('Could not create the order.', 'error');
+        });
+    }
+
+    if (buildModal) {
+      buildModal.addEventListener('change', function (event) {
+        if (event.target === buildProductEl) renderBuildSizes();
+      });
+      buildModal.addEventListener('click', function (event) {
+        var action = event.target.closest('[data-order-action]');
+        if (action) {
+          var kind = action.getAttribute('data-order-action');
+          if (kind === 'close-build') { buildModal.hidden = true; return; }
+          if (kind === 'build-add') { addBuildLine(); return; }
+          if (kind === 'build-send') { sendBuildOrder(); return; }
+        }
+        if (event.target === buildModal) buildModal.hidden = true;
+      });
+      var buildOrderBtn = document.getElementById('crmBuildOrder');
+      if (buildOrderBtn) {
+        buildOrderBtn.addEventListener('click', function () { openBuildOrder(); });
+      }
+    }
+
     if (orderModal) {
       orderModal.addEventListener('click', function (event) {
         var action = event.target.closest('[data-order-action]');
@@ -613,6 +842,33 @@
               .catch(function () {
                 action.disabled = false;
                 window.crmToast && window.crmToast('Could not request payment.', 'error');
+              });
+            return;
+          }
+          if (kind === 'set-stage') {
+            var stageEl = document.getElementById('crmOrderStage');
+            var notifyEl = document.getElementById('crmOrderStageNotify');
+            action.disabled = true;
+            postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/stage?' + query(),
+                     { stage: stageEl ? stageEl.value : '',
+                       notify: notifyEl ? notifyEl.checked : true })
+              .then(function (result) {
+                action.disabled = false;
+                window.crmToast && window.crmToast(
+                  result.message || (result.success ? 'Order status updated.'
+                                                    : 'Could not update the status.'),
+                  result.success ? 'success' : 'error');
+                if (result.success) {
+                  renderStats(result.analytics || {});
+                  renderTop((result.analytics || {}).top_items);
+                  renderRecent(result.orders);
+                  renderTable(result.orders);
+                  openOrder(orderRef);
+                }
+              })
+              .catch(function () {
+                action.disabled = false;
+                window.crmToast && window.crmToast('Could not update the status.', 'error');
               });
             return;
           }

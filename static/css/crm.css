@@ -2013,6 +2013,111 @@ select.crm-select:focus {
   opacity: 0.85;
 }
 
+/* The order status control, and the "Notify the customer" opt-out beside it.
+   The stage is a separate control from settling the payment because the two
+   move independently: an order can be ready before it is paid. */
+.crm-order-stage { padding-bottom: 12px; }
+.crm-order-notify {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ps-text-soft);
+  cursor: pointer;
+}
+.crm-order-notify input { margin: 0; cursor: pointer; }
+
+/* The stage a row is at, shown in the orders table. Tone carries the meaning:
+   ready and en route are things the customer is waiting on, delivered and
+   collected are finished. */
+.crm-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+}
+.crm-stage.is-ready { background: rgba(245, 158, 11, 0.16); color: #b45309; }
+.crm-stage.is-enroute { background: rgba(59, 130, 246, 0.14); color: #1d4ed8; }
+.crm-stage.is-delivered,
+.crm-stage.is-collected { background: rgba(16, 185, 129, 0.14); color: #047857; }
+.crm-stage.is-preparing { background: rgba(100, 116, 139, 0.12); color: #475569; }
+
+/* Who placed the order. An agent order still waiting on the customer is called
+   out because it is not work to act on yet. */
+.crm-origin {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.crm-origin.is-customer { background: rgba(100, 116, 139, 0.12); color: #475569; }
+.crm-origin.is-agent { background: rgba(79, 70, 229, 0.14); color: #4338ca; }
+.crm-origin.is-draft { background: rgba(245, 158, 11, 0.16); color: #b45309; }
+
+/* The composer's extra row, holding the "Build an order" action. */
+.crm-composer-tools {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* The order composer. Laid out as plain rows so it stays usable in the narrow
+   chat column the portal switches to on a smaller screen. */
+.crm-build-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.crm-build-row select { flex: 1 1 150px; min-width: 0; min-height: 34px; }
+.crm-build-qty { flex: 0 0 78px; min-width: 0; min-height: 34px; }
+.crm-build-lines {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.crm-build-lines li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ps-line);
+  font-size: 13px;
+}
+.crm-build-empty {
+  color: var(--ps-text-faint, var(--ps-text-soft));
+  font-size: 12.5px;
+  justify-content: flex-start;
+  border-bottom: 0;
+}
+.crm-build-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+}
+.crm-build-fields > label {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ps-text-soft);
+}
+.crm-build-fields select,
+.crm-build-fields input { min-height: 34px; }
+
 /* The order's own payment history. Events are listed oldest first because that
    is the order they happened in, and a dispute is read forwards. */
 .crm-paylog-block {

@@ -21654,6 +21654,35 @@ def ensure_shop_tables():
                 created_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        # Where the order has got to, in the business's own words, set by staff
+        # from the portal. Kept beside `status` rather than replacing it: the
+        # machine vocabulary the rest of the system reasons about is untouched.
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS stage VARCHAR(24);")
+        # When the stage last moved, so the customer can be told how fresh the
+        # update is and staff can see which orders have gone quiet.
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS stage_at TIMESTAMP;")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS stage_by VARCHAR(200);")
+        # Who placed the order. 'customer' is one the customer built in the
+        # assistant; 'agent' is one a member of staff built in the portal on their
+        # behalf. Kept as its own column rather than inferred from `channel`,
+        # because the channel records where the conversation happened and an agent
+        # order is sent over the same WhatsApp channel a customer order arrives on.
+        cursor.execute("""
+            ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS created_by VARCHAR(20)
+            DEFAULT 'customer';
+        """)
+        # Set only for an agent order, until the customer accepts or declines it.
+        # A draft is not a real order: it must not be picked, packed or paid for
+        # while nobody has agreed to it.
+        cursor.execute("""
+            ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS draft BOOLEAN DEFAULT FALSE;
+        """)
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMP;")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS declined_at TIMESTAMP;")
+        # The member of staff who built it, and the note they sent with it, so the
+        # customer's confirmation carries the same context the agent intended.
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(200);")
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS agent_note TEXT;")
         connection.commit()
     _shop_tables_ready = True
 
@@ -21770,7 +21799,7 @@ SHOP_TRANSLATIONS = {
         "Our sales team will confirm the prices and the total on quotation.":
             "Boka redu rekutengesa richasimbisa mitengo nezvose paunokumbira.",
         # Order tracking and cancellation.
-        "📦 *My orders*": "📦 *Maodha angu*",
+        "📦 *Track my order*": "📦 *Tevedzera odha yako*",
         "You have not placed an order yet.": "Hausati waisa odha.",
         "Choose an order below to cancel it. Cancelling cannot be undone.":
             "Sarudza odha pazasi kuti uibvise. Kubvisa hakugone kudzoserwa.",
@@ -22075,7 +22104,7 @@ SHOP_TRANSLATIONS = {
         "Our sales team will confirm the prices and the total on quotation.":
             "Iqembu lethu lezokuthengisa lizaqinisekisa intengo lakonke nxa ucela.",
         # Order tracking and cancellation.
-        "📦 *My orders*": "📦 *Ama-oda ami*",
+        "📦 *Track my order*": "📦 *Landela i-oda lakho*",
         "You have not placed an order yet.": "Kawukafaki i-oda okwamanje.",
         "Choose an order below to cancel it. Cancelling cannot be undone.":
             "Khetha i-oda ngezansi ukuze uyikhansela. Ukukhansela akubuyiselwa.",
@@ -22345,14 +22374,18 @@ SHOP_OPTION_TRANSLATIONS = {
         "Pay later instead": "Bhadhara gare gare",
         "I have authorised it": "Ndabvumidza kubhadhara",
         "Empty the cart": "Bvisa zvose mungoro",
-        "My orders": "Maodha angu",
         "Yes, cancel it": "Hongu, bvisa odha",
         "Keep it": "Sirasiya odha",
         "Track my order": "Tevedzera odha",
+        "All my orders": "Maodha angu ose",
         "Send a reminder about it": "Yeuchidza nezvayo",
         "Send reminder about it": "Yeuchidza nezvayo",
         "Track another order": "Tevedzera imwe odha",
         "Remind them again": "Vayeuchidze zvakare",
+        "Confirm agent orders": "Simbisa odha dzemumiririri",
+        "Confirm this order": "Simbisa odha iyi",
+        "Decline it": "Ramba",
+        "All my orders": "Maodha angu ose",
     },
     "nd": {
         "Shop": "Thenga",
@@ -22386,14 +22419,18 @@ SHOP_OPTION_TRANSLATIONS = {
         "Pay later instead": "Bhadala kamuva",
         "I have authorised it": "Sengikuvumile",
         "Empty the cart": "Khupha konke enqoleni",
-        "My orders": "Ama-oda ami",
         "Yes, cancel it": "Yebo, khansela i-oda",
         "Keep it": "Yigcine i-oda",
         "Track my order": "Landela i-oda",
+        "All my orders": "Wonke ama-oda ami",
         "Send a reminder about it": "Khumbuza ngayo",
         "Send reminder about it": "Khumbuza ngayo",
         "Track another order": "Landela enye i-oda",
         "Remind them again": "Bakhumbuze futhi",
+        "Confirm agent orders": "Qinisekisa ama-oda omeluleki",
+        "Confirm this order": "Qinisekisa i-oda leli",
+        "Decline it": "Yenqaba",
+        "All my orders": "Wonke ama-oda ami",
     },
 }
 
@@ -22430,6 +22467,7 @@ def _shop_translate_option(label, language):
             "Qty — ": "Huwandu — ",
             "Remove — ": "Bvisa — ",
             "Cancel ": "Bvisa ",
+            "Status of ": "Mamiriro e ",
             "Use what is available": "Shandisa zviriho",
             "Choose another shop": "Sarudza chimwe chitoro",
         },
@@ -22438,6 +22476,7 @@ def _shop_translate_option(label, language):
             "Qty — ": "Inani — ",
             "Remove — ": "Khupha — ",
             "Cancel ": "Khansela ",
+            "Status of ": "Isimo se ",
             "Use what is available": "Sebenzisa okukhona",
             "Choose another shop": "Khetha esinye isitolo",
         },
@@ -22836,7 +22875,7 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
     if count:
         cart_label = f"View Cart ({count} item{'s' if count != 1 else ''})"
     options = [("shop", "Shop"), ("search", "Search Products"), ("cart", cart_label),
-               ("orders", "My orders"),
+               ("orders", "Track my order"),
                ("support", "Contact us"), ("about", "About Us"),
                ("support_human", "Talk to a human")]
     if staff:
@@ -22974,7 +23013,11 @@ def _shop_cart_message(cart):
         )
     total = sum(item["qty"] for item in cart)
     labels = _shop_cart_line_labels(cart)
-    options = [("shop", "Add more products"), ("checkout", "Buy")]
+    # Buy leads the list. A customer who has finished shopping should not have to
+    # read past the edit lines to find the step that completes the order, and a
+    # long cart pushes every later choice off the visible rows - so the one
+    # choice that matters most is the one kept in view.
+    options = [("checkout", "Buy"), ("shop", "Add more products")]
     options += [(f"qty:{index}", labels[f"qty:{index}"]) for index in range(len(cart))]
     options += [(f"rm:{index}", labels[f"rm:{index}"]) for index in range(len(cart))]
     options.append(("clear", "Empty the cart"))
@@ -23046,6 +23089,227 @@ def _shop_about():
     )]
 
 
+def shop_agent_order_create(wa_number, lines, user=None, note=None, channel=None,
+                            delivery_method="collection", shop_id=None,
+                            delivery_address=None, phone=None, name=None):
+    """Build an order on a customer's behalf and send it for their confirmation.
+
+    Returns (ok, message, reference). The order is stored as a draft: it is
+    visible to the sales team but is not a real order until the customer accepts
+    it in the assistant, so nothing is picked, packed or charged for on the
+    strength of an agent's typing alone. `lines` is a list of
+    {"product", "size", "qty"} dictionaries as they were chosen in the portal.
+    """
+    wa_number = str(wa_number or "").strip()
+    if not wa_number:
+        return False, "That conversation has no WhatsApp number to send to.", ""
+    lines = [line for line in (lines or []) if int(line.get("qty") or 0) > 0]
+    if not lines:
+        return False, "Add at least one product before sending the order.", ""
+
+    # Each line is resolved against the catalogue so the order records the real
+    # product name and the price the business would charge, rather than whatever
+    # was typed into the composer.
+    cart = []
+    for line in lines:
+        product = _shop_product_at(line.get("product", 0))[0]
+        if not product:
+            return False, f"“{line.get('product')}” is not a product on the list.", ""
+        size = str(line.get("size") or "").strip()
+        if size not in product["sizes"]:
+            return False, (f"“{size}” is not a pack size of {product['name']}. "
+                           f"Choose from: {', '.join(product['sizes'])}."), ""
+        cart.append({"id": product["id"], "name": product["name"],
+                     "size": size, "qty": int(line["qty"])})
+
+    shop = shop_by_id(shop_id) if shop_id else None
+    if shop_id and not shop:
+        return False, "That shop is not one of the business's shops.", ""
+    method = delivery_method if delivery_method in ("delivery", "collection") else "collection"
+    if method == "delivery" and not (delivery_address or "").strip():
+        return False, "A delivery order needs the address to deliver to.", ""
+
+    reference = (f"{SHOP_ORDER_PREFIX}{datetime.now().strftime('%y%m%d')}-"
+                 f"{random.randint(1000, 9999)}")
+    owner = wa_number[-15:]
+    typed_name = (name or "").strip() or (crm_best_display_name(owner) or "")
+    try:
+        ensure_shop_tables()
+        ensure_crm_tables()
+        chat_id = crm_chat_id(owner, display_name=typed_name or None, channel=channel)
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                INSERT INTO shop_orders (reference, customer_name, phone, delivery_address,
+                                        channel, wa_number, chat_id, notes,
+                                        item_count, payment_status, delivery_method, shop_id,
+                                        created_by, created_by_name, agent_note, draft,
+                                        created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'unpaid', %s, %s,
+                        'agent', %s, %s, TRUE, NOW())
+                RETURNING id
+            """, (reference, typed_name or None, (phone or "").strip() or None,
+                  (delivery_address or "").strip() or None, channel, owner, chat_id,
+                  (note or "").strip() or None,
+                  sum(item["qty"] for item in cart), method,
+                  shop["id"] if shop else None,
+                  (user or "")[:200], (note or "").strip() or None))
+            order_id = cursor.fetchone()[0]
+            for item in cart:
+                cursor.execute("""
+                    INSERT INTO shop_order_items (order_id, product, pack_size, quantity,
+                                                  unit_price, created_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                """, (order_id, item["name"], item["size"], item["qty"], shop_price(item)))
+            connection.commit()
+    except Exception as e:
+        print(f"agent order save error: {e}")
+        return False, "Could not save that order just now.", ""
+
+    log_activity("agent_created_order", "order",
+                 f"Created order {reference} for a customer to confirm",
+                 target=reference,
+                 details={"wa_number": owner, "items": len(cart), "by": user},
+                 user=user)
+
+    # The customer is sent the order to accept or decline. The draft is already
+    # stored, so a delivery failure leaves it recoverable rather than lost.
+    notice = shop_agent_order_notice(reference, {
+        "reference": reference, "customer_name": typed_name, "lines": cart,
+        "delivery_method": method, "shop": (shop or {}).get("name", ""),
+        "shop_address": (shop or {}).get("address", ""),
+        "address": (delivery_address or "").strip(), "note": (note or "").strip(),
+        "created_by_name": (user or "").strip(),
+    })
+    sent = shop_send_whatsapp_reference(reference, notice)
+    if not sent:
+        return True, (f"{reference} was saved, but the WhatsApp message did not go out. "
+                      "The customer can still confirm it from Track my order."), reference
+    return True, f"{reference} sent to the customer to confirm.", reference
+
+
+def shop_agent_order_notice(reference, order):
+    """The message asking the customer to confirm an order an agent built."""
+    lines = [f"📝 *Order for your confirmation — {reference}*", ""]
+    if order.get("created_by_name"):
+        lines.append(f"{order['created_by_name']} put this order together for you.")
+        lines.append("")
+    for item in order.get("lines") or []:
+        lines.append(f"• {item['name']} ({item['size']}) × {item['qty']}")
+    lines.append("")
+    if order.get("delivery_method") == "delivery":
+        lines.append("*Receive by:* Deliver to my address")
+        if order.get("address"):
+            lines.append(f"*Delivery address:* {order['address']}")
+    else:
+        lines.append("*Receive by:* Collect from the shop")
+        if order.get("shop"):
+            lines.append(f"*Collect from:* {order['shop']}")
+            if order.get("shop_address"):
+                lines.append(f"*Shop address:* {order['shop_address']}")
+    if order.get("note"):
+        lines.append("")
+        lines.append(f"📝 *Their note:* {order['note']}")
+    lines.append("")
+    lines.append("Open *Track my order* to confirm or decline it. Nothing is arranged "
+                 "until you do.")
+    return "\n".join(lines)
+
+
+def shop_agent_orders_for(wa_number):
+    """Agent orders still waiting on this customer's answer, newest first."""
+    owner = _shop_order_owner_key(wa_number)
+    if not owner:
+        return []
+    ensure_shop_tables()
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT orders.reference, orders.customer_name, orders.item_count,
+                       COALESCE(orders.delivery_method, 'collection'), orders.shop_id,
+                       orders.delivery_address, orders.agent_note, orders.created_by_name,
+                       orders.created_at
+                FROM shop_orders orders
+                WHERE orders.wa_number = %s
+                  AND orders.created_by = 'agent'
+                  AND orders.draft = TRUE
+                  AND orders.declined_at IS NULL
+                  AND COALESCE(orders.status, 'new') <> 'cancelled'
+                ORDER BY orders.created_at DESC NULLS LAST, orders.id DESC
+                LIMIT 5
+            """, (owner,))
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"agent orders error: {e}")
+        return []
+    return [{
+        "reference": row[0],
+        "customer_name": row[1] or "",
+        "items": int(row[2] or 0),
+        "delivery": (row[3] or "collection") == "delivery",
+        "shop": (shop_by_id(row[4]) or {}).get("name", "") if row[4] else "",
+        "shop_address": (shop_by_id(row[4]) or {}).get("address", "") if row[4] else "",
+        "address": (row[5] or "").strip(),
+        "note": (row[6] or "").strip(),
+        "created_by_name": (row[7] or "").strip(),
+        "created_at": fmt_time(row[8], "%d %b %Y %H:%M"),
+    } for row in rows]
+
+
+def shop_agent_order_lines(reference):
+    """The lines of an agent order, for showing the customer what they are agreeing to."""
+    detail = order_detail(reference) or {}
+    return [{"name": line.get("product", ""), "size": line.get("pack_size", ""),
+             "qty": int(line.get("quantity") or 0),
+             "line_total": line.get("line_total")}
+            for line in detail.get("lines") or []]
+
+
+def shop_agent_order_clear(reference):
+    """Take a confirmed or declined draft out of the pending list."""
+    ensure_shop_tables()
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_orders
+                SET draft = FALSE, confirmed_at = NOW()
+                WHERE reference = %s AND draft = TRUE
+            """, (reference,))
+            connection.commit()
+        return True
+    except Exception as e:
+        print(f"agent order confirm error: {e}")
+        return False
+
+
+def shop_agent_order_decline(reference, user=None, reason=None):
+    """Decline an agent order. Returns (ok, message).
+
+    The order is cancelled rather than deleted, so the sales team can see it was
+    offered and refused, and the stock position is never touched.
+    """
+    ensure_shop_tables()
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_orders
+                SET draft = FALSE, declined_at = NOW(),
+                    status = 'cancelled', cancelled_at = NOW()
+                WHERE reference = %s AND draft = TRUE
+                RETURNING reference
+            """, (reference,))
+            changed = cursor.fetchone()
+            connection.commit()
+    except Exception as e:
+        print(f"agent order decline error: {e}")
+        return False, "Could not decline that order just now."
+    if not changed:
+        return False, "That order is no longer waiting for your answer."
+    log_activity("customer_declined_agent_order", "order",
+                 f"Declined the order {reference} an agent created",
+                 target=reference, details={"reason": reason}, user=user)
+    return True, f"Order {reference} was declined."
+
+
 def _shop_save_order(state, channel, wa_number=None, customer=None, payment_method=None,
                      amount=None, payment_status="unpaid", delivery_method=None):
     cart = state.get("cart") or []
@@ -23079,8 +23343,9 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
                 INSERT INTO shop_orders (reference, customer_name, company, phone, email,
                                         delivery_address, channel, wa_number, chat_id, notes,
                                         item_count, payment_method, payment_status, payment_amount,
-                                        delivery_method, shop_id, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                                        delivery_method, shop_id, created_by, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        'customer', NOW())
                 RETURNING id
             """, (reference, typed_name or None, customer.get("company"), customer.get("phone"),
                   customer.get("email"), address if method == "delivery" else None, channel,
@@ -23473,6 +23738,15 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
         if order:
             return _shop_track_view(order, wa_number)
         return [shop_greeting(cart, staff, display_name, language, short=True)]
+    if step == "agent_orders":
+        _order, prompt = _shop_agent_order_prompt(wa_number)
+        return [prompt] if prompt else [_shop_orders_menu(wa_number)]
+    if step == "agent_order_confirm":
+        pending = {o["reference"]: o for o in shop_agent_orders_for(wa_number)}
+        order = pending.get(ctx.get("agent_reference") or "")
+        if order:
+            return [_shop_agent_order_confirm_prompt(order)]
+        return [_shop_orders_menu(wa_number)]
     if step == "order_cancel_confirm":
         reference = ctx.get("cancel_reference") or ""
         order = next((row for row in shop_customer_orders(wa_number, limit=10)
@@ -23562,6 +23836,161 @@ def _shop_order_state_text(order):
 
 def _shop_money_text(amount):
     return f"{PAYNOW_CURRENCY} {amount:.2f}" if amount is not None else "to be confirmed"
+
+
+# ------------------------------------------------------------- order stages --
+# A stage is where the order has got to in the business's own words, as opposed
+# to `status`, which is the small machine vocabulary ('new'/'closed'/'cancelled')
+# the rest of the system already reasons about. Both are kept: nothing that reads
+# `status` has to learn a new set of values, and the customer gets told something
+# more specific than "with the sales team".
+#
+# `stage` is stored on shop_orders.stage. An order that has never been moved has
+# no stage, and falls back to whatever its payment and fulfilment already say.
+SHOP_ORDER_STAGES = ("preparing", "ready", "enroute", "delivered", "collected")
+
+# The stage only makes sense for the fulfilment the customer chose, so each one
+# names whether it is for a collection, a delivery, or either. A stage that does
+# not match the order is not offered, which stops a delivery being marked
+# "ready for collection at the shop" and confusing both the customer and staff.
+SHOP_STAGE_FULFILMENT = {
+    "preparing": "both",
+    "ready": "collection",
+    "enroute": "delivery",
+    "delivered": "delivery",
+    "collected": "collection",
+}
+
+SHOP_STAGE_LABELS = {
+    "preparing": "Order is being processed",
+    "ready": "Order is ready for collection",
+    "enroute": "Order is en route to the given address for delivery",
+    "delivered": "Order delivered",
+    "collected": "Order collected",
+}
+
+# The staff-facing name for each stage, used on the picker and in the activity
+# log. Shorter than the customer sentence so it fits a picker row, but it says
+# the same thing.
+SHOP_STAGE_STAFF_LABELS = {
+    "preparing": "Being processed",
+    "ready": "Ready for collection at the shop",
+    "enroute": "En route to the delivery address",
+    "delivered": "Delivered",
+    "collected": "Collected",
+}
+
+
+def shop_stage_for_fulfilment(stage, delivery_method):
+    """Whether a stage applies to this order's fulfilment."""
+    wanted = SHOP_STAGE_FULFILMENT.get(stage)
+    if not wanted or wanted == "both":
+        return bool(wanted)
+    delivering = (delivery_method or "collection") == "delivery"
+    return wanted == ("delivery" if delivering else "collection")
+
+
+def shop_stage_options(delivery_method):
+    """The stages that make sense for this order, as (value, label) pairs."""
+    return [(stage, SHOP_STAGE_STAFF_LABELS[stage])
+            for stage in SHOP_ORDER_STAGES
+            if shop_stage_for_fulfilment(stage, delivery_method)]
+
+
+def shop_order_stage_text(order):
+    """What the customer is told about where their order has got to.
+
+    A stage the business has actually set always wins, because it is the most
+    specific thing anyone has said. Without one, the payment and fulfilment
+    record is the only truth available and is described in those terms instead.
+    """
+    stage = (order.get("stage") or "").strip().lower()
+    shop = order.get("shop") or ""
+    address = (order.get("address") or "").strip()
+    if order.get("cancelled"):
+        return ("This order was cancelled, so nothing is being sent for it. "
+                "You can place a new order whenever you like.")
+    if stage == "ready":
+        return (f"✅ *Order is ready for collection"
+                + (f" at {shop}*." if shop else "*.")
+                + " Bring your reference with you when you come.")
+    if stage == "enroute":
+        return ("🚚 *Order is en route to the given address for delivery*"
+                + (f": {address}" if address else "")
+                + ". Please have your reference and payment ready.")
+    if stage == "delivered":
+        return "📦 *Order delivered.* Thank you for your business."
+    if stage == "collected":
+        return "📦 *Order collected.* Thank you for your business."
+    if stage == "preparing":
+        return ("👩🍳 *Order is being processed"
+                + (f" at {shop}*." if shop and not order.get("delivery") else "*.")
+                + " We will let you know as soon as there is a change.")
+    # No stage set, so fall back to the payment and fulfilment record. An order
+    # nobody has moved is still being processed, which is what the customer is
+    # told rather than being left with a blank.
+    if order.get("paid") and order.get("fulfilled"):
+        return "This order has been paid for and handed over. Nothing more is outstanding."
+    if order.get("fulfilled"):
+        return ("This order has been handed over. If you did not receive it, reply *help* and "
+                "our sales team will look into it.")
+    if order.get("paid"):
+        return ("*Order is being processed.* Your payment has been received and the goods are "
+                "being got ready "
+                + ("for delivery." if order.get("delivery") else "for you to collect."))
+    if order.get("awaiting_pin"):
+        return ("An EcoCash prompt is on your phone for this order. Enter your PIN to pay, "
+                "or reply *pay later* to settle it another way.")
+    return ("*Order is being processed.* It is with our sales team, who are confirming it "
+            "and will come back to you within one working day.")
+
+
+def shop_order_stage_notice(reference, order, stage):
+    """The message sent to the customer when staff move an order's stage.
+
+    Written from the customer's point of view - what it means for them and what
+    they should do next - rather than restating the staff label.
+    """
+    shop = order.get("shop") or ""
+    delivering = order.get("delivery") or (order.get("delivery_method") == "delivery")
+    address = (order.get("address") or "").strip()
+    lines = [f"📦 *Order update — {reference}*", ""]
+    if stage == "ready":
+        lines.append(f"✅ *Order is ready for collection"
+                     + (f" at {shop}*." if shop else "*."))
+        if shop and order.get("shop_address"):
+            lines.append(f"📍 {order['shop_address']}")
+        lines.append("")
+        lines.append(f"Bring your reference *{reference}* with you when you come.")
+        if not order.get("paid"):
+            lines.append("Payment is taken at the shop.")
+    elif stage == "enroute":
+        lines.append("🚚 *Order is en route to the given address for delivery*"
+                     + (f": {address}" if address else "")
+                     + ".")
+        lines.append("")
+        lines.append(f"Quote your reference *{reference}* to the deliverer.")
+        if not order.get("paid"):
+            lines.append("Please have the payment ready on delivery.")
+    elif stage == "delivered":
+        lines.append("📦 *Order delivered.*")
+        lines.append("")
+        lines.append("Thank you for your business. 🙏")
+    elif stage == "collected":
+        lines.append("📦 *Order collected.*")
+        lines.append("")
+        lines.append("Thank you for your business. 🙏")
+    elif stage == "preparing":
+        lines.append("👩🍳 *Order is being processed.*")
+        if shop and not delivering:
+            lines.append(f"📍 {shop}")
+        lines.append("")
+        lines.append("We will send you another update as soon as there is a change.")
+    else:
+        return ""
+    lines.append("")
+    lines.append(f"Any questions? Call {COMPANY_SYSTEM_CONTACT['phones'][0]}.")
+    return "\n".join(lines)
 
 
 def _shop_pay_later_label(customer):
@@ -23851,66 +24280,155 @@ def _shop_pay_wait_prompt(amount):
 
 
 def _shop_orders_menu(wa_number):
-    """The customer's own recent orders, with a cancel choice for the open ones.
+    """The customer's own recent orders, with tracking and cancelling on each.
 
-    Only their own orders are listed, and only the ones that can actually be
-    cancelled are offered, so the menu never promises something the next step
-    would then refuse.
+    One screen answers both halves of the main menu's "Track or cancel an order"
+    promise: every order shows where it has got to, and the open ones can be
+    cancelled from here. Only their own orders are listed, and only the ones that
+    can actually be cancelled are offered, so the menu never promises something
+    the next step would then refuse.
     """
+    pending = shop_agent_orders_for(wa_number)
     orders = shop_customer_orders(wa_number, limit=5)
-    if not orders:
+    if not orders and not pending:
         return _shop_options(
-            "📦 *My orders*\n\nYou have not placed an order yet.",
+            "📦 *Track my order*\n\nYou have not placed an order yet.",
             [("shop", "Browse products"), ("cart", "View Cart")])
 
-    lines = ["📦 *My orders*", ""]
+    lines = ["📦 *Track my order*", ""]
     options = []
+    # An order an agent built is waiting on an answer, so it leads: it is the one
+    # thing on this screen the customer still has to act on.
+    if pending:
+        lines.append(f"🧾 *{len(pending)} order{'s' if len(pending) != 1 else ''} waiting "
+                     "for your answer:*")
+        for order in pending:
+            lines.append(f"    *{order['reference']}* — {order['items']} item"
+                         f"{'s' if order['items'] != 1 else ''}")
+        lines.append("")
+    options.append(("agent_orders", "Confirm agent orders"))
+    open_orders = []
     for order in orders:
         count = order["items"]
         lines.append(f"*{order['reference']}* — {count} item"
                      f"{'s' if count != 1 else ''}, {_shop_money_text(order['amount'])}")
         lines.append(f"    {order['created_at']} · {_shop_order_state_text(order)}")
+        if not order["cancelled"]:
+            open_orders.append(order)
         if order["cancellable"]:
             options.append((f"cancel:{order['reference']}", f"Cancel {order['reference']}"))
     lines.append("")
+    # An order chosen by name is the only way to see the full status line, so the
+    # open ones are offered as choices; the rest of the list stays readable.
+    for order in open_orders[:3]:
+        options.insert(1, (f"track:{order['reference']}",
+                           f"Status of {order['reference']}"))
     if options:
-        lines.append("Choose an order below to cancel it. Cancelling cannot be undone.")
+        lines.append("Choose an order to see its status or cancel it.")
     else:
         lines.append("None of these can be cancelled here. Ask for a person and we will help.")
-    # Tracking comes first: an open order is far more likely to be chased than
-    # cancelled, and the track prompt can find any reference the customer knows.
-    options.insert(0, ("track", "Track my order"))
     options.append(("support_human", "Talk to a human"))
     options.append(("shop", "Browse products"))
     return _shop_options("\n".join(lines), options)
 
 
+def _shop_agent_order_prompt(wa_number):
+    """The orders an agent built, waiting on this customer's answer.
+
+    Returned as (single_order, prompt). One pending order resolves straight to
+    its confirmation, because asking which one would be a question with a single
+    answer.
+    """
+    pending = shop_agent_orders_for(wa_number)
+    if not pending:
+        return None, None
+    if len(pending) == 1:
+        return pending[0], None
+    lines = ["🧾 *Orders waiting for your answer*", ""]
+    options = []
+    for order in pending:
+        lines.append(f"*{order['reference']}* — {order['items']} item"
+                     f"{'s' if order['items'] != 1 else ''}")
+        lines.append(f"    sent {order['created_at']}"
+                     + (f" by {order['created_by_name']}" if order["created_by_name"] else ""))
+        options.append((f"agent:{order['reference']}", f"Confirm {order['reference']}"))
+    lines.append("")
+    lines.append("Choose one to confirm or decline it.")
+    options.append(("orders", "All my orders"))
+    options.append(("shop", "Browse products"))
+    return None, _shop_options("\n".join(lines), options)
+
+
+def _shop_agent_order_confirm_prompt(order):
+    """One agent order, read back in full before the customer answers."""
+    lines = [f"🧾 *Order to confirm — {order['reference']}*", ""]
+    if order.get("created_by_name"):
+        lines.append(f"{order['created_by_name']} put this order together for you.")
+        lines.append("")
+    lines.append(f"*Items:* {order['items']}")
+    lines.append(f"*Receive by:* "
+                 + ("Delivery to your address" if order["delivery"] else "Collection"))
+    if order["delivery"] and order.get("address"):
+        lines.append(f"*Delivery address:* {order['address']}")
+    if not order["delivery"] and order.get("shop"):
+        lines.append(f"*Collect from:* {order['shop']}")
+        if order.get("shop_address"):
+            lines.append(f"*Shop address:* {order['shop_address']}")
+    if order.get("note"):
+        lines.append("")
+        lines.append(f"📝 *Their note:* {order['note']}")
+    lines.append("")
+    lines.append("Confirm this order, or decline it if it is not right. "
+                 "Nothing is arranged until you confirm.")
+    return _shop_options("\n".join(lines),
+                         [("agent_yes", "Confirm this order"),
+                          ("agent_no", "Decline it")])
+
+
+def _shop_agent_order_result_text(ok, reference, declined=False):
+    """What the customer is told after confirming or declining an agent order."""
+    if declined:
+        return (f"❌ *{reference} is declined.*\n\n"
+                "Nothing has been arranged for it. You can place your own order whenever "
+                "you like, or ask for a person to go through it again.")
+    if ok:
+        return (f"✅ *{reference} is confirmed.*\n\n"
+                "Our sales team has been told and will arrange it. "
+                "Open *Track my order* whenever you want to see where it has got to.")
+    return (f"⚠️ *{reference} is no longer waiting for your answer.*\n\n"
+            "It may already have been confirmed or declined. Open *Track my order* to see "
+            "your orders.")
+
+
 def _shop_track_prompt(wa_number):
     """Asking which order to track.
 
-    A customer with exactly one open order is taken straight to it, because
-    asking which one would be a question with a single answer. Any reference can
-    still be typed, so the prompt says so.
+    A customer with exactly one order is taken straight to it, because asking
+    which one would be a question with a single answer. More than one falls to
+    the order list, which shows every order with its status and offers the ones
+    that can still be acted on. Any reference can be typed too, so the prompt
+    says so.
     """
     orders = shop_customer_orders(wa_number, limit=SHOP_TRACK_LOOKUP_LIMIT)
     if not orders:
         return None, _shop_options(
             "📦 *Track my order*\n\nYou have not placed an order yet.",
             [("shop", "Browse products"), ("cart", "View Cart")])
-    lines = ["📦 *Track my order*", ""]
-    options = []
-    for order in orders[:5]:
-        count = order["items"]
-        lines.append(f"*{order['reference']}* — {count} item"
-                     f"{'s' if count != 1 else ''}, {_shop_order_state_text(order)}")
-        options.append((f"track:{order['reference']}", f"Track {order['reference']}"))
-    options.append(("orders", "My orders"))
-    options.append(("m", "Main menu"))
-    if len(orders) == 1:
-        return orders[0], None
-    lines.append("")
-    lines.append("Choose an order below, or paste its reference.")
-    return None, _shop_options("\n".join(lines), options)
+    open_orders = [order for order in orders if not order["cancelled"]]
+    # Exactly one order still in play, or one order at all, resolves to itself.
+    if len(open_orders) == 1:
+        return open_orders[0], None
+    if not open_orders:
+        return None, _shop_options(
+            "📦 *Track my order*\n\nEvery order on this number has been cancelled.",
+            [("shop", "Browse products"), ("cart", "View Cart"),
+             ("support_human", "Talk to a human")])
+    return None, _shop_options(
+        "📦 *Track my order*\n\nYou have more than one order. Choose the one you mean, "
+        "or paste its reference.",
+        [(f"track:{order['reference']}",
+          f"Status of {order['reference']}") for order in open_orders[:5]]
+        + [("support_human", "Talk to a human"), ("shop", "Browse products")])
 
 
 def _shop_track_view(order, wa_number):
@@ -23920,10 +24438,9 @@ def _shop_track_view(order, wa_number):
     # offered here rather than making the customer go back to the order list.
     if order["cancellable"]:
         options.append((f"cancel:{order['reference']}", f"Cancel {order['reference']}"))
-        if not order["fulfilled"] and not order["paid"]:
-            options.append(("support_human", "Talk to a human"))
+        options.append(("support_human", "Talk to a human"))
     else:
-        options.append(("orders", "My orders"))
+        options.append(("orders", "All my orders"))
     return [_shop_options(shop_order_track_text(order), options)]
 
 
@@ -24235,17 +24752,16 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             "company and contact number so we can respond quickly.")])
 
     if low in ("support_human", "human", "talk to a human", "speak to a human"):
-        # Hand the conversation to a person: the caller escalates it and the
-        # assistant stays silent until an agent hands it back. The handover says
-        # the assistant is going quiet, so no menu follows it - printing one
-        # would contradict the sentence above it and bury the reassurance.
+        # Flag the conversation for a person and tell the customer so. The
+        # assistant keeps answering in the meantime, which is what the wording
+        # promises: waiting for an agent never means being left without a reply.
         handed_over = True
         return result("menu", [
             _shop_text(
                 "🙋 *Connecting you to a person*\n\n"
                 "A member of our sales team has been notified and will reply here shortly.\n\n"
-                "You can keep browsing in the meantime — the assistant will stay quiet "
-                "while an agent is with you."),
+                "You can keep using the assistant while you wait — it will still answer, so "
+                "you are never left without a reply."),
         ], actions=[{"type": "escalate", "reason": "Customer asked for a human agent"}],
             new_history=[])
 
@@ -24356,6 +24872,67 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         # Anything else re-asks rather than guessing at a destructive answer.
         if order:
             return result("order_cancel_confirm", [_shop_cancel_prompt(order)])
+        return result("orders", [_shop_orders_menu(wa_number)])
+
+    # An order a member of staff built, waiting on the customer's answer. Reachable
+    # from the order list, so confirming never depends on the reference being typed.
+    if low in ("agent_orders", "confirm agent orders", "agent orders",
+               "confirm agent order", "confirm orders", "pending orders"):
+        order, prompt = _shop_agent_order_prompt(wa_number)
+        if order is None and prompt is None:
+            return result("orders", [
+                _shop_text("✅ You have no orders waiting for your answer."),
+                _shop_orders_menu(wa_number)])
+        if order is None:
+            return result("agent_orders", [prompt], new_ctx={})
+        return result("agent_order_confirm", [_shop_agent_order_confirm_prompt(order)],
+                      new_ctx=dict(ctx, agent_reference=order["reference"]))
+
+    if step in ("agent_orders", "agent_order_confirm") and low.startswith("agent:"):
+        reference = command.split(":", 1)[1].strip().upper()
+        pending = {o["reference"]: o for o in shop_agent_orders_for(wa_number)}
+        order = pending.get(reference)
+        if not order:
+            return result("orders", [
+                _shop_text(f"⚠️ *{reference}* is no longer waiting for your answer."),
+                _shop_orders_menu(wa_number)])
+        return result("agent_order_confirm", [_shop_agent_order_confirm_prompt(order)],
+                      new_ctx=dict(ctx, agent_reference=reference))
+
+    if step == "agent_order_confirm":
+        reference = ctx.get("agent_reference") or ""
+        if low in ("agent_yes", "confirm", "yes", "confirm this order") or low in affirmative_words:
+            ok = shop_agent_order_clear(reference)
+            if ok:
+                # The sales team is told in the same breath as the customer, so a
+                # confirmed draft becomes work someone can actually pick up.
+                return result("menu", [
+                    _shop_text(_shop_agent_order_result_text(True, reference)),
+                    shop_greeting(cart, staff, display_name, language, short=True),
+                ], actions=[{"type": "escalate",
+                             "reason": f"Customer confirmed the order {reference} an agent created",
+                             "message": f"{reference} was confirmed by the customer."}],
+                    new_history=[])
+            return result("orders", [
+                _shop_text(_shop_agent_order_result_text(False, reference)),
+                _shop_orders_menu(wa_number)])
+        if low in ("agent_no", "decline", "decline it", "no") or low in negative_words:
+            ok, _message = shop_agent_order_decline(reference)
+            if ok:
+                return result("menu", [
+                    _shop_text(_shop_agent_order_result_text(True, reference, declined=True)),
+                    shop_greeting(cart, staff, display_name, language, short=True),
+                ], actions=[{"type": "escalate",
+                             "reason": f"Customer declined the order {reference} an agent created",
+                             "message": f"{reference} was declined by the customer."}],
+                    new_history=[])
+            return result("orders", [
+                _shop_text(_shop_agent_order_result_text(False, reference)),
+                _shop_orders_menu(wa_number)])
+        # Anything else re-asks rather than guessing at a destructive answer.
+        order, _prompt = _shop_agent_order_prompt(wa_number)
+        if order and order["reference"] == reference:
+            return result("agent_order_confirm", [_shop_agent_order_confirm_prompt(order)])
         return result("orders", [_shop_orders_menu(wa_number)])
 
     if step == "orders":
@@ -25167,7 +25744,8 @@ def shop_customer_orders(wa_number, limit=5):
                            AND items.unit_price IS NULL),
                        orders.payment_method,
                        COALESCE(orders.delivery_method, 'delivery'), orders.shop_id,
-                       orders.delivery_address
+                       orders.delivery_address, orders.stage,
+                       orders.stage_at, orders.stage_by
                 FROM shop_orders orders
                 WHERE orders.wa_number = %s
                 ORDER BY orders.created_at DESC NULLS LAST, orders.id DESC
@@ -25219,6 +25797,9 @@ def shop_customer_orders(wa_number, limit=5):
             # Named for tracking, because "collection" with no shop reads as if
             # nobody has said where the goods are.
             "source": (row[15] or "").strip(),
+            "stage": row[16] or "",
+            "stage_at": fmt_time(row[17], "%d %b %Y %H:%M"),
+            "stage_by": row[18] or "",
         })
     return orders
 
@@ -25306,44 +25887,81 @@ def shop_order_for(wa_number, reference):
                  if row["reference"] == reference), None)
 
 
-def shop_order_stage(order):
-    """Where an order has got to, as one plain sentence.
+def shop_order_stage_set(reference, stage, user=None, notify=True):
+    """Move an order to a new stage and tell the customer. Returns (ok, message).
 
-    Only the states the business actually records are named, and the last
-    fallback says what is true of every open order: it is with the sales team.
-    Guessing at a stage the records do not carry would tell a customer something
-    nobody has confirmed.
+    The stage is validated against what the order's own fulfilment allows, so a
+    delivery cannot be marked ready for collection at a shop. The customer is
+    notified only once the row has actually changed, so a repeated save cannot
+    send the same message twice.
     """
+    stage = (stage or "").strip().lower()
+    reference = (reference or "").strip().upper()
+    if stage and stage not in SHOP_ORDER_STAGES:
+        return False, "Unknown order stage."
+    order = order_detail(reference)
+    if not order:
+        return False, "That order was not found."
     if order.get("cancelled"):
-        return ("This order was cancelled, so nothing is being sent for it. "
-                "You can place a new order whenever you like.")
-    if order.get("paid") and order.get("fulfilled"):
-        return "This order has been paid for and handed over. Nothing more is outstanding."
-    if order.get("fulfilled"):
-        return ("This order has been handed over. If you did not receive it, reply *help* and "
-                "our sales team will look into it.")
-    if order.get("paid"):
-        return ("Your payment has been received. The sales team is getting the goods ready "
-                + ("and will arrange the delivery." if order.get("delivery") else
-                   "for you to collect."))
-    if order.get("awaiting_pin"):
-        return ("An EcoCash prompt is on your phone for this order. Enter your PIN to pay, "
-                "or reply *pay later* to settle it another way.")
-    return ("This order is with our sales team. They are confirming it, and will come back "
-            "to you within one working day.")
+        return False, "That order is cancelled, so its stage cannot be changed."
+    if stage and not shop_stage_for_fulfilment(stage, order.get("delivery_method")):
+        return False, ("That stage does not apply to this order's fulfilment — it is "
+                       + ("a delivery." if order.get("delivery_method") == "delivery"
+                          else "a collection."))
+    if (order.get("stage") or "") == stage:
+        return True, "Stage unchanged."
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_orders
+                SET stage = %s, stage_at = NOW(), stage_by = %s
+                WHERE reference = %s
+                RETURNING reference
+            """, (stage or None, (user or "")[:200], reference))
+            changed = cursor.fetchone()
+            connection.commit()
+    except Exception as e:
+        print(f"order stage error: {e}")
+        return False, "Could not update that order just now."
+    if not changed:
+        return False, "That order was not found."
+
+    log_activity("set_order_stage", "order",
+                 f"Moved {reference} to "
+                 f"{SHOP_STAGE_STAFF_LABELS.get(stage, 'no stage') if stage else 'no stage'}",
+                 target=reference,
+                 details={"stage": stage, "delivery_method": order.get("delivery_method")},
+                 user=user)
+    _shop_payment_event(reference, "stage", stage or "cleared", user or "")
+
+    if stage and notify:
+        # Re-read so the notice is built from what was actually stored, and not
+        # from a stage the customer may have moved on from meanwhile.
+        fresh = order_detail(reference)
+        notice = shop_order_stage_notice(reference, fresh, stage) if fresh else ""
+        if notice:
+            sent = shop_send_whatsapp_reference(reference, notice)
+            if not sent:
+                # The stage is saved either way: the update is real business
+                # state, and a customer who has not opted in on WhatsApp simply
+                # finds out at the next turn they take.
+                print(f"stage notice not delivered for {reference}")
+    return True, SHOP_STAGE_STAFF_LABELS.get(stage, "Stage cleared")
 
 
 def shop_order_track_text(order):
     """The tracking reply for one order, with its next step spelled out."""
     lines = [f"🚚 *Order {order['reference']}*", "",
-             f"*Status:* {_shop_order_state_text(order)}",
+             f"*Status:* {shop_order_stage_text(order)}",
              f"*Placed:* {order['created_at']}",
              f"*Items:* {order['items']} item{'s' if order['items'] != 1 else ''}",
              f"*Amount:* {_shop_money_text(order['amount'])}"]
     if order.get("shop"):
         lines.append(f"*{'Delivering from' if order.get('delivery') else 'Collect from'}:* "
                      f"{order['shop']}")
-    lines += ["", shop_order_stage(order)]
+    if order.get("stage_at"):
+        lines.append(f"*Last update:* {order['stage_at']}")
     return "\n".join(lines)
 
 
@@ -25382,7 +26000,7 @@ def shop_order_reminder_send(wa_number, reference, reason=SHOP_REMINDER_REASON):
                  f"Customer asked for an update on {order['reference']}",
                  target=order["reference"], details={"wa_number": owner, "reason": reason})
     return True, (f"🙋 I have asked our sales team to update you on *{order['reference']}*.\n\n"
-                  f"{shop_order_stage(order)}\n\n"
+                  f"{shop_order_stage_text(order)}\n\n"
                   "Someone will reply here as soon as they have looked into it.")
 
 
@@ -25602,35 +26220,42 @@ _CUSTOMER_HUMAN_KEYWORDS = (
 
 
 def crm_chat_is_muted(wa_number):
-    """True when the assistant must stay silent for this conversation.
+    """Whether the assistant should stay quiet for this conversation. Never.
 
-    Escalated chats and chats taken over by a human agent are both muted: the
-    bot never talks over a person.
+    This used to return True for an escalated or human chat, so the bot would not
+    talk over an agent. That muted the assistant for any reason an escalation was
+    raised - including the routine "a new order was placed" - and nothing ever
+    cleared it, so a customer who had ordered, or who had asked for a person,
+    got no reply to anything they sent afterwards. The assistant now always
+    answers; an agent is told a customer is waiting and can join a conversation
+    without the customer being cut off first.
+
+    Kept as a function, and still consulted by the webhook, so restoring a mute
+    later is a change here rather than a hunt through the callers.
     """
-    try:
-        ensure_crm_tables()
-        with get_db() as (cursor, connection):
-            cursor.execute("SELECT status FROM whatsapp_chats WHERE wa_number = %s",
-                           (str(wa_number)[-15:],))
-            row = cursor.fetchone()
-        return bool(row and row[0] in ("escalated", "human"))
-    except Exception as e:
-        print(f"CRM mute lookup error: {e}")
-        return False
+    return False
 
 
 def crm_escalate_chat(wa_number, reason, channel=None, display_name=None):
-    """Raise an unattended enquiry for the CRM team and mute the assistant."""
+    """Flag an unattended enquiry for the CRM team and alert them.
+
+    Deliberately does not stop the assistant from answering. The enquiry is
+    raised and pushed to staff devices; whatever the customer sends next is
+    still answered, so waiting for a person never means being ignored.
+    """
     crm_record_message(wa_number, "inbound", "system", reason, "system",
                        display_name=display_name, company_reg=COMPANY_SYSTEM_PREFIX,
                        escalate=True, reason=reason, channel=channel)
     try:
         ensure_crm_tables()
         with get_db() as (cursor, connection):
+            # The chat is marked unattended and given a reason for a person to
+            # pick up, but its status is left alone: 'bot' still describes who is
+            # answering, which is now always the assistant until an agent joins.
             cursor.execute("""
                 UPDATE whatsapp_chats
-                SET status = 'escalated', unattended = TRUE, handoff_reason = %s, updated_at = NOW()
-                WHERE wa_number = %s
+                SET unattended = TRUE, handoff_reason = %s, updated_at = NOW()
+                WHERE wa_number = %s AND COALESCE(status, 'bot') <> 'closed'
             """, (reason, str(wa_number)[-15:]))
             connection.commit()
     except Exception as e:
@@ -25825,12 +26450,6 @@ def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=
     crm_record_message(sender_id, "inbound", "customer", text or f"[{mtype}]", mtype,
                        display_name=(profile_name or "").strip() or None,
                        company_reg=COMPANY_SYSTEM_PREFIX, channel=display_phone_number)
-
-    # An agent already owns this conversation — stay quiet and let them answer.
-    if crm_chat_is_muted(sender_id):
-        if wants_human:
-            crm_escalate_chat(sender_id, "Customer requested a human agent", display_phone_number)
-        return
 
     if wants_human:
         _crm_reply(sender_id, "Of course — I am connecting you with a member of our sales team. "
@@ -26660,7 +27279,10 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
                COALESCE(orders.payment_status, 'unpaid'), orders.payment_amount,
                COALESCE(orders.delivery_method, 'delivery'), orders.status, orders.created_at,
                orders.wa_number, COALESCE(chats.wa_profile_name, chats.display_name),
-               orders.fulfilled_at, orders.cancelled_at
+               orders.fulfilled_at, orders.cancelled_at,
+               COALESCE(orders.stage, ''), orders.stage_at, orders.stage_by,
+               COALESCE(orders.created_by, 'customer'), orders.draft,
+               orders.created_by_name, orders.declined_at
         FROM shop_orders orders
         LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
         WHERE {clause}
@@ -26698,6 +27320,18 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
             "fulfilled_at": fmt_time(row[14], "%d %b %Y %H:%M"),
             "cancelled_at": fmt_time(row[15], "%d %b %Y %H:%M"),
             "cancelled": row[15] is not None or (row[10] or "") == "cancelled",
+            "stage": row[16] or "",
+            "stage_label": SHOP_STAGE_LABELS.get((row[16] or "").strip().lower(), ""),
+            "stage_at": fmt_time(row[17], "%d %b %Y %H:%M"),
+            "stage_by": row[18] or "",
+            # Who placed the order. A draft is one an agent built that the customer
+            # has not answered yet, so the row says so rather than letting it read
+            # as work already agreed.
+            "origin": row[19] or "customer",
+            "agent_created": (row[19] or "customer") == "agent",
+            "draft": bool(row[20]),
+            "created_by_name": row[21] or "",
+            "declined_at": fmt_time(row[22], "%d %b %Y %H:%M"),
         })
     return orders
 
@@ -26728,7 +27362,11 @@ def order_detail(reference):
                        COALESCE(orders.delivery_method, 'delivery'),
                        orders.fulfilled_at, orders.created_at,
                        COALESCE(chats.wa_profile_name, chats.display_name),
-                       orders.shop_id, orders.stock_deducted_at
+                       orders.shop_id, orders.stock_deducted_at,
+                       COALESCE(orders.stage, ''), orders.stage_at, orders.stage_by,
+                       COALESCE(orders.created_by, 'customer'), orders.draft,
+                       orders.created_by_name, orders.agent_note,
+                       orders.confirmed_at, orders.declined_at
                 FROM shop_orders orders
                 LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
                 WHERE orders.reference = %s
@@ -26796,6 +27434,16 @@ def order_detail(reference):
         "shop": (fulfilling_shop or {}).get("name", ""),
         "shop_address": (fulfilling_shop or {}).get("address", ""),
         "stock_deducted_at": fmt_time(row[21], "%d %b %Y %H:%M"),
+        "stage": row[22] or "",
+        "stage_at": fmt_time(row[23], "%d %b %Y %H:%M"),
+        "stage_by": row[24] or "",
+        "origin": row[25] or "customer",
+        "agent_created": (row[25] or "customer") == "agent",
+        "draft": bool(row[26]),
+        "created_by_name": row[27] or "",
+        "agent_note": row[28] or "",
+        "confirmed_at": fmt_time(row[29], "%d %b %Y %H:%M"),
+        "declined_at": fmt_time(row[30], "%d %b %Y %H:%M"),
         # Named `lines` rather than `items` because a dict's `.items` attribute
         # shadows a key of that name in a template, which silently breaks the
         # `{% for %}` over it.
@@ -27438,6 +28086,76 @@ def crm_analytics_api():
     })
 
 
+@app.route('/api/crm/chats/<int:chat_id>/order', methods=['POST'])
+def crm_chat_create_order(chat_id):
+    """Build an order for the customer and send it to them to confirm.
+
+    The order is stored as a draft, so it appears for the sales team straight away
+    but is not acted on until the customer accepts it in the assistant.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    with get_db() as (cursor, connection):
+        cursor.execute("SELECT wa_number, channel, display_name FROM whatsapp_chats WHERE id = %s",
+                       (chat_id,))
+        chat = cursor.fetchone()
+    if not chat:
+        return jsonify({'success': False, 'message': 'Conversation not found.'}), 404
+
+    agent = f"{user['firstname']} {user['surname']}".strip()
+    ok, message, reference = shop_agent_order_create(
+        chat[0],
+        payload.get('lines') or [],
+        user=agent,
+        note=payload.get('note'),
+        channel=chat[1],
+        delivery_method=payload.get('delivery_method') or 'collection',
+        shop_id=payload.get('shop'),
+        delivery_address=payload.get('address'),
+        phone=payload.get('phone'),
+        name=payload.get('name') or chat[2],
+    )
+    if not ok:
+        return jsonify({'success': False, 'message': message}), 400
+    return jsonify({'success': True, 'message': message, 'reference': reference,
+                    'order': order_detail(reference),
+                    'orders': orders_overview(request.args.get('period', 'today'),
+                                              request.args.get('payment', 'all'),
+                                              request.args.get('fulfilment', 'all'))})
+
+
+@app.route('/api/crm/orders/<reference>/resend', methods=['POST'])
+def crm_order_resend_api(reference):
+    """Send a draft order to the customer again."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    order = order_detail(reference)
+    if not order:
+        return jsonify({'success': False, 'message': 'Order not found.'}), 404
+    if not order.get('draft'):
+        return jsonify({'success': False,
+                        'message': 'That order is not waiting for the customer.'}), 400
+    notice = shop_agent_order_notice(reference, {
+        'reference': reference, 'created_by_name': order.get('created_by_name', ''),
+        'lines': [{'name': line.get('product'), 'size': line.get('pack_size'),
+                   'qty': line.get('quantity')} for line in order.get('lines') or []],
+        'delivery_method': order.get('delivery_method'),
+        'shop': order.get('shop', ''), 'shop_address': order.get('shop_address', ''),
+        'address': order.get('address', ''), 'note': order.get('agent_note', ''),
+    })
+    sent = shop_send_whatsapp_reference(reference, notice)
+    log_activity('resent_agent_order', 'order',
+                 f"Sent {reference} to the customer to confirm again",
+                 target=reference, details={'delivered': bool(sent)}, user=user)
+    if not sent:
+        return jsonify({'success': False,
+                        'message': 'Could not send the message just now.'}), 500
+    return jsonify({'success': True, 'message': f'{reference} was sent to the customer again.'})
+
+
 @app.route('/api/crm/catalog')
 def crm_catalog_api():
     user, error = portal_api_user('crm')
@@ -27635,6 +28353,10 @@ def crm_order_detail_api(reference):
     detail = order_detail(reference)
     if not detail:
         return jsonify({'success': False, 'message': 'Order not found.'}), 404
+    # The stages this order's fulfilment allows, so the portal offers only the
+    # ones that would actually be accepted.
+    detail['stages'] = [{'value': value, 'label': label}
+                        for value, label in shop_stage_options(detail.get('delivery_method'))]
     return jsonify({'success': True, 'order': detail,
                     'payment': order_payment_status(reference, refresh=False),
                     'payment_history': order_payment_history(reference),
@@ -27908,6 +28630,18 @@ def crm_stock_receive_api():
                     'movements': shop_stock_movements(shop['id'], limit=25)})
 
 
+@app.route('/api/crm/shops', methods=['GET'])
+def crm_shops_list_api():
+    """The shops a customer can collect from, for the order composer."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    return jsonify({'success': True,
+                    'shops': [{'id': shop['id'], 'name': shop['name'],
+                               'address': shop.get('address', '')}
+                              for shop in shop_shops()]})
+
+
 @app.route('/api/crm/shops', methods=['POST'])
 def crm_shop_save_api():
     """Add or update a shop. A shop is what stock is kept against, so it has to
@@ -28018,6 +28752,42 @@ def crm_order_fulfilment_api(reference):
                      target=reference, details={"fulfilled": bool(fulfilled)}, user=user)
     period = request.args.get('period', 'today')
     return jsonify({'success': True,
+                    'analytics': orders_analytics(period,
+                                                  request.args.get('payment', 'all'),
+                                                  request.args.get('fulfilment', 'all')),
+                    'orders': orders_overview(period,
+                                              request.args.get('payment', 'all'),
+                                              request.args.get('fulfilment', 'all'))})
+
+
+@app.route('/api/crm/orders/<reference>/stage', methods=['POST'])
+def crm_order_stage_api(reference):
+    """Move an order to a named stage and notify the customer."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    stage = payload.get('stage')
+    stage = (stage or '').strip().lower()
+    notify = payload.get('notify', True) is not False
+    ok, message = shop_order_stage_set(reference, stage,
+                                       user=f"{user['firstname']} {user['surname']}".strip(),
+                                       notify=notify)
+    if not ok:
+        return jsonify({'success': False, 'message': message}), 400
+    detail = order_detail(reference) or {}
+    period = request.args.get('period', 'today')
+    return jsonify({'success': True,
+                    'message': message,
+                    'stage': detail.get('stage', ''),
+                    'stage_at': detail.get('stage_at', ''),
+                    'stage_by': detail.get('stage_by', ''),
+                    # The stages this order's fulfilment actually allows, so the
+                    # picker cannot offer one that would then be refused.
+                    'stages': [{'value': value, 'label': label}
+                               for value, label in shop_stage_options(
+                                   detail.get('delivery_method'))],
+                    'customer_text': shop_order_stage_text(detail) if detail else '',
                     'analytics': orders_analytics(period,
                                                   request.args.get('payment', 'all'),
                                                   request.args.get('fulfilment', 'all')),
