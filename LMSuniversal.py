@@ -29647,6 +29647,96 @@ def order_filter_clause(period="today", payment="all", fulfilment="all", alias="
     return " AND ".join(where)
 
 
+# -------------------------------------------------------- order card buckets --
+# The cards above the orders table. Each bucket answers one question the sales
+# team actually asks, and every one of them is derived from `stage`, `status`
+# and `fulfilled_at` - the same three columns the assistant reads when it tells a
+# customer where their order has got to. Nothing here invents a state the
+# chatbot could not have produced, so a card can never disagree with what the
+# customer was told.
+#
+# `stage` is the business's own words for where the order is (see
+# SHOP_ORDER_STAGES); `fulfilled_at`/`cancelled_at` are the closed states. An
+# order that has never been moved has no stage and is still awaiting work.
+ORDER_CARD_BUCKETS = (
+    ("awaiting", "Awaiting fulfilment",
+     "No stage set yet - the order is still to be picked or packed."),
+    ("preparing", "Being processed",
+     "The sales team has started on it."),
+    ("ready", "Ready to collect",
+     "Waiting at the shop for the customer to collect."),
+    ("awaiting_delivery", "Out for delivery",
+     "En route to the customer's address."),
+    ("delivered", "Delivered",
+     "Handed over at the customer's address."),
+    ("collected", "Collected",
+     "Picked up from the shop by the customer."),
+    ("cancelled", "Cancelled",
+     "Called off before it was fulfilled."),
+)
+
+
+def order_bucket_clause(bucket, alias="shop_orders"):
+    """The WHERE for one order card bucket, as SQL over one table alias.
+
+    Cancelled and fulfilled orders are excluded from the open buckets rather than
+    being counted twice, so the cards always add up to the orders in view.
+    `stage` is only trusted when it is one of the stages this build knows about:
+    a row left behind by an older version falls back to awaiting work instead of
+    disappearing from every card.
+    """
+    cancelled = (f"({alias}.cancelled_at IS NOT NULL OR "
+                 f"COALESCE({alias}.status, 'new') = 'cancelled')")
+    closed = f"{alias}.fulfilled_at IS NOT NULL OR {alias}.status = 'closed'"
+    open_order = f"NOT {cancelled} AND NOT ({closed})"
+    stage = f"LOWER(COALESCE({alias}.stage, ''))"
+    known = ", ".join(f"'{value}'" for value in SHOP_ORDER_STAGES)
+    buckets = {
+        "cancelled": cancelled,
+        # The finished buckets also exclude cancelled rows, so an order that was
+        # delivered and then cancelled is counted once, as a cancellation, and
+        # the cards never sum to more than the list beneath them.
+        "delivered": f"{stage} = 'delivered' AND NOT {cancelled}",
+        "collected": f"{stage} = 'collected' AND NOT {cancelled}",
+        "awaiting_delivery": f"{stage} = 'enroute' AND {open_order}",
+        "ready": f"{stage} = 'ready' AND {open_order}",
+        "preparing": f"{stage} = 'preparing' AND {open_order}",
+        # Anything open that has not been moved, including a stage this build
+        # does not recognise, so no open order can hide from every card.
+        "awaiting": (f"{open_order} AND ({stage} NOT IN ({known}) OR "
+                     f"{stage} = '')"),
+    }
+    return buckets.get(bucket) or buckets["awaiting"]
+
+
+def order_status_counts(period="today", payment="all", fulfilment="all"):
+    """How many orders sit in each card bucket for the current filters.
+
+    One query rather than one per card, so the numbers cannot be read from
+    different moments in time and add up to something other than the list below
+    them.
+    """
+    ensure_shop_tables()
+    clause = order_filter_clause(period, payment, fulfilment, "shop_orders")
+    selects = []
+    for bucket, _label, _hint in ORDER_CARD_BUCKETS:
+        alias = f"b_{bucket}"
+        selects.append(
+            f"COUNT(*) FILTER (WHERE {order_bucket_clause(bucket, 'shop_orders')}) AS {alias}")
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute(
+                f"SELECT {', '.join(selects)} FROM shop_orders WHERE {clause}")
+            row = cursor.fetchone()
+    except Exception as e:
+        print(f"order status counts error: {e}")
+        row = None
+    counts = {}
+    for index, (bucket, _label, _hint) in enumerate(ORDER_CARD_BUCKETS):
+        counts[bucket] = int(row[index] or 0) if row else 0
+    return counts
+
+
 def orders_analytics(period="today", payment="all", fulfilment="all"):
     """Headline sales numbers for the selected period and status filters."""
     ensure_shop_tables()
@@ -29691,7 +29781,80 @@ def orders_analytics(period="today", payment="all", fulfilment="all"):
         print(f"top items error: {e}")
     totals["top_items"] = top_items
     totals["currency"] = PAYNOW_CURRENCY
+    totals["series"] = orders_sales_series(period, payment, fulfilment)
     return totals
+
+
+# How many points the sales chart shows for each period. A named period has an
+# obvious grain: a single day needs hours, a week or a month needs days. All time
+# is bucketed by month, because a day-by-day chart of a year is unreadable.
+ORDER_SERIES_GRAIN = {
+    "today": ("hour", 24, "'HH24:00'"),
+    "yesterday": ("hour", 24, "'HH24:00'"),
+    "this_week": ("day", 7, "'Dy'"),
+    "last_week": ("day", 7, "'Dy'"),
+    "this_month": ("day", 31, "'DD Mon'"),
+    "last_month": ("day", 31, "'DD Mon'"),
+    "all": ("month", 12, "'Mon YY'"),
+}
+
+
+def orders_sales_series(period="today", payment="all", fulfilment="all"):
+    """Orders and value per time bucket, for the sales chart.
+
+    generate_series fills the gaps, so a quiet hour shows as a zero rather than
+    being skipped and making two busy hours look adjacent. The buckets are cut in
+    business-day time, matching the period filters, so the chart and the totals
+    above it agree on which day an order belongs to.
+    """
+    grain, slots, label_format = ORDER_SERIES_GRAIN.get(
+        period, ORDER_SERIES_GRAIN["today"])
+    shift = ORDER_TZ_SHIFT
+    local_now = f"(CURRENT_TIMESTAMP + INTERVAL '{shift} hours')"
+    if grain == "hour":
+        start = f"date_trunc('day', {local_now})"
+        step = "1 hour"
+    elif grain == "day":
+        if period == "this_week":
+            start = f"date_trunc('week', {local_now})"
+        elif period == "last_week":
+            start = f"date_trunc('week', {local_now}) - INTERVAL '7 days'"
+        elif period == "last_month":
+            start = f"date_trunc('month', {local_now}) - INTERVAL '1 month'"
+        else:
+            start = f"date_trunc('month', {local_now})"
+        step = "1 day"
+    else:
+        start = f"date_trunc('month', {local_now}) - INTERVAL '11 months'"
+        step = "1 month"
+    clause = order_filter_clause(period, payment, fulfilment, "shop_orders")
+    created = f"(shop_orders.created_at + INTERVAL '{shift} hours')"
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute(f"""
+                SELECT to_char(bucket, {label_format}) AS label,
+                       COUNT(shop_orders.id) AS orders,
+                       COALESCE(SUM(COALESCE(shop_orders.payment_amount, 0)), 0) AS value
+                FROM generate_series(
+                        date_trunc('{grain}', {start}),
+                        date_trunc('{grain}', {local_now}),
+                        INTERVAL '{step}') AS bucket
+                LEFT JOIN shop_orders
+                       ON date_trunc('{grain}', {created}) = bucket
+                      AND {clause}
+                GROUP BY bucket
+                ORDER BY bucket
+                LIMIT {int(slots) + 1}
+            """)
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"order series error: {e}")
+        return []
+    # generate_series is inclusive of both ends, so a day grain can return one
+    # slot more than the period holds; the tail is dropped rather than relabelled.
+    rows = rows[:int(slots)]
+    return [{"label": row[0], "orders": int(row[1] or 0),
+             "value": float(row[2] or 0)} for row in rows]
 
 
 ACTIVITY_PERIODS = {
@@ -30428,6 +30591,9 @@ def crm_analytics_api():
         'periods': [{'key': key, 'label': value[0]} for key, value in ORDER_PERIODS.items()],
         'analytics': orders_analytics(period, payment, fulfilment),
         'orders': orders_overview(period, payment, fulfilment),
+        'cards': order_status_counts(period, payment, fulfilment),
+        'card_meta': [{'key': key, 'label': label, 'hint': hint}
+                      for key, label, hint in ORDER_CARD_BUCKETS],
     })
 
 

@@ -39,6 +39,17 @@
                         <span class="crm-tab-count" data-stat="stat_unattended">{{ stat_unattended }}</span>
                     </span>
                 </button>
+                {# Orders comes before analytics because it is the daily work:
+                   the sales team looks at what needs fulfilling far more often
+                   than at how the month is going. #}
+                <button class="crm-tab" type="button" id="crmTabOrders"
+                        data-crm-tab="orders" role="tab" aria-selected="false" tabindex="-1"
+                        aria-controls="crmViewOrders">
+                    <i class="bi bi-bag-check-fill"></i>
+                    <span class="crm-tab-text">
+                        <span class="crm-tab-full">Orders</span><span class="crm-tab-short">Orders</span>
+                    </span>
+                </button>
                 <button class="crm-tab" type="button" id="crmTabAnalytics"
                         data-crm-tab="analytics" role="tab" aria-selected="false" tabindex="-1"
                         aria-controls="crmViewAnalytics">
@@ -324,9 +335,9 @@
     </section>
 
     <!-- ======================================================== analytics -->
-    <section class="crm-view" id="crmViewAnalytics" data-crm-view="analytics"
-             role="tabpanel" aria-labelledby="crmTabAnalytics">
-        {# One compact toolbar rather than a panel with its own header: three
+    <section class="crm-view" id="crmViewOrders" data-crm-view="orders"
+             role="tabpanel" aria-labelledby="crmTabOrders">
+        {# One compact toolbar rather than a panel with its own header: four
            selects do not need a title bar above them. #}
         <div class="ps-panel crm-filters-panel">
             <div class="crm-filters-bar">
@@ -365,63 +376,35 @@
                             <option value="cancelled">Cancelled</option>
                         </select>
                     </label>
+                    <label class="crm-field">
+                        <span>Search</span>
+                        <input class="ps-input" type="search" id="crmOrderSearch"
+                               placeholder="Reference, name or phone" autocomplete="off">
+                    </label>
                 </div>
             </div>
         </div>
 
-        <section class="ps-stats" id="crmAnalyticsStats">
-            <div class="ps-stat">
-                <div class="ps-stat-label"><i class="bi bi-receipt"></i> Orders</div>
-                <div class="ps-stat-value" data-an="orders">0</div>
-                <div class="ps-stat-note"><span data-an="units">0</span> units ordered</div>
-            </div>
-            <div class="ps-stat">
-                <div class="ps-stat-label"><i class="bi bi-cash-coin"></i> Order value</div>
-                <div class="ps-stat-value" data-an="value">0.00</div>
-                <div class="ps-stat-note"><span data-an="currency">USD</span> across priced orders</div>
-            </div>
-            <div class="ps-stat">
-                <div class="ps-stat-label"><i class="bi bi-check2-circle"></i> Paid</div>
-                <div class="ps-stat-value" data-an="paid">0</div>
-                <div class="ps-stat-note">Settled value <span data-an="paid_value">0.00</span></div>
-            </div>
-            <div class="ps-stat">
-                <div class="ps-stat-label"><i class="bi bi-truck"></i> Delivered home</div>
-                <div class="ps-stat-value" data-an="delivery">0</div>
-                <div class="ps-stat-note"><span data-an="collection">0</span> collected from shop</div>
+        {# Where every order has got to, in the same words the assistant uses with
+           the customer. Each card is a button: pressing it filters the list below
+           to that bucket, which is quicker than describing the state in the
+           fulfilment dropdown. Counts come from the same query as the list, so a
+           card can never disagree with the rows beneath it. #}
+        <section class="crm-cards" id="crmOrderCards" aria-label="Orders by status">
+            <div class="crm-empty-state is-compact">
+                <span class="crm-empty-icon"><i class="bi bi-bag-check"></i></span>
+                <p class="crm-empty-title">Loading orders</p>
             </div>
         </section>
 
-        <div class="crm-grid-2">
-            <div class="ps-panel">
-                <div class="ps-panel-head"><h3><i class="bi bi-trophy-fill"></i> Top products</h3></div>
-                <div class="ps-panel-body">
-                    <div class="crm-top-items" id="crmTopItems">
-                        <div class="crm-empty-state is-compact">
-                            <span class="crm-empty-icon"><i class="bi bi-bar-chart-line"></i></span>
-                            <p class="crm-empty-title">Nothing sold in this period</p>
-                            <p class="crm-empty-hint">Widen the period above to see what is moving.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="ps-panel">
-                <div class="ps-panel-head"><h3><i class="bi bi-clock-history"></i> Recent orders</h3></div>
-                <div class="ps-panel-body crm-order-list" id="crmRecentOrders">
-                    <div class="crm-empty-state is-compact">
-                        <span class="crm-empty-icon"><i class="bi bi-inbox"></i></span>
-                        <p class="crm-empty-title">No orders in this period</p>
-                        <p class="crm-empty-hint">Orders taken by the assistant land here straight away.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="ps-panel crm-orders-panel">
             <div class="ps-panel-head">
-                <h3><i class="bi bi-table"></i> Orders in view</h3>
+                <h3><i class="bi bi-table"></i> <span id="crmOrdersTitle">Orders in view</span></h3>
                 <div class="ps-panel-actions">
+                    <button class="crm-mini-btn" type="button" id="crmOrdersClear"
+                            title="Show every order in this period again" hidden>
+                        <i class="bi bi-x-circle"></i> Clear card filter
+                    </button>
                     <span class="ps-chip"><strong data-an="orders">0</strong> orders</span>
                 </div>
             </div>
@@ -442,7 +425,7 @@
                     </thead>
                     <tbody id="crmOrdersBody">
                         <tr>
-                            <td colspan="7" class="crm-empty-cell">
+                            <td colspan="9" class="crm-empty-cell">
                                 <div class="crm-empty-state is-compact">
                                     <span class="crm-empty-icon"><i class="bi bi-receipt-cutoff"></i></span>
                                     <p class="crm-empty-title">No orders match these filters</p>
@@ -457,8 +440,8 @@
         </div>
 
         {# One order in detail: the lines, the payment state, and the two printed
-           documents. Kept in the analytics view because that is where sales work
-           from. #}
+           documents. It lives on this tab because this is where orders are worked
+           from, and a row is opened from the list above. #}
         <div class="crm-order-modal" id="crmOrderModal" hidden>
             <div class="crm-order-card" role="dialog" aria-modal="true"
                  aria-labelledby="crmOrderTitle">
@@ -550,6 +533,108 @@
                             id="crmOrderRequestPay" data-order-action="request-payment">
                         <i class="bi bi-phone"></i> Request EcoCash payment
                     </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================== sales analytics -->
+    <section class="crm-view" id="crmViewAnalytics" data-crm-view="analytics"
+             role="tabpanel" aria-labelledby="crmTabAnalytics">
+        {# Reporting, not daily work: the order list lives on the Orders tab, so
+           this view is only the numbers. It reads the same period and payment
+           filters, kept in sync by the shared filter state. #}
+        <div class="ps-panel crm-filters-panel">
+            <div class="crm-filters-bar">
+                <span class="crm-filters-label">
+                    <i class="bi bi-funnel-fill"></i> Filters
+                </span>
+                <div class="crm-filters">
+                    <label class="crm-field">
+                        <span>Period</span>
+                        <select class="ps-input" id="crmAnPeriod">
+                            <option value="today" selected>Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="this_week">This week</option>
+                            <option value="last_week">Last week</option>
+                            <option value="this_month">This month</option>
+                            <option value="last_month">Last month</option>
+                            <option value="all">All time</option>
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span>Payment</span>
+                        <select class="ps-input" id="crmAnPayment">
+                            <option value="all" selected>Paid &amp; will pay</option>
+                            <option value="paid">Paid</option>
+                            <option value="unpaid">Will pay</option>
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span>Fulfilment</span>
+                        <select class="ps-input" id="crmAnFulfilment">
+                            <option value="all" selected>Everything</option>
+                            <option value="delivery">Delivered home</option>
+                            <option value="collection">Collected from shop</option>
+                            <option value="pending">Awaiting fulfilment</option>
+                            <option value="fulfilled">Fulfilled</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <section class="ps-stats" id="crmAnalyticsStats">
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-receipt"></i> Orders</div>
+                <div class="ps-stat-value" data-an="orders">0</div>
+                <div class="ps-stat-note"><span data-an="units">0</span> units ordered</div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-cash-coin"></i> Order value</div>
+                <div class="ps-stat-value" data-an="value">0.00</div>
+                <div class="ps-stat-note"><span data-an="currency">USD</span> across priced orders</div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-check2-circle"></i> Paid</div>
+                <div class="ps-stat-value" data-an="paid">0</div>
+                <div class="ps-stat-note">Settled value <span data-an="paid_value">0.00</span></div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-truck"></i> Delivered home</div>
+                <div class="ps-stat-value" data-an="delivery">0</div>
+                <div class="ps-stat-note"><span data-an="collection">0</span> collected from shop</div>
+            </div>
+        </section>
+
+        <div class="ps-panel">
+            <div class="ps-panel-head">
+                <h3><i class="bi bi-bar-chart-line"></i> Sales over time</h3>
+                <div class="ps-panel-actions">
+                    <span class="ps-chip" id="crmSeriesPeak">—</span>
+                </div>
+            </div>
+            <div class="ps-panel-body">
+                <div class="crm-series" id="crmSalesSeries">
+                    <div class="crm-empty-state is-compact">
+                        <span class="crm-empty-icon"><i class="bi bi-bar-chart-line"></i></span>
+                        <p class="crm-empty-title">Nothing to chart yet</p>
+                        <p class="crm-empty-hint">Widen the period above, or take an order.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ps-panel">
+            <div class="ps-panel-head"><h3><i class="bi bi-trophy-fill"></i> Top products</h3></div>
+            <div class="ps-panel-body">
+                <div class="crm-top-items" id="crmTopItems">
+                    <div class="crm-empty-state is-compact">
+                        <span class="crm-empty-icon"><i class="bi bi-bar-chart-line"></i></span>
+                        <p class="crm-empty-title">Nothing sold in this period</p>
+                        <p class="crm-empty-hint">Widen the period above to see what is moving.</p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -243,6 +243,7 @@
         view.classList.toggle('is-active', view.getAttribute('data-crm-view') === name);
       });
       if (shell) shell.classList.toggle('ps-shell-tight', name === 'inbox');
+      if (name === 'orders') orders.load(false);
       if (name === 'analytics') analytics.load(false);
       if (name === 'stock' && !stockLoaded) {
         stockLoaded = true;
@@ -324,14 +325,21 @@
     });
   }
 
-  /* ------------------------------------------------------------- analytics */
+  /* ------------------------------------------------------------- analytics --
+     The reporting tab. It reads the same orders as the Orders tab, but shows
+     only summaries: the headline numbers, a sales chart, and which products are
+     moving. The order list itself lives on the Orders tab, so this view never
+     duplicates it. */
   var analytics = (function () {
-    var periodEl = document.getElementById('crmPeriod');
-    var paymentEl = document.getElementById('crmPayment');
-    var fulfilmentEl = document.getElementById('crmFulfilment');
+    var periodEl = document.getElementById('crmAnPeriod');
+    var paymentEl = document.getElementById('crmAnPayment');
+    var fulfilmentEl = document.getElementById('crmAnFulfilment');
     var statsEl = document.getElementById('crmAnalyticsStats');
     var topEl = document.getElementById('crmTopItems');
-    var recentEl = document.getElementById('crmRecentOrders');
+    var seriesEl = document.getElementById('crmSalesSeries');
+    var peakEl = document.getElementById('crmSeriesPeak');
+    // The order table is rendered by this module on behalf of the Orders tab,
+    // because it shares the row markup and the fulfilment wiring below.
     var bodyEl = document.getElementById('crmOrdersBody');
     var loaded = false;
     var inFlight = false;
@@ -391,102 +399,114 @@
       }).join('');
     }
 
-    function renderRecent(orders) {
-      if (!recentEl) return;
-      if (!orders || !orders.length) {
-        recentEl.innerHTML = emptyState('bi-inbox', 'No orders in this period',
-          'Orders taken by the assistant land here straight away.');
+    function renderSeries(series) {
+      if (!seriesEl) return;
+      var points = series || [];
+      var total = points.reduce(function (sum, point) { return sum + point.orders; }, 0);
+      if (!points.length || !total) {
+        seriesEl.innerHTML = emptyState('bi-bar-chart-line', 'Nothing to chart yet',
+          'Widen the period above, or take an order.');
+        if (peakEl) peakEl.textContent = '—';
         return;
       }
-      recentEl.innerHTML = orders.slice(0, 5).map(function (order) {
-        var who = order.customer_name || order.company || ('+' + order.wa_number);
-        var paid = order.payment_status === 'paid';
-        var cancelled = !!order.cancelled;
-        var pill = cancelled
-          ? '<span class="crm-pill is-cancelled">Cancelled</span>'
-          : '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
-            escapeHtml(order.payment_label || (paid ? 'Paid' : 'Will pay')) + '</span>';
-        return '<div class="crm-order-row">' +
-          '<div class="crm-order-row-main"><strong>' + escapeHtml(who) + '</strong>' +
-          '<small>' + escapeHtml(order.reference) + ' • ' + order.items + ' items • ' +
-          escapeHtml(order.created_at) + '</small></div>' +
-          pill +
-          '</div>';
+      // The busiest bucket sets the height, so the shape of the period reads at a
+      // glance. A floor of 4% keeps a single order visible rather than a sliver.
+      var peak = points.reduce(function (max, point) { return Math.max(max, point.orders); }, 0) || 1;
+      if (peakEl) {
+        peakEl.textContent = peak + (peak === 1 ? ' order at peak' : ' orders at peak');
+      }
+      var every = points.length > 16 ? Math.ceil(points.length / 12) : 1;
+      seriesEl.innerHTML = points.map(function (point, index) {
+        var height = Math.max(4, Math.round((point.orders / peak) * 100));
+        // Only every nth label is printed on a long period, so the axis stays
+        // legible instead of turning into a smear of overlapping text.
+        var showLabel = index % every === 0 || index === points.length - 1;
+        return '<div class="crm-series-col" title="' + escapeHtml(point.label) + ': ' +
+          point.orders + ' orders, ' + escapeHtml(money(point.value)) + '">' +
+          '<span class="crm-series-count">' + (point.orders || '') + '</span>' +
+          '<div class="crm-series-bar"><i style="height:' + height + '%"></i></div>' +
+          '<span class="crm-series-label">' + (showLabel ? escapeHtml(point.label) : '') +
+          '</span></div>';
       }).join('');
+    }
+
+    /* One table row. Kept apart from renderTable so the row markup can be read
+       and changed without scrolling past the event wiring that follows it. */
+    function rowHtml(order) {
+      var who = order.customer_name || order.company || ('+' + order.wa_number);
+      var contact = order.company ? '<span class="crm-sub">' + escapeHtml(order.company) + '</span>' : '';
+      var address = order.address ? '<span class="crm-sub">' + escapeHtml(order.address) + '</span>' : '';
+      var paid = order.payment_status === 'paid';
+      var delivered = order.delivery_method === 'delivery';
+      var cancelled = !!order.cancelled;
+      // A cancelled order has nothing left to fulfil and no money to take, so
+      // the fulfilment buttons are replaced rather than left to be pressed.
+      var paymentCell = cancelled
+        ? '<span class="crm-pill is-cancelled"><i class="bi bi-x-circle"></i> Cancelled</span>'
+        : '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
+          '<i class="bi ' + (paid ? 'bi-check2' : 'bi-clock') + '"></i> ' +
+          escapeHtml(order.payment_label || (paid ? 'Paid' : 'Will pay')) +
+          '</span>';
+      // The stage the sales team last set, so a row says where the order has got
+      // to without having to open it. An unmoved order shows nothing rather than
+      // a stage nobody set.
+      var stageCell = order.stage_label
+        ? '<span class="crm-stage is-' + escapeHtml(order.stage || 'set') + '">' +
+          '<i class="bi bi-signpost-split"></i> ' + escapeHtml(order.stage_label) + '</span>'
+        : '<span class="crm-sub">—</span>';
+      // Who placed the order. An agent order still waiting on the customer is
+      // called out, because it is not work to act on yet and would otherwise
+      // read like a customer order.
+      var sourceCell = order.draft
+        ? '<span class="crm-origin is-draft"><i class="bi bi-hourglass-split"></i> ' +
+          'Agent · awaiting</span>'
+        : (order.agent_created
+            ? '<span class="crm-origin is-agent"><i class="bi bi-person-badge"></i> ' +
+              'Agent</span>'
+            : '<span class="crm-origin is-customer"><i class="bi bi-person"></i> ' +
+              'Customer</span>');
+      var actionsCell = cancelled
+        ? '<span class="crm-row-note">Cancelled by the customer</span>'
+        : '<div class="crm-row-actions">' +
+          '<button class="crm-mini-btn' + (delivered ? ' is-active' : '') + '" type="button" ' +
+          'data-fulfil="delivery" title="Delivered to the customer">Home</button>' +
+          '<button class="crm-mini-btn' + (!delivered ? ' is-active' : '') + '" type="button" ' +
+          'data-fulfil="collection" title="Collected from the shop">Shop</button>' +
+          '<button class="crm-mini-btn" type="button" data-mark-done="1" ' +
+          'title="Mark this order as fulfilled">' +
+          '<i class="bi bi-check2-circle"></i> Done</button>' +
+          '<button class="crm-mini-btn" type="button" data-open-order="1" ' +
+          'title="Open this order to print documents or take payment">' +
+          '<i class="bi bi-receipt"></i> Open</button>' +
+          '</div>';
+      return '<tr data-reference="' + escapeHtml(order.reference) + '"' +
+        (cancelled ? ' class="is-cancelled"' : '') + '>' +
+        '<td><span class="crm-ref">' + escapeHtml(order.reference) + '</span>' + address + '</td>' +
+        '<td><span class="crm-who">' + escapeHtml(who) + '</span>' + contact + '</td>' +
+        '<td class="crm-col-num">' + order.items + '</td>' +
+        '<td>' + paymentCell + '</td>' +
+        '<td>' + stageCell + '</td>' +
+        '<td>' + sourceCell + '</td>' +
+        '<td class="crm-col-num crm-amount">' +
+        (order.amount === null || order.amount === undefined
+          ? '<span class="crm-amount-unset">Not priced</span>'
+          : money(order.amount)) + '</td>' +
+        '<td>' + actionsCell + '</td>' +
+        '<td class="crm-col-date">' + escapeHtml(order.created_at) + '</td>' +
+        '</tr>';
     }
 
     function renderTable(orders) {
       if (!bodyEl) return;
       if (!orders || !orders.length) {
-        bodyEl.innerHTML = '<tr><td colspan="7" class="crm-empty-cell">' +
+        bodyEl.innerHTML = '<tr><td colspan="9" class="crm-empty-cell">' +
           emptyState('bi-receipt-cutoff', 'No orders match these filters',
             'Try All time, or clear the payment and fulfilment filters.') +
           '</td></tr>';
         return;
       }
-      var state = filters();
       bodyEl.innerHTML = orders.map(function (order) {
-        var who = order.customer_name || order.company || ('+' + order.wa_number);
-        var contact = order.company ? '<span class="crm-sub">' + escapeHtml(order.company) + '</span>' : '';
-        var address = order.address ? '<span class="crm-sub">' + escapeHtml(order.address) + '</span>' : '';
-        var paid = order.payment_status === 'paid';
-        var delivered = order.delivery_method === 'delivery';
-        var cancelled = !!order.cancelled;
-        // A cancelled order has nothing left to fulfil and no money to take, so
-        // the fulfilment buttons are replaced rather than left to be pressed.
-        var paymentCell = cancelled
-          ? '<span class="crm-pill is-cancelled"><i class="bi bi-x-circle"></i> Cancelled</span>'
-          : '<span class="crm-pill ' + (paid ? 'is-paid' : 'is-unpaid') + '">' +
-            '<i class="bi ' + (paid ? 'bi-check2' : 'bi-clock') + '"></i> ' +
-            escapeHtml(order.payment_label || (paid ? 'Paid' : 'Will pay')) +
-            '</span>';
-        // The stage the sales team last set, so a row says where the order has
-        // got to without having to open it. An unmoved order shows nothing
-        // rather than a stage nobody set.
-        var stageCell = order.stage_label
-          ? '<span class="crm-stage is-' + escapeHtml(order.stage || 'set') + '">' +
-            '<i class="bi bi-signpost-split"></i> ' + escapeHtml(order.stage_label) + '</span>'
-          : '<span class="crm-sub">—</span>';
-        // Who placed the order. An agent order still waiting on the customer is
-        // called out, because it is not work to act on yet and would otherwise
-        // read like a customer order.
-        var sourceCell = order.draft
-          ? '<span class="crm-origin is-draft"><i class="bi bi-hourglass-split"></i> ' +
-            'Agent · awaiting</span>'
-          : (order.agent_created
-              ? '<span class="crm-origin is-agent"><i class="bi bi-person-badge"></i> ' +
-                'Agent</span>'
-              : '<span class="crm-origin is-customer"><i class="bi bi-person"></i> ' +
-                'Customer</span>');
-        var actionsCell = cancelled
-          ? '<span class="crm-row-note">Cancelled by the customer' + '</span>'
-          : '<div class="crm-row-actions">' +
-            '<button class="crm-mini-btn' + (delivered ? ' is-active' : '') + '" type="button" ' +
-            'data-fulfil="delivery" title="Delivered to the customer">Home</button>' +
-            '<button class="crm-mini-btn' + (!delivered ? ' is-active' : '') + '" type="button" ' +
-            'data-fulfil="collection" title="Collected from the shop">Shop</button>' +
-            '<button class="crm-mini-btn" type="button" data-mark-done="1" ' +
-            'title="Mark this order as fulfilled">' +
-            '<i class="bi bi-check2-circle"></i> Done</button>' +
-            '<button class="crm-mini-btn" type="button" data-open-order="1" ' +
-            'title="Open this order to print documents or take payment">' +
-            '<i class="bi bi-receipt"></i> Open</button>' +
-            '</div>';
-        return '<tr data-reference="' + escapeHtml(order.reference) + '"' +
-          (cancelled ? ' class="is-cancelled"' : '') + '>' +
-          '<td><span class="crm-ref">' + escapeHtml(order.reference) + '</span>' + address + '</td>' +
-          '<td><span class="crm-who">' + escapeHtml(who) + '</span>' + contact + '</td>' +
-          '<td class="crm-col-num">' + order.items + '</td>' +
-          '<td>' + paymentCell + '</td>' +
-          '<td>' + stageCell + '</td>' +
-          '<td>' + sourceCell + '</td>' +
-          '<td class="crm-col-num crm-amount">' +
-          (order.amount === null || order.amount === undefined
-            ? '<span class="crm-amount-unset">Not priced</span>'
-            : money(order.amount)) + '</td>' +
-          '<td>' + actionsCell + '</td>' +
-          '<td class="crm-col-date">' + escapeHtml(order.created_at) + '</td>' +
-          '</tr>';
+        return rowHtml(order);
       }).join('');
 
       Array.prototype.forEach.call(bodyEl.querySelectorAll('[data-fulfil]'), function (button) {
@@ -1112,8 +1132,7 @@
           loaded = true;
           renderStats(payload.analytics || {});
           renderTop((payload.analytics || {}).top_items);
-          renderRecent(payload.orders);
-          renderTable(payload.orders);
+          renderSeries((payload.analytics || {}).series);
         })
         .catch(function () {
           inFlight = false;
@@ -1124,6 +1143,207 @@
     [periodEl, paymentEl, fulfilmentEl].forEach(function (el) {
       if (el) el.addEventListener('change', function () { load(false); });
     });
+
+    /* The order list and the open-order dialog are handed to the Orders tab,
+       which owns the table they appear in. They stay defined here because they
+       share the order helpers below, and a single definition cannot drift from
+       the API it reads. */
+    return {
+      load: load,
+      isLoaded: function () { return loaded; },
+      renderTable: renderTable,
+      openOrder: openOrder,
+      emptyState: emptyState,
+    };
+  })();
+
+  /* ---------------------------------------------------------------- orders --
+     The daily work: every order in the period, with a card per state so the
+     sales team can see at a glance what is still to be picked, packed, or
+     delivered, and jump straight to it. The state names are the same ones the
+     assistant uses with the customer. */
+  var orders = (function () {
+    var periodEl = document.getElementById('crmPeriod');
+    var paymentEl = document.getElementById('crmPayment');
+    var fulfilmentEl = document.getElementById('crmFulfilment');
+    var searchEl = document.getElementById('crmOrderSearch');
+    var cardsEl = document.getElementById('crmOrderCards');
+    var titleEl = document.getElementById('crmOrdersTitle');
+    var clearEl = document.getElementById('crmOrdersClear');
+    var loaded = false;
+    var inFlight = false;
+    // The card the user pressed, or null for "every order in the period". It is
+    // held here rather than in the dropdown because a card is a filter the
+    // dropdown has no word for, such as "out for delivery".
+    var activeCard = null;
+    var searchTerm = '';
+
+    function filters() {
+      return {
+        period: periodEl ? periodEl.value : 'today',
+        payment: paymentEl ? paymentEl.value : 'all',
+        fulfilment: fulfilmentEl ? fulfilmentEl.value : 'all',
+      };
+    }
+
+    function query() {
+      var state = filters();
+      return 'period=' + encodeURIComponent(state.period) +
+             '&payment=' + encodeURIComponent(state.payment) +
+             '&fulfilment=' + encodeURIComponent(state.fulfilment);
+    }
+
+    /* A card filters the rows already fetched, so pressing one is instant and
+       needs no request. The matcher mirrors the SQL behind the counts exactly,
+       including the fallback for a stage name this build does not recognise:
+       that order is still open work, so it belongs in "Awaiting fulfilment"
+       rather than in no card at all. */
+    var KNOWN_STAGES = ['preparing', 'ready', 'enroute', 'delivered', 'collected'];
+
+    function isOpen(order) { return !order.cancelled && !order.fulfilled; }
+
+    function cardMatches(key, order) {
+      var stage = (order.stage || '').toLowerCase();
+      var known = KNOWN_STAGES.indexOf(stage) !== -1;
+      switch (key) {
+        case 'awaiting': return isOpen(order) && !known;
+        case 'preparing': return isOpen(order) && stage === 'preparing';
+        case 'ready': return isOpen(order) && stage === 'ready';
+        case 'awaiting_delivery': return isOpen(order) && stage === 'enroute';
+        case 'delivered': return !order.cancelled && stage === 'delivered';
+        case 'collected': return !order.cancelled && stage === 'collected';
+        case 'cancelled': return !!order.cancelled;
+        default: return false;
+      }
+    }
+
+    function matchesSearch(order) {
+      if (!searchTerm) return true;
+      var haystack = [
+        order.reference, order.customer_name, order.company, order.phone,
+        order.profile_name, order.address,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.indexOf(searchTerm) !== -1;
+    }
+
+    function visibleOrders(all) {
+      var rows = all || [];
+      if (activeCard) {
+        rows = rows.filter(function (order) { return cardMatches(activeCard, order); });
+      }
+      if (searchTerm) rows = rows.filter(matchesSearch);
+      return rows;
+    }
+
+    function renderCards(meta, counts) {
+      if (!cardsEl) return;
+      if (!meta || !meta.length) {
+        cardsEl.innerHTML = analytics.emptyState('bi-bag-check', 'No order states',
+          'Restart the portal to reload the order states.');
+        return;
+      }
+      cardsEl.innerHTML = meta.map(function (card) {
+        var count = (counts && counts[card.key]) || 0;
+        // A card with nothing in it stays visible but cannot be pressed, so the
+        // row never reflows under the cursor and the zero is still readable.
+        var empty = count === 0;
+        var pressed = activeCard === card.key;
+        return '<button class="crm-card is-' + card.key + (pressed ? ' is-active' : '') +
+          (empty ? ' is-empty' : '') + '" type="button" data-card="' + card.key + '"' +
+          (empty && !pressed ? ' aria-disabled="true"' : '') +
+          ' aria-pressed="' + (pressed ? 'true' : 'false') + '"' +
+          ' title="' + escapeHtml(card.hint) + '">' +
+          '<span class="crm-card-icon"><i class="bi ' + cardIcon(card.key) + '"></i></span>' +
+          '<span class="crm-card-body">' +
+            '<span class="crm-card-count">' + count + '</span>' +
+            '<span class="crm-card-label">' + escapeHtml(card.label) + '</span>' +
+          '</span>' +
+          '</button>';
+      }).join('');
+      Array.prototype.forEach.call(cardsEl.querySelectorAll('[data-card]'), function (button) {
+        button.addEventListener('click', function () {
+          var key = button.getAttribute('data-card');
+          // Pressing the active card again clears it, which is the quickest way
+          // back to the full list without hunting for a separate control.
+          activeCard = activeCard === key ? null : key;
+          renderState();
+        });
+      });
+    }
+
+    function cardIcon(key) {
+      return {
+        awaiting: 'bi-inbox',
+        preparing: 'bi-box-seam',
+        ready: 'bi-bag-check',
+        awaiting_delivery: 'bi-truck',
+        delivered: 'bi-house-check',
+        collected: 'bi-shop',
+        cancelled: 'bi-x-circle',
+      }[key] || 'bi-circle';
+    }
+
+    var lastPayload = null;
+
+    function renderState() {
+      var payload = lastPayload || {};
+      renderCards(payload.card_meta, payload.cards);
+      var rows = visibleOrders(payload.orders);
+      analytics.renderTable(rows);
+      if (titleEl) {
+        var label = '';
+        if (payload.card_meta && activeCard) {
+          label = (payload.card_meta.filter(function (c) {
+            return c.key === activeCard;
+          })[0] || {}).label || '';
+        }
+        titleEl.textContent = label ? label : 'Orders in view';
+      }
+      if (clearEl) clearEl.hidden = !activeCard;
+    }
+
+    function render(payload) {
+      lastPayload = payload || {};
+      renderState();
+    }
+
+    function load(silent) {
+      if (inFlight) return;
+      inFlight = true;
+      fetch('/api/crm/analytics?' + query())
+        .then(function (response) { return response.json(); })
+        .then(function (payload) {
+          inFlight = false;
+          if (!payload.success) return;
+          loaded = true;
+          render(payload);
+        })
+        .catch(function () {
+          inFlight = false;
+          if (!silent) console.warn('Could not load orders');
+        });
+    }
+
+    [periodEl, paymentEl, fulfilmentEl].forEach(function (el) {
+      if (el) el.addEventListener('change', function () {
+        // A change of filters can empty the active card, so the card filter is
+        // dropped rather than leaving the table apparently broken.
+        activeCard = null;
+        load(false);
+      });
+    });
+    if (searchEl) {
+      searchEl.addEventListener('input', function () {
+        searchTerm = searchEl.value.trim().toLowerCase();
+        renderState();
+      });
+    }
+    if (clearEl) {
+      clearEl.addEventListener('click', function () {
+        activeCard = null;
+        renderState();
+      });
+    }
 
     return { load: load, isLoaded: function () { return loaded; } };
   })();

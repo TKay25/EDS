@@ -2794,3 +2794,155 @@ select.crm-select:focus {
 
 /* ------------------------------------------------------------ controls */
 .ps-btn-sm { padding: 6px 11px; font-size: 0.73rem; gap: 5px; }
+
+/* ==========================================================================
+   ORDER STATUS CARDS AND SALES CHART
+   The cards are the at-a-glance read of the Orders tab: seven states, one row,
+   each pressable to filter the list below. They are sized to the same compact
+   scale as the rest of the portal so the table stays the focus - the cards are
+   a way in, not the content.
+   ========================================================================== */
+.crm-cards {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.crm-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--ps-line);
+  border-radius: var(--ps-radius-sm);
+  background: var(--ps-surface);
+  box-shadow: var(--ps-shadow-soft);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  /* The left edge carries the state colour, so the row reads as a set of
+     states rather than seven identical buttons. */
+  border-left: 3px solid var(--crm-card-accent, var(--ps-accent));
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.crm-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ps-shadow);
+}
+.crm-card:focus-visible {
+  outline: 2px solid var(--ps-accent);
+  outline-offset: 2px;
+}
+.crm-card.is-active {
+  border-color: var(--crm-card-accent, var(--ps-accent));
+  box-shadow: 0 0 0 1px var(--crm-card-accent, var(--ps-accent)), var(--ps-shadow);
+  background: var(--crm-card-soft, var(--ps-accent-soft));
+}
+/* An empty card cannot be pressed, so it must not look like it can. */
+.crm-card.is-empty {
+  cursor: default;
+  opacity: 0.55;
+  box-shadow: none;
+}
+.crm-card.is-empty:hover { transform: none; }
+
+.crm-card-icon {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 6px;
+  background: var(--crm-card-soft, var(--ps-accent-soft));
+  color: var(--crm-card-accent, var(--ps-accent));
+  font-size: 0.68rem;
+}
+.crm-card-body { min-width: 0; display: flex; flex-direction: column; }
+.crm-card-count {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.crm-card-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ps-text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* One accent per state, so a card is recognisable by colour before it is read.
+   Amber is deliberately absent: an unset stage is not a warning, it is simply
+   work not started. */
+.crm-card.is-awaiting          { --crm-card-accent: #64748B; --crm-card-soft: rgba(100,116,139,0.12); }
+.crm-card.is-preparing         { --crm-card-accent: #2563EB; --crm-card-soft: rgba(37,99,235,0.12); }
+.crm-card.is-ready             { --crm-card-accent: #F59E0B; --crm-card-soft: rgba(245,158,11,0.14); }
+.crm-card.is-awaiting_delivery { --crm-card-accent: #7C3AED; --crm-card-soft: rgba(124,58,237,0.12); }
+.crm-card.is-delivered         { --crm-card-accent: #10B981; --crm-card-soft: rgba(16,185,129,0.12); }
+.crm-card.is-collected         { --crm-card-accent: #0D9488; --crm-card-soft: rgba(13,148,136,0.12); }
+.crm-card.is-cancelled         { --crm-card-accent: #DC143C; --crm-card-soft: rgba(220,20,60,0.10); }
+
+/* The chart. Columns share the full width so a quiet hour still has somewhere
+   to sit, and the value above each bar is the count rather than an axis. */
+.crm-series {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  min-height: 150px;
+  padding: 4px 2px 0;
+}
+.crm-series-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: 150px;
+}
+.crm-series-count {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--ps-text-soft);
+  line-height: 1;
+  min-height: 0.6rem;
+}
+/* The bar track is the full height so bars grow from a common baseline; the
+   filled part is a percentage of the track. */
+.crm-series-bar {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.crm-series-bar i {
+  display: block;
+  width: 100%;
+  max-width: 34px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #3B82F6, #1D4ED8);
+  min-height: 2px;
+}
+.crm-series-col:hover .crm-series-bar i {
+  background: linear-gradient(180deg, #FF2E5A, #DC143C);
+}
+.crm-series-label {
+  font-size: 0.58rem;
+  color: var(--ps-text-soft);
+  white-space: nowrap;
+  line-height: 1;
+  min-height: 0.58rem;
+}
+
+@media (max-width: 1100px) {
+  .crm-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .crm-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
