@@ -24258,17 +24258,26 @@ SHOP_TEMPLATES = {
         "name": "bchem_order_ready_for_collection",
         "language": "en",
         "category": "UTILITY",
-        # Payment is not offered here as "taken at the shop" any more: the same
-        # message carries a Pay via EcoCash button, and telling a customer both
-        # things at once left them unsure which they were meant to do. The button
-        # is the instruction; the body only says money is still owed.
-        "body": ("{{1}}, order {{2}} is ready for collection at {{3}}. Please bring "
-                 "your reference with you. If it is still unpaid, you can settle it "
-                 "below - or change how you would like to receive it."),
-        "fields": ["customer", "reference", "shop"],
-        # Three buttons is WhatsApp's limit, so the fulfilment choices replace the
-        # generic "Talk to a human": a customer who cannot get to the shop needs
-        # to say so far more than they need a support button on this message.
+        # Split in two because the payment state changes what the customer should
+        # do: a paid order must not be offered a Pay button, and an unpaid one must
+        # not be told nothing is outstanding. A slot for "whether it is paid" could
+        # not express that, because the buttons themselves differ.
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is ready for collection at "
+                 "{{4}}. Please bring your reference with you. If you would like it "
+                 "delivered instead, you can change that below."),
+        "fields": ["customer", "reference", "amount", "shop"],
+        "buttons": [("deliver:{{reference}}", "Deliver to me"),
+                    ("collect:{{reference}}", "I will collect")],
+    },
+    "order_ready_collection_unpaid": {
+        "name": "bchem_order_ready_for_collection_unpaid",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is ready for collection at "
+                 "{{4}}. Please bring your reference with you; the amount is still "
+                 "outstanding. You can settle it below, or change how you would like "
+                 "to receive it."),
+        "fields": ["customer", "reference", "amount", "shop"],
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
                     ("deliver:{{reference}}", "Deliver to me"),
                     ("collect:{{reference}}", "I will collect")],
@@ -25205,18 +25214,20 @@ def shop_order_stage_notice(reference, order, stage):
     address = (order.get("address") or "").strip()
     lines = [f"📦 *Order update — {reference}*", ""]
     if stage == "ready":
-        lines.append(f"✅ *Order is ready for collection"
-                     + (f" at {shop}*." if shop else "*."))
+        amount_text = _order_amount_text(order)
+        heading = (f"✅ *Order {reference} for {amount_text} is ready for collection"
+                   if amount_text else
+                   f"✅ *Order {reference} is ready for collection")
+        lines.append(heading + (f" at {shop}*." if shop else "*."))
         if shop and order.get("shop_address"):
             lines.append(f"📍 {order['shop_address']}")
         lines.append("")
         lines.append(f"Bring your reference *{reference}* with you when you come.")
         if not order.get("paid"):
-            # The same message carries a Pay button, so the body points at it
-            # rather than also claiming payment is taken at the shop: saying both
-            # left the customer unsure which they were meant to do.
-            lines.append("It is still unpaid — tap *Pay via EcoCash* below, or settle it "
-                         "in person.")
+            # The unpaid message carries a Pay button, so the body points at it
+            # rather than also claiming payment is taken at the shop.
+            lines.append("The amount is still outstanding — tap *Pay via EcoCash* below, "
+                         "or settle it in person.")
         lines.append("Tap *Deliver to me* below if you would rather have it sent to an "
                      "address instead.")
     elif stage == "enroute":
@@ -31066,6 +31077,22 @@ def _order_first_name(order):
     return name.split()[0][:40]
 
 
+def _order_amount_text(order):
+    """The order's total as the customer should read it, or '' when there is none.
+
+    An unpriced order has no figure to show, so the sentence around it is written
+    to read correctly whether or not one is present rather than putting a dash
+    where a price belongs.
+    """
+    amount = (order or {}).get("total")
+    if amount is None:
+        return ""
+    try:
+        return f"{(order or {}).get('currency') or PAYNOW_CURRENCY} {float(amount):.2f}"
+    except (TypeError, ValueError):
+        return ""
+
+
 def _stage_template_for(stage, order):
     """Which template carries this stage, and with what values.
 
@@ -31079,9 +31106,16 @@ def _stage_template_for(stage, order):
         # The customer is addressed by name on this one because it is the message
         # that asks them to change their mind about how they receive the order: a
         # personal greeting reads as a person asking, not a system announcing.
-        return ("order_ready_collection", {"customer": _order_first_name(order),
-                                           "reference": order.get("reference"),
-                                           "shop": shop or "-"})
+        #
+        # Two templates rather than one with a payment slot, because the buttons
+        # differ too: offering "Pay via EcoCash" on an order that is already
+        # settled invites a customer to pay twice.
+        values = {"customer": _order_first_name(order),
+                  "reference": order.get("reference"),
+                  "amount": _order_amount_text(order) or "the amount advised",
+                  "shop": shop or "-"}
+        return ("order_ready_collection" if order.get("paid")
+                else "order_ready_collection_unpaid", values)
     if stage == "enroute":
         if address:
             return ("order_enroute", {"reference": order.get("reference"),
