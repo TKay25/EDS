@@ -347,17 +347,23 @@
   flex: 1 1 0;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  /* Label beside the control rather than above it. Four filters in a row cost a
+     whole extra line when each label sits on its own, and the label is short
+     enough to read at a glance without being stacked. */
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
 }
 
 .crm-filters .crm-field > span {
+  flex: 0 0 auto;
   font-size: 0.63rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--ps-text-soft);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .crm-filters-label {
@@ -365,10 +371,7 @@
   align-items: center;
   gap: 6px;
   flex: 0 0 auto;
-  align-self: flex-start;
-  /* Matches the field label's own line height so "Filters" reads level with
-     "Period", "Payment" and "Fulfilment" instead of drifting below them. */
-  min-height: calc(0.63rem * 1.2 + 3px);
+  align-self: center;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -2946,3 +2949,69 @@ select.crm-select:focus {
 @media (max-width: 720px) {
   .crm-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ==========================================================================
+   FIT-TO-SCREEN PASS
+   The Orders tab is the screen an agent keeps open all day, so the aim is that
+   the cards and a useful number of rows are on screen without scrolling. The
+   bands above the first row are the cost to pay: the tab strip, the filter bar
+   and the card row. Each is squeezed to the smallest height that still reads
+   clearly, and the space between them is cut rather than their contents.
+   ========================================================================== */
+
+/* The tab strip carried a 22px gap beneath it, which was the single largest
+   piece of empty space on the page. */
+.crm-tabs { margin-bottom: 10px; }
+
+.crm-topbar { margin-bottom: 8px; gap: 10px 14px; }
+
+/* The filter bar. The label now sits beside its control, so the bar is one line
+   tall rather than two. */
+.crm-filters-bar { padding: 7px 11px; gap: 6px 10px; }
+.crm-filters { gap: 8px; }
+.crm-filters .ps-input { padding: 5px 24px 5px 9px; font-size: 0.73rem; }
+
+/* The eyebrow is page furniture, not content, so it takes the smallest space
+   that still identifies the page. */
+.crm-topbar .ps-eyebrow { padding: 5px 10px; font-size: 0.66rem; }
+.crm-tab { padding: 6px 12px; font-size: 0.76rem; }
+
+/* Cards: a shorter card, and less space under the row before the panel. */
+.crm-cards { gap: 7px; margin-bottom: 10px; }
+.crm-card { padding: 7px 9px; gap: 7px; }
+.crm-card-count { font-size: 0.94rem; }
+.crm-card-icon { width: 18px; height: 18px; flex-basis: 18px; font-size: 0.64rem; }
+
+/* The panel head above the table. */
+#crmViewOrders .ps-panel-head { padding: 8px 13px; }
+#crmViewOrders .ps-panel-head h3 { font-size: 0.82rem; }
+
+/* Rows. This is what decides how many orders fit on screen, so it is cut harder
+   than the chrome: the row keeps enough height to hold two lines of text and no
+   more. */
+.crm-orders-table td { padding: 5px 9px; }
+.crm-orders-table thead th { padding: 6px 9px; font-size: 0.63rem; }
+.crm-orders-table .crm-ref { font-size: 0.76rem; }
+.crm-orders-table .crm-sub { font-size: 0.63rem; line-height: 1.25; }
+.crm-orders-table .crm-pill { padding: 2px 7px; font-size: 0.66rem; }
+.crm-orders-table .crm-stage { padding: 2px 7px; font-size: 0.66rem; }
+.crm-orders-table .crm-origin { font-size: 0.66rem; }
+.crm-orders-table .crm-amount { font-size: 0.78rem; }
+.crm-orders-table .crm-mini-btn { padding: 3px 6px; font-size: 0.66rem; }
+.crm-orders-table .crm-row-actions { gap: 3px; }
+
+/* The panel itself should not add padding around a table that is already
+   padded per cell. */
+#crmViewOrders .crm-orders-panel .crm-table-wrap { border-radius: 0 0 var(--ps-radius-sm) var(--ps-radius-sm); }
+
+/* Sales analytics reads the same way: fewer pixels per band, more numbers on
+   screen. */
+#crmViewAnalytics .crm-filters-bar { padding: 7px 11px; }
+#crmViewAnalytics .ps-panel-head { padding: 8px 13px; }
+#crmViewAnalytics .ps-panel-body { padding: 10px 13px; }
+#crmViewAnalytics .ps-stat { padding: 9px 11px; }
+#crmViewAnalytics .ps-stat-value { font-size: 0.95rem; }
+#crmViewAnalytics .ps-stat-note { font-size: 0.63rem; margin-top: 4px; }
+.crm-series { min-height: 118px; }
+.crm-series-col { height: 118px; }
+.crm-series { margin-bottom: 0; }
