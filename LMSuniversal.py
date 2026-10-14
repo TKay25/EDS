@@ -21832,6 +21832,37 @@ SHOP_MESSAGE_THEMES = {
 }
 
 
+def _shop_strip_emoji(text):
+    """The text with emoji and pictographs removed, spacing tidied.
+
+    Applied to headers and footers only. The body keeps its emoji, because a
+    glyph in front of a sentence is part of how that sentence reads; the header
+    and footer are chrome, and chrome with a leading emoji on every message makes
+    the thread look noisy rather than designed.
+    """
+    if not text:
+        return text
+    kept = []
+    for character in text:
+        code = ord(character)
+        # The pictographic, symbol, dingbat and transport blocks, plus the
+        # variation selectors and zero-width joiners that hold emoji sequences
+        # together. Anything from those is dropped; ordinary punctuation such as
+        # the middle dot and the apostrophe is kept.
+        if (0x1F000 <= code <= 0x1FAFF or 0x2600 <= code <= 0x27BF
+                or 0x2B00 <= code <= 0x2BFF or 0xFE0F == code or 0x200D == code
+                or 0x2190 <= code <= 0x21FF or 0x2700 <= code <= 0x27BF
+                or 0x1F1E6 <= code <= 0x1F1FF or code == 0x20E3):
+            continue
+        kept.append(character)
+    # A leading "·" or a doubled space is left behind when a glyph beside it goes.
+    cleaned = "".join(kept)
+    cleaned = re.sub(r"^[\s·•\-]+", "", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = re.sub(r"\s+([,.!?;:])", r"\1", cleaned)
+    return cleaned.strip()
+
+
 def _shop_frame(message, theme, header=True):
     """Tag a message with the header theme it should carry.
 
@@ -21848,25 +21879,23 @@ def _shop_frame(message, theme, header=True):
 
 
 def _shop_message_header(theme, language="en"):
-    """The bold header line for a theme, or '' when the theme is unknown."""
-    glyph, label = SHOP_MESSAGE_THEMES.get(theme, ("", ""))[:2]
+    """The bold header line for a theme, or '' when the theme is unknown.
+
+    The glyph is stripped: headers are bold text only.
+    """
+    _glyph, label = SHOP_MESSAGE_THEMES.get(theme, ("", ""))[:2]
     if not label:
         return ""
-    return f"{glyph} *{_shop_translate_text(label, language)}*" if glyph else \
-        f"*{_shop_translate_text(label, language)}*"
+    return f"*{_shop_strip_emoji(_shop_translate_text(label, language))}*"
 
 
 def _shop_message_footer(theme=""):
     """The footer line for a theme.
 
-    Styled to match the message it closes: the accent glyph is the same one the
-    header opened with, so the pair brackets the message as one block. The brand
-    is always in bold, because it is the one part that has to read the same on
-    every message whatever the theme.
+    Plain bold brand text, with no accent glyph. The themed glyph used to sit in
+    front of the brand, which put an emoji on every single message.
     """
-    glyph = (SHOP_MESSAGE_THEMES.get(theme) or ("", "", ""))[2]
-    brand = f"*{BRAND_NAME_FOOTER} · {BRAND_NAME_FOOTER_SUFFIX}*"
-    return f"{glyph} {brand}" if glyph else brand
+    return f"*{BRAND_NAME_FOOTER} · {BRAND_NAME_FOOTER_SUFFIX}*"
 
 
 def _shop_apply_framing(text, message, language="en"):
@@ -23346,30 +23375,92 @@ def _shop_image_caption(message):
     return caption[:1024] or None
 
 
-def _shop_size_list(product, category_index):
-    """The pack size prompt.
+def _shop_size_list(product, category_index, draft=None):
+    """The pack size prompt, with a running count for the line being built.
+
+    Choosing a size used to open a second stage that asked only "how many?", so a
+    simple order cost two replies and a scroll back to the list to change the
+    size. The size list now carries the count: tapping a size adds one, and the
+    step buttons below the list raise or lower it. Choosing a different size moves
+    the count to that size rather than starting again, so the customer can see the
+    whole line before confirming it.
 
     Marked to always render as a WhatsApp list: a product may offer up to ten
-    sizes, and reply buttons stop at three. Each row shows the price when one has
-    been set, so the customer is not choosing blind.
+    sizes, and reply buttons stop at three.
     """
+    draft = draft or {}
+    # The draft names the size by its position, so the row can be marked and the
+    # count shown against it. A draft for another product carries no position
+    # here, which is what keeps one product's count off another's list.
+    position = draft.get("size_index")
+    chosen = None
+    if position is not None and 0 <= int(position) < len(product["sizes"]):
+        chosen = product["sizes"][int(position)]
+    quantity = max(1, int(draft.get("qty") or 0)) if chosen is not None else 0
+
     def label(index, size):
         unit = shop_price({"id": product["id"], "size": size})
-        if unit is None:
-            return size
-        return f"{size} — {PAYNOW_CURRENCY} {unit:.2f}"
+        price = "" if unit is None else f" — {PAYNOW_CURRENCY} {unit:.2f}"
+        # The chosen row says how many are on it, so the count is visible where
+        # the choice was made rather than only in the sentence above.
+        if chosen is not None and index == int(position):
+            return f"{size}{price}  ({quantity} selected)"
+        return f"{size}{price}"
 
     size_options = [(f"size:{index}", label(index, size))
                     for index, size in enumerate(product["sizes"])]
-    prompt = _shop_options(
-        f"📦 *{product['name']}*\n\n"
-        "Which pack size would you like?\n\n"
-        "You can send the size and how many in one reply — for example "
-        "*2 × 750ml*.",
-        size_options,
-    )
+    lines = [f"📦 *{product['name']}*", ""]
+    if chosen is None:
+        lines += ["Which pack size would you like?", "",
+                  "Tapping a size starts your order and you can set how many "
+                  "below. You can also send the size and how many in one reply — "
+                  "for example *2 × 750ml*."]
+    else:
+        unit = shop_price({"id": product["id"], "size": chosen})
+        lines += [f"*{chosen}* — how many would you like?", ""]
+        if unit is None:
+            lines.append(f"Selected: *{quantity}*")
+        else:
+            lines.append(f"Selected: *{quantity}*  =  "
+                         f"*{PAYNOW_CURRENCY} {unit * quantity:.2f}*")
+    prompt = _shop_options("\n".join(lines), size_options)
     prompt["force_list"] = True
+    # The stepper is offered only once a size is chosen, because there is nothing
+    # to count before then.
+    if chosen is not None:
+        prompt["step_buttons"] = True
     return prompt
+
+
+def _shop_size_step_options(product, category_index, draft, language="en"):
+    """The add/remove/confirm buttons under the size list."""
+    return [
+        {"id": "minus", "label": "− 1"},
+        {"id": "plus", "label": "+ 1"},
+        {"id": "addline", "label": "Add to cart"},
+    ]
+
+
+def _shop_size_draft(ctx, product_index):
+    """The size-and-count line being built on the size step, or None.
+
+    Read from the context rather than kept in a module variable, because the
+    context is what survives a restart and what the transcript is rebuilt from.
+    A draft that names a different product is ignored, so a customer who opened
+    another product never sees the previous count.
+    """
+    if ctx.get("draft_size") is None:
+        return None
+    product, resolved = _shop_product_at(product_index)
+    if not product:
+        return None
+    index = int(ctx.get("draft_size") or 0)
+    sizes = product["sizes"]
+    if index < 0 or index >= len(sizes):
+        return None
+    qty = int(ctx.get("draft_qty") or 0)
+    return {"size": sizes[index], "size_index": index, "qty": max(1, qty)}
+
 
 
 def _shop_parse_quantity(raw_input):
@@ -25179,9 +25270,11 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
         return [_shop_product_list(index)]
     if step == "size":
         product, index = _shop_product_at(ctx.get("product", 0))
-        return [_shop_size_list(product, index)]
+        return [_shop_size_list(product, index, _shop_size_draft(ctx, index))]
     if step == "qty":
         product, index = _shop_product_at(ctx.get("product", 0))
+        # The size step now carries the count, but a customer who is already on
+        # this step - or on a channel with no stepper - still reaches it.
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
         return [_shop_text(f"📦 *{product['name']}* — {size}\n\nHow many units would you like?")]
     if step == "cart_qty":
@@ -25820,9 +25913,16 @@ def _shop_cart_qty_prompt():
 
 
 def _shop_pay_phone_prompt(phone):
-    return _shop_text(
+    """Which number to send the EcoCash prompt to.
+
+    The number already on file is offered as a button, so the common case is one
+    tap. Typing a different number still works, which is why the sentence says so:
+    that is the one thing a button cannot cover.
+    """
+    return _shop_options(
         f"📱 Send the EcoCash prompt to which number?\n\n"
-        f"Reply *yes* to use *{phone}*, or type the number to use a different line.")
+        f"Send a different number if you would rather use another line.",
+        [("payphone_yes", f"Use {phone}")])
 
 
 def _shop_pay_wait_prompt(amount):
@@ -26066,7 +26166,9 @@ def _shop_cancel_prompt(order):
             "entered your PIN the payment may still go through, and our sales team will "
             "contact you about it.")
         lines.append("")
-    lines.append("Cancelling cannot be undone. Reply *yes* to cancel, or *no* to keep the order.")
+    # The two answers are the buttons below, so the sentence does not also spell
+    # them out as words to type.
+    lines.append("Cancelling cannot be undone.")
     return _shop_options("\n".join(lines),
                          [("cancel_yes", "Yes, cancel it"), ("orders", "Keep it")])
 
@@ -26138,6 +26240,19 @@ _SHOP_FEEDBACK_STEPS = frozenset({
     "order_confirm", "payment", "language",
 })
 
+# The plain words each step accepts besides its own option ids. Checked before an
+# unrecognised reply is reported, so typing the word that is printed on a button
+# works as well as tapping it. Kept beside the steps rather than inside the guard
+# so a step's vocabulary is stated once, where the step is listed.
+_SHOP_STEP_ACCEPTS = {
+    "order_fulfilment": ("delivery", "deliver", "collection", "collect", "pickup", "pick up"),
+    "order_confirm": ("confirm", "confirm order", "yes"),
+    "order_cancel_confirm": ("cancel", "cancel it", "cancel order", "keep", "keep it"),
+    "payment": ("pay now", "paynow", "pay later", "paylater", "later", "ecocash"),
+    "order_shop": ("shop", "another shop", "change shop", "change"),
+    "language": ("english", "shona", "ndebele"),
+}
+
 
 def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None, display_name=None):
     """Advance the shopping assistant one step.
@@ -26206,6 +26321,10 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         pick = int(command)
         if 1 <= pick <= len(previous_options):
             command = previous_options[pick - 1]
+            # A number that named an option has been resolved to that option's id,
+            # so from here it is indistinguishable from the button and must be
+            # treated as one: the guard below must not then reject it.
+            button_id = command
         else:
             unmatched_number = True
     low = command.lower()
@@ -26756,19 +26875,35 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     # The customer's own words are only echoed back when they typed something: a
     # stray button tap has no useful text to quote, and echoing an id at someone
     # would be noise rather than clarity.
-    if unmatched_number or (
+    # A button press, or a number that named an option, is never treated as a
+    # mistyped reply: the step below is the only thing that can say whether it was
+    # valid. The label the customer tapped arrives as the message text, so
+    # comparing it against a list of id prefixes once rejected a valid tap -
+    # "Collect from the shop" against "collect:".
+    #
+    # A typed reply is checked against both the ids offered and the plain words
+    # this step accepts, so typing a choice's own word - "collect" - is accepted
+    # rather than punished. Anything not listed here still gets the helpful
+    # "not one of the options" message.
+    typed_word = command.strip().lower()
+    accepted_words = _SHOP_STEP_ACCEPTS.get(step, ())
+    named_an_option = (bool(button_id) or typed_word in (previous_options or [])
+                       or typed_word in accepted_words)
+    if not named_an_option and (unmatched_number or (
             command and step in _SHOP_FEEDBACK_STEPS
             and not low.startswith(("cat:", "prod:", "size:", "qty:", "rm:", "cancel:",
-                                    "paynow:", "track:", "deliver:", "collect:"))):
+                                    "paynow:", "track:", "deliver:", "collect:")))):
         typed = (raw_input or "").strip()
         if typed:
             problem = f"🤔 *{typed}* is not one of the options above."
         else:
             problem = "🤔 That choice is not one of the options above."
         prompt = _shop_render(step, ctx, cart, customer, staff, wa_number, display_name, language)
-        return finish(step, prompt + [_shop_text(
-            f"{problem} Please choose from the list, or use *B* to go back and *M* for "
-            "the main menu.")])
+        # The way out is a button, so it is not spelled out here: telling the
+        # customer to type what they can tap reads as the assistant not having
+        # noticed it already offered them.
+        return finish(step, prompt + [_shop_text(f"{problem} Please choose one of the "
+                                                "options above.")])
 
     # ------------------------------------------------------------------ steps
     if step == "category":
@@ -26799,32 +26934,63 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "size":
         product, product_index = _shop_product_at(ctx.get("product", 0))
+        sizes = product["sizes"]
+        # The line being built on this step: which size, and how many of it. It
+        # lives in the context so a re-render shows the same count the customer
+        # last set rather than clearing on every tap.
+        draft = _shop_size_draft(ctx, product_index) if "draft_qty" in ctx else None
+
+        def show_size_list(current=None):
+            return result("size", [_shop_size_list(product, product_index, current)],
+                          new_ctx={"product": product_index, "draft_qty": (current or {}).get("qty", 0),
+                                   "draft_size": (current or {}).get("size_index")})
+
         # A tap is answered from the button id alone. Its label carries the price,
         # and reading a number out of that label once ordered units the customer
         # never chose, so the label is never parsed when a button was pressed.
-        tapped = index_of(command, len(product["sizes"]), "size")
+        tapped = index_of(command, len(sizes), "size")
         if tapped is not None:
-            return result("qty", [_shop_text(
-                f"📦 *{product['name']}* — {product['sizes'][tapped]}\n\n"
-                "How many units would you like?"
-            )], new_ctx={"product": product_index, "size": tapped})
+            # Choosing a size starts its count at one. Choosing a different size
+            # moves the line to it, so the customer is never left with a count on
+            # a pack they moved away from.
+            return show_size_list({"size": sizes[tapped], "size_index": tapped, "qty": 1})
+
+        if low in ("plus", "minus", "addline"):
+            if not draft or draft.get("qty") is None:
+                # A stepper press with nothing chosen yet: show the list so the
+                # customer picks a size first rather than being told off.
+                return show_size_list(None)
+            if low == "addline":
+                return add_to_cart(product, draft["size"], draft["qty"],
+                                   {"product": product_index})
+            step_qty = 1 if low == "plus" else -1
+            moved = max(1, int(draft["qty"]) + step_qty)
+            return show_size_list({"size": draft["size"], "size_index": draft["size_index"],
+                                   "qty": moved})
+
         if button_id:
             # Some other button on this step: nothing to read, so the list is
             # shown again rather than guessing at the label.
-            return result("size", [_shop_size_list(product, product_index)])
+            return show_size_list(draft)
+
         # A typed reply, which may name the size and the quantity in one line.
-        typed_size, typed_qty = _shop_parse_size_and_qty(raw_input, product["sizes"])
+        typed_size, typed_qty = _shop_parse_size_and_qty(raw_input, sizes)
         if typed_size is None:
-            return result("size", [_shop_size_list(product, product_index)])
-        chosen = product["sizes"].index(typed_size)
-        new_ctx = {"product": product_index, "size": chosen}
+            # A bare number with a size already chosen is the count, which is the
+            # old two-stage habit and still worth honouring.
+            bare = _shop_parse_quantity(command)
+            if draft and bare:
+                return show_size_list({"size": draft["size"],
+                                       "size_index": draft["size_index"], "qty": bare})
+            return show_size_list(draft)
+        chosen = sizes.index(typed_size)
         if typed_qty:
-            return add_to_cart(product, typed_size, typed_qty, new_ctx)
-        return result("qty", [_shop_text(
-            f"📦 *{product['name']}* — {typed_size}\n\nHow many units would you like?"
-        )], new_ctx=new_ctx)
+            return add_to_cart(product, typed_size, typed_qty, {"product": product_index})
+        return show_size_list({"size": typed_size, "size_index": chosen, "qty": 1})
 
     if step == "qty":
+        # Kept for a customer who is already on it, and for a channel that cannot
+        # show the stepper. New traffic reaches the size step and its count.
         product, product_index = _shop_product_at(ctx.get("product", 0))
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
         quantity = _shop_parse_quantity(command)
@@ -27152,14 +27318,16 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "pay_phone":
         typed = (raw_input or "").strip()
-        phone = ctx.get("phone") if low in affirmative_words else typed
+        # The button means "use the number on file"; typing a number overrides it.
+        use_saved = low in affirmative_words or low == "payphone_yes"
+        phone = ctx.get("phone") if use_saved else typed
         phone = re.sub(r"[^0-9]", "", str(phone or ""))
         if phone.startswith("263"):
             phone = "0" + phone[3:]
         if not (phone.startswith("07") and len(phone) >= 10):
             return result("pay_phone", [_shop_text(
                 "That does not look like a Zimbabwean mobile number. "
-                "Please send it like *0771234567*, or reply *B* to change your choice.")])
+                "Please send it like *0771234567*.")])
         ok, message, poll_url = paynow_initiate(
             ctx.get("reference"), ctx.get("amount") or 0, phone, customer,
             description=f"Brilliant Chemicals order {ctx.get('reference')}")
@@ -27215,8 +27383,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                                ("paylater", "Pay later instead")]),
             ], new_ctx=ctx)
         return result("pay_wait", [
-            _shop_text("⏳ EcoCash is still waiting for your PIN. The prompt is on your phone — "
-                       "authorise it and then reply *yes*."),
+            _shop_text("⏳ EcoCash is still waiting for your PIN. The prompt is on your "
+                       "phone — authorise it and tap below once you are done."),
             _shop_options("Once you are done:",
                           [("paid_check", "I have authorised it"),
                            ("paylater", "Pay later instead")]),
@@ -28117,15 +28285,20 @@ def shop_order_reminder_send(wa_number, reference, reason=SHOP_REMINDER_REASON):
 
 
 def shop_nav_block(nav, language="en"):
-    """The navigation footer appended to every customer reply."""
-    if not nav or not (nav.get("back") or nav.get("menu")):
-        return ""
-    lines = []
-    if nav.get("back"):
-        lines.append("↩️  *B* — back to the previous menu")
-    if nav.get("menu"):
-        lines.append("🏠  *M* — main menu")
-    return "━━━━━━━━━━━━━━━\n" + _shop_translate_text("\n".join(lines), language)
+    """Kept as a function, but no longer printed.
+
+    Navigation used to be spelled out at the bottom of every reply - "reply *B* to
+    go back, *M* for the main menu" - while the same two actions are now sent as
+    reply buttons, and a button needs no explaining. Printing both told the
+    customer to type something they could simply tap, and it made every message
+    longer than it needed to be.
+
+    The transcript and the CRM thread no longer carry it either, so what an agent
+    reads matches what the customer saw. Nothing calls this, and it is left in
+    place rather than deleted so the old wording is recoverable if a channel that
+    cannot render buttons ever needs it.
+    """
+    return ""
 
 
 def shop_nav_options(nav, language="en", with_language=False):
@@ -28277,14 +28450,52 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
     # A prompt can insist on a list. The pack size choice does, because a product
     # may offer up to ten sizes and reply buttons stop at three.
     must_list = bool((choice or {}).get("force_list"))
+    # The size stepper puts its own buttons under the list: the list carries the
+    # sizes and the buttons carry the count, which is how a size and a quantity
+    # are chosen in one reply instead of two prompts.
+    step_options = []
+    if (choice or {}).get("step_buttons"):
+        step_options = [
+            {"id": "minus", "label": _shop_translate_option("− 1", language)},
+            {"id": "plus", "label": _shop_translate_option("+ 1", language)},
+            {"id": "addline", "label": _shop_translate_option("Add to cart", language)},
+        ]
     nav_options = shop_nav_options(nav, language)
     if _shop_offer_language(len(content_options), len(nav_options), must_list):
         nav_options = shop_nav_options(nav, language, with_language=True)
     options = content_options + nav_options
     body = "\n\n".join(parts)
 
+    # A message with no choices of its own still gets its navigation as buttons.
+    # A plain line of text with nothing to tap leaves the customer to remember
+    # the keywords, and the footer already tells them Main menu exists; this puts
+    # it in reach. The opening message offers nothing, so it stays plain: a button
+    # leading to the screen the customer is already looking at is worse than none.
     if not options:
+        nav_only = shop_nav_options(nav, language)
+        if nav_only and body and len(body) <= WA_BUTTON_BODY_LIMIT:
+            return [_wa_button_payload(body, nav_only)]
         return [_wa_text_payload(body)] if body else []
+
+    # With a stepper, the sizes and the count share one message where they fit
+    # together in the three buttons WhatsApp allows. They rarely do - a product
+    # with three sizes leaves no room for a count - so the usual shape is the
+    # sizes as a list and the stepper as buttons beneath it, which is still one
+    # reply from the customer. The stepper branch is decided before the generic
+    # button path, because the count must own the buttons; if the generic path ran
+    # first it would spend them on the sizes and the count would be cut off.
+    if step_options:
+        together = content_options + step_options
+        if len(together) <= WA_BUTTON_LIMIT:
+            prompt = body or _shop_translate_text("Choose an option:", language)
+            if len(prompt) <= WA_BUTTON_BODY_LIMIT:
+                return [_wa_button_payload(prompt, together)]
+        # The list carries the sizes, and the count follows as its own message,
+        # because a WhatsApp list cannot carry reply buttons of its own.
+        return [_wa_list_payload(body, content_options + nav_options,
+                                 len(nav_options), language),
+                _wa_button_payload(_shop_translate_text("How many?", language),
+                                   step_options)]
 
     if not must_list and len(options) <= WA_BUTTON_LIMIT:
         prompt = body or _shop_translate_text("Choose an option:", language)
