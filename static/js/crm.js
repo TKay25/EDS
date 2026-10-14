@@ -1411,6 +1411,7 @@
         stockCurrent.textContent = 'Add a shop to start keeping stock.';
       }
       setShopEditEnabled(false);
+      paintStaffShopOptions([]);
       return;
     }
     stockSelect.disabled = false;
@@ -1421,6 +1422,9 @@
     if (current) stockSelect.value = current.id;
     setShopEditEnabled(true);
     paintShopCurrent(current);
+    // The staff panel lists the same shops, so it is filled from the same read
+    // and keeps whatever shop the stock panel is showing.
+    paintStaffShopOptions(stockShops, current ? current.id : null);
   }
 
   function selectedShop() {
@@ -1604,6 +1608,9 @@
         renderStockShops(result.shops, result.shop);
         renderStockRows(result.rows);
         renderStockMovements(result.movements);
+        // The staff panel shows the shop the stock panel is on, so its list is
+        // loaded here rather than waiting for the dropdown to be touched.
+        loadShopStaff(stockShopId);
       })
       .catch(function () {
         stockBody.innerHTML = '<tr><td colspan="3" class="crm-empty-cell">' +
@@ -1673,14 +1680,6 @@
     // id is never derived from the new name, so orders and stock rows that point
     // at the shop keep pointing at it.
     if (editing) payload.shop_id = editing;
-    // The staff are collected before the shop is saved, so a validation failure
-    // on them stops the shop being renamed around a list that never saved.
-    var staff = collectShopStaff();
-    if (staff.length > STAFF_LIMIT) {
-      window.crmToast && window.crmToast(
-        'A shop can have up to ' + STAFF_LIMIT + ' staff.', 'error');
-      return;
-    }
     postJson('/api/crm/shops', payload).then(function (result) {
       if (!result.success) {
         setBusy(button, false);
@@ -1688,22 +1687,13 @@
           result.message || 'Could not save the shop.', 'error');
         return;
       }
-      var shopId = result.shop ? result.shop.id : '';
-      // The staff are saved against the shop that was just written, so a brand
-      // new shop takes its people in the same action as its name.
-      saveShopStaff(shopId).then(function (staffOk) {
-        setBusy(button, false);
-        window.crmToast && window.crmToast(
-          staffOk && staff.length
-            ? (result.message || 'Shop saved.') + ' Staff notified of new orders.'
-            : (result.message || (result.success ? 'Shop saved.' : 'Could not save the shop.')),
-          'success');
-        closeShopForm();
-        stockShopId = result.shop ? result.shop.id : null;
-        renderStockShops(result.shops, result.shop);
-        renderStockRows(result.rows);
-        renderStockMovements(result.movements);
-      });
+      setBusy(button, false);
+      window.crmToast && window.crmToast(result.message || 'Shop saved.', 'success');
+      closeShopForm();
+      stockShopId = result.shop ? result.shop.id : null;
+      renderStockShops(result.shops, result.shop);
+      renderStockRows(result.rows);
+      renderStockMovements(result.movements);
     }).catch(function () {
       setBusy(button, false);
       window.crmToast && window.crmToast('Could not save the shop.', 'error');
@@ -1721,8 +1711,6 @@
     if (addressEl) addressEl.value = shop ? (shop.address || '') : '';
     if (phoneEl) phoneEl.value = shop ? (shop.phone || '') : '';
     paintShopNameCount();
-    // An existing shop loads its saved staff; a new one starts with a blank row.
-    loadShopStaff(shop ? shop.id : null);
     shopForm.hidden = false;
     if (nameEl) nameEl.focus();
   }
@@ -1859,6 +1847,41 @@
     shopStaffAdd.addEventListener('click', function () {
       if (shopStaffAdd.disabled) return;
       addShopStaffRow();
+    });
+  }
+
+  /* The staff panel is always on screen now, so it owns its own shop picker and
+     save button rather than borrowing the shop form's. It is filled from the
+     same shop list the stock panel uses, so the two cannot disagree on which
+     shops exist. */
+  var staffShopSelect = document.getElementById('crmStaffShop');
+  var shopStaffSave = document.getElementById('crmShopStaffSave');
+
+  function paintStaffShopOptions(shops, selectedId) {
+    if (!staffShopSelect) return;
+    var list = shops || [];
+    staffShopSelect.innerHTML = list.length
+      ? list.map(function (shop) {
+          return '<option value="' + escapeHtml(shop.id) + '">' +
+            escapeHtml(shop.name) + '</option>';
+        }).join('')
+      : '<option value="">No shops yet</option>';
+    var wanted = selectedId || staffShopSelect.value || (list[0] && list[0].id) || '';
+    if (wanted) staffShopSelect.value = wanted;
+  }
+
+  if (staffShopSelect) {
+    staffShopSelect.addEventListener('change', function () {
+      loadShopStaff(staffShopSelect.value);
+    });
+  }
+  if (shopStaffSave) {
+    shopStaffSave.addEventListener('click', function () {
+      if (!staffShopSelect || !staffShopSelect.value) {
+        window.crmToast && window.crmToast('Add a shop first.', 'error');
+        return;
+      }
+      saveShopStaff(staffShopSelect.value);
     });
   }
 
