@@ -623,7 +623,43 @@
 
       renderPaymentHistory(history);
       renderStagePicker(order);
+      renderAddressEditor(order);
       orderTitle.textContent = 'Order ' + order.reference;
+    }
+
+    /* The address can be changed until the order is en route, because after that
+       the deliverer is working from what is on file. The control is disabled with
+       a reason rather than silently refusing the save. */
+    function renderAddressEditor(order) {
+      var input = document.getElementById('crmOrderAddress');
+      var hint = document.getElementById('crmOrderAddressHint');
+      var saveBtn = document.getElementById('crmOrderAddressSave');
+      var block = document.getElementById('crmOrderAddressBlock');
+      if (!input) return;
+      var settled = order.cancelled || order.fulfilled;
+      var stage = (order.stage || '').toLowerCase();
+      var tooLate = ['enroute', 'delivered', 'collected'].indexOf(stage) !== -1;
+      var locked = settled || tooLate;
+      // Only prefill when the field is not being typed into, so a refresh mid-edit
+      // does not wipe what the agent has entered.
+      if (document.activeElement !== input) input.value = order.address || '';
+      input.disabled = locked;
+      if (saveBtn) saveBtn.disabled = locked;
+      if (block) block.classList.toggle('is-locked', locked);
+      if (hint) {
+        if (order.cancelled) {
+          hint.textContent = 'This order is cancelled, so its address cannot be changed.';
+        } else if (tooLate) {
+          hint.textContent = 'This order is already on its way, so the address can no ' +
+            'longer be changed — the deliverer is working from what is on file.';
+        } else if (!order.address) {
+          hint.textContent = 'No address on file. Add one so the order can be delivered, ' +
+            'and the customer can be told where it is going.';
+        } else {
+          hint.textContent = 'Used on the delivery note and sent to the customer. Can be ' +
+            'changed until the order is marked en route.';
+        }
+      }
     }
 
     /* The stage picker offers only what this order's fulfilment allows, so a
@@ -959,6 +995,36 @@
               .catch(function () {
                 action.disabled = false;
                 window.crmToast && window.crmToast('Could not request payment.', 'error');
+              });
+            return;
+          }
+          if (kind === 'set-address') {
+            var addressEl = document.getElementById('crmOrderAddress');
+            var typedAddress = addressEl ? addressEl.value.trim() : '';
+            if (typedAddress.length < 5) {
+              window.crmToast && window.crmToast(
+                'Enter a fuller address — the street, the suburb, and anything the ' +
+                'deliverer needs.', 'error');
+              if (addressEl) addressEl.focus();
+              return;
+            }
+            action.disabled = true;
+            postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/address',
+                     { address: typedAddress })
+              .then(function (result) {
+                action.disabled = false;
+                if (!result.success) {
+                  window.crmToast && window.crmToast(
+                    result.message || 'Could not update the address.', 'error');
+                  return;
+                }
+                window.crmToast && window.crmToast(
+                  result.message || 'Delivery address updated.', 'success');
+                openOrder(orderRef);
+              })
+              .catch(function () {
+                action.disabled = false;
+                window.crmToast && window.crmToast('Could not update the address.', 'error');
               });
             return;
           }

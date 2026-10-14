@@ -321,46 +321,73 @@
    Three selects plus labels do not fit on one line at tablet width, and the
    labels were taller than the fields, causing a ragged wrap. They now share a
    single compact toolbar instead of a title bar above a body. */
+/* The row is top-aligned so the "Filters" label and every field label share one
+   baseline; bottom-aligning them left the label floating under a gap. */
 .crm-filters-bar {
   display: flex;
-  align-items: flex-end;
-  gap: 14px 20px;
+  align-items: flex-start;
+  gap: 8px 12px;
   flex-wrap: wrap;
-  padding: 14px 18px;
+  padding: 9px 14px;
 }
 
 .crm-filters-bar .crm-filters { flex: 1 1 auto; }
 
+.crm-filters-label i { color: var(--ps-accent); font-size: 0.78rem; }
+
+.crm-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.crm-filters .crm-field {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.crm-filters .crm-field > span {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ps-text-soft);
+  line-height: 1.2;
+}
+
 .crm-filters-label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 0 0 auto;
-  align-self: flex-end;
-  padding-bottom: 11px;
-  font-size: 0.72rem;
+  align-self: flex-start;
+  /* Matches the field label's own line height so "Filters" reads level with
+     "Period", "Payment" and "Fulfilment" instead of drifting below them. */
+  min-height: calc(0.63rem * 1.2 + 3px);
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ps-text-soft);
   white-space: nowrap;
 }
 
-.crm-filters-label i { color: var(--ps-accent); font-size: 0.82rem; }
-
-.crm-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
-
-.crm-filters .crm-field { min-width: 158px; }
-
 .crm-filters .ps-input {
-  padding: 9px 34px 9px 12px;
+  width: 100%;
+  padding: 7px 26px 7px 10px;
   font-family: inherit;
-  font-size: 0.79rem;
+  font-size: 0.75rem;
   color: var(--ps-text);
   background-color: var(--ps-surface);
   border: 1px solid var(--ps-line);
   border-radius: var(--ps-radius-sm);
   cursor: pointer;
+  text-overflow: ellipsis;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -1334,7 +1361,7 @@ select.crm-select:focus {
    their labels and push the numbers below the fold, so the label takes its own
    line and the fields pair up. */
 @media (max-width: 720px) {
-  .crm-filters-bar { padding: 12px 14px; gap: 10px 12px; }
+  .crm-filters-bar { padding: 9px 12px; gap: 7px 9px; }
 
   .crm-filters-label {
     width: 100%;
@@ -1342,9 +1369,11 @@ select.crm-select:focus {
     padding-bottom: 0;
   }
 
-  .crm-filters { gap: 10px; }
+  /* Below this width a single row would squeeze each dropdown past the point
+     where its own option text fits, so they pair up instead. */
+  .crm-filters { flex-wrap: wrap; gap: 8px; }
 
-  .crm-filters .crm-field { flex: 1 1 calc(50% - 5px); min-width: 0; }
+  .crm-filters .crm-field { flex: 1 1 calc(50% - 4px); min-width: 0; }
   .crm-filters .crm-field:first-child { flex: 1 1 100%; }
 
   .crm-orders-table td, .crm-orders-table th { padding: 12px 14px; }
@@ -2684,6 +2713,73 @@ select.crm-select:focus {
 .crm-build-row { gap: 5px; }
 .crm-build-row select,
 .crm-build-qty { min-height: 31px; }
+
+/* The address field in the order modal. A locked one is visibly inert rather
+   than merely unresponsive, so the reason in the hint is what explains it. */
+.crm-order-address.is-locked input,
+.crm-order-address.is-locked .ps-input {
+  background: var(--ps-surface-alt);
+  color: var(--ps-text-soft);
+  cursor: not-allowed;
+}
+.crm-order-address .crm-order-settle-row { align-items: stretch; }
+.crm-order-address .ps-input { min-width: 0; }
+
+/* ==========================================================================
+   MODAL DENSITY
+   The order modal is the screen an agent reads before ringing a customer, so it
+   is scanned rather than studied. Everything below trims the padding and the
+   label sizes a notch; the figure the agent is actually deciding on - the total -
+   keeps its weight, because that is what the eye should land on.
+   ========================================================================== */
+.crm-order-card { gap: 9px; padding: 13px; }
+.crm-order-head { padding: 10px 13px; gap: 9px; }
+.crm-order-head h4 { font-size: 0.85rem; }
+.crm-order-body { gap: 9px; }
+.crm-od-head { gap: 8px; }
+.crm-od-head h5 { font-size: 0.84rem; margin: 0 0 1px; }
+
+/* The metadata grid: two label/value pairs per row instead of two rows of one,
+   which is where most of the modal's spare height was going. */
+.crm-od-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 5px 12px;
+}
+.crm-od-fields dt { font-size: 0.6rem; letter-spacing: 0.07em; }
+.crm-od-fields dd { font-size: 0.75rem; }
+
+.crm-od-table th { font-size: 0.6rem; padding: 5px 8px; }
+.crm-od-table td { font-size: 0.74rem; padding: 5px 8px; }
+.crm-od-total { padding: 8px 11px; }
+.crm-od-total strong { font-size: 0.98rem; }
+.crm-od-warn, .crm-od-note { padding: 7px 10px; font-size: 0.71rem; }
+.crm-od-status { font-size: 0.71rem; }
+
+.crm-order-settle { padding: 9px 11px; gap: 7px; border-radius: 10px; }
+.crm-order-settle > label { font-size: 0.63rem; }
+.crm-order-settle-row { gap: 6px; }
+.crm-order-settle-row select,
+.crm-order-settle-row input { padding: 6px 9px; font-size: 0.75rem; min-height: 30px; }
+.crm-order-settle-hint { font-size: 0.65rem; line-height: 1.4; }
+.crm-order-notify { font-size: 0.68rem; }
+.crm-order-actions { gap: 6px; }
+.crm-order-actions .ps-btn-sm { padding: 5px 9px; font-size: 0.7rem; }
+
+/* The modal's own head when opened from the order list. */
+.crm-modal-head { padding: 10px 14px; }
+.crm-modal-head h2 { font-size: 0.85rem; }
+.crm-modal-body { padding: 11px 14px; }
+.crm-modal-hint { font-size: 0.68rem; }
+.crm-modal-filters { gap: 8px; }
+.crm-modal-filters .crm-field > span { font-size: 0.63rem; }
+
+/* Activity log rows: the summary is the content and the icon is decoration, so
+   the icon gives up its width first. */
+.crm-log-row { padding: 7px 10px; gap: 8px; }
+.crm-log-icon { width: 24px; height: 24px; font-size: 0.66rem; }
+.crm-log-summary { font-size: 0.71rem; line-height: 1.4; }
+
 
 /* ------------------------------------------------------------ branding */
 .crm-branding { gap: 13px; padding: 13px 15px; margin: 0 16px 14px; }

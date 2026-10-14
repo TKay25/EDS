@@ -24431,22 +24431,31 @@ SHOP_TEMPLATES = {
         "name": "bchem_order_enroute_noaddress",
         "language": "en",
         "category": "UTILITY",
-        # Used when the order carries no address to name. The customer is still
-        # told it is coming; the sentence simply does not claim to know where.
-        "body": ("Hey {{1}}, your order {{2}} for {{3}} has been paid and is on its way "
-                 "to you. Please quote your reference to the deliverer."),
+        # NOT a dispatch notice. This one is sent when a delivery order has no
+        # address on file, so announcing "it is on its way" would promise a
+        # delivery nobody can make. It asks for the address instead, which is the
+        # one thing standing between this order and it actually moving. The button
+        # carries the reference so the reply lands on the right order.
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is paid and ready to be "
+                 "delivered, but we have no address on file for it. Tap "
+                 "*Send my address* below and reply with your full delivery address "
+                 "so we can get it to you."),
         "fields": ["customer", "reference", "amount"],
-        "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
+        "buttons": [("deliver:{{reference}}", "Send my address"),
+                    ("track", "Track my order"), ("support_human", "Talk to a human")],
     },
     "order_enroute_no_address_unpaid": {
         "name": "bchem_order_enroute_noaddress_unpaid",
         "language": "en",
         "category": "UTILITY",
-        "body": ("Hey {{1}}, your order {{2}} for {{3}} is on its way to you. Please have "
-                 "the payment ready for the deliverer, or settle it below."),
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is ready to be delivered, but we "
+                 "have no address on file for it. Tap *Send my address* below and reply "
+                 "with your full delivery address. The amount is also still outstanding, "
+                 "so you can settle it below."),
         "fields": ["customer", "reference", "amount"],
-        "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
-                    ("track", "Track my order"), ("support_human", "Talk to a human")],
+        "buttons": [("deliver:{{reference}}", "Send my address"),
+                    ("paynow:{{reference}}", "Pay via EcoCash"),
+                    ("support_human", "Talk to a human")],
     },
     "order_delivered": {
         "name": "bchem_order_delivered",
@@ -25363,6 +25372,15 @@ def shop_order_stage_text(order):
         # telling a paid customer to have payment ready is what made this read
         # wrong once the Pay button was removed for them.
         amount_text = _order_amount_text(order)
+        if not address:
+            # Same hole as the stage notice: a delivery with no address cannot be
+            # described as on its way, so the customer is asked for it.
+            return ("🚚 *We need your delivery address*\n\nOrder "
+                    + (f"*{order.get('reference')}* for *{amount_text}* is"
+                       if amount_text else f"*{order.get('reference')}* is")
+                    + " ready to be delivered, but we have no address on file for it. "
+                      "Tap *Send my address* below and reply with your full delivery "
+                      "address.")
         heading = ("🚚 *Order "
                    + (f"{order.get('reference')} for {amount_text} is" if amount_text
                       else f"{order.get('reference')} is")
@@ -25439,19 +25457,38 @@ def shop_order_stage_notice(reference, order, stage):
                      "address instead.")
     elif stage == "enroute":
         amount_text = _order_amount_text(order)
-        lines.append("🚚 *Order "
-                     + (f"{reference} for {amount_text} is" if amount_text
-                        else f"{reference} is")
-                     + " en route to the given address for delivery*"
-                     + (f": {address}" if address else "")
-                     + ".")
-        lines.append("")
-        lines.append(f"Quote your reference *{reference}* to the deliverer.")
-        if order.get("paid"):
-            lines.append("It is fully paid — nothing more is owed. 🙏")
+        if not address:
+            # A delivery with nowhere to go. Announcing it is on its way would
+            # promise something nobody can make good, so the message asks for the
+            # address instead - the one thing that unblocks the order.
+            lines.append("🚚 *We need your delivery address*")
+            lines.append("")
+            lines.append("Order "
+                         + (f"*{reference}* for *{amount_text}* is"
+                            if amount_text else f"*{reference}* is")
+                         + " ready to be delivered, but we have no address on file for it.")
+            lines.append("")
+            lines.append("Tap *Send my address* below and reply with your full delivery "
+                         "address, including the suburb and anything the deliverer needs "
+                         "to find you.")
+            if not order.get("paid"):
+                lines.append("")
+                lines.append("The amount is also still outstanding — tap *Pay via EcoCash* "
+                             "below to settle it.")
         else:
-            lines.append("Please have the payment ready on delivery, or tap "
-                         "*Pay via EcoCash* below.")
+            lines.append("🚚 *Order "
+                         + (f"{reference} for {amount_text} is" if amount_text
+                            else f"{reference} is")
+                         + " en route to the given address for delivery*"
+                         + (f": {address}" if address else "")
+                         + ".")
+            lines.append("")
+            lines.append(f"Quote your reference *{reference}* to the deliverer.")
+            if order.get("paid"):
+                lines.append("It is fully paid — nothing more is owed. 🙏")
+            else:
+                lines.append("Please have the payment ready on delivery, or tap "
+                             "*Pay via EcoCash* below.")
     elif stage == "delivered":
         lines.append("📦 *Order delivered.*")
         lines.append("")
@@ -25929,6 +25966,12 @@ def _shop_track_prompt(wa_number):
 def _shop_track_view(order, wa_number):
     """The tracking reply for one order, with its next-step choices."""
     options = [("nudge", "Send a reminder about it")]
+    # Offered only while the goods are not yet on their way, so the choice on
+    # screen can always be honoured rather than leading to a refusal.
+    if order.get("address_changeable"):
+        options.append((f"deliver:{order['reference']}",
+                        "Change the address" if order.get("address")
+                        else "Add a delivery address"))
     # A cancellable order still has the cancel choice one screen away, so it is
     # offered here rather than making the customer go back to the order list.
     if order["cancellable"]:
@@ -26436,14 +26479,31 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         # already carries an address can reuse it, so the customer is only asked
         # when there is genuinely nothing on file.
         existing_address = str(order.get("address") or "").strip()
-        if fulfilment_method == "delivery" and not existing_address:
-            return result("order_address", [_shop_text(
-                f"🚚 *Deliver to which address?*\n\n"
-                f"Please send the full delivery address for order "
-                f"*{order['reference']}*, including the suburb and anything the "
-                f"deliverer needs to find you."
-            )], new_ctx=dict(ctx, change_reference=order["reference"],
-                             change_method="delivery"))
+        already_delivery = (order.get("delivery_method") or "collection") == "delivery"
+        # The tracking screen offers "Change the address", so tapping that must
+        # open the address prompt even when one is already on file - otherwise the
+        # customer would tap it and be told the order is already set to delivery.
+        from_tracking = bool(ctx.get("track_reference")) and already_delivery
+        change_only = already_delivery and (from_tracking or not existing_address)
+        if fulfilment_method == "delivery" and (change_only or not existing_address):
+            # Supplying or correcting the address of an order already set for
+            # delivery is not a change of fulfilment, so it must not be blocked by
+            # the stage gate that stops a method being switched after dispatch.
+            prompt = (f"🚚 *Which address should we deliver to?*"
+                      + (f"\n\nThe address on file is:\n📍 {existing_address}" if existing_address
+                         else "")
+                      + f"\n\nPlease send the full delivery address for order "
+                        f"*{order['reference']}*, including the suburb and anything the "
+                        f"deliverer needs to find you."
+                      if change_only else
+                      f"🚚 *Deliver to which address?*\n\n"
+                      f"Please send the full delivery address for order "
+                      f"*{order['reference']}*, including the suburb and anything the "
+                      f"deliverer needs to find you.")
+            return result("order_address", [_shop_text(prompt)],
+                          new_ctx=dict(ctx, change_reference=order["reference"],
+                                       change_method="delivery",
+                                       change_address_only=change_only))
         ok, reason, fresh = shop_order_fulfilment_set(
             order["reference"], wa_number, fulfilment_method,
             address=existing_address or None)
@@ -26903,6 +26963,40 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                     "Please send a fuller address — the street, the suburb, and "
                     "anything the deliverer needs to find you."
                 )], new_ctx=ctx)
+            # Completing a delivery that had no address is not a fulfilment
+            # change, so it skips the stage gate: the order is already set for
+            # delivery and this only supplies the detail it was missing. Refusing
+            # it here would leave the order permanently undeliverable.
+            if ctx.get("change_address_only"):
+                ok, message, fresh = shop_order_address_set(change_reference,
+                                                            wa_number, typed)
+                if not ok:
+                    return result("orders", [
+                        _shop_text(f"😕 {message} Our sales team will sort it out — I have "
+                                   "passed this on."),
+                        _shop_options("What would you like to do?",
+                                      [("orders", "Track my orders"),
+                                       ("support_human", "Talk to a human")]),
+                    ], actions=[{"type": "escalate",
+                                 "reason": f"Customer could not set an address on "
+                                           f"{change_reference}"}])
+                had_previous = bool(str(order.get("address") or "").strip())
+                body = (("✅ *Address updated*" if had_previous else "✅ *Address saved*")
+                        + "\n\n"
+                        + f"Thank you — order *{fresh['reference']}* will be delivered to:\n"
+                        + f"📍 {typed}\n\n"
+                        + "We will message you when it is on its way.")
+                return result("track_view",
+                              [_shop_text(body)] + _shop_track_view(fresh, wa_number),
+                              new_ctx=dict(ctx, track_reference=fresh["reference"],
+                                           change_reference=None, change_method=None,
+                                           change_address_only=None),
+                              actions=[{"type": "escalate",
+                                        "reason": f"Customer supplied the delivery "
+                                                  f"address for {fresh['reference']}",
+                                        "message": f"The customer gave the delivery "
+                                                   f"address for {fresh['reference']}: "
+                                                   f"{typed}"}])
             ok, reason, fresh = shop_order_fulfilment_set(
                 change_reference, wa_number, "delivery", address=typed)
             if not ok:
@@ -27501,6 +27595,10 @@ def _shop_payment_event_text(event, status, payload):
             return ("Customer changed this to delivery from the assistant"
                     + (f": {where}" if where else ""))
         return "Customer changed this to collection from the assistant"
+    if event == "address_supplied":
+        where = str(payload or "").strip()
+        return ("Customer supplied the delivery address from the assistant"
+                + (f": {where}" if where else ""))
     return f"{event or 'payment'} — {status or 'no status'}".strip()
 
 
@@ -27639,6 +27737,12 @@ def shop_customer_orders(wa_number, limit=5):
             "stage_at": fmt_time(row[17], "%d %b %Y %H:%M"),
             "stage_by": row[18] or "",
         })
+        # An address can be changed until the goods are actually on their way, so
+        # the tracking screen only offers it while that is still true.
+        orders[-1]["address_changeable"] = (
+            not (cancelled or fulfilled)
+            and (row[16] or "").strip().lower() not in ("enroute", "delivered", "collected")
+            and (row[13] or "delivery") == "delivery")
     return orders
 
 
@@ -27723,6 +27827,79 @@ def shop_order_for(wa_number, reference):
         return None
     return next((row for row in shop_customer_orders(owner, limit=SHOP_TRACK_LOOKUP_LIMIT)
                  if row["reference"] == reference), None)
+
+
+def shop_order_address_set(reference, wa_number, address, user=None):
+    """Fill in or change a delivery address on the customer's own order.
+
+    Separate from shop_order_fulfilment_set because it is not a change of
+    fulfilment: the order is already set for delivery, and the stage gate that
+    rightly blocks switching method must not block supplying the detail a
+    delivery cannot happen without. Scoped to the ordering number, and refused
+    once the goods are actually on their way.
+    """
+    address = " ".join(str(address or "").split()).strip()
+    if len(address) < 5:
+        return False, "That address is too short to deliver to.", {}
+    reference = (reference or "").strip().upper()
+    order = shop_order_for(wa_number, reference)
+    if not order:
+        return False, "I could not find that order on this number.", {}
+    return _shop_order_address_write(order, address, changed_by=user)
+
+
+def _shop_order_address_write(order, address, changed_by=None):
+    """Write an address to an order row, enforcing the not-yet-enroute rule.
+
+    The rule lives here rather than in each caller so the chatbot and the CRM
+    portal cannot drift apart: once the goods are en route the address is what
+    the deliverer is working from, and changing it from a screen would silently
+    send them to the wrong place.
+    """
+    reference = (order or {}).get("reference") or ""
+    if not reference:
+        return False, "That order could not be found.", {}
+    # Validated here rather than only in the caller, because this is the function
+    # both the portal and the chatbot write through: a check left to the caller
+    # would be missing from whichever surface forgot it.
+    address = " ".join(str(address or "").split()).strip()
+    if len(address) < 5:
+        return False, "That address is too short to deliver to.", order
+    if order.get("cancelled"):
+        return False, "That order was cancelled.", order
+    if order.get("fulfilled"):
+        return False, "That order has already been completed.", order
+    # 'enroute' and everything after it is too late: the parcel is with somebody.
+    if str(order.get("stage") or "").strip().lower() in ("enroute", "delivered", "collected"):
+        return False, ("That order is already on its way, so its address can no longer be "
+                       "changed."), order
+    previous = " ".join(str(order.get("address") or "").split()).strip()
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_orders
+                SET delivery_address = %s, delivery_method = 'delivery'
+                WHERE reference = %s
+                RETURNING reference
+            """, (address, reference))
+            if not cursor.fetchone():
+                return False, "That order could not be found.", {}
+            connection.commit()
+    except Exception as e:
+        print(f"order address set error: {e}")
+        return False, "That address could not be saved just now.", {}
+    # The audit line records what it was as well as what it is: which address a
+    # deliverer was originally given is exactly what a dispute turns on.
+    log_activity("changed_delivery_address", "order",
+                 f"Set the delivery address for {reference} to {address}",
+                 target=reference,
+                 details={"address": address, "previous_address": previous,
+                          "changed_by": changed_by or "customer"}, user=None)
+    _shop_payment_event(reference, "address_supplied", "delivery",
+                        f"{address}" + (f" (was: {previous})" if previous else ""))
+    return True, "", dict(order, address=address, delivery_method="delivery")
+
 
 
 def shop_order_fulfilment_set(reference, wa_number, method, address=None, user=None):
@@ -30977,6 +31154,40 @@ def _shop_slug(name):
     """A stable id from a shop name, so the assistant's choice ids stay readable."""
     slug = re.sub(r"[^a-z0-9]+", "-", str(name or "").strip().lower()).strip("-")
     return slug[:60]
+
+
+@app.route('/api/crm/orders/<reference>/address', methods=['POST'])
+def crm_order_address_api(reference):
+    """Change an order's delivery address from the portal.
+
+    Refused once the order is en route, because the deliverer is already working
+    from the address on file. Every change is written to the activity log with the
+    previous address, since which address was originally given is what a dispute
+    about a missed delivery turns on.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    address = payload.get('address')
+    order = order_detail(reference)
+    if not order:
+        return jsonify({'success': False, 'message': 'Order not found.'}), 404
+    ok, message, fresh = _shop_order_address_write(
+        order, " ".join(str(address or "").split()).strip(),
+        changed_by=f"{user.get('firstname', '')} {user.get('surname', '')}".strip() or
+                   user.get('email', ''))
+    if not ok:
+        return jsonify({'success': False, 'message': message}), 400
+    log_activity("changed_delivery_address", "order",
+                 f"Changed the delivery address for {reference}",
+                 target=reference,
+                 details={"address": fresh.get("address"),
+                          "previous_address": order.get("address") or ""},
+                 user=user)
+    return jsonify({'success': True,
+                    'order': order_detail(reference),
+                    'message': 'Delivery address updated.'})
 
 
 @app.route('/api/crm/orders/<reference>/fulfilment', methods=['POST'])

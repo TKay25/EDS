@@ -491,6 +491,25 @@
                         The customer is sent a message describing what this status means for them.
                     </p>
                 </div>
+                {# The address is editable until the order is en route: after that
+                   the deliverer is working from what is on file, so the control is
+                   disabled and says why rather than silently refusing. #}
+                <div class="crm-order-settle crm-order-address" id="crmOrderAddressBlock">
+                    <label for="crmOrderAddress">Delivery address</label>
+                    <div class="crm-order-settle-row">
+                        <input class="ps-input" type="text" id="crmOrderAddress"
+                               placeholder="Street, suburb and anything the deliverer needs"
+                               autocomplete="off">
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                                id="crmOrderAddressSave" data-order-action="set-address">
+                            <i class="bi bi-geo-alt"></i> Save address
+                        </button>
+                    </div>
+                    <p class="crm-order-settle-hint" id="crmOrderAddressHint">
+                        Used on the delivery note and sent to the customer. Can be changed
+                        until the order is marked en route.
+                    </p>
+                </div>
                 {# EcoCash settles itself through the gateway, but cash at the counter
                    and cash on the doorstep are taken by a person, so the sales team
                    says which one happened. Without it the record cannot tell the two
