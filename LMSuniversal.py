@@ -21793,7 +21793,12 @@ SHOP_TRANSLATIONS = {
         "household, cleaning and personal care.": "zvemumba, zvekuchenesa uye zvekuzvitarisira.",
         "Select a category to browse:": "Sarudza chikamu kuti uone zvigadzirwa:",
         "Available pack sizes:": "Saizi dzemapakiti aripo:",
-        "Which pack size would you like?": "Ndeipi saizi yepakiti yaunoda?",
+        "Which pack size would you like?\n\n"
+        "You can send the size and how many in one reply — for example "
+        "*2 × 750ml*.":
+            "Ndeipi saizi yepakiti yaunoda?\n\n"
+            "Unogona kutumira saizi nehuwandu pamwe chete — semuenzaniso "
+            "*2 × 750ml*.",
         "Your cart is empty": "Ngoro yako haina chinhu",
         "Add a few Knockout products and they will show up here. "
         "You can also type a product name to search for it.":
@@ -22098,7 +22103,12 @@ SHOP_TRANSLATIONS = {
         "household, cleaning and personal care.": "eyekhaya, eyokucoca kanye lokuzinakekela.",
         "Select a category to browse:": "Khetha isigaba ukuze ubone imikhiqizo:",
         "Available pack sizes:": "Amasayizi amaphakethe akhona:",
-        "Which pack size would you like?": "Ngumuphi umkhulu wephakethe owufunayo?",
+        "Which pack size would you like?\n\n"
+        "You can send the size and how many in one reply — for example "
+        "*2 × 750ml*.":
+            "Ngumuphi umkhulu wephakethe owufunayo?\n\n"
+            "Ungathumela umkhulu kanye lenani ndawonye — ngokwesibonelo "
+            "*2 × 750ml*.",
         "Your cart is empty": "Inqola yakho ayilalutho",
         "Add a few Knockout products and they will show up here. "
         "You can also type a product name to search for it.":
@@ -22966,11 +22976,74 @@ def _shop_size_list(product, category_index):
     size_options = [(f"size:{index}", label(index, size))
                     for index, size in enumerate(product["sizes"])]
     prompt = _shop_options(
-        f"📦 *{product['name']}*\n\nWhich pack size would you like?",
+        f"📦 *{product['name']}*\n\n"
+        "Which pack size would you like?\n\n"
+        "You can send the size and how many in one reply — for example "
+        "*2 × 750ml*.",
         size_options,
     )
     prompt["force_list"] = True
     return prompt
+
+
+def _shop_parse_quantity(raw_input):
+    """A quantity typed with other words around it. Returns an int or None.
+
+    Wants the customer to be able to send "2" or "2 bottles" or "5 x 750ml" in
+    one line rather than being made to strip the answer down to a number.
+    """
+    match = re.search(r"\d+", str(raw_input or ""))
+    if not match:
+        return None
+    value = int(match.group(0))
+    return value if value > 0 else None
+
+
+def _shop_parse_size_and_qty(raw_input, sizes):
+    """A pack size and a quantity from one line, each or both absent.
+
+    Returns (size, quantity). Both are best-effort so a customer can send
+    "2 × 750ml", "750ml 2", "2" or "750ml" and have whatever they gave used,
+    with the assistant asking only for the half that is still missing. The pack
+    size is matched ignoring case and spaces, so "2 litre" and "2Litre" agree.
+    """
+    text = " ".join(str(raw_input or "").split())
+    if not text:
+        return None, None
+    # A parallel, space-and-case-insensitive view of the line, plus the position
+    # each of its characters came from. Matching against this is what lets
+    # "2 litre" match the size "2 Litre" while the quantity is still read from
+    # the original text at the right offsets.
+    flat_characters = []
+    offsets = []
+    for index, character in enumerate(text):
+        if not character.isspace():
+            flat_characters.append(character.lower())
+            offsets.append(index)
+    flat = "".join(flat_characters)
+
+    # Longest first, so "2 litre" is not matched as the "2" of a shorter size.
+    ordered = sorted((size for size in sizes or []), key=len, reverse=True)
+    size = None
+    span = None
+    for candidate in ordered:
+        token = re.sub(r"\s+", "", str(candidate)).lower()
+        if not token:
+            continue
+        found = flat.find(token)
+        if found < 0:
+            continue
+        size = candidate
+        # The real span in the original text, so the digits inside the size (the
+        # "750" of "750ml") are not read back as the quantity.
+        span = (offsets[found], offsets[found + len(token) - 1] + 1)
+        break
+
+    remainder = text if span is None else (text[:span[0]] + " " + text[span[1]:])
+    # A quantity is only read once the size is known: on the size prompt a bare
+    # "2" names a pack size by number, not a count of two.
+    quantity = _shop_parse_quantity(remainder) if size else None
+    return size, quantity
 
 
 def _shop_line_amounts(item):
@@ -25029,6 +25102,25 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             return number if 0 <= number < count else None
         return None
 
+    def add_to_cart(product, size, quantity, new_ctx=None):
+        """Add a line and show the cart.
+
+        Shared by the quantity step and the combined size-and-quantity reply, so
+        both arrive at the same cart with the same wording however the customer
+        gave the answer.
+        """
+        existing = next((item for item in cart
+                         if item["id"] == product["id"] and item["size"] == size), None)
+        if existing:
+            existing["qty"] += quantity
+        else:
+            cart.append({"id": product["id"], "name": product["name"],
+                         "size": size, "qty": quantity})
+        return result("cart", [
+            _shop_text(f"✅ Added {quantity} × {product['name']} ({size}) to your cart."),
+            _shop_cart_message(cart),
+        ], new_ctx=new_ctx)
+
     # ------------------------------------------------------- navigation keys
     if low in ("language", "change language", "mutauro", "ulimi"):
         return result("language", [_shop_language_options()], new_ctx={})
@@ -25330,6 +25422,17 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "size":
         product, product_index = _shop_product_at(ctx.get("product", 0))
+        # The customer can name the size and the quantity in one reply, so the
+        # whole line is read rather than only the size line of it.
+        typed_size, typed_qty = _shop_parse_size_and_qty(raw_input, product["sizes"])
+        if typed_size is not None:
+            chosen = product["sizes"].index(typed_size)
+            new_ctx = {"product": product_index, "size": chosen}
+            if typed_qty:
+                return add_to_cart(product, typed_size, typed_qty, new_ctx)
+            return result("qty", [_shop_text(
+                f"📦 *{product['name']}* — {typed_size}\n\nHow many units would you like?"
+            )], new_ctx=new_ctx)
         chosen = index_of(command, len(product["sizes"]), "size")
         if chosen is None:
             return result("size", [_shop_size_list(product, product_index)])
@@ -25340,18 +25443,11 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if step == "qty":
         product, product_index = _shop_product_at(ctx.get("product", 0))
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
-        if not command.isdigit() or int(command) <= 0:
-            return result("qty", [_shop_text("Please reply with the number of units you need, for example *10*.")])
-        quantity = int(command)
-        existing = next((item for item in cart if item["id"] == product["id"] and item["size"] == size), None)
-        if existing:
-            existing["qty"] += quantity
-        else:
-            cart.append({"id": product["id"], "name": product["name"], "size": size, "qty": quantity})
-        return result("cart", [
-            _shop_text(f"✅ Added {quantity} × {product['name']} ({size}) to your cart."),
-            _shop_cart_message(cart),
-        ])
+        quantity = _shop_parse_quantity(command)
+        if quantity is None:
+            return result("qty", [_shop_text(
+                "Please reply with the number of units you need, for example *10*.")])
+        return add_to_cart(product, size, quantity)
 
     if step == "search":
         query = (raw_input or "").strip()
