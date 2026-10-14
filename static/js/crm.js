@@ -2241,6 +2241,10 @@
         return field ? field.value.trim() : '';
       }
 
+      /* The upload control is only for a product with no picture. Once one is
+         saved the picture is already there, so offering "Upload photo" again
+         reads as though the saved one was not accepted; replacing it is done by
+         removing it first, which is what the Remove button beside it is for. */
       function paintImage(wrapper, imagePath, imageUrl) {
         wrapper.setAttribute('data-image-path', imagePath || '');
         var preview = wrapper.querySelector('[data-role="imagepreview"]');
@@ -2251,6 +2255,10 @@
         }
         var clearButton = wrapper.querySelector('[data-role="imageclear"]');
         if (clearButton) clearButton.hidden = !imagePath;
+        var pick = wrapper.querySelector('[data-role="imagepick"]');
+        if (pick) pick.hidden = !!imagePath;
+        var hint = wrapper.querySelector('[data-role="imagehint"]');
+        if (hint) hint.hidden = !!imagePath;
       }
 
       function imageNote(wrapper, message, kind) {

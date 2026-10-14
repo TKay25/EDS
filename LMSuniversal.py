@@ -23127,11 +23127,13 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
 def _shop_category_list():
     options = [(f"cat:{index}", _shop_short_name(_shop_product(index)["name"]))
                for index in range(len(shop_all_products()))]
-    return _shop_frame(_shop_options(
+    prompt = _shop_frame(_shop_options(
         f"🛍️ *Browse Products*\n{BRAND_NAME} — household, cleaning and personal care.\n\n"
         "Select a category to browse:",
         options,
     ), "browse")
+    prompt["content_label"] = "Choose a product"
+    return prompt
 
 
 def _shop_product_list(category_index):
@@ -23425,6 +23427,8 @@ def _shop_size_list(product, category_index, draft=None):
                          f"*{PAYNOW_CURRENCY} {unit * quantity:.2f}*")
     prompt = _shop_options("\n".join(lines), size_options)
     prompt["force_list"] = True
+    # The list's own button says what the rows are.
+    prompt["content_label"] = "Choose a pack size"
     # The stepper is offered only once a size is chosen, because there is nothing
     # to count before then.
     if chosen is not None:
@@ -25330,7 +25334,9 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
     if step == "order_address":
         return [_shop_order_address_prompt(customer)]
     if step == "order_shop":
-        return [_shop_shop_prompt(customer)]
+        # Re-rendered with the cart so the stock notes match the first showing.
+        prompt = _shop_shop_prompt(customer, cart)
+        return [prompt if prompt is not None else _shop_stock_choices(cart, customer)]
     if step == "order_shop_short":
         return [_shop_short_prompt(customer, cart)]
     if step == "order_confirm":
@@ -25852,11 +25858,73 @@ def _shop_order_address_prompt(customer):
         _shop_delivery_note(customer))
 
 
-def _shop_shop_prompt(customer):
+def shop_can_cover(shop_id, cart):
+    """Whether one shop holds every line of the cart. Returns (ok, short).
+
+    A line nobody has counted is not held against the shop, because an uncounted
+    product is unknown rather than absent - the same rule the shortfall uses.
+    """
+    short = shop_cart_shortfall(shop_id, cart)
+    return (not short), short
+
+
+def shop_stock_ranked(cart, shops=None):
+    """The shops that can cover this cart, and the rest.
+
+    Returns (able, partial, none) where each is a list of shops. A shop is split
+    out by how much of the cart it holds, so the customer is offered the shops
+    that can actually complete the order first. Shops are kept in the order the
+    business listed them within each group, because that order is a deliberate
+    ranking the business chose.
+    """
+    shops = list(shops if shops is not None else shop_shops())
+    able, partial, none = [], [], []
+    for shop in shops:
+        short = shop_cart_shortfall(shop["id"], cart)
+        if not short:
+            able.append(shop)
+            continue
+        # A shop that holds some of the lines, but not all, is still worth
+        # offering: the customer can take part of the order there.
+        holds_something = any(
+            (shop_stock_of(shop["id"], item.get("id"), item.get("size")) or 0) > 0
+            for item in (cart or []))
+        (partial if holds_something else none).append(shop)
+    return able, partial, none
+
+
+def shop_stock_note(shop, short, line_count=None):
+    """The note beside a shop in the picker, or '' when it can cover the cart.
+
+    Says what the shop *does* hold, not what it lacks: "only 2 left" is something
+    a customer can act on, while "1 of 2 short" is arithmetic they have to do.
+    """
+    if not short:
+        return ""
+    parts = []
+    for line in short:
+        if line["held"] <= 0:
+            parts.append(f"no {line['size']}")
+        else:
+            parts.append(f"{line['held']} {line['size']} left")
+    return f"{shop['name']} — " + ", ".join(parts[:2])
+
+
+def _shop_shop_prompt(customer, cart=None):
     """Asking which shop hands the order over.
 
     A delivery order needs a shop just as much as a collection one: it is the
     shop that sends the driver, and therefore the one the goods come off.
+
+    When the cart is known, the shop's name carries whether it holds the order, so
+    the customer is not offered a shop that would turn them away at the counter.
+    The stock is a note rather than a filter: a shop short of the order is still
+    selectable, because part of an order is often better than none, and the
+    next step says exactly what is missing.
+
+    Returns None from the stock-aware path when no shop holds any of the cart,
+    which the caller answers with _shop_stock_choices instead. The signature keeps
+    the plain prompt for a caller that has no cart to judge.
     """
     if _shop_paying_on_delivery(customer):
         prompt = ("🚚 *Which shop is closest to you?*\n\n"
@@ -25865,8 +25933,56 @@ def _shop_shop_prompt(customer):
     else:
         prompt = ("🏬 *Which shop will you collect from?*\n\n"
                   "Choose the shop that is easiest for you to reach.")
-    return _shop_options(prompt, [(f"shop:{shop['id']}", shop["name"])
-                                  for shop in shop_shops()])
+    shops = shop_shops()
+    notes = {}
+    if cart:
+        able, partial, none = shop_stock_ranked(cart, shops)
+        if not able and not partial:
+            # Nothing anywhere holds any of this order, so the shop question
+            # cannot help and the customer is told that instead of being asked
+            # to choose between shops that would all turn them away.
+            return None
+        # Shops that can complete the order are listed first, then the ones that
+        # hold part of it. A shop with none of it is left off rather than offered
+        # as a dead end.
+        shops = able + partial
+        for shop in shops:
+            notes[shop["id"]] = shop_stock_note(shop, shop_cart_shortfall(shop["id"], cart))
+        if not able:
+            prompt += ("\n\nNo single shop has everything in this order. The choices "
+                       "below show what each one *does* hold.")
+    options = _shop_options(prompt, [(f"shop:{shop['id']}",
+                                      notes.get(shop["id"]) or shop["name"])
+                                     for shop in shops])
+    # Named so the list's own button says what it holds, rather than "Choose an
+    # option" over a column of shop names.
+    options["content_label"] = ("Choose a shop to collect from"
+                               if not _shop_paying_on_delivery(customer)
+                               else "Choose a shop")
+    return options
+
+
+def _shop_stock_choices(cart, customer):
+    """What to offer when no shop holds any of the order.
+
+    The order cannot be placed as it stands, so the customer is given the three
+    things they can actually do about it rather than a choice of shops.
+    """
+    lines = ["😕 *None of our shops hold this order right now.*", "",
+             "Nothing in your cart is in stock at any shop, so there is no shop to "
+             "send it to."]
+    if cart:
+        lines.append("")
+        for item in cart:
+            lines.append(f"    • {item.get('name')} ({item.get('size')}) × {item.get('qty')}")
+    lines.append("")
+    lines.append("You can change what you are ordering, or ask our sales team to "
+                 "look into it for you.")
+    return _shop_options("\n".join(lines), [
+        ("shop", "Change my order"),
+        ("support_human", "Talk to a human"),
+        ("cart", "Leave it for now"),
+    ])
 
 
 def _shop_short_prompt(customer, cart):
@@ -25874,7 +25990,8 @@ def _shop_short_prompt(customer, cart):
     shop = shop_by_id(customer.get("shop_id"))
     short = shop_cart_shortfall(customer.get("shop_id"), cart)
     if not shop or not short:
-        return _shop_shop_prompt(customer)
+        prompt = _shop_shop_prompt(customer, cart)
+        return prompt if prompt is not None else _shop_stock_choices(cart, customer)
     return _shop_options(_shop_shortfall_text(shop, short),
                          [("stock_fit", "Use what is available"),
                           ("order_shop", "Choose another shop")])
@@ -26899,6 +27016,34 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                           or typed_word in accepted_words)
 
     # ------------------------------------------------------------------ steps
+    # "More options" opens the choices that did not fit on the list. Handled
+    # before the steps so every overflowed prompt gets it without each one having
+    # to know the row limit, and so the page of choices is shown as a list rather
+    # than being read as an answer to the prompt underneath it.
+    if low == "more":
+        pages = ctx.get("more_pages") or []
+        if not pages:
+            # Nothing to show: the pages were lost, so the prompt is simply asked
+            # again rather than answering with an empty list.
+            return result(step, _shop_render(step, ctx, cart, customer, staff,
+                                             wa_number, display_name, language))
+        page = pages[0]
+        remaining = pages[1:]
+        new_ctx = dict(ctx)
+        if remaining:
+            new_ctx["more_pages"] = remaining
+        else:
+            new_ctx.pop("more_pages", None)
+        options = [{"id": option["id"], "label": option["label"]} for option in page]
+        if remaining:
+            options.append({"id": "more", "label": f"More options › ({len(remaining)} left)"})
+        prompt = _shop_options(_shop_translate_text("Choose one of these:"), [])
+        prompt["options"] = options
+        # force_list, because a page can hold up to ten choices and buttons stop
+        # at three.
+        prompt["force_list"] = True
+        return result(step, [prompt], new_ctx=new_ctx)
+
     if step == "category":
         chosen = index_of(command, len(shop_all_products()), "cat")
         if chosen is None:
@@ -27085,14 +27230,22 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 # No shops are configured, so the question would have no answers.
                 # The order carries on exactly as it did before shops existed.
                 return result("order_address", [_shop_order_address_prompt(customer)])
-            return result("order_shop", [_shop_shop_prompt(customer)])
+            prompt = _shop_shop_prompt(customer, cart)
+            if prompt is None:
+                return result("order_shop", [_shop_stock_choices(cart, customer)],
+                              new_customer=customer)
+            return result("order_shop", [prompt], new_customer=customer)
         if low in ("collection", "collect", "pickup", "pick up", "2") or "collect" in low:
             # No address to collect: the customer comes to us.
             customer["delivery_method"] = "collection"
             customer["delivery_address"] = ""
             if not shop_shops():
                 return result("order_confirm", _shop_order_confirmation(cart, customer))
-            return result("order_shop", [_shop_shop_prompt(customer)])
+            prompt = _shop_shop_prompt(customer, cart)
+            if prompt is None:
+                return result("order_shop", [_shop_stock_choices(cart, customer)],
+                              new_customer=customer)
+            return result("order_shop", [prompt], new_customer=customer)
         return result("order_fulfilment", [_shop_options(
             "Please choose how you would like to receive this order.",
             [("delivery", "Deliver to my address"), ("collection", "Collect from the shop")])])
@@ -27106,7 +27259,10 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             # the option it was printed against before the step is called.
             chosen = next((shop for shop in shops if shop["name"].strip().lower() == low), None)
         if not chosen:
-            return result("order_shop", [_shop_shop_prompt(customer)])
+            prompt = _shop_shop_prompt(customer, cart)
+            if prompt is None:
+                return result("order_shop", [_shop_stock_choices(cart, customer)])
+            return result("order_shop", [prompt])
         customer["shop_id"] = chosen["id"]
         if shop_cart_shortfall(chosen["id"], cart):
             return result("order_shop_short", [_shop_short_prompt(customer, cart)],
@@ -27125,14 +27281,12 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 # made again. The cart is left alone: emptying it here would throw
                 # away an order the customer never agreed to lose.
                 customer.pop("shop_id", None)
-                return result("order_shop", [_shop_shop_prompt(customer)],
-                              new_customer=customer)
+                prompt = _shop_shop_prompt(customer, cart)
+                if prompt is None:
+                    return result("order_shop", [_shop_stock_choices(cart, customer)],
+                                  new_customer=customer)
+                return result("order_shop", [prompt], new_customer=customer)
             cart = fitted
-            if _shop_paying_on_delivery(customer):
-                return result("order_address", [_shop_order_address_prompt(customer)],
-                              new_customer=customer)
-            return result("order_confirm", _shop_order_confirmation(cart, customer),
-                          new_customer=customer)
             if _shop_paying_on_delivery(customer):
                 return result("order_address", [_shop_order_address_prompt(customer)],
                               new_customer=customer)
@@ -27140,7 +27294,11 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                           new_customer=customer)
         if low in ("order_shop", "shop", "another", "change shop", "change"):
             customer.pop("shop_id", None)
-            return result("order_shop", [_shop_shop_prompt(customer)], new_customer=customer)
+            prompt = _shop_shop_prompt(customer, cart)
+            if prompt is None:
+                return result("order_shop", [_shop_stock_choices(cart, customer)],
+                              new_customer=customer)
+            return result("order_shop", [prompt], new_customer=customer)
         return result("order_shop_short", [_shop_short_prompt(customer, cart)],
                       new_customer=customer)
 
@@ -28369,12 +28527,25 @@ def _wa_button_payload(body, options):
     }
 
 
-def _wa_list_payload(body, options, nav_count=0, language="en"):
+def _wa_list_payload(body, options, nav_count=0, language="en", content_label=None):
+    """A WhatsApp list, with the group and the button naming what is inside.
+
+    "Choose" and "Choose an option" say nothing about what the rows are. When the
+    prompt knows - a shop, a product, a pack size - that word is used instead, so
+    the button the customer taps reads "Choose shop location" rather than leaving
+    them to work it out from the message above it.
+    """
     content = options[:len(options) - nav_count] if nav_count else options
+    group = content_label or _shop_translate_text("Choose", language)
+    button = content_label or _shop_translate_text("Choose an option", language)
+    if content_label:
+        group = _shop_translate_text(content_label, language)
+        button = _shop_translate_text(_LIST_BUTTON_LABELS.get(content_label, content_label),
+                                      language)
     sections = []
     if content:
         sections.append({
-            "title": _shop_translate_text("Choose", language),
+            "title": group,
             "rows": [{"id": option["id"],
                       "title": _wa_clip(option["label"], WA_LIST_ROW_TITLE_LIMIT)}
                      for option in content],
@@ -28391,10 +28562,19 @@ def _wa_list_payload(body, options, nav_count=0, language="en"):
         "interactive": {
             "type": "list",
             "body": {"text": body},
-            "action": {"button": _shop_translate_text("Choose an option", language),
-                       "sections": sections},
+            "action": {"button": _wa_clip(button, 20), "sections": sections},
         },
     }
+
+
+# What the list button says for each kind of choice. WhatsApp caps this button at
+# 20 characters, so these are the short form and the clip is a backstop.
+_LIST_BUTTON_LABELS = {
+    "Choose a shop": "Choose shop",
+    "Choose a shop to collect from": "Choose shop",
+    "Choose a product": "Select product",
+    "Choose a pack size": "Select pack size",
+}
 
 
 def _shop_offer_language(content_count, nav_count, must_list):
@@ -28486,7 +28666,7 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
         # The list carries the sizes, and the count follows as its own message,
         # because a WhatsApp list cannot carry reply buttons of its own.
         return [_wa_list_payload(body, content_options + nav_options,
-                                 len(nav_options), language),
+                                 len(nav_options), language, content_label),
                 _wa_button_payload(_shop_translate_text("How many?", language),
                                    step_options)]
 
@@ -28498,12 +28678,27 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
         return [_wa_button_payload(prompt, options)]
 
     capacity = WA_LIST_ROWS_MAX - len(nav_options)
+    content_label = (choice or {}).get("content_label")
     if len(content_options) > capacity:
-        hidden = content_options[capacity:]
-        body = body + "\n\n" + _shop_translate_text("Reply with a number for the rest:", language) + "\n" + "\n".join(
-            f"{index}. {option['label']}"
-            for index, option in enumerate(hidden, start=capacity + 1))
-        options = content_options[:capacity] + nav_options
+        # The choices beyond the row limit used to be printed as numbered text,
+        # which the customer could only answer by typing a number - the one thing
+        # a list exists to avoid. The last row is now a real choice that opens the
+        # remaining ones, so every option is reachable by tapping.
+        #
+        # The overflow is carried on the choice itself, in pages, because the
+        # engine stores the message it rendered and reads the selected id back
+        # from that store.
+        keep = capacity - 1
+        first = content_options[:keep]
+        rest = content_options[keep:]
+        pages = [rest[index:index + WA_LIST_ROWS_MAX]
+                 for index in range(0, len(rest), WA_LIST_ROWS_MAX)]
+        choice["more_pages"] = pages
+        body = body + "\n\n" + _shop_translate_text(
+            "There are more choices than fit here — tap More options to see the rest.",
+            language)
+        options = first + [{"id": "more", "label": _shop_translate_text("More options ›",
+                                                                       language)}] + nav_options
     return [_wa_list_payload(body, options, len(nav_options), language)]
 
 

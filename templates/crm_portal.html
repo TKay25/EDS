@@ -974,17 +974,19 @@
                             {% endif %}
                         </div>
                         <div class="crm-product-image-tools">
-                            <label class="ps-btn ps-btn-ghost ps-btn-sm crm-product-image-pick">
-                                <i class="bi bi-upload"></i> Choose picture
+                            <label class="ps-btn ps-btn-ghost ps-btn-sm crm-product-image-pick"
+                                   data-role="imagepick" {% if product.image_path %}hidden{% endif %}>
+                                <i class="bi bi-upload"></i> Upload photo
                                 <input type="file" data-role="imagefile" hidden
                                        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
                             </label>
                             <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
                                     data-role="imageclear" {% if not product.image_path %}hidden{% endif %}>
-                                <i class="bi bi-x-lg"></i> Remove
+                                <i class="bi bi-x-lg"></i> Remove photo
                             </button>
                         </div>
-                        <p class="ps-muted crm-product-image-hint">
+                        <p class="ps-muted crm-product-image-hint" data-role="imagehint"
+                           {% if product.image_path %}hidden{% endif %}>
                             PNG, JPG or WEBP, up to {{ limits.image_max_mb }} MB. Shown to the
                             customer when they open this product.
                         </p>
