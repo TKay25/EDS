@@ -24130,12 +24130,20 @@ SHOP_TEMPLATES = {
         "name": "bchem_order_ready_for_collection",
         "language": "en",
         "category": "UTILITY",
-        "body": ("Order {{1}} is ready for collection at {{2}}. Please bring your "
-                 "reference with you. If you have not paid yet, payment is taken at the "
-                 "shop."),
-        "fields": ["reference", "shop"],
+        # Payment is not offered here as "taken at the shop" any more: the same
+        # message carries a Pay via EcoCash button, and telling a customer both
+        # things at once left them unsure which they were meant to do. The button
+        # is the instruction; the body only says money is still owed.
+        "body": ("{{1}}, order {{2}} is ready for collection at {{3}}. Please bring "
+                 "your reference with you. If it is still unpaid, you can settle it "
+                 "below - or change how you would like to receive it."),
+        "fields": ["customer", "reference", "shop"],
+        # Three buttons is WhatsApp's limit, so the fulfilment choices replace the
+        # generic "Talk to a human": a customer who cannot get to the shop needs
+        # to say so far more than they need a support button on this message.
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
-                    ("track", "Track my order"), ("support_human", "Talk to a human")],
+                    ("deliver:{{reference}}", "Deliver to me"),
+                    ("collect:{{reference}}", "I will collect"), ],
     },
     "order_enroute": {
         "name": "bchem_order_enroute",
@@ -25676,6 +25684,26 @@ def _shop_cancel_result(ok, reason, detail, order=None):
                                     "message": message}]
 
 
+# Steps whose reply is meant to be one of the choices on screen. Anything else is
+# answered by naming the problem and repeating the prompt, rather than letting the
+# same prompt silently reappear.
+#
+# Steps that also read free text are deliberately absent, because there an
+# unrecognised reply is a valid answer and telling someone their words "are not
+# one of the options" would be nonsense. That covers `search` and `support_msg`
+# (which are nothing but free text), `search_results` and `cart` (which treat an
+# unmatched reply as a fresh product search), `order_name`, `order_address` and
+# `pay_phone` (which expect a name, an address or a number), and `cart_qty`, which
+# answers a bad quantity with a message of its own that says what a good one looks
+# like rather than only that the reply was wrong.
+_SHOP_FEEDBACK_STEPS = frozenset({
+    "category", "product", "size", "about", "support", "orders",
+    "track", "track_view", "order_cancel_confirm", "agent_order_confirm",
+    "agent_orders", "order_fulfilment", "order_shop", "order_shop_short",
+    "order_confirm", "payment", "language",
+})
+
+
 def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None, display_name=None):
     """Advance the shopping assistant one step.
 
@@ -26157,12 +26185,28 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             return result("cart", [_shop_cart_message(cart)])
         return result("order_name", [_shop_text(_shop_name_phone_prompt())])
 
-    # A number that is not on the current menu should never silently jump levels.
-    if unmatched_number and step in ("category", "product", "size", "search_results", "cart", "about", "support", "orders", "order_cancel_confirm"):
+    # An unrecognised reply should never be answered with silence. A prompt that
+    # simply reappears reads as the assistant being deaf, and on the product step
+    # it also threw the customer back to the whole catalogue. Anything that is not
+    # one of the options offered is therefore named, and the prompt is repeated so
+    # the choices are still in front of them.
+    #
+    # The customer's own words are only echoed back when they typed something: a
+    # stray button tap has no useful text to quote, and echoing an id at someone
+    # would be noise rather than clarity.
+    if unmatched_number or (
+            command and step in _SHOP_FEEDBACK_STEPS
+            and not low.startswith(("cat:", "prod:", "size:", "qty:", "rm:", "cancel:",
+                                    "paynow:", "track:"))):
+        typed = (raw_input or "").strip()
+        if typed:
+            problem = f"🤔 *{typed}* is not one of the options above."
+        else:
+            problem = "🤔 That choice is not one of the options above."
         prompt = _shop_render(step, ctx, cart, customer, staff, wa_number, display_name, language)
         return finish(step, prompt + [_shop_text(
-            f"🤔 *{command}* is not one of the options above. Please choose from the list, "
-            "or use *B* to go back and *M* for the main menu.")])
+            f"{problem} Please choose from the list, or use *B* to go back and *M* for "
+            "the main menu.")])
 
     # ------------------------------------------------------------------ steps
     if step == "category":
@@ -26177,7 +26221,19 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             if chosen is not None:
                 return result("size", [_shop_size_list(_shop_product(chosen), chosen)],
                               new_ctx={"product": chosen})
-        return result("category", [_shop_category_list()])
+            # A stale choice (the catalogue changed underneath the prompt) goes
+            # back to the list so the customer is offered what actually exists.
+            return result("category", [
+                _shop_text("😕 That product is no longer available. Here is the current range:"),
+                _shop_category_list(),
+            ])
+        # Anything else was already named and repeated by the feedback guard
+        # above, so re-showing the product keeps the customer where they were
+        # rather than dropping them back at the whole catalogue. The stored
+        # position is clamped through _shop_product_at first, so a catalogue that
+        # shrank since the prompt cannot index past the end.
+        _product, product_index = _shop_product_at(ctx.get("product", 0))
+        return result("product", [_shop_product_list(product_index)], new_ctx={"product": product_index})
 
     if step == "size":
         product, product_index = _shop_product_at(ctx.get("product", 0))
@@ -26256,7 +26312,13 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             except (ValueError, IndexError):
                 pass
             return result("cart", [_shop_cart_message(cart)])
-        return result("cart", [_shop_cart_message(cart)])
+        # The edit is kept rather than the customer being dropped back on the
+        # cart: they asked to change a line, so the question stays open and the
+        # reply says what was wrong with the answer instead of discarding it.
+        return result("cart_qty", [
+            _shop_text("Please reply with the number of units you need, for example *10*."),
+            _shop_cart_qty_prompt(),
+        ])
 
     if step == "support_msg":
         message = (raw_input or "").strip()
