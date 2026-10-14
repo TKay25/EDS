@@ -334,7 +334,7 @@
     </section>
     </section>
 
-    <!-- ======================================================== analytics -->
+    <!-- ======================================================== orders -->
     <section class="crm-view" id="crmViewOrders" data-crm-view="orders"
              role="tabpanel" aria-labelledby="crmTabOrders">
         {# One compact toolbar rather than a panel with its own header: four
@@ -452,7 +452,8 @@
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
-                <div class="crm-order-body" id="crmOrderBody"></div>
+                <div class="crm-order-scroll">
+                    <div class="crm-order-body" id="crmOrderBody"></div>
                 <p class="crm-od-status" id="crmOrderNote"></p>
                 {# Where the order has got to, in the business's own words. Only
                    the stages that match the order's fulfilment are offered, so a
@@ -516,6 +517,9 @@
                         outstanding. The receipt can be printed or sent once it is received.
                     </p>
                 </div>
+                </div>
+                {# The documents and the payment request are the point of opening the
+                   order, so they stay put while the detail above scrolls. #}
                 <div class="crm-order-actions">
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
                             data-order-action="delivery-note">

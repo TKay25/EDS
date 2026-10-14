@@ -23377,12 +23377,36 @@ def _shop_parse_quantity(raw_input):
 
     Wants the customer to be able to send "2" or "2 bottles" or "5 x 750ml" in
     one line rather than being made to strip the answer down to a number.
+
+    A price is never a quantity. List and button titles carry the price - "500ml
+    — USD 2.00" - and reading the first number out of one turned that 2 into an
+    order for two units the customer never asked for. Anything that looks like an
+    amount of money is removed before the count is read.
     """
-    match = re.search(r"\d+", str(raw_input or ""))
+    text = _shop_strip_money(raw_input)
+    match = re.search(r"\d+", text)
     if not match:
         return None
     value = int(match.group(0))
     return value if value > 0 else None
+
+
+def _shop_strip_money(raw_input):
+    """The text with any money amount taken out.
+
+    Handles the forms the assistant itself writes: "USD 2.00", "$2", "2.00 USD".
+    The currency code is matched loosely because the shop may be configured with
+    a different one than the default.
+    """
+    text = str(raw_input or "")
+    currency = re.escape(str(PAYNOW_CURRENCY or "USD"))
+    # An amount written with its currency, either side of the number.
+    text = re.sub(rf"{currency}\s*\d+(?:[.,]\d+)?", " ", text, flags=re.IGNORECASE)
+    text = re.sub(rf"\d+(?:[.,]\d+)?\s*{currency}", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\$\s*\d+(?:[.,]\d+)?", " ", text)
+    # A bare decimal is a price, never a count: no one orders 2.00 units.
+    text = re.sub(r"\b\d+[.,]\d{2}\b", " ", text)
+    return text
 
 
 def _shop_parse_size_and_qty(raw_input, sizes):
@@ -23426,6 +23450,9 @@ def _shop_parse_size_and_qty(raw_input, sizes):
         break
 
     remainder = text if span is None else (text[:span[0]] + " " + text[span[1]:])
+    # The price on a button title is not a quantity, so it is removed before the
+    # count is read: "500ml — USD 2.00" must add one unit, not two.
+    remainder = _shop_strip_money(remainder)
     # A quantity is only read once the size is known: on the size prompt a bare
     # "2" names a pack size by number, not a count of two.
     quantity = _shop_parse_quantity(remainder) if size else None
@@ -26772,23 +26799,30 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "size":
         product, product_index = _shop_product_at(ctx.get("product", 0))
-        # The customer can name the size and the quantity in one reply, so the
-        # whole line is read rather than only the size line of it.
-        typed_size, typed_qty = _shop_parse_size_and_qty(raw_input, product["sizes"])
-        if typed_size is not None:
-            chosen = product["sizes"].index(typed_size)
-            new_ctx = {"product": product_index, "size": chosen}
-            if typed_qty:
-                return add_to_cart(product, typed_size, typed_qty, new_ctx)
+        # A tap is answered from the button id alone. Its label carries the price,
+        # and reading a number out of that label once ordered units the customer
+        # never chose, so the label is never parsed when a button was pressed.
+        tapped = index_of(command, len(product["sizes"]), "size")
+        if tapped is not None:
             return result("qty", [_shop_text(
-                f"📦 *{product['name']}* — {typed_size}\n\nHow many units would you like?"
-            )], new_ctx=new_ctx)
-        chosen = index_of(command, len(product["sizes"]), "size")
-        if chosen is None:
+                f"📦 *{product['name']}* — {product['sizes'][tapped]}\n\n"
+                "How many units would you like?"
+            )], new_ctx={"product": product_index, "size": tapped})
+        if button_id:
+            # Some other button on this step: nothing to read, so the list is
+            # shown again rather than guessing at the label.
             return result("size", [_shop_size_list(product, product_index)])
+        # A typed reply, which may name the size and the quantity in one line.
+        typed_size, typed_qty = _shop_parse_size_and_qty(raw_input, product["sizes"])
+        if typed_size is None:
+            return result("size", [_shop_size_list(product, product_index)])
+        chosen = product["sizes"].index(typed_size)
+        new_ctx = {"product": product_index, "size": chosen}
+        if typed_qty:
+            return add_to_cart(product, typed_size, typed_qty, new_ctx)
         return result("qty", [_shop_text(
-            f"📦 *{product['name']}* — {product['sizes'][chosen]}\n\nHow many units would you like?"
-        )], new_ctx={"product": product_index, "size": chosen})
+            f"📦 *{product['name']}* — {typed_size}\n\nHow many units would you like?"
+        )], new_ctx=new_ctx)
 
     if step == "qty":
         product, product_index = _shop_product_at(ctx.get("product", 0))
