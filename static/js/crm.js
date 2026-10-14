@@ -930,21 +930,25 @@
         address: delivering && buildAddressEl ? buildAddressEl.value : '',
         note: buildNoteEl ? buildNoteEl.value : ''
       };
-      buildSendBtn.disabled = true;
+      setBusy(buildSendBtn, true, 'Sending?');
       postJson('/api/crm/chats/' + encodeURIComponent(activeId) + '/order', payload)
         .then(function (result) {
-          buildSendBtn.disabled = false;
+          setBusy(buildSendBtn, false);
           window.crmToast && window.crmToast(
             result.message || (result.success ? 'Order sent for confirmation.' : 'Could not create the order.'),
             result.success ? 'success' : 'error');
           if (result.success) {
             if (buildModal) buildModal.hidden = true;
-            if (result.orders) { renderRecent(result.orders); renderTable(result.orders); }
-            loadMessages();
+            if (result.orders) { analytics.applyOrderResult(result); }
+            // The order was posted into the conversation, so the thread is
+            // reloaded to show it. The inbox owns that panel, and it publishes a
+            // refresh rather than exposing its internals - the old call named a
+            // function that was private to the other script and threw.
+            if (window.crmReloadThread) window.crmReloadThread();
           }
         })
         .catch(function () {
-          buildSendBtn.disabled = false;
+          setBusy(buildSendBtn, false);
           window.crmToast && window.crmToast('Could not create the order.', 'error');
         });
     }
@@ -984,26 +988,26 @@
             return;
           }
           if (kind === 'send-receipt') {
-            action.disabled = true;
+            setBusy(action, true, 'Sending?');
             postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/email-receipt', {})
               .then(function (result) {
-                action.disabled = false;
+                setBusy(action, false);
                 window.crmToast && window.crmToast(
                   result.message || (result.success ? 'Receipt sent.' : 'Could not send the receipt.'),
                   result.success ? 'success' : 'error');
                 if (result.success) load(true);
               })
               .catch(function () {
-                action.disabled = false;
+                setBusy(action, false);
                 window.crmToast && window.crmToast('Could not send the receipt.', 'error');
               });
             return;
           }
           if (kind === 'request-payment') {
-            action.disabled = true;
+            setBusy(action, true, 'Sending?');
             postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/request-payment', {})
               .then(function (result) {
-                action.disabled = false;
+                setBusy(action, false);
                 if (!result.success) {
                   window.crmToast && window.crmToast(result.message || 'Could not request payment.', 'error');
                   return;
@@ -1013,7 +1017,7 @@
                 openOrder(orderRef);
               })
               .catch(function () {
-                action.disabled = false;
+                setBusy(action, false);
                 window.crmToast && window.crmToast('Could not request payment.', 'error');
               });
             return;
@@ -1028,11 +1032,11 @@
               if (addressEl) addressEl.focus();
               return;
             }
-            action.disabled = true;
+            setBusy(action, true, 'Saving…');
             postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/address',
                      { address: typedAddress })
               .then(function (result) {
-                action.disabled = false;
+                setBusy(action, false);
                 if (!result.success) {
                   window.crmToast && window.crmToast(
                     result.message || 'Could not update the address.', 'error');
@@ -1043,7 +1047,7 @@
                 openOrder(orderRef);
               })
               .catch(function () {
-                action.disabled = false;
+                setBusy(action, false);
                 window.crmToast && window.crmToast('Could not update the address.', 'error');
               });
             return;
@@ -1051,44 +1055,41 @@
           if (kind === 'set-stage') {
             var stageEl = document.getElementById('crmOrderStage');
             var notifyEl = document.getElementById('crmOrderStageNotify');
-            action.disabled = true;
+            setBusy(action, true, 'Updating?');
             postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/stage?' + query(),
                      { stage: stageEl ? stageEl.value : '',
                        notify: notifyEl ? notifyEl.checked : true })
               .then(function (result) {
-                action.disabled = false;
+                setBusy(action, false);
                 window.crmToast && window.crmToast(
                   result.message || (result.success ? 'Order status updated.'
                                                     : 'Could not update the status.'),
                   result.success ? 'success' : 'error');
                 if (result.success) {
-                  renderStats(result.analytics || {});
-                  renderTop((result.analytics || {}).top_items);
-                  renderRecent(result.orders);
-                  renderTable(result.orders);
+                  analytics.applyOrderResult(result);
                   openOrder(orderRef);
                 }
               })
               .catch(function () {
-                action.disabled = false;
+                setBusy(action, false);
                 window.crmToast && window.crmToast('Could not update the status.', 'error');
               });
             return;
           }
           if (kind === 'record-payment') {
             var methodEl = document.getElementById('crmOrderMethod');
-            action.disabled = true;
+            setBusy(action, true, 'Recording?');
             postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/record-payment',
                      { method: methodEl ? methodEl.value : 'shop' })
               .then(function (result) {
-                action.disabled = false;
+                setBusy(action, false);
                 window.crmToast && window.crmToast(
                   result.message || (result.success ? 'Payment recorded.' : 'Could not record the payment.'),
                   result.success ? 'success' : 'error');
                 if (result.success) { loadOrder(orderRef, true); load(true); }
               })
               .catch(function () {
-                action.disabled = false;
+                setBusy(action, false);
                 window.crmToast && window.crmToast('Could not record the payment.', 'error');
               });
             return;
@@ -1110,10 +1111,7 @@
             window.alert(result.message || 'Could not update that order.');
             return;
           }
-          renderStats(result.analytics || {});
-          renderTop((result.analytics || {}).top_items);
-          renderRecent(result.orders);
-          renderTable(result.orders);
+          analytics.applyOrderResult(result);
         })
         .catch(function () {
           row.style.opacity = '';
@@ -1148,12 +1146,25 @@
        which owns the table they appear in. They stay defined here because they
        share the order helpers below, and a single definition cannot drift from
        the API it reads. */
+    /* A save that returns a fresh order list refreshes the Orders tab through the
+       same path the tab uses, so the cards and the table cannot disagree. This
+       replaced three calls to renderRecent, a function that no longer exists -
+       the call threw after the save had already succeeded, so the request looked
+       like it had failed. */
+    function applyOrderResult(result, row) {
+      if (result.analytics) renderStats(result.analytics);
+      if (result.analytics) renderTop(result.analytics.top_items);
+      if (orders && result.orders) orders.replace(result.orders);
+      else if (result.orders) renderTable(result.orders);
+    }
+
     return {
       load: load,
       isLoaded: function () { return loaded; },
       renderTable: renderTable,
       openOrder: openOrder,
       emptyState: emptyState,
+      applyOrderResult: applyOrderResult,
     };
   })();
 
@@ -1345,9 +1356,15 @@
       });
     }
 
-    return { load: load, isLoaded: function () { return loaded; } };
+    return { load: load, isLoaded: function () { return loaded; },
+             // Refresh the cards and the table from a payload another action
+             // already fetched, so a save does not cost a second round trip.
+             replace: function (rows) {
+               lastPayload = { orders: rows, card_meta: lastPayload && lastPayload.card_meta,
+                               cards: lastPayload && lastPayload.cards };
+               renderState();
+             } };
   })();
-
   /* ----------------------------------------------------------------- stock --
      Stock lives per shop, and the shop the customer chose is the one the goods
      come off when they pay. The table is built from the catalogue server-side,

@@ -331,6 +331,12 @@
         });
     }
 
+    // Published so another script on the same page can ask for a refresh without
+    // reaching into this closure. The order builder on the CRM page needs it: an
+    // order it creates is posted into the conversation, so the thread has to be
+    // reloaded to show it. A no-op when no conversation is open.
+    window.crmReloadThread = function () { loadMessages(true, true); };
+
     function setMode(mode) {
       if (!activeId) return;
       fetch('/api/crm/chats/' + activeId + '/mode', {

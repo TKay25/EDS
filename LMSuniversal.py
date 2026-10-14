@@ -26364,6 +26364,21 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         return state, messages, actions or []
 
     def result(new_step, messages, actions=None, new_ctx=None, new_customer=None, new_history=None):
+        # The single place a step's answer is known, so it is also the place to
+        # notice that a reply was not understood. A step that stayed on its own
+        # step, changed nothing, asked for no action and re-showed the same prompt
+        # has made no progress, and the customer is told so rather than left with
+        # a prompt that looks like it ignored them. Deciding here means no step has
+        # to remember to do it, and no guard has to guess in advance what a step
+        # would have accepted.
+        if (command and step in _SHOP_FEEDBACK_STEPS and new_step == step
+                and not actions and new_ctx is None and new_customer is None
+                and not already_understood):
+            typed = (raw_input or "").strip()
+            problem = (f"🤔 *{typed}* is not one of the options above." if typed
+                       else "🤔 That choice is not one of the options above.")
+            messages = list(messages) + [_shop_text(
+                f"{problem} Please choose one of the options above.")]
         if new_history is not None:
             return finish(new_step, messages, actions, new_ctx, new_customer, new_history)
         pushed = list(history)
@@ -26868,42 +26883,20 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     # An unrecognised reply should never be answered with silence. A prompt that
     # simply reappears reads as the assistant being deaf, and on the product step
-    # it also threw the customer back to the whole catalogue. Anything that is not
-    # one of the options offered is therefore named, and the prompt is repeated so
-    # the choices are still in front of them.
+    # it also threw the customer back to the whole catalogue. The feedback is
+    # added in `result` below, once the step has decided what to do, so the step
+    # is the only thing that judges its own input.
     #
-    # The customer's own words are only echoed back when they typed something: a
-    # stray button tap has no useful text to quote, and echoing an id at someone
-    # would be noise rather than clarity.
-    # A button press, or a number that named an option, is never treated as a
-    # mistyped reply: the step below is the only thing that can say whether it was
-    # valid. The label the customer tapped arrives as the message text, so
-    # comparing it against a list of id prefixes once rejected a valid tap -
-    # "Collect from the shop" against "collect:".
-    #
-    # A typed reply is checked against both the ids offered and the plain words
-    # this step accepts, so typing a choice's own word - "collect" - is accepted
-    # rather than punished. Anything not listed here still gets the helpful
-    # "not one of the options" message.
+    # These two are read there:
+    #   already_understood - a button press, or a number that named an option, or
+    #     a word this step accepts, is never second-guessed. The label a customer
+    #     tapped arrives as the message text, so an earlier version that compared
+    #     it against id prefixes rejected a valid tap: "Collect from the shop"
+    #     against "collect:".
     typed_word = command.strip().lower()
     accepted_words = _SHOP_STEP_ACCEPTS.get(step, ())
-    named_an_option = (bool(button_id) or typed_word in (previous_options or [])
-                       or typed_word in accepted_words)
-    if not named_an_option and (unmatched_number or (
-            command and step in _SHOP_FEEDBACK_STEPS
-            and not low.startswith(("cat:", "prod:", "size:", "qty:", "rm:", "cancel:",
-                                    "paynow:", "track:", "deliver:", "collect:")))):
-        typed = (raw_input or "").strip()
-        if typed:
-            problem = f"🤔 *{typed}* is not one of the options above."
-        else:
-            problem = "🤔 That choice is not one of the options above."
-        prompt = _shop_render(step, ctx, cart, customer, staff, wa_number, display_name, language)
-        # The way out is a button, so it is not spelled out here: telling the
-        # customer to type what they can tap reads as the assistant not having
-        # noticed it already offered them.
-        return finish(step, prompt + [_shop_text(f"{problem} Please choose one of the "
-                                                "options above.")])
+    already_understood = (bool(button_id) or typed_word in (previous_options or [])
+                          or typed_word in accepted_words)
 
     # ------------------------------------------------------------------ steps
     if step == "category":

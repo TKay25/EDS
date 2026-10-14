@@ -3155,3 +3155,80 @@ select.crm-select:focus {
   .crm-order-modal,
   .crm-modal-backdrop { padding: 10px; }
 }
+
+/* ==========================================================================
+   CHECKBOXES
+   The portal styled every control except these, so a checkbox was the browser's
+   own blue square - a different size, colour and corner radius from everything
+   around it. It is drawn as a real control now, in the accent colour, sized to
+   the text it sits beside.
+   ========================================================================== */
+.crm-order-notify input[type="checkbox"],
+input.crm-check[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  margin: 0;
+  border: 1.5px solid var(--ps-line);
+  border-radius: 4px;
+  background: var(--ps-surface);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* The tick is drawn rather than a glyph, so it stays crisp at this size and
+   needs no icon font loaded. */
+.crm-order-notify input[type="checkbox"]::after,
+input.crm-check[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.12s ease;
+}
+
+.crm-order-notify input[type="checkbox"]:checked,
+input.crm-check[type="checkbox"]:checked {
+  background: var(--ps-accent);
+  border-color: var(--ps-accent);
+}
+.crm-order-notify input[type="checkbox"]:checked::after,
+input.crm-check[type="checkbox"]:checked::after { transform: rotate(45deg) scale(1); }
+
+.crm-order-notify input[type="checkbox"]:hover,
+input.crm-check[type="checkbox"]:hover { border-color: var(--ps-accent); }
+
+.crm-order-notify input[type="checkbox"]:focus-visible,
+input.crm-check[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.16);
+}
+
+.crm-order-notify input[type="checkbox"]:disabled,
+input.crm-check[type="checkbox"]:disabled {
+  cursor: default;
+  opacity: 0.5;
+  background: var(--ps-surface-alt);
+}
+
+/* The label reads as one target with its box, so a tap on the words works too. */
+.crm-order-notify { cursor: pointer; user-select: none; }
+
+/* A checkbox with its words beside it, for use outside the order dialog. */
+.crm-check-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.74rem;
+  color: var(--ps-text);
+  cursor: pointer;
+  user-select: none;
+}
