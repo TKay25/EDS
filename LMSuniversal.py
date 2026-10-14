@@ -23377,93 +23377,59 @@ def _shop_image_caption(message):
     return caption[:1024] or None
 
 
-def _shop_size_list(product, category_index, draft=None):
-    """The pack size prompt, with a running count for the line being built.
-
-    Choosing a size used to open a second stage that asked only "how many?", so a
-    simple order cost two replies and a scroll back to the list to change the
-    size. The size list now carries the count: tapping a size adds one, and the
-    step buttons below the list raise or lower it. Choosing a different size moves
-    the count to that size rather than starting again, so the customer can see the
-    whole line before confirming it.
+def _shop_size_list(product, category_index):
+    """The pack size prompt.
 
     Marked to always render as a WhatsApp list: a product may offer up to ten
-    sizes, and reply buttons stop at three.
+    sizes, and reply buttons stop at three. The count is asked on the next step;
+    the customer may also give both at once by typing them, which is handled
+    before this prompt is ever reached.
     """
-    draft = draft or {}
-    # The draft names the size by its position, so the row can be marked and the
-    # count shown against it. A draft for another product carries no position
-    # here, which is what keeps one product's count off another's list.
-    position = draft.get("size_index")
-    chosen = None
-    if position is not None and 0 <= int(position) < len(product["sizes"]):
-        chosen = product["sizes"][int(position)]
-    quantity = max(1, int(draft.get("qty") or 0)) if chosen is not None else 0
-
     def label(index, size):
         unit = shop_price({"id": product["id"], "size": size})
-        price = "" if unit is None else f" — {PAYNOW_CURRENCY} {unit:.2f}"
-        # The chosen row says how many are on it, so the count is visible where
-        # the choice was made rather than only in the sentence above.
-        if chosen is not None and index == int(position):
-            return f"{size}{price}  ({quantity} selected)"
-        return f"{size}{price}"
+        if unit is None:
+            return size
+        return f"{size} — {PAYNOW_CURRENCY} {unit:.2f}"
 
     size_options = [(f"size:{index}", label(index, size))
                     for index, size in enumerate(product["sizes"])]
-    lines = [f"📦 *{product['name']}*", ""]
-    if chosen is None:
-        lines += ["Which pack size would you like?", "",
-                  "Tapping a size starts your order and you can set how many "
-                  "below. You can also send the size and how many in one reply — "
-                  "for example *2 × 750ml*."]
-    else:
-        unit = shop_price({"id": product["id"], "size": chosen})
-        lines += [f"*{chosen}* — how many would you like?", ""]
-        if unit is None:
-            lines.append(f"Selected: *{quantity}*")
-        else:
-            lines.append(f"Selected: *{quantity}*  =  "
-                         f"*{PAYNOW_CURRENCY} {unit * quantity:.2f}*")
-    prompt = _shop_options("\n".join(lines), size_options)
+    prompt = _shop_options(
+        f"📦 *{product['name']}*\n\n"
+        "Which pack size would you like?\n\n"
+        "You can send the size and how many in one reply — for example "
+        "*2 × 750ml*.",
+        size_options,
+    )
     prompt["force_list"] = True
     # The list's own button says what the rows are.
     prompt["content_label"] = "Choose a pack size"
-    # The stepper is offered only once a size is chosen, because there is nothing
-    # to count before then.
-    if chosen is not None:
-        prompt["step_buttons"] = True
     return prompt
 
 
-def _shop_size_step_options(product, category_index, draft, language="en"):
-    """The add/remove/confirm buttons under the size list."""
-    return [
-        {"id": "minus", "label": "− 1"},
-        {"id": "plus", "label": "+ 1"},
-        {"id": "addline", "label": "Add to cart"},
-    ]
+def _shop_require_quantity(raw_input):
+    """A quantity from the customer's reply. Returns (quantity, problem).
 
-
-def _shop_size_draft(ctx, product_index):
-    """The size-and-count line being built on the size step, or None.
-
-    Read from the context rather than kept in a module variable, because the
-    context is what survives a restart and what the transcript is rebuilt from.
-    A draft that names a different product is ignored, so a customer who opened
-    another product never sees the previous count.
+    A count is a whole number and nothing else: digits only, no letters, no words
+    and no price. "3 bottles" is refused with the format restated rather than
+    being scanned for a digit, because guessing at a count is how a customer ends
+    up charged for units they never asked for. The one thing allowed alongside the
+    digits is whitespace.
     """
-    if ctx.get("draft_size") is None:
-        return None
-    product, resolved = _shop_product_at(product_index)
-    if not product:
-        return None
-    index = int(ctx.get("draft_size") or 0)
-    sizes = product["sizes"]
-    if index < 0 or index >= len(sizes):
-        return None
-    qty = int(ctx.get("draft_qty") or 0)
-    return {"size": sizes[index], "size_index": index, "qty": max(1, qty)}
+    typed = " ".join(str(raw_input or "").split())
+    if not typed:
+        return None, "Please reply with the number of units you need, for example *10*."
+    if not typed.isdigit():
+        return None, ("Please send the quantity as a whole number on its own, "
+                      "for example *10*. Letters and words cannot be read as a count.")
+    quantity = int(typed)
+    if quantity <= 0:
+        return None, "Please send a quantity of 1 or more, for example *10*."
+    if quantity > 999:
+        # A four-figure count on a household order is a typo, and asking is
+        # cheaper than a delivery of a thousand bottles.
+        return None, ("That looks like more than we can send in one order. Please "
+                      "send a smaller number, or talk to our sales team for a bulk order.")
+    return quantity, ""
 
 
 
@@ -25274,11 +25240,9 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
         return [_shop_product_list(index)]
     if step == "size":
         product, index = _shop_product_at(ctx.get("product", 0))
-        return [_shop_size_list(product, index, _shop_size_draft(ctx, index))]
+        return [_shop_size_list(product, index)]
     if step == "qty":
         product, index = _shop_product_at(ctx.get("product", 0))
-        # The size step now carries the count, but a customer who is already on
-        # this step - or on a channel with no stepper - still reaches it.
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
         return [_shop_text(f"📦 *{product['name']}* — {size}\n\nHow many units would you like?")]
     if step == "cart_qty":
@@ -25793,10 +25757,14 @@ def _shop_fulfilment_prompt():
 
 
 def _shop_name_phone_prompt():
-    """The opening question of an order, asking for both details at once."""
+    """The opening question of an order, asking for both details at once.
+
+    The comma is stated as required, not just shown in the example: it is the only
+    separator that cannot be misread, and a reply without one is sent back.
+    """
     return ("📝 Let's set up your order.\n\n"
             "Please send your *full name* and the best *phone number* to reach you on, "
-            "for example:\n\n"
+            "separated by a comma:\n\n"
             "*Tendai Moyo, 0771234567*")
 
 
@@ -25816,33 +25784,41 @@ SHOP_PHONE_DIGITS = 10
 
 
 def _shop_parse_name_phone(raw_input):
-    """Split one typed line into (name, phone).
+    """Split one typed line into (name, phone), or report the format problem.
 
-    The number is found anywhere in the line rather than assumed to be last, so
-    "0771234567 Tendai Moyo" works as well as "Tendai Moyo 0771234567". Only the
-    first number is taken, and whatever surrounds it becomes the name, which
-    keeps a comma, a dash or a newline from needing its own rule. A line with no
-    number yields a name and no phone, which is exactly what the caller needs to
-    know to ask for the half that is missing.
+    Returns (name, phone, problem). The requested format is "Name, 0771234567" -
+    a comma between the two - so a line without one is sent back rather than
+    guessed at. Guessing is what puts a name in the phone field and a number in
+    the name field, and the customer then has to spot it on the confirmation.
+
+    A comma is required because it is the only separator that is unambiguous: a
+    name and a number separated by a space could be either, and Zimbabwean names
+    contain spaces.
     """
     text = " ".join(str(raw_input or "").split())
     if not text:
-        return "", ""
-    match = re.search(r"\+?\d[\d\s\-()]{7,}\d", text)
-    if not match:
-        # A bare run of digits still reads as an attempt at a number, so it is
-        # not mistaken for a name.
-        if re.fullmatch(r"[^\w]*\d+[^\w]*", text):
-            return "", text.strip()
-        return text.strip(), ""
-    digits = re.sub(r"\D", "", match.group(0))
+        return "", "", "Please send your *full name* and *phone number*, separated by a comma."
+    if "," not in text:
+        return "", "", ("Please put a comma between your name and number, like this:\n\n"
+                        "*Tendai Moyo, 0771234567*")
+    name_part, phone_part = text.split(",", 1)
+    name = name_part.strip()
+    phone_part = phone_part.strip()
+    if not phone_part:
+        return "", "", ("Please add your phone number after the comma, like this:\n\n"
+                        "*Tendai Moyo, 0771234567*")
+    if not name:
+        return "", "", ("Please put your name before the comma, like this:\n\n"
+                        "*Tendai Moyo, 0771234567*")
+    digits = re.sub(r"\D", "", phone_part)
     if digits.startswith("263"):
         digits = "0" + digits[3:]
     elif digits.startswith("00263"):
         digits = "0" + digits[5:]
-    phone = digits if (digits.startswith("07") and len(digits) >= SHOP_PHONE_DIGITS) else ""
-    name = (text[:match.start()] + " " + text[match.end():]).strip(" ,-–—:;/\t")
-    return name.strip(), phone
+    if not (digits.startswith("07") and len(digits) >= SHOP_PHONE_DIGITS):
+        return "", "", ("That does not look like a Zimbabwean mobile number. Please "
+                        "send it like this:\n\n*Tendai Moyo, 0771234567*")
+    return name, digits, ""
 
 
 def _shop_order_address_prompt(customer):
@@ -27073,69 +27049,50 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if step == "size":
         product, product_index = _shop_product_at(ctx.get("product", 0))
         sizes = product["sizes"]
-        # The line being built on this step: which size, and how many of it. It
-        # lives in the context so a re-render shows the same count the customer
-        # last set rather than clearing on every tap.
-        draft = _shop_size_draft(ctx, product_index) if "draft_qty" in ctx else None
 
-        def show_size_list(current=None):
-            return result("size", [_shop_size_list(product, product_index, current)],
-                          new_ctx={"product": product_index, "draft_qty": (current or {}).get("qty", 0),
-                                   "draft_size": (current or {}).get("size_index")})
+        def ask_quantity(chosen_index):
+            """Move to the count, naming the pack size that was chosen."""
+            return result("qty", [_shop_text(
+                f"📦 *{product['name']}* — {sizes[chosen_index]}\n\n"
+                "How many units would you like?")],
+                new_ctx={"product": product_index, "size": chosen_index})
 
         # A tap is answered from the button id alone. Its label carries the price,
         # and reading a number out of that label once ordered units the customer
         # never chose, so the label is never parsed when a button was pressed.
         tapped = index_of(command, len(sizes), "size")
         if tapped is not None:
-            # Choosing a size starts its count at one. Choosing a different size
-            # moves the line to it, so the customer is never left with a count on
-            # a pack they moved away from.
-            return show_size_list({"size": sizes[tapped], "size_index": tapped, "qty": 1})
-
-        if low in ("plus", "minus", "addline"):
-            if not draft or draft.get("qty") is None:
-                # A stepper press with nothing chosen yet: show the list so the
-                # customer picks a size first rather than being told off.
-                return show_size_list(None)
-            if low == "addline":
-                return add_to_cart(product, draft["size"], draft["qty"],
-                                   {"product": product_index})
-            step_qty = 1 if low == "plus" else -1
-            moved = max(1, int(draft["qty"]) + step_qty)
-            return show_size_list({"size": draft["size"], "size_index": draft["size_index"],
-                                   "qty": moved})
-
+            return ask_quantity(tapped)
         if button_id:
             # Some other button on this step: nothing to read, so the list is
             # shown again rather than guessing at the label.
-            return show_size_list(draft)
-
-        # A typed reply, which may name the size and the quantity in one line.
+            return result("size", [_shop_size_list(product, product_index)])
+        # A typed reply may name the size and the count in one line, which is the
+        # only way to give both at once.
         typed_size, typed_qty = _shop_parse_size_and_qty(raw_input, sizes)
         if typed_size is None:
-            # A bare number with a size already chosen is the count, which is the
-            # old two-stage habit and still worth honouring.
-            bare = _shop_parse_quantity(command)
-            if draft and bare:
-                return show_size_list({"size": draft["size"],
-                                       "size_index": draft["size_index"], "qty": bare})
-            return show_size_list(draft)
+            return result("size", [_shop_size_list(product, product_index)])
         chosen = sizes.index(typed_size)
         if typed_qty:
             return add_to_cart(product, typed_size, typed_qty, {"product": product_index})
-        return show_size_list({"size": typed_size, "size_index": chosen, "qty": 1})
+        return ask_quantity(chosen)
 
     if step == "qty":
-        # Kept for a customer who is already on it, and for a channel that cannot
-        # show the stepper. New traffic reaches the size step and its count.
         product, product_index = _shop_product_at(ctx.get("product", 0))
         size = product["sizes"][min(ctx.get("size", 0), len(product["sizes"]) - 1)]
-        quantity = _shop_parse_quantity(command)
+        # The count is a whole number and nothing else. A typed word is refused
+        # with the format restated rather than being parsed for a digit, so a
+        # customer who wrote "3 bottles" is told what to send instead of having
+        # the order guessed at.
+        quantity, problem = _shop_require_quantity(raw_input)
         if quantity is None:
             return result("qty", [_shop_text(
-                "Please reply with the number of units you need, for example *10*.")])
+                f"📦 *{product['name']}* — {size}\n\n{problem}")],
+                new_ctx={"product": product_index, "size": ctx.get("size", 0)})
         return add_to_cart(product, size, quantity)
+
+
+
 
     if step == "search":
         query = (raw_input or "").strip()
@@ -27179,9 +27136,12 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         return result("cart", [_shop_cart_message(cart)])
 
     if step == "cart_qty":
-        if command.isdigit() and int(command) > 0 and "edit" in ctx:
+        # The count is a whole number and nothing else, so "3 bottles" is refused
+        # with the format restated rather than being parsed for a digit.
+        quantity, problem = _shop_require_quantity(raw_input)
+        if quantity is not None and "edit" in ctx:
             try:
-                cart[ctx["edit"]]["qty"] = int(command)
+                cart[ctx["edit"]]["qty"] = quantity
             except (ValueError, IndexError):
                 pass
             return result("cart", [_shop_cart_message(cart)])
@@ -27189,7 +27149,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         # cart: they asked to change a line, so the question stays open and the
         # reply says what was wrong with the answer instead of discarding it.
         return result("cart_qty", [
-            _shop_text("Please reply with the number of units you need, for example *10*."),
+            _shop_text(problem or "Please reply with the number of units you need, "
+                                  "for example *10*."),
             _shop_cart_qty_prompt(),
         ])
 
@@ -27209,7 +27170,13 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if step == "order_name":
         # Name and phone arrive in one turn, so one step fills both and the
         # customer is not asked the same question twice over.
-        name, phone = _shop_parse_name_phone(raw_input)
+        name, phone, problem = _shop_parse_name_phone(raw_input)
+        if problem:
+            # The format was not followed, so the question is asked again with the
+            # reason given. Nothing is stored from an unusable line: half a name
+            # saved from a mistyped reply is worse than none, because the next
+            # prompt would then ask only for the other half.
+            return result("order_name", [_shop_text(problem)])
         if name:
             customer["name"] = name
         if phone:
@@ -28623,16 +28590,6 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
     # A prompt can insist on a list. The pack size choice does, because a product
     # may offer up to ten sizes and reply buttons stop at three.
     must_list = bool((choice or {}).get("force_list"))
-    # The size stepper puts its own buttons under the list: the list carries the
-    # sizes and the buttons carry the count, which is how a size and a quantity
-    # are chosen in one reply instead of two prompts.
-    step_options = []
-    if (choice or {}).get("step_buttons"):
-        step_options = [
-            {"id": "minus", "label": _shop_translate_option("− 1", language)},
-            {"id": "plus", "label": _shop_translate_option("+ 1", language)},
-            {"id": "addline", "label": _shop_translate_option("Add to cart", language)},
-        ]
     nav_options = shop_nav_options(nav, language)
     if _shop_offer_language(len(content_options), len(nav_options), must_list):
         nav_options = shop_nav_options(nav, language, with_language=True)
@@ -28652,24 +28609,6 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
 
     # With a stepper, the sizes and the count share one message where they fit
     # together in the three buttons WhatsApp allows. They rarely do - a product
-    # with three sizes leaves no room for a count - so the usual shape is the
-    # sizes as a list and the stepper as buttons beneath it, which is still one
-    # reply from the customer. The stepper branch is decided before the generic
-    # button path, because the count must own the buttons; if the generic path ran
-    # first it would spend them on the sizes and the count would be cut off.
-    if step_options:
-        together = content_options + step_options
-        if len(together) <= WA_BUTTON_LIMIT:
-            prompt = body or _shop_translate_text("Choose an option:", language)
-            if len(prompt) <= WA_BUTTON_BODY_LIMIT:
-                return [_wa_button_payload(prompt, together)]
-        # The list carries the sizes, and the count follows as its own message,
-        # because a WhatsApp list cannot carry reply buttons of its own.
-        return [_wa_list_payload(body, content_options + nav_options,
-                                 len(nav_options), language, content_label),
-                _wa_button_payload(_shop_translate_text("How many?", language),
-                                   step_options)]
-
     if not must_list and len(options) <= WA_BUTTON_LIMIT:
         prompt = body or _shop_translate_text("Choose an option:", language)
         if len(prompt) > WA_BUTTON_BODY_LIMIT:
