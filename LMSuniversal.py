@@ -21796,6 +21796,97 @@ def _shop_options(text, options):
     return {"type": "options", "text": text, "options": [{"id": o[0], "label": o[1]} for o in options]}
 
 
+# ------------------------------------------------------- message framing --
+# A header and a footer on the messages a customer sees most: the welcome, the
+# results of something they asked for, and the notices about their order. The
+# short mid-flow prompts ("How many units?", "Which pack size?") are deliberately
+# left plain, because a footer under every one of them would be noise in a
+# conversation that is already several messages long.
+#
+# The footer is styled to match the message rather than stamped on identically:
+# WhatsApp has no font families, so the only styling available is weight
+# (asterisks), the separator glyph and the emoji. Each theme therefore carries
+# its own accent so the thread reads as one designed system, and a theme with no
+# accent falls back to the plain brand line.
+BRAND_NAME_FOOTER = COMPANY_SYSTEM_NAME
+BRAND_NAME_FOOTER_SUFFIX = "Client Portal"
+
+# theme -> (header glyph, header label, footer separator glyph)
+SHOP_MESSAGE_THEMES = {
+    "welcome": ("👋", "Welcome", "👋"),
+    "menu": ("🛍️", "Main menu", "🛍️"),
+    "browse": ("🛍️", "Browse products", "🛍️"),
+    "product": ("🧴", "Product", "🧴"),
+    "cart": ("🛒", "Your cart", "🛒"),
+    "order": ("📦", "Your order", "📦"),
+    "orders": ("📦", "Your orders", "📦"),
+    "track": ("📦", "Tracking", "📦"),
+    "payment": ("💳", "Payment", "💳"),
+    "help": ("🙋", "Help", "🙋"),
+    "about": ("🏢", "About us", "🏢"),
+    "search": ("🔎", "Search", "🔎"),
+    "language": ("🌐", "Language", "🌐"),
+    "notice": ("🔔", "Update", "🔔"),
+    "problem": ("⚠️", "Something to check", "⚠️"),
+    "done": ("✅", "Done", "✅"),
+}
+
+
+def _shop_frame(message, theme, header=True):
+    """Tag a message with the header theme it should carry.
+
+    The framing is attached here rather than wrapped around the text, so the
+    translation pass still sees the original sentence: a header baked into the
+    body would be sent to the translator as part of the customer's words.
+    """
+    if not isinstance(message, dict):
+        return message
+    message["theme"] = theme
+    if not header:
+        message["no_header"] = True
+    return message
+
+
+def _shop_message_header(theme, language="en"):
+    """The bold header line for a theme, or '' when the theme is unknown."""
+    glyph, label = SHOP_MESSAGE_THEMES.get(theme, ("", ""))[:2]
+    if not label:
+        return ""
+    return f"{glyph} *{_shop_translate_text(label, language)}*" if glyph else \
+        f"*{_shop_translate_text(label, language)}*"
+
+
+def _shop_message_footer(theme=""):
+    """The footer line for a theme.
+
+    Styled to match the message it closes: the accent glyph is the same one the
+    header opened with, so the pair brackets the message as one block. The brand
+    is always in bold, because it is the one part that has to read the same on
+    every message whatever the theme.
+    """
+    glyph = (SHOP_MESSAGE_THEMES.get(theme) or ("", "", ""))[2]
+    brand = f"*{BRAND_NAME_FOOTER} · {BRAND_NAME_FOOTER_SUFFIX}*"
+    return f"{glyph} {brand}" if glyph else brand
+
+
+def _shop_apply_framing(text, message, language="en"):
+    """Wrap one message's text in its header and footer, if it carries a theme."""
+    theme = (message or {}).get("theme")
+    if not theme or not text:
+        return text
+    header = "" if (message or {}).get("no_header") else _shop_message_header(theme, language)
+    # The footer is dropped if the message is already at the button body limit,
+    # because a header and footer that push a prompt past 1024 would make the
+    # interactive message unsendable and cost the customer their buttons.
+    footer = _shop_message_footer(theme)
+    candidate = f"{header}\n\n{text}" if header else text
+    if len(candidate) + len(footer) + 2 <= WA_BUTTON_BODY_LIMIT:
+        return f"{candidate}\n\n{footer}"
+    return candidate
+
+
+
+
 SHOP_LANGUAGE_NAMES = {"en": "English", "sn": "Shona", "nd": "Ndebele"}
 
 SHOP_TRANSLATIONS = {
@@ -22981,7 +23072,7 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
         first_name = _shop_first_name(display_name)
         body = (f"What would you like to do next, *{first_name}*?"
                 if first_name else "What would you like to do next?")
-        return _shop_options(body, options)
+        return _shop_frame(_shop_options(body, options), "menu")
 
     first_name = _shop_first_name(display_name)
     if first_name:
@@ -22999,17 +23090,19 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
         "🙋 Ask for a person whenever you prefer\n\n"
         "What would you like to do?"
     )
-    return _shop_options(body, options)
+    # The full welcome is framed as a welcome; a return to the menu (handled
+    # above) as a menu.
+    return _shop_frame(_shop_options(body, options), "welcome")
 
 
 def _shop_category_list():
     options = [(f"cat:{index}", _shop_short_name(_shop_product(index)["name"]))
                for index in range(len(shop_all_products()))]
-    return _shop_options(
+    return _shop_frame(_shop_options(
         f"🛍️ *Browse Products*\n{BRAND_NAME} — household, cleaning and personal care.\n\n"
         "Select a category to browse:",
         options,
-    )
+    ), "browse")
 
 
 def _shop_product_list(category_index):
@@ -23394,10 +23487,10 @@ def _shop_cart_total_line(cart):
 
 def _shop_cart_message(cart):
     if not cart:
-        return _shop_options(
+        return _shop_frame(_shop_options(
             "🛒 *Your cart is empty*\n\nBrowse the range or search for a product to get started.",
             [("shop", "Browse products"), ("search", "Search products")],
-        )
+        ), "cart")
     total = sum(item["qty"] for item in cart)
     labels = _shop_cart_line_labels(cart)
     # Buy leads the list. A customer who has finished shopping should not have to
@@ -23408,20 +23501,20 @@ def _shop_cart_message(cart):
     options += [(f"qty:{index}", labels[f"qty:{index}"]) for index in range(len(cart))]
     options += [(f"rm:{index}", labels[f"rm:{index}"]) for index in range(len(cart))]
     options.append(("clear", "Empty the cart"))
-    return _shop_options(
+    return _shop_frame(_shop_options(
         f"🛒 *Your cart* — {total} item{'s' if total != 1 else ''}\n\n"
         f"{_shop_cart_summary(cart)}\n\n"
         f"{_shop_cart_total_line(cart)}\n\n"
         "What would you like to do?",
         options,
-    )
+    ), "cart")
 
 
 def _shop_search_prompt():
-    return _shop_text(
+    return _shop_frame(_shop_text(
         "🔎 *Search Products*\n\nType a product name or keyword — for example *bleach*, *jelly*, "
         "*pine* or *dish*."
-    )
+    ), "search")
 
 
 def _shop_search_results(cart, query):
@@ -23432,31 +23525,33 @@ def _shop_search_results(cart, query):
         if query in entry["name"].lower() or query in entry["summary"].lower()
     ]
     if not matches:
-        messages = [_shop_text(
+        messages = [_shop_frame(_shop_text(
             f"😕 I could not find anything for “{query}”.\n\nTry another keyword, or browse the full range."),
-            _shop_options("You can also:", [("shop", "Browse all categories")])]
+            "problem"),
+            _shop_frame(_shop_options("You can also:", [("shop", "Browse all categories")]),
+                        "menu", header=False)]
         return "search", {}, messages
     options = [(f"prod:{index}", _shop_short_name(_shop_product(index)["name"]))
                for index, entry in matches]
-    messages = [_shop_options(
+    messages = [_shop_frame(_shop_options(
         f"🔎 *Search results for “{query}”* — {len(matches)} product"
         f"{'s' if len(matches) != 1 else ''} found:",
-        options)]
+        options), "search")]
     return "search_results", {"query": query}, messages
 
 
 def _shop_support():
-    return [_shop_options(
+    return [_shop_frame(_shop_options(
         "☎️ *Customer Support*\n\nHow would you like to contact Brilliant Chemicals Sales?",
         [("support_call", "Call us"),
          ("support_msg", "Message us"),
          ("support_human", "Talk to a human")],
-    )]
+    ), "help")]
 
 
 def _shop_about():
     phones = COMPANY_SYSTEM_CONTACT["phones"]
-    return [_shop_options(
+    return [_shop_frame(_shop_options(
         "🏢 *About Brilliant Chemicals (Pvt) Ltd*\n\n"
         "We are a Zimbabwean company, registered as *Vivid Chemicals*, that manufactures, markets and "
         f"distributes high quality domestic household and personal care products under our brand *{BRAND_NAME}*.\n\n"
@@ -23473,7 +23568,7 @@ def _shop_about():
         f"*Call:* {phones[0]} / {phones[1]}\n"
         f"*Email:* {COMPANY_SYSTEM_CONTACT['email']}",
         [("shop", "Shop our products"), ("support", "Talk to Support")],
-    )]
+    ), "about")]
 
 
 def shop_agent_order_create(wa_number, lines, user=None, note=None, channel=None,
@@ -24242,6 +24337,20 @@ SHOP_TEMPLATES = {
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
                     ("orders", "Track my order"), ("shop", "Shop more")],
     },
+    "order_confirmation_paid": {
+        "name": "bchem_order_confirmation_paid",
+        "language": "en",
+        "category": "UTILITY",
+        # The paid twin exists so a customer who settled at the counter, or whose
+        # payment landed while the order was being taken, is never invited to pay
+        # a second time. The amount is still shown, as a receipt of what was paid.
+        "body": ("Thank you {{1}}. Your order {{2}} for {{3}} has been received and is "
+                 "paid — no further payment is needed. Tap *Track my order* below to see "
+                 "where it has got to."),
+        "fields": ["customer", "reference", "amount"],
+        "buttons": [("orders", "Track my order"), ("shop", "Shop more"),
+                    ("support_human", "Talk to a human")],
+    },
     "order_confirmation_unpriced": {
         "name": "bchem_order_received_unpriced",
         "language": "en",
@@ -24253,6 +24362,20 @@ SHOP_TEMPLATES = {
         "fields": ["customer", "reference"],
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
                     ("orders", "Track my order"), ("shop", "Shop more")],
+    },
+    "order_confirmation_unpriced_paid": {
+        "name": "bchem_order_received_unpriced_paid",
+        "language": "en",
+        "category": "UTILITY",
+        # The unpriced twin of the paid confirmation: the order was settled before
+        # a total was ever quoted, which happens when a customer pays at the shop
+        # for a line the portal had not priced yet.
+        "body": ("Thank you {{1}}. Your order {{2}} has been received and is paid — no "
+                 "further payment is needed. Our sales team will confirm the prices on "
+                 "quotation, and *Track my order* below shows where it has got to."),
+        "fields": ["customer", "reference"],
+        "buttons": [("orders", "Track my order"), ("shop", "Shop more"),
+                    ("support_human", "Talk to a human")],
     },
     "order_ready_collection": {
         "name": "bchem_order_ready_for_collection",
@@ -24286,9 +24409,21 @@ SHOP_TEMPLATES = {
         "name": "bchem_order_enroute",
         "language": "en",
         "category": "UTILITY",
-        "body": ("Order {{1}} is on its way to {{2}}. Please have your reference and "
-                 "payment ready for the deliverer."),
-        "fields": ["reference", "address"],
+        # Paid twin of the delivery notice. The customer asked for delivery, so
+        # this is the message that tells them it is actually on its way; a settled
+        # customer must not be offered a Pay button on it.
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} has been paid and is on its way "
+                 "to {{4}}. Please quote your reference to the deliverer."),
+        "fields": ["customer", "reference", "amount", "address"],
+        "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_enroute_unpaid": {
+        "name": "bchem_order_enroute_unpaid",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is on its way to {{4}}. Please "
+                 "have the payment ready for the deliverer, or settle it below."),
+        "fields": ["customer", "reference", "amount", "address"],
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
                     ("track", "Track my order"), ("support_human", "Talk to a human")],
     },
@@ -24296,9 +24431,20 @@ SHOP_TEMPLATES = {
         "name": "bchem_order_enroute_noaddress",
         "language": "en",
         "category": "UTILITY",
-        "body": ("Order {{1}} is on its way to you. Please have your reference and "
-                 "payment ready for the deliverer."),
-        "fields": ["reference"],
+        # Used when the order carries no address to name. The customer is still
+        # told it is coming; the sentence simply does not claim to know where.
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} has been paid and is on its way "
+                 "to you. Please quote your reference to the deliverer."),
+        "fields": ["customer", "reference", "amount"],
+        "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_enroute_no_address_unpaid": {
+        "name": "bchem_order_enroute_noaddress_unpaid",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is on its way to you. Please have "
+                 "the payment ready for the deliverer, or settle it below."),
+        "fields": ["customer", "reference", "amount"],
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
                     ("track", "Track my order"), ("support_human", "Talk to a human")],
     },
@@ -24322,9 +24468,21 @@ SHOP_TEMPLATES = {
         "name": "bchem_order_being_processed",
         "language": "en",
         "category": "UTILITY",
-        "body": ("Order {{1}} is being processed at {{2}}. We will tell you as soon as "
-                 "there is a change."),
-        "fields": ["reference", "shop"],
+        # Paid twin: nothing is owed, so the customer is told what is happening
+        # rather than being offered a way to pay.
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is paid and being processed at "
+                 "{{4}}. We will tell you as soon as there is a change."),
+        "fields": ["customer", "reference", "amount", "shop"],
+        "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_being_processed_unpaid": {
+        "name": "bchem_order_being_processed_unpaid",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is being processed at {{4}}. The "
+                 "amount is still outstanding — you can settle it below. We will tell you "
+                 "as soon as there is a change."),
+        "fields": ["customer", "reference", "amount", "shop"],
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
                     ("track", "Track my order"), ("support_human", "Talk to a human")],
     },
@@ -24332,9 +24490,21 @@ SHOP_TEMPLATES = {
         "name": "bchem_order_being_processed_anon",
         "language": "en",
         "category": "UTILITY",
-        "body": ("Order {{1}} is being processed. We will tell you as soon as there is a "
-                 "change."),
-        "fields": ["reference"],
+        # The no-shop variant, for an order with no branch to name. Split for the
+        # same reason as its twin: the buttons differ with the payment state.
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is paid and being processed. We "
+                 "will tell you as soon as there is a change."),
+        "fields": ["customer", "reference", "amount"],
+        "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
+    "order_being_processed_noshop_unpaid": {
+        "name": "bchem_order_being_processed_anon_unpaid",
+        "language": "en",
+        "category": "UTILITY",
+        "body": ("Hey {{1}}, your order {{2}} for {{3}} is being processed. The amount is "
+                 "still outstanding — you can settle it below. We will tell you as soon "
+                 "as there is a change."),
+        "fields": ["customer", "reference", "amount"],
         "buttons": [("paynow:{{reference}}", "Pay via EcoCash"),
                     ("track", "Track my order"), ("support_human", "Talk to a human")],
     },
@@ -25155,6 +25325,22 @@ def shop_stage_options(delivery_method):
             if shop_stage_for_fulfilment(stage, delivery_method)]
 
 
+def _order_amount_text(order):
+    """The order's total as the customer should read it, or '' when there is none.
+
+    An unpriced order has no figure to show, so the sentence around it is written
+    to read correctly whether or not one is present rather than putting a dash
+    where a price belongs.
+    """
+    amount = (order or {}).get("total")
+    if amount is None:
+        return ""
+    try:
+        return f"{(order or {}).get('currency') or PAYNOW_CURRENCY} {float(amount):.2f}"
+    except (TypeError, ValueError):
+        return ""
+
+
 def shop_order_stage_text(order):
     """What the customer is told about where their order has got to.
 
@@ -25173,9 +25359,21 @@ def shop_order_stage_text(order):
                 + (f" at {shop}*." if shop else "*.")
                 + " Bring your reference with you when you come.")
     if stage == "enroute":
-        return ("🚚 *Order is en route to the given address for delivery*"
-                + (f": {address}" if address else "")
-                + ". Please have your reference and payment ready.")
+        # The amount is named, and whether it is settled decided the sentence:
+        # telling a paid customer to have payment ready is what made this read
+        # wrong once the Pay button was removed for them.
+        amount_text = _order_amount_text(order)
+        heading = ("🚚 *Order "
+                   + (f"{order.get('reference')} for {amount_text} is" if amount_text
+                      else f"{order.get('reference')} is")
+                   + " en route to the given address for delivery*"
+                   + (f": {address}" if address else "")
+                   + ".")
+        if order.get("paid"):
+            return (heading + " It is fully paid — just quote your reference to the "
+                              "deliverer.")
+        return (heading + " Please have the payment ready for the deliverer, or settle it "
+                          "with the *Pay via EcoCash* button in the notice.")
     if stage == "delivered":
         return "📦 *Order delivered.* Thank you for your business."
     if stage == "collected":
@@ -25213,6 +25411,13 @@ def shop_order_stage_notice(reference, order, stage):
     delivering = order.get("delivery") or (order.get("delivery_method") == "delivery")
     address = (order.get("address") or "").strip()
     lines = [f"📦 *Order update — {reference}*", ""]
+    # The greeting mirrors the template that carries the same stage, so a customer
+    # sees the same message whether it went out inside the 24-hour window or fell
+    # back to the approved template afterwards. It is prepended as its own line
+    # because the header above doubles as the subject line in the transcript.
+    greeting_name = _order_first_name(order)
+    if greeting_name and greeting_name != "Hello":
+        lines.insert(0, f"Hey {greeting_name},{chr(10)}")
     if stage == "ready":
         amount_text = _order_amount_text(order)
         heading = (f"✅ *Order {reference} for {amount_text} is ready for collection"
@@ -25228,15 +25433,23 @@ def shop_order_stage_notice(reference, order, stage):
             # rather than also claiming payment is taken at the shop.
             lines.append("The amount is still outstanding — tap *Pay via EcoCash* below, "
                          "or settle it in person.")
+        else:
+            lines.append("This order is fully paid — nothing more is owed.")
         lines.append("Tap *Deliver to me* below if you would rather have it sent to an "
                      "address instead.")
     elif stage == "enroute":
-        lines.append("🚚 *Order is en route to the given address for delivery*"
+        amount_text = _order_amount_text(order)
+        lines.append("🚚 *Order "
+                     + (f"{reference} for {amount_text} is" if amount_text
+                        else f"{reference} is")
+                     + " en route to the given address for delivery*"
                      + (f": {address}" if address else "")
                      + ".")
         lines.append("")
         lines.append(f"Quote your reference *{reference}* to the deliverer.")
-        if not order.get("paid"):
+        if order.get("paid"):
+            lines.append("It is fully paid — nothing more is owed. 🙏")
+        else:
             lines.append("Please have the payment ready on delivery, or tap "
                          "*Pay via EcoCash* below.")
     elif stage == "delivered":
@@ -25248,12 +25461,18 @@ def shop_order_stage_notice(reference, order, stage):
         lines.append("")
         lines.append("Thank you for your business. 🙏")
     elif stage == "preparing":
-        lines.append("👩🍳 *Order is being processed.*")
+        amount_text = _order_amount_text(order)
+        lines.append("👩🍳 *Order is being processed"
+                     + (f" — {amount_text}*" if amount_text else "*"))
         if shop and not delivering:
             lines.append(f"📍 {shop}")
         lines.append("")
         if not order.get("paid"):
-            lines.append("Tap *Pay via EcoCash* below to settle it while you wait.")
+            lines.append("The amount is still outstanding — tap *Pay via EcoCash* below "
+                         "to settle it while you wait.")
+            lines.append("")
+        else:
+            lines.append("This order is fully paid — nothing more is owed.")
             lines.append("")
         lines.append("We will send you another update as soon as there is a change.")
     else:
@@ -25528,7 +25747,8 @@ def _shop_payment_options(customer):
 
 
 def _shop_payment_prompt(customer):
-    return _shop_options("How would you like to pay?", _shop_payment_options(customer))
+    return _shop_frame(_shop_options("How would you like to pay?",
+                                     _shop_payment_options(customer)), "payment")
 
 
 def _shop_cart_qty_prompt():
@@ -25566,9 +25786,9 @@ def _shop_orders_menu(wa_number):
     pending = shop_agent_orders_for(wa_number)
     orders = shop_customer_orders(wa_number, limit=5)
     if not orders and not pending:
-        return _shop_options(
+        return _shop_frame(_shop_options(
             "📦 *Track my order*\n\nYou have not placed an order yet.",
-            [("shop", "Browse products"), ("cart", "View Cart")])
+            [("shop", "Browse products"), ("cart", "View Cart")]), "track")
 
     lines = ["📦 *Track my order*", ""]
     options = []
@@ -25604,7 +25824,7 @@ def _shop_orders_menu(wa_number):
         lines.append("None of these can be cancelled here. Ask for a person and we will help.")
     options.append(("support_human", "Talk to a human"))
     options.append(("shop", "Browse products"))
-    return _shop_options("\n".join(lines), options)
+    return _shop_frame(_shop_options("\n".join(lines), options), "track")
 
 
 def _shop_agent_order_prompt(wa_number):
@@ -25716,7 +25936,7 @@ def _shop_track_view(order, wa_number):
         options.append(("support_human", "Talk to a human"))
     else:
         options.append(("orders", "All my orders"))
-    return [_shop_options(shop_order_track_text(order), options)]
+    return [_shop_frame(_shop_options(shop_order_track_text(order), options), "track")]
 
 
 def _shop_track_entry(wa_number):
@@ -25746,11 +25966,12 @@ def _shop_track_nudge(wa_number, ctx):
         ]
     ok, message = shop_order_reminder_send(wa_number, order["reference"])
     return [
-        _shop_text(("✅ " if ok else "⚠️ ") + message),
-        _shop_options("What would you like to do next?",
-                      [("nudge", "Remind them again"),
-                       ("track", "Track another order"),
-                       ("shop", "Browse products")]),
+        _shop_frame(_shop_text(("✅ " if ok else "⚠️ ") + message),
+                    "done" if ok else "problem"),
+        _shop_frame(_shop_options("What would you like to do next?",
+                                  [("nudge", "Remind them again"),
+                                   ("track", "Track another order"),
+                                   ("shop", "Browse products")]), "menu", header=False),
     ]
 
 
@@ -25804,7 +26025,7 @@ def _shop_cancel_result(ok, reason, detail, order=None):
                             "reason": f"Cancelled order {reference} may still be paid",
                             "message": f"{reference} was cancelled while an EcoCash prompt was "
                                        f"outstanding. Check whether the payment landed."})
-        return [_shop_text("\n".join(lines))], actions
+        return [_shop_frame(_shop_text("\n".join(lines)), "done")], actions
 
     blocked = {
         "already_cancelled": f"ℹ️ *{reference}* was already cancelled, so there is nothing to "
@@ -25819,12 +26040,13 @@ def _shop_cancel_result(ok, reason, detail, order=None):
                  "it out — I have passed this on.",
     }
     message = blocked.get(reason, blocked["error"])
+    theme = "menu" if reason == "already_cancelled" else "problem"
     if reason == "already_cancelled":
-        return [_shop_text(message)], []
-    return [_shop_text(message)], [{"type": "escalate",
-                                    "reason": f"Order {reference} could not be cancelled "
-                                              f"({reason})",
-                                    "message": message}]
+        return [_shop_frame(_shop_text(message), theme)], []
+    return [_shop_frame(_shop_text(message), theme)], [
+        {"type": "escalate",
+         "reason": f"Order {reference} could not be cancelled ({reason})",
+         "message": message}]
 
 
 # Steps whose reply is meant to be one of the choices on screen. Anything else is
@@ -26918,10 +27140,10 @@ def _shop_order_placed(reference, customer, amount=None, paid=False):
     # The confirmation is the last thing the customer sees for this order, so the
     # two things they will want next are offered here rather than left to the
     # main menu: where the order has got to, and a way to chase it.
-    return [_shop_options(
+    return [_shop_frame(_shop_options(
         "\n".join(lines),
         [("track", "Track my order"),
-         ("nudge", "Send a reminder about it")])]
+         ("nudge", "Send a reminder about it")]), "done" if paid else "order")]
 
 
 def _shop_payment_event(reference, event, status, payload=""):
@@ -27826,10 +28048,14 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
     for message in messages or []:
         if not message:
             continue
+        # Only a themed message is framed: the short mid-flow prompts carry no
+        # theme, so they stay plain rather than being bracketed on every turn.
+        framed = _shop_apply_framing(message.get("text") or "",
+                                     message, language)
         if message.get("options"):
-            choice = message
+            choice = dict(message, text=framed)
         else:
-            texts.append(message.get("text") or "")
+            texts.append(framed)
 
     parts = [part.strip() for part in texts if part and part.strip()]
     choice_text = (choice.get("text") or "").strip() if choice else ""
@@ -27875,7 +28101,9 @@ def shop_messages_to_text(messages, nav=None, language="en"):
         if options:
             text = f"{text}\n\n" + "\n".join(
                 f"{index}. {option['label']}" for index, option in enumerate(options, start=1))
-        parts.append(text)
+        # The transcript shows the same framing the customer saw, so an agent
+        # reading the thread is looking at the message that was actually sent.
+        parts.append(_shop_apply_framing(text, message, language))
     body = "\n\n".join(part for part in parts if part)
     nav_text = shop_nav_block(nav, language)
     if nav_text:
@@ -31019,29 +31247,48 @@ def _record_outbound(reference, message, sent, used_template=False):
                        delivered=sent, is_staff=str(channel or "").endswith("staff"))
 
 
-def shop_send_order_confirmation(reference, customer_name=None, amount=None):
+def shop_send_order_confirmation(reference, customer_name=None, amount=None, paid=False):
     """Tell the customer their order was received, with a template fallback.
 
-    An unpriced order has its own template, because a slot for an amount that
-    does not exist would print whatever filled it in the wrong place.
+    The wording mirrors the approved template for the same situation, because the
+    customer sees whichever one the 24-hour window allows: the free-form message
+    inside the window, the template outside it. A paid order picks the paid pair
+    for the same reason the stage notices do - the buttons differ, and offering a
+    Pay button to someone who has already paid invites a double payment.
+
+    An unpriced order has its own template, because a slot for an amount that does
+    not exist would print whatever filled it in the wrong place.
     """
     number, channel = shop_order_number_and_channel(reference)
     if not number:
         return False
     name = " ".join(str(customer_name or "").split()).strip() or "there"
+    formatted = f"{PAYNOW_CURRENCY} {float(amount):.2f}" if amount is not None else ""
     if amount is None:
-        message = ("✅ *Order placed*\n\n"
-                   f"Thank you {name}! Your reference is *{reference}*.\n"
-                   "Our sales team will confirm the prices and the total on quotation.")
-        key, values = "order_confirmation_unpriced", {"customer": name,
-                                                     "reference": reference}
+        values = {"customer": name, "reference": reference}
+        if paid:
+            message = ("✅ *Order placed*\n\n"
+                       f"Thank you {name}! Your reference is *{reference}*.\n"
+                       "We have received payment — nothing more is owed.\n"
+                       "Our sales team will confirm the prices on quotation.")
+            key = "order_confirmation_unpriced_paid"
+        else:
+            message = ("✅ *Order placed*\n\n"
+                       f"Thank you {name}! Your reference is *{reference}*.\n"
+                       "Our sales team will confirm the prices and the total on quotation.")
+            key = "order_confirmation_unpriced"
     else:
-        formatted = f"{PAYNOW_CURRENCY} {float(amount):.2f}"
-        message = ("✅ *Order placed*\n\n"
-                   f"Thank you {name}! Your reference is *{reference}*.\n"
-                   f"Amount due: *{formatted}*")
-        key, values = ("order_confirmation",
-                       {"customer": name, "reference": reference, "amount": formatted})
+        values = {"customer": name, "reference": reference, "amount": formatted}
+        if paid:
+            message = ("✅ *Order placed*\n\n"
+                       f"Thank you {name}! Your reference is *{reference}*.\n"
+                       f"Amount: *{formatted}* — paid in full, nothing more is owed.")
+            key = "order_confirmation_paid"
+        else:
+            message = ("✅ *Order placed*\n\n"
+                       f"Thank you {name}! Your reference is *{reference}*.\n"
+                       f"Amount due: *{formatted}*")
+            key = "order_confirmation"
     sent, _detail, used_template = shop_send_notice(
         number, message, key, values, channel)
     _record_outbound(reference, message, sent, used_template)
@@ -31077,59 +31324,53 @@ def _order_first_name(order):
     return name.split()[0][:40]
 
 
-def _order_amount_text(order):
-    """The order's total as the customer should read it, or '' when there is none.
-
-    An unpriced order has no figure to show, so the sentence around it is written
-    to read correctly whether or not one is present rather than putting a dash
-    where a price belongs.
-    """
-    amount = (order or {}).get("total")
-    if amount is None:
-        return ""
-    try:
-        return f"{(order or {}).get('currency') or PAYNOW_CURRENCY} {float(amount):.2f}"
-    except (TypeError, ValueError):
-        return ""
-
-
 def _stage_template_for(stage, order):
     """Which template carries this stage, and with what values.
 
-    A stage whose line needs a shop or an address has a fallback for when the
-    order does not carry one, because a template's slots are positional and an
+    Every customer-facing stage has a paid and an unpaid twin, chosen here from
+    the order itself. The reason is the buttons: a paid order must never carry a
+    "Pay via EcoCash" button, because that invites a settled customer to pay
+    twice, and an unpaid one must not read as though nothing is owed. A slot for
+    "whether it is paid" could not express that, since a template's buttons are
+    fixed at approval time.
+
+    A stage whose line needs a shop or an address has a further fallback for when
+    the order does not carry one, because a template's slots are positional and an
     empty one would put the reference where the shop belongs.
     """
     shop = order.get("shop") or ""
     address = (order.get("address") or "").strip()
+    paid = bool(order.get("paid"))
+    # `customer` and `amount` appear in almost every body, so they are composed
+    # once and merged per stage rather than repeated at each return.
+    common = {"customer": _order_first_name(order),
+              "reference": order.get("reference"),
+              "amount": _order_amount_text(order) or "the amount advised"}
     if stage == "ready":
         # The customer is addressed by name on this one because it is the message
         # that asks them to change their mind about how they receive the order: a
         # personal greeting reads as a person asking, not a system announcing.
-        #
-        # Two templates rather than one with a payment slot, because the buttons
-        # differ too: offering "Pay via EcoCash" on an order that is already
-        # settled invites a customer to pay twice.
-        values = {"customer": _order_first_name(order),
-                  "reference": order.get("reference"),
-                  "amount": _order_amount_text(order) or "the amount advised",
-                  "shop": shop or "-"}
-        return ("order_ready_collection" if order.get("paid")
+        values = dict(common, shop=shop or "-")
+        return ("order_ready_collection" if paid
                 else "order_ready_collection_unpaid", values)
     if stage == "enroute":
+        # The customer asked for delivery, so this is the message that tells them
+        # it is actually on its way.
         if address:
-            return ("order_enroute", {"reference": order.get("reference"),
-                                      "address": address})
-        return ("order_enroute_no_address", {"reference": order.get("reference")})
+            values = dict(common, address=address)
+            return ("order_enroute" if paid else "order_enroute_unpaid", values)
+        return ("order_enroute_no_address" if paid
+                else "order_enroute_no_address_unpaid", dict(common))
     if stage == "delivered":
         return ("order_delivered", {"reference": order.get("reference")})
     if stage == "collected":
         return ("order_collected", {"reference": order.get("reference")})
     if stage == "preparing":
         if shop and not order.get("delivery"):
-            return ("order_being_processed", {"reference": order.get("reference"),
-                                              "shop": shop})
-        return ("order_being_processed_noshop", {"reference": order.get("reference")})
+            return ("order_being_processed" if paid
+                    else "order_being_processed_unpaid", dict(common, shop=shop))
+        return ("order_being_processed_noshop" if paid
+                else "order_being_processed_noshop_unpaid", dict(common))
     return ("order_cancelled", {"reference": order.get("reference")})
 
 

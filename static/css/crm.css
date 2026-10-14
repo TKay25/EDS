@@ -2491,3 +2491,206 @@ select.crm-select:focus {
   }
   .crm-order-actions .ps-btn { flex: 1 1 100%; }
 }
+
+/* ==========================================================================
+   DENSITY PASS
+   The CRM is a working screen: an agent reads a chat, an order and a stock
+   table at once, so every millimetre of chrome is a millimetre taken from the
+   data. This block tightens the existing rules from the outside rather than
+   editing two thousand lines in place, which keeps every feature and every
+   earlier decision intact while making the whole screen fit more.
+
+   It is deliberately conservative: nothing below 12px is reduced further,
+   because text an agent has to squint at is not a saving. The gains come from
+   the generous values instead - the 20px panels, the 18px product padding, the
+   16px card gaps - and from the vertical space between blocks.
+   ========================================================================== */
+
+/* ---------------------------------------------------------- page chrome */
+.crm-topbar { gap: 10px; margin-bottom: 7px; }
+.ps-hero-compact { margin-bottom: 6px; padding-top: 2px; padding-bottom: 2px; }
+.ps-shell.ps-shell-tight { padding-bottom: 6px; }
+
+/* --------------------------------------------------------------- tabs */
+.crm-tabs { padding: 4px; gap: 3px; }
+.crm-tab {
+  padding: 7px 14px;
+  font-size: 0.72rem;
+  gap: 6px;
+}
+.crm-tab i { font-size: 0.82rem; }
+.crm-tab .crm-tab-count { font-size: 0.62rem; padding: 1px 6px; }
+
+/* ------------------------------------------------------------- panels */
+.ps-panel-head { padding: 11px 16px; }
+.ps-panel-head h3 { font-size: 0.85rem; gap: 7px; }
+.ps-panel-head h3 i { font-size: 0.9rem; }
+.ps-panel-body { padding: 12px 16px; }
+/* Hints are read once and then ignored, so they take the smaller cut. */
+.crm-hint { font-size: 0.74rem; line-height: 1.5; }
+
+/* ----------------------------------------------------------- catalogue */
+.crm-product-grid { gap: 12px; padding: 0 16px 16px; }
+.crm-product { padding: 13px 14px; gap: 10px; border-radius: 14px; }
+.crm-product-head { gap: 9px; }
+.crm-product-name { font-size: 0.82rem; }
+.crm-product-base { margin-top: 3px; font-size: 0.63rem; }
+.crm-product-summary { font-size: 0.75rem; line-height: 1.45; }
+.crm-price-grid { gap: 7px; }
+.crm-price { gap: 3px; }
+.crm-price-size { font-size: 0.65rem; }
+.crm-price .ps-input { padding: 6px 8px; font-size: 0.74rem; }
+.crm-product-foot { gap: 9px; padding-top: 2px; }
+.crm-save-note { font-size: 0.7rem; }
+/* The picture field: smaller preview, tighter tools. */
+.crm-product-image { grid-template-columns: 56px minmax(0, 1fr); gap: 8px 10px; margin-top: 7px; }
+.crm-product-image-preview { width: 56px; height: 56px; border-radius: 9px; }
+.crm-product-image-tools { gap: 6px; }
+.crm-product-image-hint { font-size: 0.67rem; }
+
+/* -------------------------------------------------------------- fields */
+.crm-field { gap: 3px; }
+.crm-field > span { font-size: 0.69rem; }
+.crm-field .ps-input,
+.crm-field textarea,
+.crm-field select { padding: 8px 10px; font-size: 0.79rem; }
+
+/* --------------------------------------------------------------- chips */
+.ps-chip { font-size: 0.66rem; padding: 3px 9px; }
+.crm-origin { font-size: 10.5px; padding: 2px 7px; }
+.crm-stage { font-size: 10.5px; padding: 2px 8px; }
+
+/* --------------------------------------------------------------- inbox */
+/* The inbox is the tightest screen, so it takes the deepest cut: the chat list
+   rows and the thread header are read at a glance, not studied. These classes
+   come from portal.css, which the CRM reuses rather than redefining. */
+.ps-chat-item { padding: 9px 11px; gap: 8px; border-radius: 10px; }
+.ps-chat-name { font-size: 0.78rem; }
+.ps-chat-preview { font-size: 0.71rem; }
+.ps-chat-time { font-size: 0.61rem; }
+.ps-chat-avatar { width: 32px; height: 32px; font-size: 0.76rem; }
+.ps-chat-meta { gap: 5px; }
+.ps-thread-head { padding: 9px 13px; gap: 9px; }
+.ps-thread-body { padding: 12px 13px; gap: 9px; }
+.ps-composer { padding: 9px 11px; gap: 7px; }
+.crm-chat-badge { font-size: 10.5px; padding: 1px 7px; }
+.crm-thread-title { font-size: 0.83rem; }
+.crm-thread-loading-inner { font-size: 0.73rem; }
+.crm-composer-row { gap: 7px; }
+.crm-composer-tools { gap: 5px; margin-top: 5px; }
+.crm-composer-note { font-size: 0.66rem; }
+
+/* -------------------------------------------------------------- orders */
+.crm-orders-table td { padding: 7px 10px; }
+.crm-order-card { gap: 12px; padding: 16px; }
+.crm-order-head { gap: 9px; }
+.crm-order-body { gap: 9px; }
+.crm-order-modal { padding: 18px; }
+.crm-order-settle { padding: 11px 13px; gap: 9px; }
+.crm-order-settle-row { gap: 7px; }
+.crm-order-settle-hint { font-size: 0.69rem; }
+.crm-order-actions { gap: 7px; }
+
+/* --------------------------------------------------------- stock table */
+/* A count sheet is a long list of numbers, so the rows are the whole point:
+   tightening them is what lets a full shop's stock fit without scrolling. */
+.crm-table th { font-size: 0.63rem; padding: 7px 10px; }
+.crm-table td { font-size: 0.76rem; padding: 6px 10px; }
+.crm-stock-receive { padding: 10px 13px; }
+
+/* ------------------------------------------------------- activity log */
+.crm-log-summary { font-size: 0.75rem; }
+.crm-log-icon { width: 28px; height: 28px; font-size: 0.74rem; }
+.crm-date-range { gap: 8px; }
+
+/* ------------------------------------------------------- shop editor */
+.crm-shop-form { padding: 14px 16px; gap: 11px; }
+.crm-shop-staff { gap: 7px; }
+.crm-shop-staff-row { padding: 7px 9px; gap: 7px; }
+.crm-shop-staff-row .ps-input { padding: 7px 9px; font-size: 0.76rem; }
+
+/* ---------------------------------------------------------- analytics */
+.ps-stat-value { font-size: 1.05rem; }
+.ps-stat-label { font-size: 0.66rem; }
+.ps-stat { padding: 11px 13px; gap: 7px; }
+.ps-stats { gap: 9px; }
+.crm-banner-stat { font-size: 0.74rem; }
+
+/* ==========================================================================
+   LAYOUT PASS
+   Shrinking alone leaves gaps where a flex row kept its old proportions. These
+   rules redistribute the reclaimed space so the screens read as intentionally
+   dense rather than merely small - no control is hidden or moved out of reach.
+   ========================================================================== */
+
+/* The chat list should fill the panel beside the thread instead of stopping
+   short and leaving a band of empty panel under it. */
+.ps-chat-list {
+  display: flex;
+  flex-direction: column;
+  align-content: flex-start;
+  overflow-y: auto;
+  padding: 6px;
+  gap: 3px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.ps-chat-item { flex: 0 0 auto; }
+
+/* The inbox columns share one height, so the shorter of the two is stretched
+   rather than leaving a ragged bottom edge. */
+.ps-inbox { align-items: stretch; }
+.ps-inbox > .ps-panel { display: flex; flex-direction: column; min-height: 0; }
+.ps-inbox > .ps-panel > .ps-chat-list,
+.ps-inbox > .ps-panel > .ps-thread-body { flex: 1 1 auto; min-height: 0; }
+
+/* Product cards: the foot is pinned to the bottom so the Save and Remove
+   buttons line up across a row whatever the description length. */
+.crm-product { justify-content: flex-start; }
+.crm-product-summary { min-height: 42px; }
+.crm-product-foot { margin-top: auto; }
+
+/* The catalogue grid gets a slightly smaller minimum so a 1280-wide screen
+   shows three cards where the old sizing fitted two. */
+.crm-product-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+
+/* The price grid lines up with the unit-size field above it rather than
+   floating at its own rhythm. */
+.crm-price-grid + .crm-field { margin-top: 7px; }
+
+/* Tables: the header stays put while a long stock or order list scrolls, so the
+   column meanings are not scrolled away from the numbers. */
+.crm-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--ps-surface-alt);
+}
+.crm-table-wrap { max-height: 62vh; overflow-y: auto; }
+
+/* The panel head and its body join without the double rule that made a short
+   panel look like two stacked boxes. */
+.ps-panel-head + .ps-panel-body { padding-top: 0; }
+.ps-panel-head + .crm-product-grid,
+.ps-panel-head + .crm-table-wrap { padding-top: 0; }
+
+/* A stats strip is a single band, so it does not wrap onto a second row on the
+   widths the CRM is actually used at. */
+.ps-stats { flex-wrap: nowrap; }
+@media (max-width: 900px) { .ps-stats { flex-wrap: wrap; } }
+
+/* ------------------------------------------------------ order composer */
+.crm-build-lines li { padding: 5px 0; font-size: 12.5px; }
+.crm-build-row { gap: 5px; }
+.crm-build-row select,
+.crm-build-qty { min-height: 31px; }
+
+/* ------------------------------------------------------------ branding */
+.crm-branding { gap: 13px; padding: 13px 15px; margin: 0 16px 14px; }
+.crm-branding-preview { flex: 0 0 84px; width: 84px; height: 66px; }
+.crm-branding-body h4 { font-size: 0.82rem; margin-bottom: 3px; }
+.crm-branding-body p { font-size: 0.73rem; margin-bottom: 8px; }
+.crm-branding-tools { gap: 7px; }
+
+/* ------------------------------------------------------------ controls */
+.ps-btn-sm { padding: 6px 11px; font-size: 0.73rem; gap: 5px; }
