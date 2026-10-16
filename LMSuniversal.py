@@ -25169,8 +25169,12 @@ def _shop_staff_send_interactive(sender_id, payload, readable, fallback,
 
 
 def _shop_staff_order_for_update(reference, staff):
-    """Return an order only when it belongs to this staff member's shop."""
-    order = order_detail(reference)
+    """Return an order only when it belongs to this staff member's shop.
+
+    The reference is uppercased first: order references are stored uppercase, and
+    a staff member typing a lowercase one must not read as "not found".
+    """
+    order = order_detail((reference or "").strip().upper())
     if not order or str(order.get("shop_key") or "").lower() != \
             str(staff.get("shop_id") or "").lower():
         return None
@@ -25187,9 +25191,16 @@ def _shop_staff_status_prompt(sender_id, reference, staff, channel=None):
                          staff, channel)
         return True
     if order.get("cancelled"):
-        _shop_staff_send(sender_id,
-                         f"Order {reference} was cancelled, so its status cannot be changed.",
-                         staff, channel)
+        # A cancelled order still has to be readable: the shop may be holding
+        # goods for it. Status cannot move, so rather than replying with a bare
+        # refusal, the status and the reason are spelled out and the paid case is
+        # called out because only head office can refund it.
+        cancelled_body = (f"Order {reference} is *cancelled*, so its status cannot be "
+                          "changed.\nThe customer was told nothing is being sent for it.")
+        if order.get("paid"):
+            cancelled_body += ("\nThis order was *paid* — head office has to refund or "
+                               "reopen it.")
+        _shop_staff_send(sender_id, cancelled_body, staff, channel)
         return True
 
     current = (order.get("stage") or "").strip().lower()
@@ -25441,7 +25452,7 @@ def shop_order_staff_summary(reference, shop_id=None):
     Returns '' when the order does not exist or does not belong to this shop, so
     a reference for another shop reads exactly like an unknown one.
     """
-    order = order_detail(reference)
+    order = order_detail((reference or "").strip().upper())
     if not order:
         return ""
     if shop_id and str(order.get("shop_key") or "").lower() != str(shop_id).lower():
@@ -25486,10 +25497,15 @@ def shop_order_staff_summary(reference, shop_id=None):
     # The business stage is what tells staff whether the order is still to be
     # picked, so it is named in their own words rather than the customer's.
     stage = (order.get("stage") or "").strip().lower()
-    lines.append(f"*Current status:* "
-                 f"{SHOP_STAGE_STAFF_LABELS.get(stage, 'Not set')}")
     if order.get("cancelled"):
-        lines.append("*This order was cancelled.*")
+        # Cancelled outranks any stage: the order is not going to be prepared,
+        # whatever stage it was left on when it was cancelled.
+        lines.append("*Current status:* Cancelled")
+    else:
+        lines.append(f"*Current status:* "
+                     f"{SHOP_STAGE_STAFF_LABELS.get(stage, 'Not set')}")
+    if order.get("cancelled"):
+        lines.append("*This order was cancelled* — nothing is being sent for it.")
     return "\n".join(lines)
 
 
@@ -29663,6 +29679,22 @@ def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=
     staff_member = shop_staff_for_number(sender_id)
     if staff_member and shop_staff_reply(
             sender_id, reply_id, staff_member, display_phone_number):
+        crm_record_message(sender_id, "inbound", "staff", text or f"[{mtype}]", mtype,
+                           company_reg=COMPANY_SYSTEM_PREFIX,
+                           channel=display_phone_number, is_staff=True,
+                           display_name=staff_member.get("name"))
+        return
+
+    # A known staff handset that sent something order-shaped but that the staff
+    # handler did not claim must not be answered by the customer product search:
+    # that is where "I could not find anything for BC-…" came from. The message
+    # is answered as a staff message instead, so the failure is a real one rather
+    # than a product search missing the point.
+    if staff_member and re.search(r"BC-\d{6}-\d{4}", reply_id or "", re.IGNORECASE):
+        _shop_staff_send(sender_id,
+                         f"I couldn't match that order to your shop. Check the reference "
+                         f"and send it again, or ask head office to look it up.",
+                         staff_member, display_phone_number)
         crm_record_message(sender_id, "inbound", "staff", text or f"[{mtype}]", mtype,
                            company_reg=COMPANY_SYSTEM_PREFIX,
                            channel=display_phone_number, is_staff=True,
