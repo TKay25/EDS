@@ -2868,6 +2868,28 @@
         requestAnimationFrame(function () { skeleton.hidden = true; });
       });
     }
+
+    /* The conversation filter is a server-side query, so the choice is put in
+       the URL and the page reloaded. It used to be a dead control: changing it
+       did nothing, which made the inbox look empty at random. */
+    var filterSelect = document.getElementById('crmFilterSelect');
+    if (filterSelect) {
+      filterSelect.addEventListener('change', function () {
+        var url = new URL(window.location.href);
+        var value = filterSelect.value;
+        if (!value || value === 'all') {
+          // The default needs no parameter, so the plain URL stays bookmarkable.
+          url.searchParams.delete('filter');
+        } else {
+          url.searchParams.set('filter', value);
+        }
+        // Any open conversation is dropped: a chat outside the new filter would
+        // otherwise stay on screen and contradict the list beside it.
+        url.searchParams.delete('chat');
+        window.location.href = url.toString();
+      });
+    }
+
     var retry = document.getElementById('crmChatsRetry');
     if (retry) {
       retry.addEventListener('click', function () {

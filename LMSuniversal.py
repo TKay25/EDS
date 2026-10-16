@@ -30025,6 +30025,18 @@ def company_system_stats():
     return stats
 
 
+# The inbox filters the dropdown offers, and the labels it shows. Kept here so
+# the route can reject an unknown value instead of quietly falling back.
+_CRM_CHAT_FILTERS = {
+    "all": "All conversations",
+    "open": "Open conversations",
+    "unattended": "Unattended",
+    "human": "Agent live",
+    "staff": "Staff",
+    "closed": "Closed",
+}
+
+
 def _crm_chats(filter_key="all", search=None):
     """Conversations for the CRM inbox.
 
@@ -30047,8 +30059,11 @@ def _crm_chats(filter_key="all", search=None):
         where.append("is_staff = TRUE")
     elif filter_key == "customers":
         where.append("is_staff = FALSE")
-    else:
+    elif filter_key == "open":
         where.append("status <> 'closed'")
+    # "all" adds no status condition at all. It used to reuse the open-chats
+    # filter, so a closed conversation disappeared from "All conversations" —
+    # which reads as the history having been lost.
 
     search = " ".join(str(search or "").split()).strip()
     if search:
@@ -30292,8 +30307,13 @@ def portal_crm():
         wa_load_channels()
     except Exception as e:
         print(f"channel warmup skipped: {e}")
+    # The filter is part of the URL so a reload, a bookmark or the back button
+    # all land on the same list the agent was looking at.
+    chat_filter = (request.args.get('filter') or 'all').strip().lower()
+    if chat_filter not in _CRM_CHAT_FILTERS:
+        chat_filter = 'all'
     try:
-        chats = _crm_chats('all')
+        chats = _crm_chats(chat_filter)
         chats_error = ""
     except Exception as e:
         # An inbox that failed to load must not render as an empty one: that is
@@ -30322,6 +30342,8 @@ def portal_crm():
     return render_template('crm_portal.html', user=user, active_nav='crm',
                            nav_modules=user_modules(user),
                            chats=chats, chats_error=chats_error,
+                           chat_filter=chat_filter,
+                           chat_filters=list(_CRM_CHAT_FILTERS.items()),
                            orders=orders,
                            catalog=catalog,
                            removed=removed,

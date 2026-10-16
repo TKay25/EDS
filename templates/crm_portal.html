@@ -125,11 +125,9 @@
                     <label class="crm-select-wrap">
                         <span class="crm-select-label">Show</span>
                         <select class="ps-input crm-select" id="crmFilterSelect" aria-label="Filter conversations">
-                            <option value="all" selected>All conversations</option>
-                            <option value="unattended">Unattended</option>
-                            <option value="human">Agent live</option>
-                            <option value="staff">Staff</option>
-                            <option value="closed">Closed</option>
+                            {% for value, label in chat_filters %}
+                            <option value="{{ value }}"{% if value == chat_filter %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
                         </select>
                     </label>
                 </div>
