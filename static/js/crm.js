@@ -2855,7 +2855,31 @@
     });
   }
 
+  /* ------------------------------------------------- inbox load feedback
+     The chat cards arrive already rendered, so the only wait is the browser
+     painting a long page. The skeleton is dismissed on the first frame, and the
+     retry button reloads when the query itself failed. */
+  function initInboxLoadState() {
+    var skeleton = document.getElementById('crmListSkeleton');
+    if (skeleton) {
+      // Two frames, so the browser has painted the page before the placeholder
+      // is taken away; hiding it in the same frame would show neither.
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { skeleton.hidden = true; });
+      });
+    }
+    var retry = document.getElementById('crmChatsRetry');
+    if (retry) {
+      retry.addEventListener('click', function () {
+        retry.disabled = true;
+        retry.innerHTML = '<span class="crm-spinner is-btn" aria-hidden="true"></span> Retrying…';
+        window.location.reload();
+      });
+    }
+  }
+
   initTabs();
+  initInboxLoadState();
   initCatalog();
   initBranding();
   initActivityLog();

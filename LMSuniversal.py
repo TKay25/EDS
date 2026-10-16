@@ -21627,16 +21627,27 @@ def ensure_shop_tables():
         """)
         # The company's own branding, stored as one row rather than a settings
         # table: there is exactly one set of these and a single row makes that
-        # explicit. The logo path follows the product pictures - a file under the
-        # static folder, referenced by path - so the same asset serves the portal
-        # and every document a customer receives.
+        # explicit.
+        #
+        # The bytes are kept here as well as the file. A hosted deployment wipes
+        # its own disk on every redeploy, so a logo that lived only as a file was
+        # gone after the next deploy while the row still named it - which is what
+        # drew a broken image in the portal. The file is still written, because a
+        # static path is what WhatsApp needs to fetch, but the bytes are the copy
+        # that survives, and they are written back to disk on first read.
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS shop_branding (
                 brand_key VARCHAR(40) PRIMARY KEY,
                 logo_path VARCHAR(300),
+                logo_bytes BYTEA,
+                logo_mime VARCHAR(60),
                 updated_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        # The same for a product picture.
+        cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS image_bytes BYTEA;")
+        cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS image_mime VARCHAR(60);")
+
         # The people at a shop who are told when an order lands there. Kept per
         # shop rather than as system users: a shop's staff are not the same as the
         # portal's users, and most of them will never sign in to anything.
@@ -23193,6 +23204,19 @@ LOGO_BRAND_KEY = "primary"
 _company_logo_cache = {"loaded": False, "path": ""}
 
 
+def _inside_root(full, folder):
+    """Whether an absolute path sits inside a folder under the static root.
+
+    Compared with normalised separators and case, because a stored path uses
+    forward slashes while the platform's own separator may be a backslash: the
+    joined result is a mixed path whose plain string comparison fails on Windows
+    even though the file is exactly where it should be.
+    """
+    root = os.path.abspath(os.path.join(app.static_folder, folder))
+    return os.path.normcase(os.path.abspath(full)).startswith(
+        os.path.normcase(root) + os.sep)
+
+
 def _logo_absolute_path(logo_path):
     """Where the stored logo actually sits on disk, or '' when it is not there."""
     path = str(logo_path or "").strip().lstrip("/")
@@ -23201,8 +23225,7 @@ def _logo_absolute_path(logo_path):
     # Confined to the brand folder, so a stored value can never name a file
     # outside it no matter what was written to the column.
     full = os.path.abspath(os.path.join(app.static_folder, path))
-    root = os.path.abspath(os.path.join(app.static_folder, LOGO_DIR))
-    if not full.startswith(root + os.sep):
+    if not _inside_root(full, LOGO_DIR):
         return ""
     return full if os.path.isfile(full) else ""
 
@@ -23236,12 +23259,74 @@ def company_logo_path():
             path = str(row[0]).strip() if row and row[0] else ""
     except Exception as e:
         print(f"logo lookup error: {e}")
-    # A path whose file has gone is treated as no logo, so a document renders
-    # without one rather than with a broken image placeholder.
+    # A path whose file has gone is rewritten from the stored bytes. A redeploy
+    # empties the disk, so this is the normal way a logo comes back rather than an
+    # error case, and only a logo with no stored copy is treated as absent.
     if path and not _logo_absolute_path(path):
-        path = ""
+        if not _logo_from_store(path):
+            path = ""
     _company_logo_cache = {"loaded": True, "path": path}
     return path
+
+
+def _logo_from_store(logo_path):
+    """Write the stored logo bytes back to disk. Returns the path, or ''.
+
+    Called when the file is missing, which is what a redeploy leaves behind: the
+    row survives in the database and the disk does not.
+    """
+    path = str(logo_path or "").strip().lstrip("/")
+    if not path:
+        return ""
+    full = _logo_absolute_path(path)
+    # _logo_absolute_path only returns an existing file, so the target is rebuilt
+    # here under the same confinement check.
+    full = os.path.abspath(os.path.join(app.static_folder, path))
+    if not _inside_root(full, LOGO_DIR):
+        return ""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT logo_bytes FROM shop_branding WHERE brand_key = %s",
+                           (LOGO_BRAND_KEY,))
+            row = cursor.fetchone()
+    except Exception as e:
+        print(f"logo store read error: {e}")
+        return ""
+    if not row or not row[0]:
+        # Nothing stored yet. The logo may still be on disk from before the bytes
+        # were kept, so it is adopted into the store rather than being lost on the
+        # next deploy.
+        _adopt_logo_into_store(path)
+        return _logo_absolute_path(path)
+    try:
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "wb") as handle:
+            handle.write(bytes(row[0]))
+    except Exception as e:
+        print(f"logo restore error: {e}")
+        return ""
+    return full
+
+
+def _adopt_logo_into_store(logo_path):
+    """Copy a logo that exists on disk into the store, so it survives a redeploy."""
+    full = _logo_absolute_path(logo_path)
+    if not full:
+        return
+    try:
+        with open(full, "rb") as handle:
+            data = handle.read()
+        extension = full.rsplit(".", 1)[-1].lower() if "." in full else "png"
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_branding SET logo_bytes = %s, logo_mime = %s
+                WHERE brand_key = %s AND logo_bytes IS NULL
+            """, (psycopg2.Binary(data), LOGO_EXTENSIONS.get(extension) or "image/png",
+                  LOGO_BRAND_KEY))
+            connection.commit()
+    except Exception as e:
+        print(f"logo adopt error: {e}")
 
 
 def company_logo_url():
@@ -23255,9 +23340,12 @@ def company_logo_data():
     Read at document-render time and embedded as a data URI, so a printed
     document never depends on the machine that renders it being able to fetch
     the file over the network.
+
+    Falls back to the stored copy, because a document must still carry the logo
+    after a redeploy has emptied the disk.
     """
     path = company_logo_path()
-    full = _logo_absolute_path(path)
+    full = _logo_absolute_path(path) or _logo_from_store(path)
     if not full:
         return None, "", ""
     extension = full.rsplit(".", 1)[-1].lower() if "." in full else ""
@@ -23290,16 +23378,61 @@ def company_logo_data_uri():
         return ""
 
 
+def product_image_path_on_disk(image_path):
+    """The image's path on disk, restoring it from the store when needed. '' if none.
+
+    The single place that answers "is there a picture for this product". A file
+    that is present is used as-is; one that is missing is rewritten from the bytes
+    kept in the database, which is how a picture comes back after a redeploy.
+
+    A file that exists but has no stored copy is adopted into the store here.
+    That is the only moment it can be done: the file is still on disk now, and the
+    next deploy is the one that would lose it.
+    """
+    full = _product_image_absolute_path(image_path)
+    if full:
+        _adopt_product_image_if_unstored(image_path, full)
+        return full
+    return _product_image_from_store(image_path)
+
+
+def _adopt_product_image_if_unstored(image_path, full):
+    """Store the bytes of a file that is on disk but not yet in the store."""
+    path = str(image_path or "").strip().lstrip("/")
+    product_id = os.path.splitext(os.path.basename(path))[0]
+    if not product_id:
+        return
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT image_bytes FROM shop_products WHERE product_id = %s",
+                           (product_id,))
+            row = cursor.fetchone()
+    except Exception as e:
+        print(f"product image store check error: {e}")
+        return
+    if row and row[0]:
+        return
+    _adopt_product_image_into_store(product_id, full)
+
+
 def product_image_public_url(image_path):
     """An absolute URL for a product image, or '' when there is not one.
 
     Built from the request when one is in flight, and otherwise from the
     configured base URL. WhatsApp will not fetch a relative path, so a path that
     cannot be made absolute is treated as no image.
+
+    The file is resolved before a URL is handed out, which in practice means the
+    stored bytes are written back to disk first. The stored path outlives the
+    file on a hosted deployment - its disk is wiped on every redeploy - so asking
+    the disk alone both hid pictures that could have been restored and put a
+    broken image in the catalogue editor, where the browser draws its own
+    torn-page icon over the empty frame.
     """
-    path = str(image_path or "").strip().lstrip("/")
-    if not path:
+    if not product_image_path_on_disk(image_path):
         return ""
+    path = str(image_path or "").strip().lstrip("/")
     base = (PUBLIC_BASE_URL or "").strip().rstrip("/")
     if not base:
         try:
@@ -23312,7 +23445,7 @@ def product_image_public_url(image_path):
 
 
 def _product_image_absolute_path(image_path):
-    """Where a stored image actually sits on disk, or '' when it is not there."""
+    """Where a stored image sits on disk, or '' when it is not there."""
     path = str(image_path or "").strip().lstrip("/")
     if not path:
         return ""
@@ -23320,27 +23453,108 @@ def _product_image_absolute_path(image_path):
     # still confined to the images folder so a stored value can never name a file
     # outside it.
     full = os.path.abspath(os.path.join(app.static_folder, path))
-    root = os.path.abspath(os.path.join(app.static_folder, PRODUCT_IMAGE_DIR))
-    if not full.startswith(root + os.sep):
+    if not _inside_root(full, PRODUCT_IMAGE_DIR):
         return ""
     return full if os.path.isfile(full) else ""
 
 
+def _restore_image_file(image_path, image_bytes, label="product image"):
+    """Write stored bytes back to the static folder. Returns the path, or ''.
+
+    A redeploy empties the disk but the database keeps the bytes, so the file is
+    rewritten the first time it is asked for. That keeps the static URL working
+    for WhatsApp, which must fetch a real URL, without needing a persistent disk.
+    """
+    path = str(image_path or "").strip().lstrip("/")
+    if not path or not image_bytes:
+        return ""
+    full = os.path.abspath(os.path.join(app.static_folder, path))
+    if not _inside_root(full, PRODUCT_IMAGE_DIR):
+        return ""
+    try:
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "wb") as handle:
+            handle.write(bytes(image_bytes))
+    except Exception as e:
+        print(f"{label} restore error: {e}")
+        return ""
+    return full
+
+
 def product_image_data(image_path):
-    """(bytes, mime_type) for a product image, or (None, '')."""
-    full = _product_image_absolute_path(image_path)
+    """(bytes, mime_type) for a product image, or (None, '').
+
+    A file on disk is preferred, and the stored copy is the fallback: after a
+    redeploy only the stored copy exists, and it is written back out so the next
+    read finds a file.
+    """
+    full = product_image_path_on_disk(image_path)
     if not full:
-        return None, ""
-    extension = full.rsplit(".", 1)[-1].lower() if "." in full else ""
-    mime = PRODUCT_IMAGE_EXTENSIONS.get(extension)
-    if not mime:
         return None, ""
     try:
         with open(full, "rb") as handle:
-            return handle.read(), mime
+            data = handle.read()
     except Exception as e:
         print(f"product image read error: {e}")
         return None, ""
+    extension = full.rsplit(".", 1)[-1].lower() if "." in full else ""
+    mime = PRODUCT_IMAGE_EXTENSIONS.get(extension) or "application/octet-stream"
+    return data, mime
+
+
+def _product_image_from_store(image_path):
+    """The stored bytes for a product image, written back to disk. '' if none.
+
+    The product id is taken from the filename, which is how the upload named it,
+    so the lookup needs no second column to join on.
+    """
+    path = str(image_path or "").strip().lstrip("/")
+    if not path:
+        return ""
+    product_id = os.path.splitext(os.path.basename(path))[0]
+    if not product_id:
+        return ""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT image_bytes FROM shop_products WHERE product_id = %s",
+                           (product_id,))
+            row = cursor.fetchone()
+    except Exception as e:
+        print(f"product image store read error: {e}")
+        return ""
+    if not row or not row[0]:
+        # Nothing stored yet. The picture may still be on disk from before the
+        # bytes were kept, so an existing file is adopted into the store rather
+        # than the image being treated as missing.
+        full = _product_image_absolute_path(image_path)
+        if full:
+            _adopt_product_image_into_store(product_id, full)
+        return full or ""
+    return _restore_image_file(path, row[0])
+
+
+def _adopt_product_image_into_store(product_id, full_path):
+    """Copy a file that exists on disk into the store, so it survives a redeploy.
+
+    Written for the pictures uploaded before the bytes were kept: without this,
+    the next deploy would lose them for good even though this one still has them.
+    """
+    try:
+        with open(full_path, "rb") as handle:
+            data = handle.read()
+        extension = full_path.rsplit(".", 1)[-1].lower() if "." in full_path else "jpg"
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                UPDATE shop_products
+                SET image_bytes = %s, image_mime = %s
+                WHERE product_id = %s AND image_bytes IS NULL
+            """, (psycopg2.Binary(data),
+                  PRODUCT_IMAGE_EXTENSIONS.get(extension) or "image/jpeg",
+                  product_id))
+            connection.commit()
+    except Exception as e:
+        print(f"product image adopt error: {e}")
 
 
 def product_image_payload(image_path, caption=None):
@@ -24121,10 +24335,11 @@ def shop_staff_number(value):
 def shop_staff_for_number(wa_number):
     """The shop a WhatsApp number belongs to, or None.
 
-    Used to recognise a reply from a shop's own handset. Matched on the last
-    fifteen digits because that is how every other WhatsApp number is stored.
+    Staff numbers are saved in local 07… form, while Meta sends the sender in
+    international 263… form. Normalize both forms before matching, and retain
+    the suffix match for older rows saved internationally.
     """
-    owner = str(wa_number or "")[-15:]
+    owner = shop_staff_number(wa_number)
     if not owner:
         return None
     ensure_shop_tables()
@@ -24133,9 +24348,11 @@ def shop_staff_for_number(wa_number):
             cursor.execute("""
                 SELECT id, shop_id, name, wa_number
                 FROM shop_staff
-                WHERE wa_number = %s AND active IS NOT FALSE
-                ORDER BY position, id LIMIT 1
-            """, (owner,))
+                WHERE (wa_number = %s OR RIGHT(wa_number, 9) = %s)
+                  AND active IS NOT FALSE
+                ORDER BY CASE WHEN wa_number = %s THEN 0 ELSE 1 END, position, id
+                LIMIT 1
+            """, (owner, owner[-9:], owner))
             row = cursor.fetchone()
     except Exception as e:
         print(f"shop staff lookup error: {e}")
@@ -24890,7 +25107,8 @@ def shop_order_claim(reference, staff):
         return True, f"{reference} is already being worked on."
     ok, _message = shop_order_stage_set(reference, "preparing",
                                         user=staff.get("name") or "Shop staff",
-                                        notify=True)
+                                        notify=True,
+                                        expected_shop_id=staff.get("shop_id"))
     if not ok:
         return False, f"Could not update {reference}."
     return True, (f"👍 Thank you. *{reference}* is marked as being worked on and the "
@@ -24910,15 +25128,385 @@ def shop_order_ready(reference, staff):
     stage = "collected" if order.get("delivery_method") != "delivery" else "delivered"
     ok, _message = shop_order_stage_set(reference, stage,
                                         user=staff.get("name") or "Shop staff",
-                                        notify=True)
+                                        notify=True,
+                                        expected_shop_id=staff.get("shop_id"))
     if not ok:
         return False, f"Could not update {reference}."
     return True, (f"✅ *{reference}* is marked as {SHOP_STAGE_STAFF_LABELS[stage].lower()}, "
                   f"and the customer has been told.")
 
 
-def shop_staff_reply(sender_id, button_id, staff):
-    """Handle a button reply from a shop's own number. Returns True if handled.
+def _shop_staff_send(sender_id, text, staff, channel=None):
+    """Send and record a plain-text reply to a registered shop staff member."""
+    sent, detail = crm_send_whatsapp(sender_id, text, channel)
+    if not sent:
+        print(f"shop staff reply failed for {sender_id}: {detail}")
+    crm_record_message(sender_id, "outbound", "staff", text, "text",
+                       company_reg=COMPANY_SYSTEM_PREFIX, channel=channel,
+                       delivered=sent, is_staff=True,
+                       sender_name=staff.get("name") or "Shop staff")
+    return sent
+
+
+def _shop_staff_send_interactive(sender_id, payload, readable, fallback,
+                                 staff, channel=None):
+    """Send a staff choice prompt, with a text route if WhatsApp rejects it."""
+    sent, detail = crm_send_whatsapp_payload(sender_id, payload, channel)
+    message_type = "interactive"
+    body = readable
+    if not sent:
+        print(f"shop staff interactive reply failed for {sender_id}: {detail}")
+        body = fallback
+        message_type = "text"
+        sent, detail = crm_send_whatsapp(sender_id, body, channel)
+        if not sent:
+            print(f"shop staff text fallback failed for {sender_id}: {detail}")
+    crm_record_message(sender_id, "outbound", "staff", body, message_type,
+                       company_reg=COMPANY_SYSTEM_PREFIX, channel=channel,
+                       delivered=sent, is_staff=True,
+                       sender_name=staff.get("name") or "Shop staff")
+    return sent
+
+
+def _shop_staff_order_for_update(reference, staff):
+    """Return an order only when it belongs to this staff member's shop."""
+    order = order_detail(reference)
+    if not order or str(order.get("shop_key") or "").lower() != \
+            str(staff.get("shop_id") or "").lower():
+        return None
+    return order
+
+
+def _shop_staff_status_prompt(sender_id, reference, staff, channel=None):
+    """Offer the valid, not-yet-current status choices for this shop's order."""
+    reference = (reference or "").strip().upper()
+    order = _shop_staff_order_for_update(reference, staff)
+    if not order:
+        _shop_staff_send(sender_id,
+                         f"I couldn't find order {reference} for your shop.",
+                         staff, channel)
+        return True
+    if order.get("cancelled"):
+        _shop_staff_send(sender_id,
+                         f"Order {reference} was cancelled, so its status cannot be changed.",
+                         staff, channel)
+        return True
+
+    current = (order.get("stage") or "").strip().lower()
+    choices = [(stage, label) for stage, label in
+               shop_stage_options(order.get("delivery_method")) if stage != current]
+
+    short_labels = {
+        "preparing": "Being processed",
+        "ready": "Ready for collection",
+        "enroute": "En route",
+        "delivered": "Delivered",
+        "collected": "Collected",
+    }
+    rows = [{
+        "id": f"staffstage:{reference}:{stage}",
+        "title": short_labels[stage],
+        "description": f"Current status: {SHOP_STAGE_STAFF_LABELS.get(current, 'Not set')}",
+    } for stage, _label in choices]
+
+    # An unpaid order also offers the EcoCash prompt, so the shop can collect the
+    # money as well as move the order - the same two things the portal offers.
+    can_charge, _reason = _shop_staff_pay_state(order)
+    if can_charge:
+        amount = order.get("amount_charged")
+        if amount is None:
+            amount = order.get("total")
+        rows.append({
+            "id": f"staffpay:{reference}",
+            "title": "Request EcoCash payment",
+            "description": f"Send the EcoCash prompt to the customer for "
+                           f"{order.get('currency') or PAYNOW_CURRENCY} {float(amount):.2f}",
+        })
+
+    current_label = SHOP_STAGE_STAFF_LABELS.get(current, "Not set")
+    if rows and can_charge:
+        body = (f"Order {reference} is currently {current_label} and not yet paid. "
+                "Choose a status, or send the EcoCash payment prompt. The customer "
+                "is notified after you confirm.")
+    elif rows:
+        body = (f"Order {reference} is currently {current_label}. "
+                "Choose the new status. The customer will be notified after you confirm.")
+    elif can_charge:
+        body = (f"Order {reference} is currently {current_label}, and there are no other "
+                "statuses left to set. You can send the EcoCash payment prompt instead.")
+    else:
+        label = SHOP_STAGE_STAFF_LABELS.get(current, "not set")
+        _shop_staff_send(sender_id,
+                         f"Order {reference} is already at its available status: {label}.",
+                         staff, channel)
+        return True
+
+    payload = {
+        "type": "interactive",
+        "interactive": {
+            "type": "list",
+            "body": {"text": body},
+            "action": {
+                "button": "Choose option",
+                "sections": [{"title": "Available options", "rows": rows}],
+            },
+        },
+    }
+    fallback_lines = [body, ""]
+    fallback_lines.extend(
+        f"Reply STATUS {reference} {stage} — {short_labels[stage]}"
+        for stage, _label in choices
+    )
+    if can_charge:
+        fallback_lines.append(f"Reply PAY {reference} — send the EcoCash payment prompt")
+    _shop_staff_send_interactive(
+        sender_id, payload, body, "\n".join(fallback_lines), staff, channel)
+    return True
+
+
+def _shop_staff_confirm_status(sender_id, reference, stage, staff, channel=None):
+    """Ask for explicit confirmation before changing an order's stage."""
+    reference = (reference or "").strip().upper()
+    stage = (stage or "").strip().lower()
+    order = _shop_staff_order_for_update(reference, staff)
+    if not order:
+        _shop_staff_send(sender_id,
+                         f"I couldn't find order {reference} for your shop.",
+                         staff, channel)
+        return True
+    if order.get("cancelled"):
+        _shop_staff_send(sender_id,
+                         f"Order {reference} was cancelled, so its status cannot be changed.",
+                         staff, channel)
+        return True
+    if stage not in dict(shop_stage_options(order.get("delivery_method"))):
+        _shop_staff_send(sender_id,
+                         "That status is not available for this order's fulfilment.",
+                         staff, channel)
+        return True
+    if stage == (order.get("stage") or "").strip().lower():
+        _shop_staff_send(sender_id,
+                         f"Order {reference} is already marked as "
+                         f"{SHOP_STAGE_STAFF_LABELS[stage]}.",
+                         staff, channel)
+        return True
+
+    label = SHOP_STAGE_STAFF_LABELS[stage]
+    current_label = SHOP_STAGE_STAFF_LABELS.get(
+        (order.get("stage") or "").strip().lower(), "Not set")
+    body = (f"Confirm status change for {reference}?\n"
+            f"{current_label} → {label}\n"
+            "The customer's usual order update will be sent.")
+    payload = {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {
+                        "id": f"staffstageconfirm:{reference}:{stage}",
+                        "title": "Confirm"}},
+                    {"type": "reply", "reply": {
+                        "id": f"staffstagecancel:{reference}:{stage}",
+                        "title": "Cancel"}},
+                ],
+            },
+        },
+    }
+    fallback = (body + f"\nReply CONFIRM {reference} {stage} to confirm, "
+                "or CANCEL to leave it unchanged.")
+    _shop_staff_send_interactive(sender_id, payload, body, fallback, staff, channel)
+    return True
+
+
+def _shop_staff_pay_state(order):
+    """Whether an EcoCash prompt can still be sent for this order, and why not.
+
+    Mirrors the portal's own rule: the button is dead once the money is in, and
+    while a prompt is already waiting on the customer's handset. The order dict
+    can come from either the assistant or the portal, so both spellings of a
+    settled order are accepted.
+    """
+    if (order.get("payment_status") or order.get("status") or "unpaid").lower() == "paid":
+        return False, "That order is already paid."
+    if order.get("payment_awaiting"):
+        return False, ("That order already has an EcoCash prompt waiting on the "
+                       "customer's handset.")
+    if order.get("paid"):
+        return False, "That order is already paid."
+    amount = order.get("amount_charged")
+    if amount is None:
+        amount = order.get("total")
+    if not amount:
+        return False, "This order has no amount to charge."
+    if not _ecocash_msisdn(order.get("phone")):
+        return False, "That order has no usable mobile number to send the prompt to."
+    return True, ""
+
+
+def _shop_staff_confirm_payment(sender_id, reference, staff, channel=None):
+    """Ask for confirmation before sending an EcoCash prompt to the customer."""
+    reference = (reference or "").strip().upper()
+    order = _shop_staff_order_for_update(reference, staff)
+    if not order:
+        _shop_staff_send(sender_id,
+                         f"I couldn't find order {reference} for your shop.",
+                         staff, channel)
+        return True
+    if order.get("cancelled"):
+        _shop_staff_send(sender_id,
+                         f"Order {reference} was cancelled, so nothing can be charged for it.",
+                         staff, channel)
+        return True
+    allowed, reason = _shop_staff_pay_state(order)
+    if not allowed:
+        _shop_staff_send(sender_id, reason, staff, channel)
+        return True
+
+    amount = order.get("amount_charged")
+    if amount is None:
+        amount = order.get("total")
+    amount_text = f"{order.get('currency') or PAYNOW_CURRENCY} {float(amount):.2f}"
+    number = _ecocash_msisdn(order.get("phone"))
+    body = (f"Send an EcoCash payment prompt for {reference}?\n"
+            f"Amount: {amount_text}\n"
+            f"Customer's handset: {number}\n"
+            "The customer enters their own PIN; you never see it.")
+    payload = {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {
+                        "id": f"staffpayconfirm:{reference}", "title": "Send prompt"}},
+                    {"type": "reply", "reply": {
+                        "id": f"staffpaycancel:{reference}", "title": "Cancel"}},
+                ],
+            },
+        },
+    }
+    fallback = (body + f"\nReply PAY {reference} to send it, or CANCEL to leave it.")
+    _shop_staff_send_interactive(sender_id, payload, body, fallback, staff, channel)
+    return True
+
+
+def _shop_staff_send_payment_prompt(sender_id, reference, staff, channel=None):
+    """Send the EcoCash PIN prompt to the customer's handset for their shop's order."""
+    reference = (reference or "").strip().upper()
+    order = _shop_staff_order_for_update(reference, staff)
+    if not order:
+        _shop_staff_send(sender_id,
+                         f"I couldn't find order {reference} for your shop.",
+                         staff, channel)
+        return True
+    if order.get("cancelled"):
+        _shop_staff_send(sender_id,
+                         f"Order {reference} was cancelled, so nothing can be charged for it.",
+                         staff, channel)
+        return True
+    allowed, reason = _shop_staff_pay_state(order)
+    if not allowed:
+        _shop_staff_send(sender_id, reason, staff, channel)
+        return True
+
+    # The customer's own number is used rather than the handset that asked, so the
+    # money is authorised by the person whose order it is.
+    ok, message, _poll_url = order_request_ecocash(
+        reference, None, f"{staff.get('name') or 'Shop staff'} (shop)",
+        expected_shop_id=staff.get("shop_id"))
+    if ok:
+        message = (f"📲 An EcoCash prompt for {reference} was sent to the customer's "
+                   "handset. They enter their own PIN; the order is marked paid once "
+                   "the payment settles.")
+    _shop_staff_send(sender_id, message, staff, channel)
+    log_activity("shop_staff_replied", "order",
+                 f"{staff.get('name') or 'Shop staff'} requested an EcoCash prompt for "
+                 f"{reference}",
+                 target=reference,
+                 details={"shop_id": staff.get("shop_id"), "success": ok})
+    return True
+
+
+def shop_order_staff_summary(reference, shop_id=None):
+    """A full order briefing for a shop's staff, as WhatsApp text.
+
+    Built from the same `order_detail()` the portal and the printed documents
+    read, so what a shop is told on WhatsApp cannot drift from what the CRM
+    shows. The lines are written for someone who has to hand the goods over:
+    what was ordered, what it costs, whether the money is in, and where it goes.
+
+    Returns '' when the order does not exist or does not belong to this shop, so
+    a reference for another shop reads exactly like an unknown one.
+    """
+    order = order_detail(reference)
+    if not order:
+        return ""
+    if shop_id and str(order.get("shop_key") or "").lower() != str(shop_id).lower():
+        return ""
+
+    delivering = (order.get("delivery_method") or "collection") == "delivery"
+    currency = order.get("currency") or PAYNOW_CURRENCY
+    lines = [f"🧾 *Order {order.get('reference')}*", ""]
+    lines.append(f"*Placed:* {order.get('created_at') or '—'}")
+    lines.append(f"*Customer:* {order.get('customer_name') or '—'}")
+    if order.get("phone"):
+        lines.append(f"*Phone:* {order['phone']}")
+    lines.append(f"*Shop:* {order.get('shop') or '—'}")
+    lines.append(f"*Receiving:* "
+                 + ("Delivery to their address" if delivering else "Collection from the shop"))
+    if delivering:
+        lines.append(f"*Deliver to:* {order.get('address') or 'No address on file'}")
+    lines.append(f"*Payment:* {order.get('payment_status_label') or '—'}")
+
+    lines.append("")
+    lines.append("*Items*")
+    if order.get("lines"):
+        for line in order["lines"]:
+            quantity = line.get("quantity") or 0
+            name = line.get("product") or "Item"
+            size = f" ({line['pack_size']})" if line.get("pack_size") else ""
+            if line.get("unit_price") is None:
+                lines.append(f"• {name}{size} × {quantity} — price not set")
+            else:
+                line_total = line.get("line_total")
+                if line_total is None:
+                    line_total = float(line["unit_price"]) * quantity
+                lines.append(f"• {name}{size} × {quantity} — {currency} {line_total:.2f}"
+                             f" ({currency} {float(line['unit_price']):.2f} each)")
+    else:
+        lines.append("• No items on this order")
+
+    lines.append("")
+    lines.append(f"*Total:* {currency} {float(order.get('total') or 0):.2f}")
+    if order.get("item_count"):
+        lines.append(f"*Units:* {order['item_count']}")
+    # The business stage is what tells staff whether the order is still to be
+    # picked, so it is named in their own words rather than the customer's.
+    stage = (order.get("stage") or "").strip().lower()
+    lines.append(f"*Current status:* "
+                 f"{SHOP_STAGE_STAFF_LABELS.get(stage, 'Not set')}")
+    if order.get("cancelled"):
+        lines.append("*This order was cancelled.*")
+    return "\n".join(lines)
+
+
+def _shop_staff_send_order_summary(sender_id, reference, staff, channel=None):
+    """Send the full order briefing, then the options, for a staff reference."""
+    summary = shop_order_staff_summary(reference, staff.get("shop_id"))
+    if not summary:
+        _shop_staff_send(sender_id,
+                         f"I couldn't find order {reference} for your shop.",
+                         staff, channel)
+        return True
+    _shop_staff_send(sender_id, summary, staff, channel)
+    return _shop_staff_status_prompt(sender_id, reference, staff, channel)
+
+
+def shop_staff_reply(sender_id, button_id, staff, channel=None):
+    """Handle staff order actions and status changes. Returns True if handled.
 
     Returns False when the id is not one of the shop's own buttons, or when the
     sender is not recognised as staff, so the caller can carry on with the
@@ -24929,21 +25517,138 @@ def shop_staff_reply(sender_id, button_id, staff):
     if not isinstance(staff, dict) or not staff.get("shop_id"):
         return False
     button_id = str(button_id or "").strip()
+
+    if button_id.startswith("staffstage:"):
+        parts = button_id.split(":", 2)
+        if len(parts) == 3:
+            return _shop_staff_confirm_status(
+                sender_id, parts[1], parts[2], staff, channel)
+
+    if button_id.startswith("staffpayconfirm:"):
+        parts = button_id.split(":", 1)
+        if len(parts) == 2:
+            return _shop_staff_send_payment_prompt(sender_id, parts[1], staff, channel)
+
+    if button_id.startswith("staffpay:"):
+        parts = button_id.split(":", 1)
+        if len(parts) == 2:
+            return _shop_staff_confirm_payment(sender_id, parts[1], staff, channel)
+
+    if button_id.startswith("staffpaycancel:"):
+        parts = button_id.split(":", 1)
+        if len(parts) == 2:
+            _shop_staff_send(sender_id,
+                             f"No EcoCash prompt was sent for {parts[1]}.",
+                             staff, channel)
+            return True
+
+    if button_id.startswith("staffstageconfirm:"):
+        parts = button_id.split(":", 2)
+        if len(parts) == 3:
+            reference, stage = parts[1], parts[2].lower()
+            if stage not in SHOP_STAGE_STAFF_LABELS:
+                _shop_staff_send(sender_id, "That status is not available.",
+                                 staff, channel)
+                return True
+            # Repeated here rather than relying on the prompt that offered the
+            # button: a staff member from another shop must not be able to move
+            # this order by tapping a confirm id they were never sent.
+            if not _shop_staff_order_for_update(reference, staff):
+                _shop_staff_send(sender_id,
+                                 f"I couldn't find order {reference} for your shop.",
+                                 staff, channel)
+                return True
+            ok, message = shop_order_stage_set(
+                reference, stage, user=staff.get("name") or "Shop staff",
+                notify=True, expected_shop_id=staff.get("shop_id"))
+            if ok:
+                message = (f"✅ Order {reference} is now marked as "
+                           f"{SHOP_STAGE_STAFF_LABELS[stage]}. The customer's usual "
+                           "WhatsApp order update was triggered.")
+            _shop_staff_send(sender_id, message, staff, channel)
+            log_activity("shop_staff_replied", "order",
+                         f"{staff.get('name') or 'Shop staff'} confirmed {reference} "
+                         f"as {stage}" if ok else
+                         f"{staff.get('name') or 'Shop staff'} could not update {reference}",
+                         target=reference,
+                         details={"stage": stage, "shop_id": staff.get("shop_id"),
+                                  "success": ok})
+            return True
+
+    if button_id.startswith("staffstagecancel:"):
+        parts = button_id.split(":", 2)
+        if len(parts) == 3:
+            _shop_staff_send(sender_id,
+                             f"Status change for {parts[1]} cancelled; the order was not changed.",
+                             staff, channel)
+            return True
+
     for prefix, handler in (("staffwork:", shop_order_claim),
                             ("staffdone:", shop_order_ready)):
         if button_id.startswith(prefix):
             reference = button_id.split(":", 1)[1].strip()
+            if not _shop_staff_order_for_update(reference, staff):
+                _shop_staff_send(sender_id,
+                                 f"I couldn't find order {reference} for your shop.",
+                                 staff, channel)
+                return True
             ok, message = handler(reference, staff)
-            crm_send_whatsapp(sender_id, message)
-            crm_record_message(sender_id, "outbound", "staff", message, "text",
-                               sender_name=staff.get("name") or "Shop staff",
-                               is_staff=True)
+            _shop_staff_send(sender_id, message, staff, channel)
             log_activity("shop_staff_replied", "order",
                          f"{staff.get('name') or 'Shop staff'} tapped {prefix.rstrip(':')} "
                          f"on {reference}",
                          target=reference,
                          details={"button": button_id, "shop_id": staff.get("shop_id")})
             return True
+
+    status_command = re.fullmatch(
+        r"(?:STATUS\s+)?(BC-\d{6}-\d{4})", button_id, re.IGNORECASE)
+    if status_command:
+        return _shop_staff_send_order_summary(
+            sender_id, status_command.group(1), staff, channel)
+
+    stage_command = re.fullmatch(
+        r"STATUS\s+(BC-\d{6}-\d{4})\s+([a-z_]+)", button_id, re.IGNORECASE)
+    if stage_command:
+        return _shop_staff_confirm_status(
+            sender_id, stage_command.group(1), stage_command.group(2),
+            staff, channel)
+
+    pay_command = re.fullmatch(r"PAY\s+(BC-\d{6}-\d{4})", button_id, re.IGNORECASE)
+    if pay_command:
+        return _shop_staff_confirm_payment(
+            sender_id, pay_command.group(1), staff, channel)
+
+    confirm_command = re.fullmatch(
+        r"CONFIRM\s+(BC-\d{6}-\d{4})\s+([a-z_]+)", button_id, re.IGNORECASE)
+    if confirm_command:
+        reference, stage = confirm_command.group(1), confirm_command.group(2).lower()
+        if stage not in SHOP_STAGE_STAFF_LABELS:
+            _shop_staff_send(sender_id, "That status is not available.",
+                             staff, channel)
+            return True
+        # Checked before the write, exactly as the button path does, so a typed
+        # CONFIRM cannot move another shop's order either.
+        if not _shop_staff_order_for_update(reference, staff):
+            _shop_staff_send(sender_id,
+                             f"I couldn't find order {reference} for your shop.",
+                             staff, channel)
+            return True
+        ok, message = shop_order_stage_set(
+            reference, stage, user=staff.get("name") or "Shop staff",
+            notify=True, expected_shop_id=staff.get("shop_id"))
+        if ok:
+            message = (f"✅ Order {reference} is now marked as "
+                       f"{SHOP_STAGE_STAFF_LABELS[stage]}. The customer's usual "
+                       "WhatsApp order update was triggered.")
+        _shop_staff_send(sender_id, message, staff, channel)
+        return True
+
+    if re.fullmatch(r"CANCEL(?:\s+BC-\d{6}-\d{4}(?:\s+[a-z_]+)?)?", button_id,
+                    re.IGNORECASE):
+        _shop_staff_send(sender_id, "Cancelled; the order was not changed.",
+                         staff, channel)
+        return True
     return False
 
 
@@ -27741,16 +28446,22 @@ def _ecocash_msisdn(phone):
     return digits
 
 
-def order_request_ecocash(reference, phone=None, user=None):
+def order_request_ecocash(reference, phone=None, user=None, expected_shop_id=None):
     """Send an EcoCash PIN prompt for an order. Returns (ok, message, poll_url).
 
     The sales person triggers this when the customer says they want to pay by
     EcoCash, so the prompt lands on the customer's own handset and they enter
     their PIN there. The portal never sees the PIN.
+
+    `expected_shop_id` narrows the order to one shop's own work, so a shop's
+    handset cannot push a payment prompt for another shop's order.
     """
     detail = order_detail(reference)
     if not detail:
         return False, "That order could not be found.", ""
+    if expected_shop_id and str(detail.get("shop_key") or "").lower() != \
+            str(expected_shop_id).lower():
+        return False, "That order is no longer assigned to your shop.", ""
     if detail["payment_status"] == "paid":
         return False, "That order is already paid.", ""
     if not paynow_configured():
@@ -28285,7 +28996,8 @@ def shop_order_fulfilment_set(reference, wa_number, method, address=None, user=N
     return True, "changed", fresh or order
 
 
-def shop_order_stage_set(reference, stage, user=None, notify=True):
+def shop_order_stage_set(reference, stage, user=None, notify=True,
+                         expected_shop_id=None):
     """Move an order to a new stage and tell the customer. Returns (ok, message).
 
     The stage is validated against what the order's own fulfilment allows, so a
@@ -28300,6 +29012,9 @@ def shop_order_stage_set(reference, stage, user=None, notify=True):
     order = order_detail(reference)
     if not order:
         return False, "That order was not found."
+    if expected_shop_id and str(order.get("shop_key") or "").lower() != \
+            str(expected_shop_id).lower():
+        return False, "That order is no longer assigned to your shop."
     if order.get("cancelled"):
         return False, "That order is cancelled, so its stage cannot be changed."
     if stage and not shop_stage_for_fulfilment(stage, order.get("delivery_method")):
@@ -28311,12 +29026,20 @@ def shop_order_stage_set(reference, stage, user=None, notify=True):
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
-            cursor.execute("""
-                UPDATE shop_orders
-                SET stage = %s, stage_at = NOW(), stage_by = %s
-                WHERE reference = %s
-                RETURNING reference
-            """, (stage or None, (user or "")[:200], reference))
+            if expected_shop_id:
+                cursor.execute("""
+                    UPDATE shop_orders
+                    SET stage = %s, stage_at = NOW(), stage_by = %s
+                    WHERE reference = %s AND shop_id = %s
+                    RETURNING reference
+                """, (stage or None, (user or "")[:200], reference, expected_shop_id))
+            else:
+                cursor.execute("""
+                    UPDATE shop_orders
+                    SET stage = %s, stage_at = NOW(), stage_by = %s
+                    WHERE reference = %s
+                    RETURNING reference
+                """, (stage or None, (user or "")[:200], reference))
             changed = cursor.fetchone()
             connection.commit()
     except Exception as e:
@@ -28938,7 +29661,8 @@ def crm_customer_webhook(sender_id, display_phone_number, message, profile_name=
     # else. Checked by number rather than by the button id alone, so a customer
     # cannot move an order along by echoing one of the shop's button ids back.
     staff_member = shop_staff_for_number(sender_id)
-    if staff_member and shop_staff_reply(sender_id, reply_id, staff_member):
+    if staff_member and shop_staff_reply(
+            sender_id, reply_id, staff_member, display_phone_number):
         crm_record_message(sender_id, "inbound", "staff", text or f"[{mtype}]", mtype,
                            company_reg=COMPANY_SYSTEM_PREFIX,
                            channel=display_phone_number, is_staff=True,
@@ -29570,9 +30294,16 @@ def portal_crm():
         print(f"channel warmup skipped: {e}")
     try:
         chats = _crm_chats('all')
+        chats_error = ""
     except Exception as e:
+        # An inbox that failed to load must not render as an empty one: that is
+        # what made a remote-database timeout look like "my conversations are
+        # gone". The reason is passed to the template so the page says so.
         print(f"CRM data error: {e}")
         chats = []
+        chats_error = ("The conversations could not be loaded just now. This is "
+                       "usually the database taking too long to answer.\n"
+                       f"Detail: {e}")
     try:
         orders = orders_overview('today', 'all')
     except Exception as e:
@@ -29590,7 +30321,8 @@ def portal_crm():
         removed = []
     return render_template('crm_portal.html', user=user, active_nav='crm',
                            nav_modules=user_modules(user),
-                           chats=chats, orders=orders,
+                           chats=chats, chats_error=chats_error,
+                           orders=orders,
                            catalog=catalog,
                            removed=removed,
                            limits=catalog_limits(),
@@ -29871,7 +30603,8 @@ def order_detail(reference):
                        COALESCE(orders.stage, ''), orders.stage_at, orders.stage_by,
                        COALESCE(orders.created_by, 'customer'), orders.draft,
                        orders.created_by_name, orders.agent_note,
-                       orders.confirmed_at, orders.declined_at
+                       orders.confirmed_at, orders.declined_at, orders.cancelled_at,
+                       orders.payment_poll_url
                 FROM shop_orders orders
                 LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
                 WHERE orders.reference = %s
@@ -29957,6 +30690,12 @@ def order_detail(reference):
         "agent_note": row[28] or "",
         "confirmed_at": fmt_time(row[29], "%d %b %Y %H:%M"),
         "declined_at": fmt_time(row[30], "%d %b %Y %H:%M"),
+        "cancelled": row[31] is not None or (row[11] or "").lower() == "cancelled",
+        "paid": (row[13] or "").lower() == "paid",
+        # A prompt already sitting on the customer's handset is why the payment
+        # request is not offered a second time.
+        "payment_awaiting": bool(row[32]),
+        "payment_status": (row[13] or "unpaid").strip().lower(),
         # Named `lines` rather than `items` because a dict's `.items` attribute
         # shadows a key of that name in a template, which silently breaks the
         # `{% for %}` over it.
@@ -30713,6 +31452,8 @@ def crm_save_product_image(product_id, upload):
     if extension not in PRODUCT_IMAGE_EXTENSIONS:
         allowed = ", ".join(sorted(PRODUCT_IMAGE_EXTENSIONS))
         return "", f"That file type is not supported — use one of: {allowed}."
+    # Kept beside the bytes so a restored file is served with the right type.
+    mime = PRODUCT_IMAGE_EXTENSIONS.get(extension) or "image/jpeg"
     # Read before writing so an oversized upload is refused without touching the
     # folder, and measure the bytes rather than trusting a Content-Length header.
     try:
@@ -30749,12 +31490,20 @@ def crm_save_product_image(product_id, upload):
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
+            # The bytes are stored as well as the file, because a hosted deploy
+            # wipes its disk and the picture has to survive that. INSERT ... ON
+            # CONFLICT keeps the write to one statement, so a product that had no
+            # row cannot be left half-created.
             cursor.execute("""
-                INSERT INTO shop_products (product_id, image_path, updated_at)
-                VALUES (%s, %s, NOW())
+                INSERT INTO shop_products (product_id, image_path, image_bytes, image_mime,
+                                           updated_at)
+                VALUES (%s, %s, %s, %s, NOW())
                 ON CONFLICT (product_id) DO UPDATE
-                SET image_path = EXCLUDED.image_path, updated_at = NOW()
-            """, (product_id, relative))
+                SET image_path = EXCLUDED.image_path,
+                    image_bytes = EXCLUDED.image_bytes,
+                    image_mime = EXCLUDED.image_mime,
+                    updated_at = NOW()
+            """, (product_id, relative, psycopg2.Binary(data), mime))
             connection.commit()
         shop_refresh_catalog()
         return relative, ""
@@ -30836,12 +31585,20 @@ def crm_save_company_logo(upload):
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
+            # The bytes are stored as well as the file: a hosted deploy wipes its
+            # disk, and a document that lost its logo on every deploy is worse than
+            # one that never had it.
             cursor.execute("""
-                INSERT INTO shop_branding (brand_key, logo_path, updated_at)
-                VALUES (%s, %s, NOW())
+                INSERT INTO shop_branding (brand_key, logo_path, logo_bytes, logo_mime,
+                                           updated_at)
+                VALUES (%s, %s, %s, %s, NOW())
                 ON CONFLICT (brand_key) DO UPDATE
-                SET logo_path = EXCLUDED.logo_path, updated_at = NOW()
-            """, (LOGO_BRAND_KEY, relative))
+                SET logo_path = EXCLUDED.logo_path,
+                    logo_bytes = EXCLUDED.logo_bytes,
+                    logo_mime = EXCLUDED.logo_mime,
+                    updated_at = NOW()
+            """, (LOGO_BRAND_KEY, relative, psycopg2.Binary(data),
+                  LOGO_EXTENSIONS.get(extension) or "image/png"))
             connection.commit()
         _company_logo_cache = {"loaded": True, "path": relative}
         return relative, ""

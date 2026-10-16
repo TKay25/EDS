@@ -505,8 +505,8 @@ select.ps-input {
 .crm-view[data-crm-view="analytics"] .ps-stat-label {
   gap: 0;
   margin-bottom: 6px;
-  font-size: 0.63rem;
-  letter-spacing: 0.09em;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
 }
 
 .crm-view[data-crm-view="analytics"] .ps-stat-label i {
@@ -536,13 +536,13 @@ select.ps-input {
 }
 
 .crm-view[data-crm-view="analytics"] .ps-stat-value {
-  font-size: 1rem;
+  font-size: 0.9rem;
   letter-spacing: -0.02em;
 }
 
 .crm-view[data-crm-view="analytics"] .ps-stat-note {
   margin-top: 4px;
-  font-size: 0.66rem;
+  font-size: 0.62rem;
 }
 
 .crm-top-items { display: flex; flex-direction: column; gap: 14px; flex: 1 1 auto; }
@@ -1928,8 +1928,7 @@ select.crm-select:focus {
 }
 
 /* Shown while one conversation's messages are being fetched. */
-.crm-thread-loading { display: flex; align-items: center; justify-content: center; }
-.crm-thread-loading[hidden] { display: none; }
+.crm-thread-loading { display: flex; align-items: center; justify-content: center; }.crm-thread-loading[hidden] { display: none; }
 .crm-thread-loading-inner {
   display: flex;
   flex-direction: column;
@@ -1968,6 +1967,52 @@ select.crm-select:focus {
   cursor: progress;
   pointer-events: none;
   opacity: 0.85;
+}
+
+/* ------------------------------------------------ inbox loading skeleton
+   The chat cards are rendered by the server, and the page cannot paint until
+   that query comes back. Against a remote database that wait is long enough to
+   read as an empty inbox, so placeholder cards are drawn underneath the real
+   ones and hidden by the script as soon as the page is ready. */
+.crm-list-skeleton { display: flex; flex-direction: column; }
+.crm-list-skeleton[hidden] { display: none; }
+
+.crm-skel-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 13px;
+  border-bottom: 1px solid var(--ps-line);
+}
+
+.crm-skel-avatar,
+.crm-skel-lines i {
+  background: linear-gradient(90deg, var(--ps-surface-alt) 25%,
+                              rgba(220, 20, 60, 0.07) 37%, var(--ps-surface-alt) 63%);
+  background-size: 400% 100%;
+  animation: crm-skel-shimmer 1.4s ease-in-out infinite;
+}
+
+.crm-skel-avatar {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+.crm-skel-lines { flex: 1 1 auto; display: flex; flex-direction: column; gap: 8px; }
+.crm-skel-lines i { display: block; height: 10px; border-radius: 999px; }
+.crm-skel-lines i:first-child { width: 62%; }
+.crm-skel-lines i:last-child { width: 88%; height: 8px; }
+
+@keyframes crm-skel-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* Reduced motion gets a flat placeholder rather than a moving one. */
+@media (prefers-reduced-motion: reduce) {
+  .crm-skel-avatar, .crm-skel-lines i { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .crm-spinner { animation-duration: 1600ms; }
@@ -3067,8 +3112,8 @@ select.crm-select:focus {
 #crmViewAnalytics .ps-panel-head { padding: 8px 13px; }
 #crmViewAnalytics .ps-panel-body { padding: 10px 13px; }
 #crmViewAnalytics .ps-stat { padding: 9px 11px; }
-#crmViewAnalytics .ps-stat-value { font-size: 0.95rem; }
-#crmViewAnalytics .ps-stat-note { font-size: 0.63rem; margin-top: 4px; }
+#crmViewAnalytics .ps-stat-value { font-size: 0.9rem; }
+#crmViewAnalytics .ps-stat-note { font-size: 0.6rem; margin-top: 4px; }
 .crm-series { min-height: 118px; }
 .crm-series-col { height: 118px; }
 .crm-series { margin-bottom: 0; }

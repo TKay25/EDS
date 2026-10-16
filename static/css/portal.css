@@ -376,8 +376,8 @@ body.ps-body {
 }
 
 .ps-stat-label i { color: var(--ps-accent); font-size: 0.8rem; }
-.ps-stat-value { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
-.ps-stat-note { margin-top: 6px; font-size: 0.72rem; color: var(--ps-text-soft); }
+.ps-stat-value { font-size: 1.08rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.ps-stat-note { margin-top: 6px; font-size: 0.66rem; color: var(--ps-text-soft); }
 
 /* ---------------------------------------------------------------- panel -- */
 .ps-panel {

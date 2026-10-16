@@ -148,7 +148,32 @@
             <div class="crm-search-hint" id="crmSearchHint" hidden></div>
 
             <div class="ps-chat-list" id="crmChatList">
-                {% if chats %}
+                {# Shown until the page finishes loading. The cards below are in
+                   the markup already, so this is hidden by the script on the
+                   first paint; if the script never runs, the empty state is the
+                   last thing in the list and stays visible. #}
+                <div class="crm-list-skeleton" id="crmListSkeleton" aria-hidden="true">
+                    <div class="crm-skel-card"><span class="crm-skel-avatar"></span>
+                        <span class="crm-skel-lines"><i></i><i></i></span></div>
+                    <div class="crm-skel-card"><span class="crm-skel-avatar"></span>
+                        <span class="crm-skel-lines"><i></i><i></i></span></div>
+                    <div class="crm-skel-card"><span class="crm-skel-avatar"></span>
+                        <span class="crm-skel-lines"><i></i><i></i></span></div>
+                </div>
+                {% if chats_error %}
+                    {# A failed query used to render as "No conversations yet",
+                       which reads as an empty inbox rather than a broken one. #}
+                    <div class="ps-empty" id="crmChatsError">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <h4>Couldn’t load conversations</h4>
+                        <p>{{ chats_error }}</p>
+                        <div class="crm-empty-actions">
+                            <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmChatsRetry">
+                                <i class="bi bi-arrow-clockwise"></i> Try again
+                            </button>
+                        </div>
+                    </div>
+                {% elif chats %}
                     {% for chat in chats %}
                     <div class="ps-chat-item is-{{ chat.kind | default('shopping') }}{% if chat.status == 'human' %} is-human{% endif %}"
                          data-chat-id="{{ chat.id }}"
@@ -183,7 +208,6 @@
                 {% endif %}
             </div>
         </div>
-
         <div class="ps-panel">
             <div class="ps-thread">
                 <div class="ps-thread-head">
