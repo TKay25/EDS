@@ -25192,15 +25192,30 @@ def _shop_staff_status_prompt(sender_id, reference, staff, channel=None):
         return True
     if order.get("cancelled"):
         # A cancelled order still has to be readable: the shop may be holding
-        # goods for it. Status cannot move, so rather than replying with a bare
-        # refusal, the status and the reason are spelled out and the paid case is
-        # called out because only head office can refund it.
-        cancelled_body = (f"Order {reference} is *cancelled*, so its status cannot be "
-                          "changed.\nThe customer was told nothing is being sent for it.")
+        # goods for it. Status cannot move, so the only action offered is the one
+        # that makes sense - reopening the order, which is then confirmed before
+        # anything is written. The paid case is called out because a settled
+        # payment survives the reopen and the customer must not be charged twice.
+        body = (f"Order {reference} is *cancelled*, so its status cannot be changed.\n"
+                "You can reopen it if the customer still wants it — the customer is "
+                "then told it is active again.")
         if order.get("paid"):
-            cancelled_body += ("\nThis order was *paid* — head office has to refund or "
-                               "reopen it.")
-        _shop_staff_send(sender_id, cancelled_body, staff, channel)
+            body += "\nThis order was *paid* — reopening keeps that payment on the order."
+        payload = {
+            "type": "interactive",
+            "interactive": {
+                "type": "button",
+                "body": {"text": body},
+                "action": {
+                    "buttons": [
+                        {"type": "reply", "reply": {
+                            "id": f"staffreopen:{reference}", "title": "Reopen order"}},
+                    ],
+                },
+            },
+        }
+        fallback = (body + f"\nReply REOPEN {reference} to reopen it.")
+        _shop_staff_send_interactive(sender_id, payload, body, fallback, staff, channel)
         return True
 
     current = (order.get("stage") or "").strip().lower()
@@ -25521,6 +25536,162 @@ def _shop_staff_send_order_summary(sender_id, reference, staff, channel=None):
     return _shop_staff_status_prompt(sender_id, reference, staff, channel)
 
 
+def shop_order_reopen(reference, user=None, expected_shop_id=None):
+    """Bring a cancelled order back to life. Returns (ok, message).
+
+    Only the cancellation is undone: `cancelled_at` is cleared and the status
+    returns to 'new', so the order rejoins the shop's work exactly as it was.
+    Payment and fulfilment are left alone, because whether money was taken and
+    how the goods leave are facts about the order that cancelling never changed.
+    A payment that was already settled stays settled, which is what the reopening
+    notice tells the customer.
+
+    Scoped to one shop when `expected_shop_id` is given, so a shop's handset
+    cannot reopen another shop's order. Idempotent: an order that is not
+    cancelled reports that instead of being written twice.
+    """
+    reference = (reference or "").strip().upper()
+    if not reference:
+        return False, "That order could not be matched."
+    order = order_detail(reference)
+    if not order:
+        return False, "That order was not found."
+    if expected_shop_id and str(order.get("shop_key") or "").lower() != \
+            str(expected_shop_id).lower():
+        return False, "That order is no longer assigned to your shop."
+    if not order.get("cancelled"):
+        return False, f"Order {reference} is not cancelled, so there is nothing to reopen."
+
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            # The write is conditional on it still being cancelled, so two people
+            # tapping Reopen at once produces one reopen and one clear answer.
+            cursor.execute("""
+                UPDATE shop_orders
+                SET status = 'new', cancelled_at = NULL
+                WHERE reference = %s
+                  AND (cancelled_at IS NOT NULL OR COALESCE(status, 'new') = 'cancelled')
+                RETURNING reference
+            """, (reference,))
+            changed = cursor.fetchone()
+            connection.commit()
+    except Exception as e:
+        print(f"order reopen error: {e}")
+        return False, "Could not reopen that order just now."
+    if not changed:
+        return False, f"Order {reference} is not cancelled, so there is nothing to reopen."
+
+    log_activity("reopened_order", "order",
+                 f"Reopened order {reference}",
+                 target=reference,
+                 details={"shop_id": expected_shop_id or "",
+                          "was_paid": bool(order.get("paid")),
+                          "delivery_method": order.get("delivery_method")},
+                 user=user)
+    _shop_payment_event(reference, "reopened", order.get("payment_status") or "unpaid",
+                        str(user or ""))
+
+    # The customer is told from the re-read row, so the notice describes what was
+    # actually stored rather than what this call intended to store.
+    fresh = order_detail(reference)
+    if fresh:
+        notice = shop_order_reopened_text(fresh)
+        if notice:
+            try:
+                sent = shop_send_stage_notice(reference, "reopened", fresh, notice)
+                if not sent:
+                    print(f"reopen notice not delivered for {reference}")
+            except Exception as e:
+                # The reopen is real business state; a failed message must not
+                # undo it, and the shop is told either way.
+                print(f"reopen notice error for {reference}: {e}")
+    return True, f"Order {reference} has been reopened."
+
+
+def shop_order_reopened_text(order):
+    """What the customer is told when their cancelled order is reopened.
+
+    The whole order is restated because the customer's earlier confirmation is
+    stale by now: what was on it, what it costs, whether it was already paid, and
+    how they are receiving it.
+    """
+    reference = (order or {}).get("reference") or ""
+    currency = (order or {}).get("currency") or PAYNOW_CURRENCY
+    delivering = (order.get("delivery_method") or "collection") == "delivery"
+    lines = [f"♻️ *Order {reference} has been reopened*", ""]
+    lines.append("Good news — this order is active again and our team will carry on "
+                 "with it.")
+    lines.append("")
+    lines.append("*What was on it*")
+    if order.get("lines"):
+        for line in order["lines"]:
+            quantity = line.get("quantity") or 0
+            name = line.get("product") or "Item"
+            size = f" ({line['pack_size']})" if line.get("pack_size") else ""
+            if line.get("unit_price") is None:
+                lines.append(f"• {name}{size} × {quantity}")
+            else:
+                line_total = line.get("line_total")
+                if line_total is None:
+                    line_total = float(line["unit_price"]) * quantity
+                lines.append(f"• {name}{size} × {quantity} — {currency} {line_total:.2f}")
+    else:
+        lines.append("• No items on this order")
+    lines.append("")
+    lines.append(f"*Total:* {currency} {float(order.get('total') or 0):.2f}")
+    lines.append(f"*Items:* {order.get('item_count') or 0}")
+    # Payment is stated plainly, including when it is already settled: a customer
+    # who paid before the order was cancelled must not be asked to pay again.
+    if order.get("paid"):
+        lines.append(f"*Payment:* Already paid — "
+                     f"{order.get('payment_status_label') or 'settled'}. "
+                     "You do not need to pay again.")
+    else:
+        lines.append(f"*Payment:* {order.get('payment_status_label') or 'Not yet paid'}")
+    if delivering:
+        lines.append(f"*Receiving:* Delivery to your address")
+        lines.append(f"*Deliver to:* {order.get('address') or 'No address on file yet'}")
+        if not (order.get("address") or "").strip():
+            lines.append("Please send us your delivery address so we can send it out.")
+    else:
+        lines.append(f"*Receiving:* Collection from the shop")
+        if order.get("shop"):
+            lines.append(f"*Collect from:* {order['shop']}")
+            if order.get("shop_address"):
+                lines.append(f"📍 {order['shop_address']}")
+    stage = (order.get("stage") or "").strip().lower()
+    lines.append(f"*Current status:* "
+                 f"{SHOP_STAGE_STAFF_LABELS.get(stage, 'Being processed')}")
+    return "\n".join(lines)
+
+
+def _shop_staff_reopen(sender_id, reference, staff, channel=None):
+    """Reopen a cancelled shop order and tell the shop how it went."""
+    reference = (reference or "").strip().upper()
+    # Checked here as well as inside shop_order_reopen so the shop gets the same
+    # "not your order" wording every other staff action uses, rather than the
+    # module-level phrasing.
+    if not _shop_staff_order_for_update(reference, staff):
+        _shop_staff_send(sender_id,
+                         f"I couldn't find order {reference} for your shop.",
+                         staff, channel)
+        return True
+    ok, message = shop_order_reopen(
+        reference, user=f"{staff.get('name') or 'Shop staff'} (shop)",
+        expected_shop_id=staff.get("shop_id"))
+    if ok:
+        message = (f"♻️ Order {reference} has been reopened and is back on your shop's "
+                   "work. The customer has been sent the order details on WhatsApp.")
+    _shop_staff_send(sender_id, message, staff, channel)
+    log_activity("shop_staff_replied", "order",
+                 f"{staff.get('name') or 'Shop staff'} "
+                 f"{'reopened' if ok else 'could not reopen'} {reference}",
+                 target=reference,
+                 details={"shop_id": staff.get("shop_id"), "success": ok})
+    return True
+
+
 def shop_staff_reply(sender_id, button_id, staff, channel=None):
     """Handle staff order actions and status changes. Returns True if handled.
 
@@ -25533,6 +25704,65 @@ def shop_staff_reply(sender_id, button_id, staff, channel=None):
     if not isinstance(staff, dict) or not staff.get("shop_id"):
         return False
     button_id = str(button_id or "").strip()
+
+    if button_id.startswith("staffreopen:"):
+        parts = button_id.split(":", 1)
+        if len(parts) == 2:
+            reference = parts[1].strip().upper()
+            if not _shop_staff_order_for_update(reference, staff):
+                _shop_staff_send(sender_id,
+                                 f"I couldn't find order {reference} for your shop.",
+                                 staff, channel)
+                return True
+            order = _shop_staff_order_for_update(reference, staff)
+            if not order.get("cancelled"):
+                _shop_staff_send(sender_id,
+                                 f"Order {reference} is not cancelled, so there is "
+                                 "nothing to reopen.",
+                                 staff, channel)
+                return True
+            # Confirmed before writing, so a mis-tap cannot put a cancelled order
+            # back into the shop's work.
+            body = (f"Reopen order {reference}?\n"
+                    "The customer is sent a WhatsApp message telling them it is active "
+                    "again, with the items, the amount and how they are receiving it.")
+            if order.get("paid"):
+                body += "\nThis order was *paid* — that payment stays on the order."
+            payload = {
+                "type": "interactive",
+                "interactive": {
+                    "type": "button",
+                    "body": {"text": body},
+                    "action": {
+                        "buttons": [
+                            {"type": "reply", "reply": {
+                                "id": f"staffreopenconfirm:{reference}",
+                                "title": "Reopen"}},
+                            {"type": "reply", "reply": {
+                                "id": f"staffreopencancel:{reference}",
+                                "title": "Cancel"}},
+                        ],
+                    },
+                },
+            }
+            fallback = (body + f"\nReply CONFIRM REOPEN {reference} to reopen it, "
+                        "or CANCEL to leave it cancelled.")
+            _shop_staff_send_interactive(sender_id, payload, body, fallback, staff, channel)
+            return True
+
+    if button_id.startswith("staffreopencancel:"):
+        parts = button_id.split(":", 1)
+        if len(parts) == 2:
+            _shop_staff_send(sender_id,
+                             f"Order {parts[1]} was left cancelled and nothing was sent "
+                             "to the customer.",
+                             staff, channel)
+            return True
+
+    if button_id.startswith("staffreopenconfirm:"):
+        parts = button_id.split(":", 1)
+        if len(parts) == 2:
+            return _shop_staff_reopen(sender_id, parts[1], staff, channel)
 
     if button_id.startswith("staffstage:"):
         parts = button_id.split(":", 2)
@@ -25634,6 +25864,28 @@ def shop_staff_reply(sender_id, button_id, staff, channel=None):
     if pay_command:
         return _shop_staff_confirm_payment(
             sender_id, pay_command.group(1), staff, channel)
+
+    # A cancelled order has no next status, so reopening is its own command
+    # rather than one of the stage choices.
+    reopen_command = re.fullmatch(
+        r"REOPEN\s+(BC-\d{6}-\d{4})", button_id, re.IGNORECASE)
+    if reopen_command:
+        reference = reopen_command.group(1).upper()
+        order = _shop_staff_order_for_update(reference, staff)
+        if not order:
+            _shop_staff_send(sender_id,
+                             f"I couldn't find order {reference} for your shop.",
+                             staff, channel)
+            return True
+        # Routed back through the button id so the confirmation step cannot be
+        # skipped by typing the command instead of tapping.
+        return shop_staff_reply(sender_id, f"staffreopen:{reference}", staff, channel)
+
+    reopen_confirm = re.fullmatch(
+        r"CONFIRM\s+REOPEN\s+(BC-\d{6}-\d{4})", button_id, re.IGNORECASE)
+    if reopen_confirm:
+        return _shop_staff_reopen(
+            sender_id, reopen_confirm.group(1), staff, channel)
 
     confirm_command = re.fullmatch(
         r"CONFIRM\s+(BC-\d{6}-\d{4})\s+([a-z_]+)", button_id, re.IGNORECASE)
