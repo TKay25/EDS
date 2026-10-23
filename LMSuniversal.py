@@ -21644,6 +21644,12 @@ def ensure_shop_tables():
                 updated_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        # The table shipped without these two columns, and CREATE TABLE IF NOT
+        # EXISTS leaves an existing table untouched, so the stored copy was never
+        # written on a database that predates them. Reading it raised, which took
+        # the logo out of every document after a redeploy emptied the disk.
+        cursor.execute("ALTER TABLE shop_branding ADD COLUMN IF NOT EXISTS logo_bytes BYTEA;")
+        cursor.execute("ALTER TABLE shop_branding ADD COLUMN IF NOT EXISTS logo_mime VARCHAR(60);")
         # The same for a product picture.
         cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS image_bytes BYTEA;")
         cursor.execute("ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS image_mime VARCHAR(60);")
@@ -23330,8 +23336,15 @@ def _adopt_logo_into_store(logo_path):
 
 
 def company_logo_url():
-    """An absolute URL for the logo, or '' when there is not one."""
-    return product_image_public_url(company_logo_path())
+    """An absolute URL for the logo, or '' when there is not one.
+
+    Deliberately not routed through product_image_public_url: that one confines a
+    path to the product picture folder, so a logo stored under images/brand was
+    rejected and the branding panel showed no logo even straight after an upload.
+    company_logo_path() has already restored the file from the store when the
+    disk lost it, so a non-empty path means the file is there.
+    """
+    return _static_public_url(company_logo_path())
 
 
 def company_logo_data():
@@ -23416,12 +23429,31 @@ def _adopt_product_image_if_unstored(image_path, full):
     _adopt_product_image_into_store(product_id, full)
 
 
+def _static_public_url(image_path):
+    """An absolute URL for a file under static/, or '' when it cannot be built.
+
+    WhatsApp will not fetch a relative path, so a path that cannot be made
+    absolute is treated as no image.
+    """
+    path = str(image_path or "").strip().lstrip("/")
+    if not path:
+        return ""
+    base = (PUBLIC_BASE_URL or "").strip().rstrip("/")
+    if not base:
+        try:
+            base = request.host_url.rstrip("/")
+        except Exception:
+            base = ""
+    if not base:
+        return ""
+    return f"{base}/static/{path}"
+
+
 def product_image_public_url(image_path):
     """An absolute URL for a product image, or '' when there is not one.
 
     Built from the request when one is in flight, and otherwise from the
-    configured base URL. WhatsApp will not fetch a relative path, so a path that
-    cannot be made absolute is treated as no image.
+    configured base URL.
 
     The file is resolved before a URL is handed out, which in practice means the
     stored bytes are written back to disk first. The stored path outlives the
@@ -23432,16 +23464,7 @@ def product_image_public_url(image_path):
     """
     if not product_image_path_on_disk(image_path):
         return ""
-    path = str(image_path or "").strip().lstrip("/")
-    base = (PUBLIC_BASE_URL or "").strip().rstrip("/")
-    if not base:
-        try:
-            base = request.host_url.rstrip("/")
-        except Exception:
-            base = ""
-    if not base:
-        return ""
-    return f"{base}/static/{path}"
+    return _static_public_url(image_path)
 
 
 def _product_image_absolute_path(image_path):

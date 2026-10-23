@@ -343,6 +343,12 @@
     var bodyEl = document.getElementById('crmOrdersBody');
     var loaded = false;
     var inFlight = false;
+    // A filter change that arrives while a load is running is remembered rather
+    // than dropped. A load takes seconds against the remote database, so a
+    // person who changes the period straight after opening the tab would
+    // otherwise be left looking at the previous period with the new one showing
+    // in the dropdowns.
+    var reloadPending = false;
 
     function filters() {
       return {
@@ -1119,13 +1125,27 @@
         });
     }
 
+    function loadFinished() {
+      inFlight = false;
+      if (reloadPending) {
+        reloadPending = false;
+        load(false);
+      }
+    }
+
     function load(silent) {
-      if (inFlight) return;
+      if (inFlight) {
+        reloadPending = true;
+        return;
+      }
       inFlight = true;
       fetch('/api/crm/analytics?' + query())
         .then(function (response) { return response.json(); })
         .then(function (payload) {
-          inFlight = false;
+          // The controls have moved on since this request was sent, so this
+          // answer describes a filter nobody is looking at any more. It is
+          // skipped and the queued load brings back the current one.
+          if (reloadPending) return;
           if (!payload.success) return;
           loaded = true;
           renderStats(payload.analytics || {});
@@ -1133,9 +1153,9 @@
           renderSeries((payload.analytics || {}).series);
         })
         .catch(function () {
-          inFlight = false;
           if (!silent) console.warn('Could not load sales analytics');
-        });
+        })
+        .then(loadFinished, loadFinished);
     }
 
     [periodEl, paymentEl, fulfilmentEl].forEach(function (el) {
@@ -1183,6 +1203,9 @@
     var clearEl = document.getElementById('crmOrdersClear');
     var loaded = false;
     var inFlight = false;
+    // See the analytics loader: a filter change during a request is queued, not
+    // dropped, so the table always ends up matching the dropdowns.
+    var reloadPending = false;
     // The card the user pressed, or null for "every order in the period". It is
     // held here rather than in the dropdown because a card is a filter the
     // dropdown has no word for, such as "out for delivery".
@@ -1318,21 +1341,34 @@
       renderState();
     }
 
+    function loadFinished() {
+      inFlight = false;
+      if (reloadPending) {
+        reloadPending = false;
+        load(false);
+      }
+    }
+
     function load(silent) {
-      if (inFlight) return;
+      if (inFlight) {
+        reloadPending = true;
+        return;
+      }
       inFlight = true;
       fetch('/api/crm/analytics?' + query())
         .then(function (response) { return response.json(); })
         .then(function (payload) {
-          inFlight = false;
+          // Superseded by a newer filter choice, so it is not painted over the
+          // one the user is now looking at; the queued load replaces it.
+          if (reloadPending) return;
           if (!payload.success) return;
           loaded = true;
           render(payload);
         })
         .catch(function () {
-          inFlight = false;
           if (!silent) console.warn('Could not load orders');
-        });
+        })
+        .then(loadFinished, loadFinished);
     }
 
     [periodEl, paymentEl, fulfilmentEl].forEach(function (el) {
