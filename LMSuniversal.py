@@ -21190,6 +21190,23 @@ def wa_error_from_response(response):
     return detail, is_window
 
 
+def wa_outbound_number(value):
+    """The recipient in the international form Meta requires for a send.
+
+    Numbers a person enters by hand - a shopkeeper's handset, an HQ alert number -
+    are stored in local 07… form, while Meta only accepts the full international
+    number. Converting at the send layer means every outbound path, including a
+    number stored before this existed, is deliverable rather than silently
+    rejected.
+    """
+    digits = re.sub(r"\D", "", str(value or ""))
+    if digits.startswith("00"):
+        digits = digits[2:]
+    if digits.startswith("0") and len(digits) > 9:
+        return "263" + digits[1:]
+    return digits
+
+
 def crm_send_whatsapp(wa_number, text, channel=None):
     """Send a WhatsApp text from the company channel. Returns (ok, detail)."""
     creds = wa_outbound_credentials(channel)
@@ -21201,7 +21218,7 @@ def crm_send_whatsapp(wa_number, text, channel=None):
             f"https://graph.facebook.com/v18.0/{creds['phone_id']}/messages",
             headers={"Authorization": "Bearer " + str(creds['token']),
                      "Content-Type": "application/json"},
-            json={"messaging_product": "whatsapp", "to": wa_number,
+            json={"messaging_product": "whatsapp", "to": wa_outbound_number(wa_number),
                   "type": "text", "text": {"body": text}},
             timeout=20,
         )
@@ -21223,7 +21240,7 @@ def crm_send_whatsapp_payload(wa_number, payload, channel=None):
                        "inbox once so the channel credentials are registered.")
     body = dict(payload)
     body["messaging_product"] = "whatsapp"
-    body["to"] = wa_number
+    body["to"] = wa_outbound_number(wa_number)
     try:
         response = requests.post(
             f"https://graph.facebook.com/v18.0/{creds['phone_id']}/messages",
@@ -21449,9 +21466,10 @@ COMPANY_SYSTEM_CONTACT = {
 
 # ------------------------------------------------------- alert recipients --
 # Where the business wants to be told about money and about customers asking for
-# a person. Numbers are held in the local 07… form the sender expects, and are
-# overridable from the environment so a deployment can point them elsewhere
-# without a code change.
+# a person. Numbers are stored in local 07… form because that is how people write
+# them; wa_outbound_number() converts to the international form Meta requires
+# when they are actually sent. They are overridable from the environment so a
+# deployment can point them elsewhere without a code change.
 SHOP_HQ_WA_NUMBER = os.getenv("SHOP_HQ_WA_NUMBER", "0784752545")
 SHOP_SALES_AGENT_WA_NUMBER = os.getenv("SHOP_SALES_AGENT_WA_NUMBER", "0774121556")
 
@@ -24521,10 +24539,18 @@ def shop_staff_for_number(wa_number):
     except Exception as e:
         print(f"shop staff lookup error: {e}")
         return None
-    if not row:
-        return None
-    return {"id": row[0], "shop_id": row[1] or "", "name": row[2] or "",
-            "wa_number": row[3] or "", "shop": shop_by_id(row[1])}
+    if row:
+        return {"id": row[0], "shop_id": row[1] or "", "name": row[2] or "",
+                "wa_number": row[3] or "", "shop": shop_by_id(row[1])}
+    # A shop that has not listed its staff still has a telephone number, and an
+    # order notice falls back to it. Recognising a reply from that handset keeps
+    # its buttons working instead of answering the shopkeeper as a customer.
+    for shop in shop_shops():
+        if shop_staff_number(shop.get("phone")) == owner:
+            return {"id": None, "shop_id": shop["id"],
+                    "name": shop.get("name") or "Shop", "wa_number": owner,
+                    "shop": shop, "fallback": True}
+    return None
 
 
 def _shop_order_notice_for_staff(reference, order):
@@ -25028,6 +25054,21 @@ SHOP_TEMPLATES = {
         "buttons": [("staffwork:{{reference}}", "Working on it"),
                     ("staffdone:{{reference}}", "Ready / done")],
     },
+    "staff_order_reminder": {
+        "name": "bchem_staff_order_reminder",
+        "language": "en",
+        "category": "UTILITY",
+        # Sent when a customer chases an order. It reuses the shop's own action
+        # buttons so the reminder can be acted on directly, rather than making the
+        # shopkeeper look the order up again.
+        "body": ("Reminder from a customer. Order {{1}} is still waiting at your shop. "
+                 "Customer {{2}}. Items {{3}}. Current status {{4}}. Tap *Working on "
+                 "it* below if someone is handling it, or *Ready / done* when it is "
+                 "finished."),
+        "fields": ["reference", "customer", "items", "stage"],
+        "buttons": [("staffwork:{{reference}}", "Working on it"),
+                    ("staffdone:{{reference}}", "Ready / done")],
+    },
     "hq_payment_received": {
         "name": "bchem_hq_payment_received",
         "language": "en",
@@ -25115,7 +25156,7 @@ def shop_send_template(to_number, key, values, channel=None):
         })
     payload = {
         "messaging_product": "whatsapp",
-        "to": to_number,
+        "to": wa_outbound_number(to_number),
         "type": "template",
         "template": {
             "name": spec["name"],
@@ -25206,6 +25247,52 @@ def _shop_notify_shop_of_order(reference):
         return 0
 
 
+def _shop_send_to_staff_members(staff, body, reference, channel=None,
+                                template_key="staff_new_order", template_values=None,
+                                label="staff notice"):
+    """Deliver one notice to each staff member, falling back to text/template.
+
+    The button message is tried first, then the same message as plain text, then
+    the approved template. A shopkeeper's handset often sits outside the 24-hour
+    window, so the fallback is what makes the notice arrive at all.
+    """
+    payload = _shop_staff_buttons_payload(body, reference)
+    sent = 0
+    for person in staff:
+        number = person.get("wa_number") or ""
+        try:
+            ok, detail = crm_send_whatsapp_payload(number, payload, channel)
+            if not ok:
+                ok, detail, _used = shop_send_notice(
+                    number, body, template_key, template_values or {}, channel)
+                if not ok:
+                    print(f"{label} failed for {number}: {detail}")
+            if ok:
+                sent += 1
+        except Exception as e:
+            print(f"{label} error for {number}: {e}")
+    return sent
+
+
+def _shop_notification_recipients(shop_id):
+    """Who an order notice reaches: the shop's staff, or the shop's own number.
+
+    The staff list is the intended place for this. Falling back to the shop's
+    phone means a shop that has only filled in the shop telephone, or has not
+    built its staff list yet, still hears about its orders and reminders instead
+    of nobody being told.
+    """
+    staff = shop_staff(shop_id)
+    if staff:
+        return staff
+    shop = shop_by_id(shop_id) or {}
+    number = shop_staff_number(shop.get("phone"))
+    if not number:
+        return []
+    return [{"name": shop.get("name") or "Shop", "wa_number": number,
+             "shop_id": shop_id, "fallback": True}]
+
+
 def shop_notify_staff_of_order(reference, order):
     """Tell every staff member at the fulfilling shop about an order. Returns the count.
 
@@ -25215,11 +25302,10 @@ def shop_notify_staff_of_order(reference, order):
     shop_id = order.get("shop_key")
     if not shop_id:
         return 0
-    staff = shop_staff(shop_id)
+    staff = _shop_notification_recipients(shop_id)
     if not staff:
         return 0
     body = _shop_order_notice_for_staff(reference, order)
-    payload = _shop_staff_buttons_payload(body, reference)
     # The template's slots, kept beside the live text so the two cannot drift.
     template_values = {
         "reference": reference,
@@ -25229,26 +25315,66 @@ def shop_notify_staff_of_order(reference, order):
                        if order.get("delivery_method") == "delivery"
                        else "Collection from your shop"),
     }
-    sent = 0
-    for person in staff:
-        try:
-            ok, detail = crm_send_whatsapp_payload(person["wa_number"], payload,
-                                                   order.get("channel") or None)
-            if not ok:
-                # A button message can be refused where plain text is not, so the
-                # same notice is retried as text rather than dropped.
-                ok, detail, _used = shop_send_notice(
-                    person["wa_number"], body, "staff_new_order", template_values,
-                    order.get("channel") or None)
-                if not ok:
-                    print(f"staff notice failed for {person['wa_number']}: {detail}")
-            if ok:
-                sent += 1
-        except Exception as e:
-            print(f"staff notice error: {e}")
+    sent = _shop_send_to_staff_members(
+        staff, body, reference, order.get("channel") or None,
+        "staff_new_order", template_values, "staff notice")
     if sent:
         log_activity("notified_shop_staff", "order",
-                     f"Told {sent} staff at the shop about {reference}",
+                     f"Told {sent} shop recipient(s) about {reference}",
+                     target=reference, details={"shop_id": shop_id, "sent": sent})
+    return sent
+
+
+def _shop_order_reminder_notice_for_staff(reference, order):
+    """What a shop is told when a customer chases an order."""
+    stage = (order.get("stage") or "").strip().lower()
+    delivering = order.get("delivery_method") == "delivery"
+    lines = [f"⏰ *Customer reminder — {reference}*", ""]
+    if order.get("shop"):
+        lines.append(f"*Shop:* {order['shop']}")
+    if order.get("customer_name"):
+        lines.append(f"*Customer:* {order['customer_name']}")
+    lines.append(f"*Items:* {order.get('item_count') or 0}")
+    lines.append("*Receive by:* "
+                 + ("Delivery to the customer" if delivering
+                    else "Collection from your shop"))
+    lines.append(f"*Current status:* {SHOP_STAGE_STAFF_LABELS.get(stage, 'Not set')}")
+    if order.get("stage_at"):
+        lines.append(f"*Last update:* {order['stage_at']}")
+    lines.append("")
+    lines.append("The customer asked for an update. Tap *Working on it* if someone "
+                 "is handling it, or *Ready / done* when it is finished.")
+    return "\n".join(lines)
+
+
+def shop_notify_staff_of_reminder(reference, order=None):
+    """Ask the fulfilling shop to chase an order a customer reminded us about.
+
+    Returns how many staff were reached. The same buttons as the new-order notice
+    are attached, so the shopkeeper can act on the reminder without opening
+    anything else.
+    """
+    order = order_detail(reference) or order or {}
+    shop_id = order.get("shop_key")
+    if not shop_id:
+        return 0
+    staff = _shop_notification_recipients(shop_id)
+    if not staff:
+        return 0
+    body = _shop_order_reminder_notice_for_staff(reference, order)
+    template_values = {
+        "reference": reference,
+        "customer": order.get("customer_name") or "-",
+        "items": order.get("item_count") or 0,
+        "stage": SHOP_STAGE_STAFF_LABELS.get(
+            (order.get("stage") or "").strip().lower(), "Not set"),
+    }
+    sent = _shop_send_to_staff_members(
+        staff, body, reference, order.get("channel") or None,
+        "staff_order_reminder", template_values, "staff reminder")
+    if sent:
+        log_activity("reminded_shop_staff", "order",
+                     f"Reminded {sent} shop recipient(s) about {reference}",
                      target=reference, details={"shop_id": shop_id, "sent": sent})
     return sent
 
@@ -29667,8 +29793,20 @@ def shop_order_reminder_send(wa_number, reference, reason=SHOP_REMINDER_REASON):
     log_activity("customer_order_reminder", "order",
                  f"Customer asked for an update on {order['reference']}",
                  target=order["reference"], details={"wa_number": owner, "reason": reason})
-    return True, (f"🙋 I have asked our sales team to update you on *{order['reference']}*.\n\n"
-                  f"{shop_order_stage_text(order)}\n\n"
+    # The shopkeeper is the person who can actually move the order, so the
+    # reminder goes to the fulfilling shop's staff as well as to the sales team
+    # escalation raised by the caller. A failed send is not reported as success.
+    reminded = 0
+    try:
+        reminded = shop_notify_staff_of_reminder(order["reference"])
+    except Exception as e:
+        print(f"shop reminder notify error for {order['reference']}: {e}")
+    if reminded:
+        opening = (f"🙋 I have reminded the shop about *{order['reference']}*.")
+    else:
+        opening = (f"🙋 I have asked our sales team to update you on "
+                   f"*{order['reference']}*.")
+    return True, (f"{opening}\n\n{shop_order_stage_text(order)}\n\n"
                   "Someone will reply here as soon as they have looked into it.")
 
 
@@ -33616,7 +33754,8 @@ def crm_send_whatsapp_document(wa_number, filename, payload_bytes, caption=None,
             f"https://graph.facebook.com/v18.0/{creds['phone_id']}/messages",
             headers={"Authorization": "Bearer " + str(creds["token"]),
                      "Content-Type": "application/json"},
-            json={"messaging_product": "whatsapp", "to": wa_number,
+            json={"messaging_product": "whatsapp",
+                  "to": wa_outbound_number(wa_number),
                   "type": "document", "document": document},
             timeout=30,
         )
