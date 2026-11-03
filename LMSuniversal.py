@@ -18066,6 +18066,58 @@ def delete_company_tables():
         except Exception as e:
             return jsonify({'message': f'Error: {str(e)}'}), 500
         
+# Platform super-admin. These credentials sign in to the multi-company console
+# that runs SOM / delete per company, from either the LMS login form or the
+# Brilliant Chemicals company system login form.
+EDS_ADMIN_EMAIL = "iamgreat"
+EDS_ADMIN_PASSWORD = "011235813"
+
+
+def eds_admin_console_page(today_date):
+    """Render the multi-company admin console with its SOM and delete actions."""
+    with get_db() as (cursor, connection):
+        cursor.execute("SELECT table_name FROM information_schema.tables "
+                       "WHERE table_schema='public' AND table_type='BASE TABLE'")
+        table_names = [row[0] for row in cursor.fetchall()]
+
+        table_counts = []
+        for table_name in table_names:
+            if not table_name.endswith('main'):
+                continue
+            try:
+                cursor.execute(f'SELECT COUNT(*) FROM "{table_name}"')
+                count = cursor.fetchone()[0]
+                table_counts.append({'Company': table_name, 'Employees': count})
+            except Exception as e:
+                table_counts.append({'Company': table_name, 'Employees': f'Error: {e}'})
+
+        cursor.execute("SELECT * FROM companyreg;")
+        compsreg = pd.DataFrame(cursor.fetchall(),
+                                columns=["Company ID", "Company Name", "Date Registered"])
+
+    df_main_counts = pd.DataFrame(table_counts)
+    merged_df = pd.merge(df_main_counts, compsreg, left_on='Company',
+                         right_on='Company Name', how='outer')
+    merged_df = merged_df.drop(columns=['Company Name'])
+    merged_df = merged_df[["Company ID", "Company", "Date Registered", "Employees"]]
+
+    merged_df['ACTION'] = merged_df['Company'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 som-comp-btn" data-ID="{x}" onclick="somCompany('{x}')">SOM</button><button class="btn btn-primary3 delete-comp-btn" data-ID="{x}" onclick="deleteCompany('{x}')">Delete</button></div>''')
+
+    merged_df = merged_df[["Company ID", "Company", "Date Registered", "Employees", "ACTION"]]
+
+    table_companies_html = merged_df.to_html(classes="table table-bordered table-theme", table_id="companiesTable", index=False,  escape=False,)
+
+    return render_template('edslmsadmin.html', today_date=today_date,
+                           table_companies_html=table_companies_html)
+
+
+@app.route('/eds-admin')
+def eds_admin_console():
+    if not session.get('eds_admin'):
+        return redirect(url_for('company_login_page'))
+    return eds_admin_console_page(datetime.now().strftime('%d %B %Y'))
+
+
 @app.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
@@ -18085,50 +18137,10 @@ def login():
                 if not email or not password:
                     return jsonify({'success': False, 'message': 'Email and password are required.'}), 400
                 
-                if email == "iamgreat" and password == "011235813":
-
-                    cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")
-                    
-                    tables = cursor.fetchall()
-                    table_names = [table[0] for table in tables]
-
-                    df_tables = pd.DataFrame(table_names, columns=['Company'])
-
-                    print(df_tables)
-
-                    main_tables = [name for name in table_names if name.endswith('main')]
-
-                    table_counts = []
-                    for table_name in main_tables:
-                        try:
-                            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-                            count = cursor.fetchone()[0]
-                            table_counts.append({'Company': table_name, 'Employees': count})
-                        except Exception as e:
-                            table_counts.append({'Company': table_name, 'Employees': f'Error: {e}'})
-
-                    df_main_counts = pd.DataFrame(table_counts)
-                    print(df_main_counts)
-
-                    query_compreg = f"SELECT * FROM companyreg;"
-                    cursor.execute(query_compreg)
-                    rows_comps = cursor.fetchall()
-                    compsreg = pd.DataFrame(rows_comps, columns=["Company ID","Company Name", "Date Registered"])
-                    print(compsreg)
-
-
-                    merged_df = pd.merge(df_main_counts, compsreg, left_on='Company', right_on='Company Name', how='outer')
-                    merged_df = merged_df.drop(columns=['Company Name'])
-                    merged_df = merged_df[["Company ID","Company", "Date Registered","Employees"]]
-                    print(merged_df)
-
-                    merged_df['ACTION'] = merged_df['Company'].apply(lambda x: f'''<div style="display: flex; gap: 10px;"><button class="btn btn-primary3 som-comp-btn" data-ID="{x}" onclick="somCompany('{x}')">SOM</button><button class="btn btn-primary3 delete-comp-btn" data-ID="{x}" onclick="deleteCompany('{x}')">Delete</button></div>''')
-
-                    merged_df = merged_df[["Company ID","Company", "Date Registered","Employees","ACTION"]]
-
-                    table_companies_html = merged_df.to_html(classes="table table-bordered table-theme", table_id="companiesTable", index=False,  escape=False,)
-        
-                    return render_template('edslmsadmin.html', today_date = today_date, table_companies_html=table_companies_html)
+                if email == EDS_ADMIN_EMAIL and password == EDS_ADMIN_PASSWORD:
+                    session.permanent = True
+                    session['eds_admin'] = True
+                    return eds_admin_console_page(today_date)
 
 
                 # Query tables with the 'email' column
@@ -30486,6 +30498,16 @@ def company_login_page():
         if not email or not password:
             return jsonify({'success': False, 'message': 'Email and password are required.'}), 400
 
+        # The platform super-admin also signs in here; the email is not an
+        # employee record, so it must be handled before the employee lookup.
+        if email == EDS_ADMIN_EMAIL and password == EDS_ADMIN_PASSWORD:
+            session.clear()
+            session.permanent = True
+            session['user_uuid'] = str(uuid.uuid4())
+            session['eds_admin'] = True
+            user_sessions[email] = {'uuid': session['user_uuid'], 'email': email}
+            return jsonify({'success': True, 'redirect': url_for('eds_admin_console')})
+
         try:
             with get_db() as (cursor, connection):
                 cursor.execute(f"SELECT * FROM {COMPANY_SYSTEM_TABLE} WHERE email = %s", (email,))
@@ -30534,6 +30556,8 @@ def company_login_page():
 
     if company_system_user():
         return redirect(url_for('company_system'))
+    if session.get('eds_admin'):
+        return redirect(url_for('eds_admin_console'))
     return render_template('company_login.html', company_name=COMPANY_SYSTEM_NAME,
                            channel_number=company_system_channel_label())
 
