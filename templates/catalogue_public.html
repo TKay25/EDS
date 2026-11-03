@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Catalogue | {{ company_name }}</title>
+    <meta name="description" content="Browse the {{ company_name }} catalogue and order on WhatsApp.">
+    <style>
+        :root {
+            --ink: #211a1d;
+            --muted: #6b5c61;
+            --crimson: #9d1c34;
+            --crimson-dark: #7c1428;
+            --gold: #c8a24a;
+            --paper: #fbf8f4;
+            --line: #e7ddd3;
+            --card: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Poppins", "Segoe UI", system-ui, sans-serif;
+            color: var(--ink);
+            background: var(--paper);
+            line-height: 1.55;
+        }
+        a { color: inherit; }
+        .hero {
+            padding: 34px 20px 46px;
+            background: linear-gradient(135deg, var(--crimson-dark), var(--crimson) 62%, #b72e48);
+            color: #fff;
+        }
+        .hero-inner {
+            width: min(1080px, 100%);
+            margin: 0 auto;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .brand img {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.94);
+            padding: 6px;
+        }
+        .brand-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .brand-sub {
+            margin: 2px 0 0;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.78);
+        }
+        .hero h1 {
+            margin: 30px 0 8px;
+            font-size: clamp(2rem, 4.5vw, 3rem);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        .hero p.lead {
+            margin: 0;
+            max-width: 58ch;
+            color: rgba(255, 255, 255, 0.86);
+        }
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            margin-top: 22px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: var(--gold);
+            color: #2a210f;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+        }
+        main {
+            width: min(1080px, 100%);
+            margin: 0 auto;
+            padding: 34px 20px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--card);
+            box-shadow: 0 8px 20px rgba(56, 30, 36, 0.06);
+        }
+        .card img.product {
+            width: 100%;
+            height: 175px;
+            object-fit: cover;
+            background: #f4eee7;
+        }
+        .card .body {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 16px 18px 18px;
+        }
+        .card h2 {
+            margin: 0 0 6px;
+            font-size: 1.02rem;
+        }
+        .card .summary {
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+        .sizes {
+            margin: 0 0 16px;
+            padding: 0;
+            list-style: none;
+            border-top: 1px solid var(--line);
+        }
+        .sizes li {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--line);
+            font-size: 0.82rem;
+        }
+        .sizes strong { white-space: nowrap; }
+        .sizes .quote { color: var(--muted); font-weight: 500; }
+        .mini {
+            margin-top: auto;
+            align-self: flex-start;
+            padding: 9px 15px;
+            border-radius: 999px;
+            background: var(--crimson);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .empty {
+            grid-column: 1 / -1;
+            padding: 40px 0;
+            text-align: center;
+            color: var(--muted);
+        }
+        footer {
+            padding: 26px 20px 36px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        footer strong { color: var(--ink); }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <div class="hero-inner">
+            <div class="brand">
+                {% if logo_url %}<img src="{{ logo_url }}" alt="">{% endif %}
+                <div>
+                    <div class="brand-name">{{ company_name }}</div>
+                    <p class="brand-sub">Household · Cleaning · Personal care</p>
+                </div>
+            </div>
+            <h1>Our catalogue</h1>
+            <p class="lead">
+                Browse the range below. Order on WhatsApp and we will build your cart,
+                confirm the price and arrange collection.
+            </p>
+            {% if whatsapp_link %}
+            <a class="cta" href="{{ whatsapp_link }}">Order on WhatsApp</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        {% for item in items %}
+        <article class="card" id="{{ item.id }}">
+            {% if item.image_url %}
+            <img class="product" src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy">
+            {% endif %}
+            <div class="body">
+                <h2>{{ item.name }}</h2>
+                {% if item.summary %}<p class="summary">{{ item.summary }}</p>{% endif %}
+                <ul class="sizes">
+                    {% for size in item.sizes %}
+                    <li>
+                        <span>{{ size.size }}</span>
+                        {% if size.price is not none %}
+                        <strong>{{ currency }} {{ '%.2f' | format(size.price) }}</strong>
+                        {% else %}
+                        <span class="quote">Ask for a quote</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% if whatsapp_link %}
+                <a class="mini" href="{{ whatsapp_link }}">Order this range</a>
+                {% endif %}
+            </div>
+        </article>
+        {% else %}
+        <p class="empty">No products are published yet. Please check back soon.</p>
+        {% endfor %}
+    </main>
+
+    <footer>
+        <strong>{{ company_name }}</strong><br>
+        {{ company_contact.address }}<br>
+        {{ company_contact.phones | join(' · ') }} · {{ company_contact.email }}
+    </footer>
+</body>
+</html>

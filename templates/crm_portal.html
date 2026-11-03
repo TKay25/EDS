@@ -958,6 +958,69 @@
                 </div>
             </div>
 
+            {# The native WhatsApp catalogue customers see on the business
+               profile. Meta fills it from the feed below, so products stay
+               managed here rather than being re-entered in Commerce Manager. #}
+            <div class="crm-branding" id="crmWhatsappCatalog">
+                <div class="crm-branding-preview">
+                    <span class="crm-branding-empty">
+                        <i class="bi bi-whatsapp"></i>
+                    </span>
+                </div>
+                <div class="crm-branding-body">
+                    <h4><i class="bi bi-shop"></i> WhatsApp catalogue</h4>
+                    <p class="ps-muted">
+                        The products in this catalogue are published to WhatsApp from the feed
+                        below. Customers can open the catalogue from the business profile or the
+                        assistant's <strong>View catalogue</strong> button, and build a cart
+                        in WhatsApp.
+                    </p>
+                    <div class="crm-add-grid">
+                        <label class="crm-field">
+                            <span>Meta catalog ID</span>
+                            <input class="ps-input" type="text" id="crmCatalogId"
+                                   value="{{ whatsapp_catalog_id }}"
+                                   placeholder="e.g. 123456789012345" autocomplete="off">
+                        </label>
+                        <label class="crm-field crm-field-wide">
+                            <span>Product feed URL (paste into Commerce Manager → Data sources)</span>
+                            <div class="crm-order-settle-row">
+                                <input class="ps-input" type="text" id="crmCatalogFeedUrl"
+                                       value="{{ catalog_feed_url }}" readonly>
+                                <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
+                                        id="crmCatalogFeedCopy">
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                                <a class="ps-btn ps-btn-ghost ps-btn-sm"
+                                   href="{{ url_for('catalogue_public_page') }}"
+                                   target="_blank" rel="noopener">
+                                    <i class="bi bi-box-arrow-up-right"></i> Preview
+                                </a>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="crm-branding-tools">
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                                id="crmCatalogSave">
+                            <i class="bi bi-check2"></i> Save catalog ID
+                        </button>
+                        <span class="crm-save-note" id="crmCatalogNote"></span>
+                    </div>
+                    <p class="ps-muted">
+                        Setup: in Meta Commerce Manager, create or open a catalog, add a
+                        <strong>scheduled feed</strong> using the URL above, then paste the
+                        catalog ID here. A pack needs a price and the product a picture
+                        before it can appear in the catalogue.
+                    </p>
+                    {% if not catalog_feed_url %}
+                    <p class="ps-muted">
+                        The feed URL could not be built. Set <code>PUBLIC_BASE_URL</code> to
+                        the deployment's public address and reload this page.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Only shown when the catalogue is full, so the limit is explained
                  at the point it actually blocks something. -->
             <div class="crm-alert is-warn" id="crmCatalogFull" hidden>

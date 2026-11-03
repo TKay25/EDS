@@ -22,6 +22,8 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.styles import PatternFill, Font
 from werkzeug.utils import secure_filename
 import io
+import csv
+import hmac
 import base64
 import json
 import requests
@@ -21352,6 +21354,78 @@ def shop_cart_total(cart):
     return round(total, 2)
 
 
+# ------------------------------------------------------- WhatsApp catalogue --
+# The native catalogue customers see on the business profile is fed from the
+# same products the assistant sells. Meta fetches the CSV below on a schedule,
+# so a product added or repriced in the CRM reaches the catalogue without a
+# deploy. The catalog ID is the connection marker: without it the assistant
+# falls back to its own in-chat range rather than offering a button that would
+# open nothing.
+WHATSAPP_CATALOG_ID_KEY = "whatsapp_catalog_id"
+CATALOG_FEED_TOKEN_KEY = "catalog_feed_token"
+
+
+def whatsapp_catalog_id():
+    """The Meta catalog the business has connected, or ''."""
+    return (shop_setting_value(WHATSAPP_CATALOG_ID_KEY, "") or "").strip()
+
+
+def catalog_feed_token(create=False):
+    """The secret in the product feed URL, created on first use when asked."""
+    token = (shop_setting_value(CATALOG_FEED_TOKEN_KEY, "") or "").strip()
+    if token or not create:
+        return token
+    candidate = uuid.uuid4().hex
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            # Insert-if-absent, then read back: two workers rendering the CRM at
+            # the same moment must end up agreeing on one feed URL.
+            cursor.execute("""
+                INSERT INTO shop_settings (setting_key, setting_value, updated_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (setting_key) DO NOTHING
+            """, (CATALOG_FEED_TOKEN_KEY, candidate))
+            connection.commit()
+            cursor.execute("SELECT setting_value FROM shop_settings WHERE setting_key = %s",
+                           (CATALOG_FEED_TOKEN_KEY,))
+            row = cursor.fetchone()
+        return (row[0] if row and row[0] else candidate).strip()
+    except Exception as e:
+        print(f"catalog feed token error: {e}")
+        return ""
+
+
+def public_base_url():
+    """The public origin of this deployment, or '' when it cannot be known.
+
+    A proxy terminates TLS before the request reaches this app, so the forwarded
+    scheme is preferred over the one Flask sees. Meta will not fetch an http URL,
+    and the same base is used for product images and links in the catalogue feed.
+    """
+    base = (PUBLIC_BASE_URL or "").strip().rstrip("/")
+    if base:
+        return base
+    try:
+        forwarded = (request.headers.get("X-Forwarded-Proto") or "").split(",")[0].strip()
+        scheme = forwarded or request.scheme or "https"
+        host = request.host
+        if host:
+            return f"{scheme}://{host}".rstrip("/")
+    except Exception:
+        pass
+    return ""
+
+
+def catalog_feed_url():
+    """The URL to paste into Meta Commerce Manager, or '' when it cannot be built."""
+    base = public_base_url()
+    token = catalog_feed_token(create=True)
+    if not base or not token:
+        return ""
+    return f"{base}/catalogue/facebook-feed.csv?token={urllib.parse.quote(token)}"
+
+
 # Delivery is the exception rather than the norm: an order is collected from a
 # shop unless the customer is outside Harare and the order is large enough to be
 # worth sending. The threshold is business data set in the CRM portal, so the
@@ -23172,6 +23246,74 @@ def _shop_product(category_index):
     }
 
 
+def shop_catalog_item_id(product_id, size):
+    """Meta's retailer id for one pack size: stable, short and URL-safe."""
+    raw = f"{product_id}-{size}"
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "-", raw).strip("-").lower()
+    return slug[:100] or "item"
+
+
+def shop_catalog_items():
+    """Every sellable pack, with the retailer id Meta knows it by.
+
+    The feed and an incoming catalogue cart both read this one list, so the id
+    a customer's cart comes back with is the id the feed gave Meta. A pack that
+    slugifies to an id already taken gets its position appended rather than
+    colliding, which would make Meta reject the feed.
+    """
+    items = []
+    seen = set()
+    for index in range(len(shop_all_products())):
+        product = _shop_product(index)
+        if not product:
+            continue
+        for position, size in enumerate(product["sizes"]):
+            retailer_id = shop_catalog_item_id(product["id"], size)
+            if retailer_id in seen:
+                retailer_id = f"{retailer_id}-{position + 1}"[:100]
+            seen.add(retailer_id)
+            items.append({
+                "retailer_id": retailer_id,
+                "product": product,
+                "size": size,
+                "price": shop_price({"id": product["id"], "size": size}),
+            })
+    return items
+
+
+def shop_cart_from_catalog_order(message):
+    """The cart represented by a native WhatsApp catalogue order message.
+
+    Meta sends the catalog cart back as `product_items` with the retailer ids the
+    feed gave it. Those are mapped to real products here, so the customer carries
+    on through the same checkout as an order built in the chat. An item that no
+    longer exists is left out rather than guessed at.
+    """
+    order = (message or {}).get("order") or {}
+    catalog = shop_catalog_items()
+    by_id = {item["retailer_id"]: item for item in catalog}
+    cart = []
+    for entry in order.get("product_items") or []:
+        retailer_id = str((entry or {}).get("product_retailer_id") or "").strip()
+        try:
+            quantity = int((entry or {}).get("quantity") or 0)
+        except (TypeError, ValueError):
+            continue
+        item = by_id.get(retailer_id)
+        if not item or quantity <= 0:
+            continue
+        product = item["product"]
+        existing = next((line for line in cart
+                         if line["id"] == product["id"] and line["size"] == item["size"]),
+                        None)
+        if existing:
+            existing["qty"] += quantity
+        else:
+            cart.append({"id": product["id"], "name": product["name"],
+                         "size": item["size"], "qty": quantity})
+    return cart
+
+
 def _shop_short_name(name):
     """Product name as shown on a WhatsApp choice, without the brand prefix."""
     name = str(name or "").strip()
@@ -23260,10 +23402,15 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
     cart_label = "View Cart"
     if count:
         cart_label = f"View Cart ({count} item{'s' if count != 1 else ''})"
+    # Only offered when Meta has a catalogue connected, so the choice always
+    # opens something rather than leading to a refusal.
+    has_catalog = bool(whatsapp_catalog_id())
     options = [("shop", "Shop"), ("search", "Search Products"), ("cart", cart_label),
                ("orders", "Track my order"),
                ("support", "Contact us"), ("about", "About Us"),
                ("support_human", "Talk to a human")]
+    if has_catalog:
+        options.insert(0, ("catalogue", "View catalogue"))
     if staff:
         options.append(("switch_staff", "Switch to Staff"))
     options.append(("language", "Language"))
@@ -23286,8 +23433,10 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
     body = (
         f"{opening}\n"
         f"I am the {COMPANY_SYSTEM_CONTACT['name']} assistant.\n\n"
-        "🛍️ Browse the range and build an order\n"
-        "🔎 Search for a product by name\n"
+        + ("🛍️ Open our WhatsApp catalogue and build a cart\n" if has_catalog else "")
+        + ("🧾 Shop in the chat instead and build an order\n" if has_catalog
+           else "🛍️ Browse the range and build an order\n")
+        + "🔎 Search for a product by name\n"
         "🛒 Review your cart and buy\n"
         "📦 Track or cancel an order\n"
         "🙋 Ask for a person whenever you prefer\n\n"
@@ -23296,6 +23445,24 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
     # The full welcome is framed as a welcome; a return to the menu (handled
     # above) as a menu.
     return _shop_frame(_shop_options(body, options), "welcome")
+
+
+def _shop_catalog_entry():
+    """The native WhatsApp catalogue message customers open from the menu.
+
+    The catalog is the one connected to the business in Meta, so a product added
+    in the CRM appears after Meta next reads the feed. The text is also what the
+    transcript records, and the fallback is used if WhatsApp refuses the rich
+    message.
+    """
+    return {
+        "type": "catalog",
+        "catalog": True,
+        "text": ("🛍️ *Our catalogue*\n\nBrowse the full range, open a product for "
+                 "details, and add what you need to your WhatsApp cart."),
+        "fallback": ("The catalogue could not be opened just now. Reply *shop* to "
+                     "browse the range here."),
+    }
 
 
 def _shop_category_list():
@@ -23595,12 +23762,7 @@ def _static_public_url(image_path):
     path = str(image_path or "").strip().lstrip("/")
     if not path:
         return ""
-    base = (PUBLIC_BASE_URL or "").strip().rstrip("/")
-    if not base:
-        try:
-            base = request.host_url.rstrip("/")
-        except Exception:
-            base = ""
+    base = public_base_url()
     if not base:
         return ""
     return f"{base}/static/{path}"
@@ -24362,7 +24524,8 @@ SHOP_CHECKOUT_WORDS = ("buy", "buy now", "tenga", "thema")
 # protected now.
 SHOP_RESERVED_WORDS = frozenset({
     "shop", "search", "cart", "support", "about", "language", "checkout", "clear",
-    "paynow", "paylater", "confirm_order", "support_human", "paid_check",
+    "catalogue", "catalog", "paynow", "paylater", "confirm_order", "support_human",
+    "paid_check",
     "delivery", "collection", "none", "back", "previous", "menu", "home", "reset",
     "restart", "start", "b", "m", "yes", "y", "no", "n", "ok", "later", "cancel",
     "skip", "help", "en", "sn", "nd", "track", "nudge", "buy", "remind",
@@ -27840,6 +28003,15 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if low in ("shop", "shop now", "addmore", "shop more"):
         return result("category", [_shop_category_list()])
 
+    if low in ("catalogue", "catalog", "view catalogue", "view catalog"):
+        if whatsapp_catalog_id():
+            return result("menu", [_shop_catalog_entry()])
+        # Not connected yet: the range is still browsable in the chat, so the
+        # choice is answered rather than refused.
+        return result("category", [
+            _shop_text("The WhatsApp catalogue is not connected yet — here is our range:"),
+            _shop_category_list()])
+
     if low in ("search", "search products"):
         return result("search", [_shop_search_prompt()])
 
@@ -29884,6 +30056,18 @@ def _wa_text_payload(body):
     return {"type": "text", "text": {"body": body}}
 
 
+def _wa_catalog_payload(text):
+    """A native WhatsApp catalogue message opening the connected catalog."""
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "catalog_message",
+            "body": {"text": str(text or "")[:WA_BUTTON_BODY_LIMIT]},
+            "action": {"name": "catalog_message"},
+        },
+    }
+
+
 def _wa_button_payload(body, options):
     return {
         "type": "interactive",
@@ -29979,6 +30163,10 @@ def shop_whatsapp_payloads(messages, nav=None, language="en"):
     choice = None
     for message in messages or []:
         if not message:
+            continue
+        # A native catalogue message is sent as its own payload by
+        # shop_send_whatsapp; its text is only for the transcript.
+        if message.get("catalog"):
             continue
         # Only a themed message is framed: the short mid-flow prompts carry no
         # theme, so they stay plain rather than being bracketed on every turn.
@@ -30177,6 +30365,13 @@ def _wa_inbound_preview(message):
             return reply.get("title", ""), "list", reply.get("id", "")
         if kind == "nfm_reply":
             return "Form response", "flow", ""
+    if mtype == "order":
+        # A cart sent from the native WhatsApp catalogue. The items are handled
+        # by shop_webhook_turn; this is what the transcript shows.
+        order = message.get("order") or {}
+        count = len(order.get("product_items") or [])
+        return (f"Catalogue cart — {count} item{'s' if count != 1 else ''}",
+                "order", "")
     labels = {"image": "[image]", "video": "[video]", "audio": "[voice note]",
               "document": "[document]", "sticker": "[sticker]", "location": "[location]",
               "contacts": "[contact]"}
@@ -30264,6 +30459,33 @@ def shop_webhook_turn(sender_id, display_phone_number, message, staff=False, dis
     if display_name:
         state["display_name"] = " ".join(str(display_name).split()).strip()
 
+    # A cart sent from the native WhatsApp catalogue arrives as an `order`
+    # message. Its items are mapped back to the same catalogue the chat sells
+    # from, so the customer lands in the normal cart and checkout rather than
+    # having their order dropped into the inbox as unreadable text.
+    if (message or {}).get("type") == "order":
+        catalog_cart = shop_cart_from_catalog_order(message)
+        if catalog_cart:
+            state["cart"] = catalog_cart
+            new_state, messages, actions = shop_engine(
+                state, raw_input="", button_id="cart",
+                channel="whatsapp-staff" if staff else "whatsapp", wa_number=sender_id,
+                display_name=display_name)
+            shop_save_state(state_key, new_state)
+            note = _shop_text("🛒 I've loaded the items from your WhatsApp catalogue "
+                              "into your cart.")
+            shop_send_whatsapp(sender_id, [note] + messages, new_state.get("nav"),
+                               display_phone_number, staff=staff,
+                               language=new_state.get("language", "en"))
+            return actions
+        shop_send_whatsapp(
+            sender_id,
+            [_shop_text("😕 I couldn't match those catalogue items to our range. "
+                        "Please open the catalogue again, or reply *shop* to browse "
+                        "here.")],
+            {"back": False, "menu": True}, display_phone_number, staff=staff)
+        return []
+
     new_state, messages, actions = shop_engine(
         state, raw_input=text, button_id=reply_id,
         channel="whatsapp-staff" if staff else "whatsapp", wa_number=sender_id,
@@ -30311,6 +30533,24 @@ def shop_send_whatsapp(wa_number, messages, nav, channel=None, staff=False, lang
 
     kind = "text"
     ok = True
+    # The native catalogue travels as its own interactive message. A rejection is
+    # answered with plain text rather than being left silent.
+    for message in messages or []:
+        if not (message or {}).get("catalog"):
+            continue
+        catalog_payload = _wa_catalog_payload(message.get("text") or "")
+        sent, detail = crm_send_whatsapp_payload(wa_number, catalog_payload, channel)
+        if sent:
+            kind = "interactive"
+        else:
+            print(f"catalogue send failed: {detail}")
+            fallback = (message.get("fallback")
+                        or "Reply *shop* to browse the range here.")
+            sent, fallback_detail = crm_send_whatsapp(wa_number, fallback, channel)
+            if not sent:
+                print(f"catalogue text fallback failed: {fallback_detail}")
+        ok = ok and sent
+
     for payload in payloads:
         sent, detail = crm_send_whatsapp_payload(wa_number, payload, channel)
         if payload.get("type") == "interactive":
@@ -31069,6 +31309,10 @@ def portal_crm():
                            # The delivery rule is editable, so the panel shows
                            # the threshold the assistant is actually applying.
                            delivery_policy=shop_delivery_policy(),
+                           # The catalogue panel shows the connected Meta catalog
+                           # and the feed URL Meta should read.
+                           whatsapp_catalog_id=whatsapp_catalog_id(),
+                           catalog_feed_url=catalog_feed_url(),
                            # Rendered so the shop name field cannot drift from the
                            # limit the endpoint actually enforces.
                            shop_name_limit=SHOP_NAME_LIMIT,
@@ -32696,6 +32940,99 @@ def crm_activity_pdf():
     return response
 
 
+# ---------------------------------------------------------- public catalogue --
+CATALOG_FEED_FIELDS = (
+    "id", "title", "description", "availability", "condition", "price",
+    "link", "image_link", "brand", "item_group_id", "size",
+)
+
+
+def catalogue_public_items():
+    """The catalogue as the public page shows it, with every pack price."""
+    items = []
+    for index in range(len(shop_all_products())):
+        product = _shop_product(index)
+        if not product:
+            continue
+        sizes = [{"size": size,
+                  "price": shop_price({"id": product["id"], "size": size})}
+                 for size in product["sizes"]]
+        items.append({
+            "id": product["id"],
+            "name": product["name"],
+            "summary": product["summary"],
+            "image_url": product_image_public_url(product.get("image")),
+            "sizes": sizes,
+        })
+    return items
+
+
+def catalogue_feed_rows():
+    """One feed row per sellable pack, ready for Meta Commerce Manager.
+
+    The `id` is the same retailer id a native catalogue cart comes back with, so
+    an order placed from the WhatsApp catalogue can be turned back into exactly
+    the cart the assistant knows.
+    """
+    base = public_base_url()
+    fallback_image = company_logo_url()
+    rows = []
+    for item in shop_catalog_items():
+        if item["price"] is None:
+            continue
+        product = item["product"]
+        rows.append({
+            "id": item["retailer_id"],
+            "title": f"{product['name']} — {item['size']}",
+            "description": product.get("summary") or product["name"],
+            "availability": "in stock",
+            "condition": "new",
+            "price": f"{item['price']:.2f} {PAYNOW_CURRENCY}",
+            "link": f"{base}/catalogue#{product['id']}" if base else "",
+            "image_link": product_image_public_url(product.get("image")) or fallback_image,
+            "brand": COMPANY_SYSTEM_NAME,
+            "item_group_id": product["id"],
+            "size": item["size"],
+        })
+    return rows
+
+
+@app.route('/catalogue')
+def catalogue_public_page():
+    """The public catalogue Meta links each product to, and a shareable page."""
+    channel = company_system_channel_label()
+    whatsapp_link = ""
+    if channel:
+        text = urllib.parse.quote("Catalogue")
+        whatsapp_link = f"https://wa.me/{channel}?text={text}"
+    return render_template('catalogue_public.html',
+                           items=catalogue_public_items(),
+                           whatsapp_link=whatsapp_link,
+                           company_name=COMPANY_SYSTEM_NAME,
+                           company_contact=COMPANY_SYSTEM_CONTACT,
+                           logo_url=company_logo_url(),
+                           currency=PAYNOW_CURRENCY)
+
+
+@app.route('/catalogue/facebook-feed.csv')
+def catalogue_facebook_feed():
+    """The product feed Meta reads to keep the WhatsApp catalogue in step."""
+    expected = catalog_feed_token()
+    supplied = (request.args.get('token') or '').strip()
+    if not expected or not hmac.compare_digest(supplied.encode(), expected.encode()):
+        return jsonify({'success': False, 'message': 'Not found.'}), 404
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=list(CATALOG_FEED_FIELDS))
+    writer.writeheader()
+    writer.writerows(catalogue_feed_rows())
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+    response.headers['Content-Disposition'] = \
+        'inline; filename=brilliant_chemicals_catalogue.csv'
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
 # ------------------------------------------------- orders, documents, payment --
 def _pdf_download(html, filename):
     """Render HTML to a PDF download, or a JSON error the portal can show."""
@@ -32962,6 +33299,38 @@ def crm_delivery_policy_api():
                                 f"{shop_delivery_threshold_text(policy)} or more "
                                 "outside Harare."),
                     'policy': policy})
+
+
+@app.route('/api/crm/whatsapp-catalog', methods=['POST'])
+def crm_whatsapp_catalog_api():
+    """Connect or disconnect the Meta catalog behind the native catalogue button.
+
+    The products themselves are not pushed here: Meta reads the feed URL on a
+    schedule, so the CRM stays the one place a product is edited. The catalog ID
+    is what tells the assistant the connection exists.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    catalog_id = re.sub(r"\D", "", str(payload.get('catalog_id') or ''))
+    if len(catalog_id) > 40:
+        return jsonify({'success': False,
+                        'message': 'That catalog ID is too long.'}), 400
+    ok, message = shop_settings_save({WHATSAPP_CATALOG_ID_KEY: catalog_id})
+    if not ok:
+        return jsonify({'success': False, 'message': message}), 400
+    log_activity("changed_whatsapp_catalog", "catalogue",
+                 "Connected the WhatsApp catalogue" if catalog_id
+                 else "Disconnected the WhatsApp catalogue",
+                 target="whatsapp-catalog",
+                 details={"catalog_id": catalog_id}, user=user)
+    return jsonify({
+        'success': True,
+        'catalog_id': catalog_id,
+        'message': ("WhatsApp catalogue connected." if catalog_id
+                    else "WhatsApp catalogue disconnected."),
+    })
 
 
 @app.route('/api/crm/products/<product_id>/image', methods=['POST'])

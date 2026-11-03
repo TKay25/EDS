@@ -277,6 +277,73 @@
     });
   }
 
+  /* ------------------------------------------------ WhatsApp catalogue */
+  function initWhatsappCatalogue() {
+    var save = document.getElementById('crmCatalogSave');
+    if (!save) return;
+    var idEl = document.getElementById('crmCatalogId');
+    var feedEl = document.getElementById('crmCatalogFeedUrl');
+    var copy = document.getElementById('crmCatalogFeedCopy');
+    var noteEl = document.getElementById('crmCatalogNote');
+
+    function note(message, kind) {
+      if (!noteEl) return;
+      noteEl.textContent = message;
+      noteEl.classList.remove('is-ok', 'is-error');
+      if (kind) noteEl.classList.add(kind);
+      window.setTimeout(function () {
+        if (noteEl.textContent === message) noteEl.textContent = '';
+      }, 4000);
+    }
+
+    if (copy) {
+      copy.addEventListener('click', function () {
+        if (!feedEl || !feedEl.value) {
+          toast('The feed URL is not available. Set PUBLIC_BASE_URL first.', 'error');
+          return;
+        }
+        function copied() {
+          toast('Feed URL copied.', 'ok',
+                'Paste it into Commerce Manager → Data sources → Add feed.');
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(feedEl.value).then(copied, function () {
+            feedEl.select();
+            document.execCommand('copy');
+            copied();
+          });
+          return;
+        }
+        feedEl.select();
+        document.execCommand('copy');
+        copied();
+      });
+    }
+
+    save.addEventListener('click', function () {
+      setBusy(save, true, 'Saving…');
+      postJson('/api/crm/whatsapp-catalog',
+               { catalog_id: idEl ? idEl.value.trim() : '' })
+        .then(function (result) {
+          setBusy(save, false);
+          if (!result.success) {
+            note(result.message || 'Could not save the catalog ID.', 'is-error');
+            toast(result.message || 'Could not save the catalog ID.', 'error');
+            return;
+          }
+          if (idEl) idEl.value = result.catalog_id || '';
+          note('Saved', 'is-ok');
+          toast(result.message || 'WhatsApp catalogue saved.', 'ok');
+        })
+        .catch(function () {
+          setBusy(save, false);
+          note('Could not save the catalog ID.', 'is-error');
+          toast('Could not save the catalog ID. Check your connection and try again.',
+                'error');
+        });
+    });
+  }
+
   /* ------------------------------------------------------------- tabs */
   function initTabs() {
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-crm-tab]'));
@@ -2999,5 +3066,6 @@
   initCatalog();
   initBranding();
   initDeliveryPolicy();
+  initWhatsappCatalogue();
   initActivityLog();
 })();
