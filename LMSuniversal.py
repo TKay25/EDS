@@ -21334,6 +21334,111 @@ def shop_cart_total(cart):
         total += price * int(item.get("qty") or 0)
     return round(total, 2)
 
+
+# Delivery is the exception rather than the norm: an order is collected from a
+# shop unless the customer is outside Harare and the order is large enough to be
+# worth sending. The threshold is business data set in the CRM portal, so the
+# rule can move without a deploy. A threshold of zero means "ignore this gate".
+SHOP_DELIVERY_MIN_UNITS_KEY = "delivery_min_units"
+SHOP_DELIVERY_MIN_VALUE_KEY = "delivery_min_value"
+SHOP_DELIVERY_MIN_UNITS_DEFAULT = 20
+SHOP_DELIVERY_MIN_VALUE_DEFAULT = 0.0
+SHOP_DELIVERY_AREA_HARARE = "harare"
+SHOP_DELIVERY_AREA_OUTSIDE = "outside"
+
+
+def shop_setting_value(key, default=None):
+    """Read one business setting, falling back to its default on any error."""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("SELECT setting_value FROM shop_settings WHERE setting_key = %s",
+                           (key,))
+            row = cursor.fetchone()
+        if row and str(row[0]).strip():
+            return str(row[0]).strip()
+    except Exception as e:
+        print(f"shop setting read error ({key}): {e}")
+    return default
+
+
+def shop_settings_save(values):
+    """Store several business settings in one transaction. Returns (ok, message)."""
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            for key, value in (values or {}).items():
+                cursor.execute("""
+                    INSERT INTO shop_settings (setting_key, setting_value, updated_at)
+                    VALUES (%s, %s, NOW())
+                    ON CONFLICT (setting_key) DO UPDATE
+                    SET setting_value = EXCLUDED.setting_value, updated_at = NOW()
+                """, (key, str(value)))
+            connection.commit()
+        return True, ""
+    except Exception as e:
+        print(f"shop settings save error: {e}")
+        return False, "Could not save those settings just now."
+
+
+def shop_delivery_policy():
+    """The thresholds that make an order a bulk order for delivery."""
+    try:
+        units = int(float(shop_setting_value(SHOP_DELIVERY_MIN_UNITS_KEY,
+                                             SHOP_DELIVERY_MIN_UNITS_DEFAULT)))
+    except (TypeError, ValueError):
+        units = SHOP_DELIVERY_MIN_UNITS_DEFAULT
+    try:
+        value = float(shop_setting_value(SHOP_DELIVERY_MIN_VALUE_KEY,
+                                         SHOP_DELIVERY_MIN_VALUE_DEFAULT))
+    except (TypeError, ValueError):
+        value = SHOP_DELIVERY_MIN_VALUE_DEFAULT
+    return {"min_units": max(1, units), "min_value": max(0.0, value)}
+
+
+def shop_delivery_threshold_text(policy=None):
+    """The bulk threshold in words, for a message that has to state it."""
+    policy = policy or shop_delivery_policy()
+    parts = [f"{policy['min_units']} units"]
+    if policy["min_value"] > 0:
+        parts.append(f"{PAYNOW_CURRENCY} {policy['min_value']:.2f}")
+    return " and ".join(parts)
+
+
+def shop_delivery_eligible(units, value=None, area=None, policy=None):
+    """Whether an order qualifies for delivery. Returns (ok, reason).
+
+    Both halves of the rule matter: the customer has to be outside Harare, and
+    the order has to be big enough to be worth sending. An unpriced total cannot
+    satisfy a value threshold, because there is nothing honest to compare.
+    """
+    if str(area or "").strip().lower() != SHOP_DELIVERY_AREA_OUTSIDE:
+        return False, ("Delivery is only available for bulk orders outside Harare. "
+                       "Please collect this order from one of our shops.")
+    policy = policy or shop_delivery_policy()
+    if int(units or 0) < policy["min_units"]:
+        return False, (f"Delivery is only available for bulk orders outside Harare — "
+                       f"{shop_delivery_threshold_text(policy)} or more. "
+                       "Please collect this order from one of our shops.")
+    if policy["min_value"] > 0:
+        if value is None:
+            return False, ("This order has no priced total yet, so delivery cannot be "
+                           "confirmed. Please collect it from a shop, or ask for a quote.")
+        if float(value) < policy["min_value"]:
+            return False, (f"Delivery is only available for bulk orders outside Harare — "
+                           f"{shop_delivery_threshold_text(policy)} or more. "
+                           "Please collect this order from one of our shops.")
+    return True, ""
+
+
+def shop_order_delivery_eligible(order):
+    """The delivery rule applied to a stored order. Returns (ok, reason)."""
+    order = order or {}
+    units = sum(int(line.get("quantity") or 0) for line in order.get("lines") or [])
+    value = order.get("subtotal") if order.get("priced") else None
+    return shop_delivery_eligible(units, value, order.get("area"))
+
+
 COMPANY_SYSTEM_CONTACT = {
     "name": "Brilliant Chemicals",
     "email": "sales@brilliantchemicals.co.zw",
@@ -21637,6 +21742,22 @@ def ensure_shop_tables():
                 updated_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        # Business rules the staff can change in the portal, such as the size an
+        # order must reach before delivery is offered. Kept as key/value rows so
+        # adding a rule needs no schema change and an unset rule falls back to
+        # its default rather than disappearing.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shop_settings (
+                setting_key VARCHAR(80) PRIMARY KEY,
+                setting_value TEXT,
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        # Where the customer said they are ordering from. Delivery is only
+        # offered outside Harare, so the answer has to outlive the conversation
+        # that collected it: a customer may later change how an existing order is
+        # received, and that change is judged by the same rule.
+        cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS customer_area VARCHAR(24);")
         # The company's own branding, stored as one row rather than a settings
         # table: there is exactly one set of these and a single row makes that
         # explicit.
@@ -21719,7 +21840,13 @@ def ensure_shop_tables():
         """)
         cursor.execute("""
             ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS delivery_method VARCHAR(24)
-            DEFAULT 'delivery';
+            DEFAULT 'collection';
+        """)
+        # The column was first added with delivery as the default. Collection is
+        # now the default path, so an insert that forgets to name a method must
+        # not quietly create a delivery order.
+        cursor.execute("""
+            ALTER TABLE shop_orders ALTER COLUMN delivery_method SET DEFAULT 'collection';
         """)
         cursor.execute("""
             ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS fulfilled_at TIMESTAMP;
@@ -24173,15 +24300,17 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
                 INSERT INTO shop_orders (reference, customer_name, company, phone, email,
                                         delivery_address, channel, wa_number, chat_id, notes,
                                         item_count, payment_method, payment_status, payment_amount,
-                                        delivery_method, shop_id, created_by, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                        delivery_method, shop_id, customer_area, created_by,
+                                        created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                         'customer', NOW())
                 RETURNING id
             """, (reference, typed_name or None, customer.get("company"), customer.get("phone"),
                   customer.get("email"), address if method == "delivery" else None, channel,
                   wa_number, chat_id, customer.get("notes"),
                   sum(item["qty"] for item in cart), payment_method, payment_status, amount,
-                  method, shop["id"] if shop else None))
+                  method, shop["id"] if shop else None,
+                  (customer.get("area") or "").strip() or None))
             order_id = cursor.fetchone()[0]
             for item in cart:
                 # The price is captured now, at the moment of sale, so the
@@ -26301,8 +26430,10 @@ def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
         return [_shop_language_options()]
     if step == "order_name":
         return [_shop_text(_shop_prompt_for_missing_details(customer))]
+    if step == "order_area":
+        return [_shop_area_prompt()]
     if step == "order_fulfilment":
-        return [_shop_fulfilment_prompt()]
+        return [_shop_fulfilment_prompt(customer, cart)]
     if step == "order_address":
         return [_shop_order_address_prompt(customer)]
     if step == "order_shop":
@@ -26551,8 +26682,12 @@ def shop_order_stage_notice(reference, order, stage):
                          "or settle it in person.")
         else:
             lines.append("This order is fully paid — nothing more is owed.")
-        lines.append("Tap *Deliver to me* below if you would rather have it sent to an "
-                     "address instead.")
+        # The switch to delivery is only offered to an order that qualifies for
+        # it, so the message never promises a choice the assistant would refuse.
+        delivery_ok, _delivery_reason = shop_order_delivery_eligible(order)
+        if delivery_ok:
+            lines.append("Tap *Deliver to me* below if you would rather have it sent to an "
+                         "address instead.")
     elif stage == "enroute":
         amount_text = _order_amount_text(order)
         if not address:
@@ -26753,15 +26888,30 @@ def _shop_delivery_note(customer):
     return SHOP_DELIVERY_NOTE if _shop_paying_on_delivery(customer) else ""
 
 
-def _shop_fulfilment_prompt():
-    """The delivery-or-collection question, built in one place.
+def _shop_area_prompt():
+    """Ask where the order is going, which decides whether delivery is open."""
+    return _shop_options(
+        "📍 *Where are you ordering from?*\n\n"
+        "Orders are collected from one of our shops. Delivery is only offered for "
+        "bulk orders going outside Harare.",
+        [("area_harare", "Harare"), ("area_outside", "Outside Harare")])
 
-    The same two choices are offered by the engine, by the rewind renderer and
-    after an invalid answer, so the wording can never drift between them.
+
+def _shop_fulfilment_prompt(customer=None, cart=None):
+    """The fulfilment question, offering delivery only when the order qualifies.
+
+    The same choices are offered by the engine, by the rewind renderer and after
+    an invalid answer, so the wording and the rule can never drift between them.
+    A customer who has not said they are outside Harare is never shown delivery.
     """
-    return _shop_options("How would you like to receive this order?",
-                         [("delivery", "Deliver to my address"),
-                          ("collection", "Collect from the shop")])
+    eligible, _reason = shop_delivery_eligible(
+        sum(int(item.get("qty") or 0) for item in (cart or [])),
+        shop_cart_total(cart or []),
+        (customer or {}).get("area"))
+    options = [("collection", "Collect from the shop")]
+    if eligible:
+        options.insert(0, ("delivery", "Deliver to my address"))
+    return _shop_options("How would you like to receive this order?", options)
 
 
 def _shop_name_phone_prompt():
@@ -27337,7 +27487,7 @@ def _shop_cancel_result(ok, reason, detail, order=None):
 _SHOP_FEEDBACK_STEPS = frozenset({
     "category", "product", "size", "about", "support", "orders",
     "track", "track_view", "order_cancel_confirm", "agent_order_confirm",
-    "agent_orders", "order_fulfilment", "order_shop", "order_shop_short",
+    "agent_orders", "order_area", "order_fulfilment", "order_shop", "order_shop_short",
     "order_confirm", "payment", "language",
 })
 
@@ -27346,6 +27496,7 @@ _SHOP_FEEDBACK_STEPS = frozenset({
 # works as well as tapping it. Kept beside the steps rather than inside the guard
 # so a step's vocabulary is stated once, where the step is listed.
 _SHOP_STEP_ACCEPTS = {
+    "order_area": ("harare", "outside", "outside harare"),
     "order_fulfilment": ("delivery", "deliver", "collection", "collect", "pickup", "pick up"),
     "order_confirm": ("confirm", "confirm order", "yes"),
     "order_cancel_confirm": ("cancel", "cancel it", "cancel order", "keep", "keep it"),
@@ -27747,6 +27898,20 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         # customer would tap it and be told the order is already set to delivery.
         from_tracking = bool(ctx.get("track_reference")) and already_delivery
         change_only = already_delivery and (from_tracking or not existing_address)
+        if fulfilment_method == "delivery" and not already_delivery:
+            # The delivery rule is checked before the address is asked for, so a
+            # customer who does not qualify is not made to type an address only
+            # to be told delivery was never available.
+            detail = order_detail(order["reference"]) or {}
+            eligible, delivery_reason = shop_order_delivery_eligible(detail)
+            if not eligible:
+                return result("orders", [
+                    _shop_text(f"📦 {delivery_reason}"),
+                    _shop_options("What would you like to do?",
+                                  [("orders", "Track my orders"),
+                                   ("support_human", "Talk to a human")]),
+                    _shop_orders_menu(wa_number),
+                ])
         if fulfilment_method == "delivery" and (change_only or not existing_address):
             # Supplying or correcting the address of an order already set for
             # delivery is not a change of fulfilment, so it must not be blocked by
@@ -27770,6 +27935,16 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             order["reference"], wa_number, fulfilment_method,
             address=existing_address or None)
         if not ok:
+            if reason == "not_eligible":
+                return result("orders", [
+                    _shop_text("📦 " + (fresh.get("delivery_reason") or
+                                        "Delivery is only available for bulk orders "
+                                        "outside Harare.")),
+                    _shop_options("What would you like to do?",
+                                  [("orders", "Track my orders"),
+                                   ("support_human", "Talk to a human")]),
+                    _shop_orders_menu(wa_number),
+                ])
             if reason == "staged":
                 stage_word = ("being delivered" if
                               (fresh.get("delivery_method") == "delivery")
@@ -28194,12 +28369,52 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             # their name but no number is not asked for the name again.
             return result("order_name", [_shop_text(
                 _shop_prompt_for_missing_details(customer))])
-        # How the order reaches the customer changes what we still need to ask,
-        # so ask it before the address rather than after.
-        return result("order_fulfilment", [_shop_fulfilment_prompt()])
+        # Where the order is going decides whether delivery is even offered, so
+        # it is asked before the fulfilment question rather than after it.
+        return result("order_area", [_shop_area_prompt()])
+
+    if step == "order_area":
+        if "outside" in low:
+            customer["area"] = SHOP_DELIVERY_AREA_OUTSIDE
+        elif low in ("area_harare", "harare", "1") or "harare" in low:
+            customer["area"] = SHOP_DELIVERY_AREA_HARARE
+        else:
+            return result("order_area", [_shop_area_prompt()])
+        eligible, reason = shop_delivery_eligible(
+            sum(int(item.get("qty") or 0) for item in cart),
+            shop_cart_total(cart), customer["area"])
+        if eligible:
+            return result("order_fulfilment", [_shop_fulfilment_prompt(customer, cart)],
+                          new_customer=customer)
+        # Collection is the only path, so the customer is told why delivery is
+        # not on offer and taken straight on rather than shown a dead choice.
+        customer["delivery_method"] = "collection"
+        customer["delivery_address"] = ""
+        notice = _shop_text(reason)
+        if not shop_shops():
+            return result("order_confirm",
+                          [notice] + _shop_order_confirmation(cart, customer),
+                          new_customer=customer)
+        prompt = _shop_shop_prompt(customer, cart)
+        if prompt is None:
+            return result("order_shop",
+                          [notice] + _shop_stock_choices(cart, customer),
+                          new_customer=customer)
+        return result("order_shop", [notice, prompt], new_customer=customer)
 
     if step == "order_fulfilment":
         if low in ("delivery", "deliver", "1") or "deliver" in low:
+            eligible, reason = shop_delivery_eligible(
+                sum(int(item.get("qty") or 0) for item in cart),
+                shop_cart_total(cart), customer.get("area"))
+            if not eligible:
+                # A stale screen, or a typed word, can reach here after the order
+                # stopped qualifying. Collection is the only honest answer.
+                customer["delivery_method"] = "collection"
+                customer["delivery_address"] = ""
+                return result("order_fulfilment",
+                              [_shop_text(reason), _shop_fulfilment_prompt(customer, cart)],
+                              new_customer=customer)
             customer["delivery_method"] = "delivery"
             if not shop_shops():
                 # No shops are configured, so the question would have no answers.
@@ -28221,9 +28436,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                 return result("order_shop", [_shop_stock_choices(cart, customer)],
                               new_customer=customer)
             return result("order_shop", [prompt], new_customer=customer)
-        return result("order_fulfilment", [_shop_options(
-            "Please choose how you would like to receive this order.",
-            [("delivery", "Deliver to my address"), ("collection", "Collect from the shop")])])
+        return result("order_fulfilment", [_shop_fulfilment_prompt(customer, cart)])
 
     if step == "order_shop":
         shops = shop_shops()
@@ -28352,6 +28565,15 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                     return result("orders", [
                         _shop_text(f"😕 I could not find order *{change_reference}* on this "
                                    "number."),
+                        _shop_options("What would you like to do?",
+                                      [("orders", "Track my orders"),
+                                       ("support_human", "Talk to a human")]),
+                    ])
+                if reason == "not_eligible":
+                    return result("orders", [
+                        _shop_text("📦 " + (fresh.get("delivery_reason") or
+                                            "Delivery is only available for bulk orders "
+                                            "outside Harare.")),
                         _shop_options("What would you like to do?",
                                       [("orders", "Track my orders"),
                                        ("support_human", "Talk to a human")]),
@@ -28493,6 +28715,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         if ok and paynow_status == "paid":
             shop_payment_update(reference, "paid", paid=True, method="ecocash")
             shop_stock_deduct(reference)
+            _shop_auto_send_receipt(reference, "chat payment")
             cart = []
             ordered = True
             return result("menu", [
@@ -28846,10 +29069,7 @@ def order_payment_status(reference, refresh=True):
                 status, paid = "paid", True
                 # The customer paid from their own handset, so the receipt goes
                 # straight to them rather than waiting for someone to send it.
-                try:
-                    shop_send_receipt(reference)
-                except Exception as e:
-                    print(f"receipt send skipped: {e}")
+                _shop_auto_send_receipt(reference, "payment poll")
             elif gateway_status and gateway_status != status:
                 # Cancelled, failed or timed out all mean the same thing to the
                 # portal: it is no longer waiting on the customer.
@@ -28972,8 +29192,14 @@ def order_record_payment(reference, method, user=None):
                  f"{SHOP_PAYMENT_METHOD_LABELS.get(key, key)}",
                  target=reference,
                  details={"method": key, "amount": amount}, user=user)
+    sent, detail = _shop_auto_send_receipt(reference, "staff-recorded payment")
+    if sent:
+        message = ("The receipt is available in the customer's WhatsApp conversation.")
+    else:
+        message = (f"The receipt was not sent automatically: {detail} "
+                   "It can still be printed or sent manually.")
     return True, (f"Marked received — paid {SHOP_PAYMENT_METHOD_LABELS.get(key, key)}. "
-                  "The receipt can now be printed or sent to the customer.")
+                  f"{message}")
 
 
 def _shop_order_owner_key(number):
@@ -29013,7 +29239,7 @@ def shop_customer_orders(wa_number, limit=5):
                          WHERE items.order_id = orders.id
                            AND items.unit_price IS NULL),
                        orders.payment_method,
-                       COALESCE(orders.delivery_method, 'delivery'), orders.shop_id,
+                       COALESCE(orders.delivery_method, 'collection'), orders.shop_id,
                        orders.delivery_address, orders.stage,
                        orders.stage_at, orders.stage_by
                 FROM shop_orders orders
@@ -29062,7 +29288,7 @@ def shop_customer_orders(wa_number, limit=5):
             "awaiting_pin": bool(row[9]) and not paid,
             "cancellable": not (cancelled or paid or fulfilled),
             "blocked_reason": reason,
-            "delivery": (row[13] or "delivery") == "delivery",
+            "delivery": (row[13] or "collection") == "delivery",
             "shop": (shop_by_id(row[14]) or {}).get("name", "") if row[14] else "",
             # Named for tracking, because "collection" with no shop reads as if
             # nobody has said where the goods are.
@@ -29076,7 +29302,7 @@ def shop_customer_orders(wa_number, limit=5):
         orders[-1]["address_changeable"] = (
             not (cancelled or fulfilled)
             and (row[16] or "").strip().lower() not in ("enroute", "delivered", "collected")
-            and (row[13] or "delivery") == "delivery")
+            and (row[13] or "collection") == "delivery")
     return orders
 
 
@@ -29243,9 +29469,11 @@ def shop_order_fulfilment_set(reference, wa_number, method, address=None, user=N
     reads exactly like one that does not exist and cannot be probed. Once the
     order has moved past being prepared - set aside for collection, or loaded for
     delivery - the choice is refused, because the goods are already on one path
-    and telling the customer otherwise would be a lie. Before that the switch is
-    free, which is the whole point of offering it on the ready-for-collection
-    notice: a customer who cannot get to the shop needs to say so.
+    and telling the customer otherwise would be a lie. Before that, switching to
+    collection is always free; switching to delivery is allowed only when the
+    order qualifies as a bulk order outside Harare, which is the same rule the
+    order was placed under. A customer who cannot get to the shop is still helped
+    by the sales team.
     """
     method = (method or "").strip().lower()
     if method not in ("delivery", "collection"):
@@ -29270,6 +29498,14 @@ def shop_order_fulfilment_set(reference, wa_number, method, address=None, user=N
     # is precisely the case that must be refused.
     if current_stage and current_stage not in ("preparing", "none"):
         return False, "staged", order
+    if method == "delivery":
+        # Switching to delivery is judged by the same rule the order was placed
+        # under: outside Harare, and big enough to be a bulk order. Without this
+        # a customer could add delivery back to an order that never qualified.
+        detail = order_detail(reference) or {}
+        eligible, delivery_reason = shop_order_delivery_eligible(detail)
+        if not eligible:
+            return False, "not_eligible", dict(order, delivery_reason=delivery_reason)
     address = " ".join(str(address or "").split()).strip()
     if method == "delivery" and not address:
         address = str(order.get("address") or "").strip()
@@ -29371,7 +29607,15 @@ def shop_order_stage_set(reference, stage, user=None, notify=True,
                 # state, and a customer who has not opted in on WhatsApp simply
                 # finds out at the next turn they take.
                 print(f"stage notice not delivered for {reference}")
-    return True, SHOP_STAGE_STAFF_LABELS.get(stage, "Stage cleared")
+    message = SHOP_STAGE_STAFF_LABELS.get(stage, "Stage cleared")
+    if stage == "collected" and \
+            (order.get("payment_status") or "").strip().lower() == "paid":
+        sent, detail = _shop_auto_send_receipt(reference, "collected order")
+        if sent:
+            message += ". The receipt is available in the customer's WhatsApp conversation."
+        else:
+            message += f". The receipt was not sent automatically: {detail}"
+    return True, message
 
 
 def shop_order_track_text(order):
@@ -30684,6 +30928,9 @@ def portal_crm():
                            # instead of a broken image.
                            logo_url=company_logo_url(),
                            logo_max_mb=LOGO_MAX_BYTES // (1024 * 1024),
+                           # The delivery rule is editable, so the panel shows
+                           # the threshold the assistant is actually applying.
+                           delivery_policy=shop_delivery_policy(),
                            # Rendered so the shop name field cannot drift from the
                            # limit the endpoint actually enforces.
                            shop_name_limit=SHOP_NAME_LIMIT,
@@ -30867,7 +31114,7 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
         SELECT orders.reference, orders.customer_name, orders.company, orders.phone,
                orders.delivery_address, orders.item_count, orders.payment_method,
                COALESCE(orders.payment_status, 'unpaid'), orders.payment_amount,
-               COALESCE(orders.delivery_method, 'delivery'), orders.status, orders.created_at,
+               COALESCE(orders.delivery_method, 'collection'), orders.status, orders.created_at,
                orders.wa_number, COALESCE(chats.wa_profile_name, chats.display_name),
                orders.fulfilled_at, orders.cancelled_at,
                COALESCE(orders.stage, ''), orders.stage_at, orders.stage_by,
@@ -30902,7 +31149,7 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
             "payment_label": _shop_order_payment_badge(
                 (row[7] or "").lower() == "paid", row[6], row[9], row[7]),
             "amount": float(row[8]) if row[8] is not None else None,
-            "delivery_method": row[9] or "delivery",
+            "delivery_method": row[9] or "collection",
             "status": row[10] or "new",
             "created_at": fmt_time(row[11], "%d %b %Y %H:%M"),
             "wa_number": row[12] or "",
@@ -30949,7 +31196,7 @@ def order_detail(reference):
                        COALESCE(orders.payment_method, ''),
                        COALESCE(orders.payment_status, 'unpaid'),
                        orders.payment_amount, orders.paid_at,
-                       COALESCE(orders.delivery_method, 'delivery'),
+                       COALESCE(orders.delivery_method, 'collection'),
                        orders.fulfilled_at, orders.created_at,
                        COALESCE(chats.wa_profile_name, chats.display_name),
                        orders.shop_id, orders.stock_deducted_at,
@@ -30957,7 +31204,7 @@ def order_detail(reference):
                        COALESCE(orders.created_by, 'customer'), orders.draft,
                        orders.created_by_name, orders.agent_note,
                        orders.confirmed_at, orders.declined_at, orders.cancelled_at,
-                       orders.payment_poll_url
+                       orders.payment_poll_url, orders.customer_area
                 FROM shop_orders orders
                 LEFT JOIN whatsapp_chats chats ON chats.wa_number = orders.wa_number
                 WHERE orders.reference = %s
@@ -31056,6 +31303,9 @@ def order_detail(reference):
         "subtotal": subtotal,
         "total": charged if charged is not None else subtotal,
         "priced": priced and bool(lines),
+        # Where the customer said the order was going. Delivery is judged
+        # against this after the conversation that collected it has ended.
+        "area": row[33] or "",
         "currency": PAYNOW_CURRENCY,
     }
 
@@ -31086,8 +31336,8 @@ def order_fulfilment_filter(key, alias="shop_orders"):
                  f"COALESCE({alias}.status, 'new') = 'cancelled')")
     filters = {
         "all": active,
-        "delivery": f"COALESCE({alias}.delivery_method, 'delivery') = 'delivery' AND {active}",
-        "collection": f"{alias}.delivery_method = 'collection' AND {active}",
+        "delivery": f"{alias}.delivery_method = 'delivery' AND {active}",
+        "collection": f"COALESCE({alias}.delivery_method, 'collection') = 'collection' AND {active}",
         "pending": (f"{alias}.fulfilled_at IS NULL AND {alias}.status <> 'closed' "
                     f"AND {active}"),
         "fulfilled": f"{alias}.fulfilled_at IS NOT NULL OR {alias}.status = 'closed'",
@@ -31219,7 +31469,7 @@ def orders_analytics(period="today", payment="all", fulfilment="all"):
             f"WHERE {clause} AND payment_status = 'paid'"),
         "delivery": _safe_scalar(
             f"SELECT COUNT(*) FROM shop_orders WHERE {clause} "
-            f"AND COALESCE(delivery_method, 'delivery') = 'delivery'"),
+            f"AND COALESCE(delivery_method, 'collection') = 'collection'"),
         "collection": _safe_scalar(
             f"SELECT COUNT(*) FROM shop_orders WHERE {clause} AND delivery_method = 'collection'"),
     }
@@ -32521,6 +32771,61 @@ def crm_company_logo_save_api():
     return jsonify({'success': True, 'logo_url': company_logo_url(), 'logo_path': stored})
 
 
+@app.route('/api/crm/delivery-policy', methods=['GET', 'POST'])
+def crm_delivery_policy_api():
+    """Read or change the rule that decides when delivery is offered.
+
+    Orders are collected from a shop by default. Delivery is the exception for a
+    bulk order going outside Harare, and "bulk" is a business decision, so its
+    threshold lives here rather than in code.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    if request.method == 'GET':
+        return jsonify({'success': True, 'policy': shop_delivery_policy()})
+    payload = request.get_json(silent=True) or {}
+    try:
+        units = int(float(payload.get('min_units')))
+    except (TypeError, ValueError):
+        return jsonify({'success': False,
+                        'message': 'Give the number of units that makes an order a bulk order.',
+                        'policy': shop_delivery_policy()}), 400
+    if units < 1 or units > 9999:
+        return jsonify({'success': False,
+                        'message': 'The delivery threshold must be between 1 and 9999 units.',
+                        'policy': shop_delivery_policy()}), 400
+    try:
+        value = float(payload.get('min_value') or 0)
+    except (TypeError, ValueError):
+        return jsonify({'success': False,
+                        'message': 'Give the minimum order value as a number, or 0 to ignore it.',
+                        'policy': shop_delivery_policy()}), 400
+    if value < 0:
+        return jsonify({'success': False,
+                        'message': 'The minimum order value cannot be negative.',
+                        'policy': shop_delivery_policy()}), 400
+    ok, message = shop_settings_save({
+        SHOP_DELIVERY_MIN_UNITS_KEY: units,
+        SHOP_DELIVERY_MIN_VALUE_KEY: f"{value:.2f}",
+    })
+    if not ok:
+        return jsonify({'success': False, 'message': message,
+                        'policy': shop_delivery_policy()}), 400
+    policy = shop_delivery_policy()
+    log_activity("changed_delivery_policy", "order",
+                 f"Set delivery to orders of {shop_delivery_threshold_text(policy)} "
+                 "or more outside Harare",
+                 target="delivery-policy",
+                 details={"min_units": policy["min_units"],
+                          "min_value": policy["min_value"]}, user=user)
+    return jsonify({'success': True,
+                    'message': ("Delivery is now offered for bulk orders of "
+                                f"{shop_delivery_threshold_text(policy)} or more "
+                                "outside Harare."),
+                    'policy': policy})
+
+
 @app.route('/api/crm/products/<product_id>/image', methods=['POST'])
 def crm_product_image_save_api(product_id):
     """Upload a product picture.
@@ -33050,10 +33355,7 @@ def shop_paynow_callback(reference, data):
         shop_send_payment_confirmation(reference)
         # The receipt follows the confirmation so the customer has the itemised
         # record of what they paid for without having to ask for it.
-        try:
-            shop_send_receipt(reference)
-        except Exception as e:
-            print(f"receipt send skipped: {e}")
+        _shop_auto_send_receipt(reference, "payment callback")
     else:
         shop_payment_update(reference, status or 'pending')
     return True
@@ -33249,10 +33551,20 @@ def shop_send_stage_notice(reference, stage, order, message):
         return False
     key, values = _stage_template_for(stage, order or {})
     values.setdefault("reference", reference)
+    buttons = None
+    if stage == "ready":
+        # A "ready for collection" notice offers the switch to delivery, but only
+        # an order that qualifies may carry that button. Removing it here keeps
+        # the ordinary message honest; the template fallback keeps its approved
+        # content, and the assistant refuses a switch that does not qualify.
+        delivery_ok, _delivery_reason = shop_order_delivery_eligible(order or {})
+        if not delivery_ok:
+            buttons = [button for button in shop_template_buttons(key)
+                       if not str(button[0]).startswith("deliver:")]
     # The buttons go on the ordinary message as well, so the customer sees the
     # same choices whether or not the window has closed.
     sent, _detail, used_template = shop_send_notice(
-        row[0], message, key, values, row[1])
+        row[0], message, key, values, row[1], buttons=buttons)
     crm_record_message(row[0], "outbound", "system", message,
                        "template" if used_template else "text",
                        company_reg=COMPANY_SYSTEM_PREFIX, channel=row[1],
@@ -33424,6 +33736,18 @@ def shop_send_receipt(reference, wa_number=None, channel=None, force=False):
         _shop_payment_event(reference, "receipt_sent", "ok", filename)
     else:
         _shop_payment_event(reference, "receipt_sent", "error", detail)
+    return sent, detail
+
+
+def _shop_auto_send_receipt(reference, trigger):
+    """Attempt an automatic receipt send and report failures without undoing the event."""
+    try:
+        sent, detail = shop_send_receipt(reference)
+    except Exception as e:
+        print(f"receipt send skipped after {trigger} for {reference}: {e}")
+        return False, str(e)
+    if not sent:
+        print(f"receipt send skipped after {trigger} for {reference}: {detail}")
     return sent, detail
 
 

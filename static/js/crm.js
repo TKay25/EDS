@@ -219,6 +219,64 @@
     }
   }
 
+  /* --------------------------------------------------- delivery policy */
+  function initDeliveryPolicy() {
+    var save = document.getElementById('crmDeliverySave');
+    if (!save) return;
+    var unitsEl = document.getElementById('crmDeliveryMinUnits');
+    var valueEl = document.getElementById('crmDeliveryMinValue');
+    var noteEl = document.getElementById('crmDeliveryNote');
+
+    function note(message, kind) {
+      if (!noteEl) return;
+      noteEl.textContent = message;
+      noteEl.classList.remove('is-ok', 'is-error');
+      if (kind) noteEl.classList.add(kind);
+      window.setTimeout(function () {
+        if (noteEl.textContent === message) noteEl.textContent = '';
+      }, 4000);
+    }
+
+    save.addEventListener('click', function () {
+      var units = parseInt(unitsEl ? unitsEl.value : '', 10);
+      var value = parseFloat(valueEl ? valueEl.value : '0');
+      if (!isFinite(units) || units < 1 || units > 9999) {
+        note('Enter between 1 and 9999 units.', 'is-error');
+        toast('That delivery threshold is not valid.', 'error',
+              'The minimum must be a whole number of units from 1 to 9999.');
+        return;
+      }
+      if (!isFinite(value) || value < 0) {
+        note('Enter 0 or a positive amount.', 'is-error');
+        toast('That minimum value is not valid.', 'error',
+              'Use 0 to ignore the order value, or a positive amount.');
+        return;
+      }
+      setBusy(save, true, 'Saving…');
+      postJson('/api/crm/delivery-policy', { min_units: units, min_value: value })
+        .then(function (result) {
+          setBusy(save, false);
+          if (!result.success) {
+            note(result.message || 'Could not save the delivery policy.', 'is-error');
+            toast(result.message || 'Could not save the delivery policy.', 'error');
+            return;
+          }
+          if (result.policy) {
+            if (unitsEl) unitsEl.value = result.policy.min_units;
+            if (valueEl) valueEl.value = Number(result.policy.min_value).toFixed(2);
+          }
+          note('Saved', 'is-ok');
+          toast(result.message || 'Delivery policy saved.', 'ok');
+        })
+        .catch(function () {
+          setBusy(save, false);
+          note('Could not save the delivery policy.', 'is-error');
+          toast('Could not save the delivery policy. Check your connection and try again.',
+                'error');
+        });
+    });
+  }
+
   /* ------------------------------------------------------------- tabs */
   function initTabs() {
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-crm-tab]'));
@@ -2940,5 +2998,6 @@
   initInboxLoadState();
   initCatalog();
   initBranding();
+  initDeliveryPolicy();
   initActivityLog();
 })();

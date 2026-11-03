@@ -307,6 +307,11 @@
                                        placeholder="Optional — shown on the confirmation">
                             </div>
                             <p class="crm-order-settle-hint">
+                                Delivery is the exception: the assistant offers it only for bulk
+                                orders outside Harare. Choosing it here is a manager-approved
+                                override, so give the address as well.
+                            </p>
+                            <p class="crm-order-settle-hint">
                                 The customer is sent this order to confirm or decline. It stays a
                                 draft until they answer, so it cannot be picked or paid for yet.
                             </p>
@@ -536,7 +541,8 @@
                     </div>
                     <p class="crm-order-settle-hint">
                         Use this when the money is handed over, so the order stops reading as
-                        outstanding. The receipt can be printed or sent once it is received.
+                        outstanding. A paid receipt is sent automatically to the customer's
+                        WhatsApp; it can also be printed from this order.
                     </p>
                 </div>
                 </div>
@@ -904,6 +910,49 @@
                         </button>
                         <span class="crm-save-note" id="crmBrandingNote"></span>
                     </div>
+                </div>
+            </div>
+
+            {# Orders are collected from a shop unless this rule says the order is
+               a bulk one going outside Harare. The threshold is business data, so
+               it is set here rather than in code. #}
+            <div class="crm-branding" id="crmDeliveryPolicy">
+                <div class="crm-branding-preview crm-delivery-preview">
+                    <span class="crm-branding-empty">
+                        <i class="bi bi-truck"></i>
+                    </span>
+                </div>
+                <div class="crm-branding-body">
+                    <h4><i class="bi bi-geo-alt"></i> Delivery policy</h4>
+                    <p class="ps-muted">
+                        Every customer is asked whether they are in Harare or outside it.
+                        Orders are collected from a shop unless the customer is outside Harare
+                        and the order reaches the bulk threshold below.
+                    </p>
+                    <div class="crm-add-grid">
+                        <label class="crm-field">
+                            <span>Minimum units for delivery</span>
+                            <input class="ps-input" type="number" min="1" max="9999" step="1"
+                                   id="crmDeliveryMinUnits"
+                                   value="{{ delivery_policy.min_units }}">
+                        </label>
+                        <label class="crm-field">
+                            <span>Minimum order value ({{ PAYNOW_CURRENCY if PAYNOW_CURRENCY is defined else 'USD' }}), 0 to ignore</span>
+                            <input class="ps-input" type="number" min="0" step="0.01"
+                                   id="crmDeliveryMinValue"
+                                   value="{{ '%.2f' | format(delivery_policy.min_value) }}">
+                        </label>
+                    </div>
+                    <div class="crm-branding-tools">
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmDeliverySave">
+                            <i class="bi bi-check2"></i> Save delivery policy
+                        </button>
+                        <span class="crm-save-note" id="crmDeliveryNote"></span>
+                    </div>
+                    <p class="ps-muted">
+                        Staff can still set delivery on an individual order from the CRM portal
+                        when a manager approves an exception.
+                    </p>
                 </div>
             </div>
 
