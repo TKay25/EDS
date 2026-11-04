@@ -20899,13 +20899,24 @@ def wa_waba_id(channel=None):
     """The WhatsApp Business Account id, or '' when it is not known yet.
 
     Read from the environment first, then from the channel webhooks taught us.
+    The environment may name the token and phone id without naming the account,
+    so the remembered channels are still consulted rather than stopping there.
     Empty simply means "cannot check or connect a catalog", never an error.
     """
     configured = (os.getenv("WHATSAPP_WABA_ID") or "").strip()
     if configured:
         return configured
-    creds = wa_outbound_credentials(channel) or {}
-    return str(creds.get("waba_id") or "").strip()
+    creds = _wa_channels.get(str(channel)) if channel else None
+    if creds is None:
+        wa_load_channels()
+        creds = _wa_channels.get(str(channel)) if channel else None
+    if creds and str(creds.get("waba_id") or "").strip():
+        return str(creds["waba_id"]).strip()
+    for value in _wa_channels.values():
+        candidate = str((value or {}).get("waba_id") or "").strip()
+        if candidate:
+            return candidate
+    return ""
 
 
 def wa_load_channels():
@@ -21495,7 +21506,8 @@ def whatsapp_catalog_status():
         "detail": "",
     }
     if not catalog_id:
-        status["detail"] = "Save the Meta catalog ID first."
+        status["detail"] = ("Enter and save the Meta catalog ID (Commerce Manager → "
+                            "Catalog → Settings).")
         return status
     if not waba_id:
         status["detail"] = ("The WhatsApp Business Account is not known yet. Send one "
@@ -21543,7 +21555,8 @@ def whatsapp_catalog_connect():
     """
     catalog_id = whatsapp_catalog_id()
     if not catalog_id:
-        return False, "Save the Meta catalog ID first."
+        return False, ("Enter the Meta catalog ID (Commerce Manager → Catalog → "
+                       "Settings) and connect again.")
     waba_id = wa_waba_id()
     if not waba_id:
         return False, ("The WhatsApp Business Account is not known yet. Send one message "
@@ -31460,6 +31473,7 @@ def portal_crm():
                            # The catalogue panel shows the connected Meta catalog
                            # and the feed URL Meta should read.
                            whatsapp_catalog_id=whatsapp_catalog_id(),
+                           whatsapp_waba_id=wa_waba_id(),
                            catalog_feed_url=catalog_feed_url(),
                            # Rendered so the shop name field cannot drift from the
                            # limit the endpoint actually enforces.
@@ -33496,10 +33510,25 @@ def crm_whatsapp_catalog_status_api():
 
 @app.route('/api/crm/whatsapp-catalog/connect', methods=['POST'])
 def crm_whatsapp_catalog_connect_api():
-    """Link the saved catalog to the WhatsApp Business Account."""
+    """Link the saved catalog to the WhatsApp Business Account.
+
+    The ID typed into the panel is saved first, so pressing Connect with a freshly
+    pasted ID works in one step rather than failing until Save is pressed too.
+    """
     user, error = portal_api_user('crm')
     if error:
         return error
+    payload = request.get_json(silent=True) or {}
+    typed_id = re.sub(r"\D", "", str(payload.get('catalog_id') or ''))
+    if typed_id:
+        if len(typed_id) > 40:
+            return jsonify({'success': False,
+                            'message': 'That catalog ID is too long.',
+                            'status': whatsapp_catalog_status()}), 400
+        saved, message = shop_settings_save({WHATSAPP_CATALOG_ID_KEY: typed_id})
+        if not saved:
+            return jsonify({'success': False, 'message': message,
+                            'status': whatsapp_catalog_status()}), 400
     ok, detail = whatsapp_catalog_connect()
     status = whatsapp_catalog_status()
     log_activity("connected_whatsapp_catalog" if ok

@@ -285,6 +285,7 @@
     var feedEl = document.getElementById('crmCatalogFeedUrl');
     var copy = document.getElementById('crmCatalogFeedCopy');
     var connect = document.getElementById('crmCatalogConnect');
+    var wabaEl = document.getElementById('crmCatalogWabaId');
     var statusEl = document.getElementById('crmCatalogStatus');
     var noteEl = document.getElementById('crmCatalogNote');
 
@@ -304,6 +305,7 @@
     function paintStatus(status) {
       if (!statusEl) return;
       if (!status) { statusEl.textContent = ''; return; }
+      if (wabaEl) wabaEl.value = status.waba_id || '';
       var prefix = status.connected ? '\u2705 Connected' : '\u26a0\ufe0f Not connected';
       var looked = status.catalogs && status.catalogs.length
         ? ' Catalogs on the account: ' +
@@ -323,6 +325,9 @@
           if (statusEl) statusEl.textContent = 'Could not check the WhatsApp connection.';
         });
     }
+    // The Settings tab re-checks Meta each time it is opened, because the link
+    // can be made from Meta's side too.
+    window.__crmCatalogRefresh = loadStatus;
 
     if (copy) {
       copy.addEventListener('click', function () {
@@ -374,10 +379,22 @@
 
     if (connect) {
       connect.addEventListener('click', function () {
+        var typedId = idEl ? idEl.value.trim() : '';
+        if (!typedId) {
+          note('Enter the Meta catalog ID first.', 'is-error');
+          window.crmToast && window.crmToast(
+            'Enter the Meta catalog ID', 'error',
+            'Find it in Commerce Manager → Catalog → Settings. The WABA ID is detected automatically.');
+          if (idEl) idEl.focus();
+          return;
+        }
         setBusy(connect, true, 'Connecting…');
-        postJson('/api/crm/whatsapp-catalog/connect', {})
+        postJson('/api/crm/whatsapp-catalog/connect', { catalog_id: typedId })
           .then(function (result) {
             setBusy(connect, false);
+            if (result.status && result.status.catalog_id && idEl) {
+              idEl.value = result.status.catalog_id;
+            }
             paintStatus(result && result.status);
             window.crmToast && window.crmToast(
               result.message || (result.success
@@ -428,6 +445,7 @@
         initStock();
       }
       if (name === 'inbox') sizeInbox();
+      if (name === 'settings' && window.__crmCatalogRefresh) window.__crmCatalogRefresh();
     }
 
     // The inbox takes whatever the viewport has left after the chrome above it.

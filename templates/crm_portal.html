@@ -74,6 +74,14 @@
                         <span class="crm-tab-full">Stock</span><span class="crm-tab-short">Stock</span>
                     </span>
                 </button>
+                <button class="crm-tab" type="button" id="crmTabSettings"
+                        data-crm-tab="settings" role="tab" aria-selected="false" tabindex="-1"
+                        aria-controls="crmViewSettings">
+                    <i class="bi bi-gear-fill"></i>
+                    <span class="crm-tab-text">
+                        <span class="crm-tab-full">Settings</span><span class="crm-tab-short">Settings</span>
+                    </span>
+                </button>
             </div>
             <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity"
                     aria-haspopup="dialog">
@@ -842,6 +850,185 @@
 
     </section>
 
+    <!-- ========================================================== settings -->
+    <section class="crm-view" id="crmViewSettings" data-crm-view="settings"
+             role="tabpanel" aria-labelledby="crmTabSettings">
+        <div class="ps-panel">
+            <div class="ps-panel-head">
+               <h3><i class="bi bi-gear-fill"></i> Settings</h3>
+               <div class="ps-panel-actions">
+                   <span class="ps-chip">Documents · Delivery · WhatsApp</span>
+               </div>
+            </div>
+            <div class="ps-panel-body">
+               <p class="ps-muted crm-hint">
+                   These settings apply to the whole business rather than to one product, so
+                   they are kept apart from the catalogue. Changes take effect immediately.
+               </p>
+            </div>
+
+            {# The logo is set once and appears on every document the customer
+              receives, so it belongs with the business settings rather than
+              inside any one document. #}
+            <div class="crm-branding" id="crmBranding">
+               <div class="crm-branding-preview" id="crmBrandingPreview">
+                   {% if logo_url %}
+                   <img src="{{ logo_url }}" alt="Company logo">
+                   {% else %}
+                   <span class="crm-branding-empty">
+                       <i class="bi bi-image"></i> No logo yet
+                   </span>
+                   {% endif %}
+               </div>
+               <div class="crm-branding-body">
+                   <h4><i class="bi bi-badge-tm"></i> Company logo</h4>
+                   <p class="ps-muted">
+                       Shown at the top of every receipt and delivery note sent to a customer.
+                       PNG, JPG or WEBP, up to {{ logo_max_mb }} MB. A transparent PNG looks best.
+                   </p>
+                   <div class="crm-branding-tools">
+                       <label class="ps-btn ps-btn-primary ps-btn-sm crm-branding-pick">
+                           <i class="bi bi-upload"></i> <span id="crmBrandingPickLabel">Upload logo</span>
+                           <input type="file" id="crmBrandingFile" hidden
+                                  accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+                       </label>
+                       <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmBrandingClear"
+                               {% if not logo_url %}hidden{% endif %}>
+                           <i class="bi bi-x-lg"></i> Remove
+                       </button>
+                       <span class="crm-save-note" id="crmBrandingNote"></span>
+                   </div>
+               </div>
+            </div>
+
+            {# Orders are collected from a shop unless this rule says the order is
+              a bulk one going outside Harare. The threshold is business data, so
+              it is set here rather than in code. #}
+            <div class="crm-branding" id="crmDeliveryPolicy">
+               <div class="crm-branding-preview crm-delivery-preview">
+                   <span class="crm-branding-empty">
+                       <i class="bi bi-truck"></i>
+                   </span>
+               </div>
+               <div class="crm-branding-body">
+                   <h4><i class="bi bi-geo-alt"></i> Delivery policy</h4>
+                   <p class="ps-muted">
+                       Every customer is asked whether they are in Harare or outside it.
+                       Orders are collected from a shop unless the customer is outside Harare
+                       and the order reaches the bulk threshold below.
+                   </p>
+                   <div class="crm-add-grid">
+                       <label class="crm-field">
+                           <span>Minimum units for delivery</span>
+                           <input class="ps-input" type="number" min="1" max="9999" step="1"
+                                  id="crmDeliveryMinUnits"
+                                  value="{{ delivery_policy.min_units }}">
+                       </label>
+                       <label class="crm-field">
+                           <span>Minimum order value ({{ PAYNOW_CURRENCY if PAYNOW_CURRENCY is defined else 'USD' }}), 0 to ignore</span>
+                           <input class="ps-input" type="number" min="0" step="0.01"
+                                  id="crmDeliveryMinValue"
+                                  value="{{ '%.2f' | format(delivery_policy.min_value) }}">
+                       </label>
+                   </div>
+                   <div class="crm-branding-tools">
+                       <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmDeliverySave">
+                           <i class="bi bi-check2"></i> Save delivery policy
+                       </button>
+                       <span class="crm-save-note" id="crmDeliveryNote"></span>
+                   </div>
+                   <p class="ps-muted">
+                       Staff can still set delivery on an individual order from the CRM portal
+                       when a manager approves an exception.
+                   </p>
+               </div>
+            </div>
+
+            {# The native WhatsApp catalogue customers see on the business profile.
+              Meta fills it from the feed below, so products stay managed here
+              rather than being re-entered in Commerce Manager. #}
+            <div class="crm-branding" id="crmWhatsappCatalog">
+               <div class="crm-branding-preview">
+                   <span class="crm-branding-empty">
+                       <i class="bi bi-whatsapp"></i>
+                   </span>
+               </div>
+               <div class="crm-branding-body">
+                   <h4><i class="bi bi-shop"></i> WhatsApp catalogue</h4>
+                   <p class="ps-muted">
+                       The products are published to WhatsApp from the feed below. Customers open
+                       the catalogue from the business profile or the assistant's
+                       <strong>View catalogue</strong> button, and build a cart in WhatsApp.
+                   </p>
+                   <div class="crm-add-grid">
+                       <label class="crm-field">
+                           <span>Meta catalog ID
+                               <em>Commerce Manager → Catalog → Settings → ID</em></span>
+                           <input class="ps-input" type="text" id="crmCatalogId"
+                                  value="{{ whatsapp_catalog_id }}"
+                                  placeholder="15-digit number, e.g. 123456789012345"
+                                  inputmode="numeric" autocomplete="off">
+                       </label>
+                       <label class="crm-field">
+                           <span>WhatsApp Business Account (WABA) ID</span>
+                           <input class="ps-input" type="text" id="crmCatalogWabaId"
+                                  value="{{ whatsapp_waba_id }}" readonly
+                                  placeholder="Detected automatically">
+                       </label>
+                       <label class="crm-field crm-field-wide">
+                           <span>Product feed URL (paste into Commerce Manager → Data sources)</span>
+                           <div class="crm-order-settle-row">
+                               <input class="ps-input" type="text" id="crmCatalogFeedUrl"
+                                      value="{{ catalog_feed_url }}" readonly>
+                               <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
+                                       id="crmCatalogFeedCopy">
+                                   <i class="bi bi-clipboard"></i> Copy
+                               </button>
+                               <a class="ps-btn ps-btn-ghost ps-btn-sm"
+                                  href="{{ url_for('catalogue_public_page') }}"
+                                  target="_blank" rel="noopener">
+                                   <i class="bi bi-box-arrow-up-right"></i> Preview
+                               </a>
+                           </div>
+                       </label>
+                   </div>
+                   <div class="crm-branding-tools">
+                       <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                               id="crmCatalogSave">
+                           <i class="bi bi-check2"></i> Save catalog ID
+                       </button>
+                       <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                               id="crmCatalogConnect">
+                           <i class="bi bi-shop"></i> Connect to WhatsApp
+                       </button>
+                       <span class="crm-save-note" id="crmCatalogNote"></span>
+                   </div>
+                   <p class="ps-muted" id="crmCatalogStatus">
+                       Checking the WhatsApp connection…
+                   </p>
+                   <p class="ps-muted">
+                       The shop icon beside the business name in the customer's chat is drawn by
+                       WhatsApp. It appears once the catalog is connected to the WhatsApp Business
+                       Account behind the bot number — <strong>Connect to WhatsApp</strong> does
+                       that for you. A pack needs a price and its product a picture before it can
+                       appear in the catalogue.
+                   </p>
+                   <p class="ps-muted">
+                       If Meta refuses the connection, the app's token lacks catalog permission:
+                       connect it in WhatsApp Manager → Account tools → Catalog, or use a token
+                       with <code>catalog_management</code>.
+                   </p>
+                   {% if not catalog_feed_url %}
+                   <p class="ps-muted">
+                       The feed URL could not be built. Set <code>PUBLIC_BASE_URL</code> to
+                       the deployment's public address and reload this page.
+                   </p>
+                   {% endif %}
+               </div>
+            </div>
+        </div>
+    </section>
+
     <section class="crm-view" id="crmViewProducts" data-crm-view="products"
              role="tabpanel" aria-labelledby="crmTabProducts">
         <div class="ps-panel">
@@ -881,159 +1068,9 @@
                 <p class="ps-muted crm-hint" id="crmCatalogSearchNote" hidden></p>
             </div>
 
-            {# The logo is set once and appears on every document the customer
-               receives, so it belongs with the catalogue rather than inside any one
-               document's settings. #}
-            <div class="crm-branding" id="crmBranding">
-                <div class="crm-branding-preview" id="crmBrandingPreview">
-                    {% if logo_url %}
-                    <img src="{{ logo_url }}" alt="Company logo">
-                    {% else %}
-                    <span class="crm-branding-empty">
-                        <i class="bi bi-image"></i> No logo yet
-                    </span>
-                    {% endif %}
-                </div>
-                <div class="crm-branding-body">
-                    <h4><i class="bi bi-badge-tm"></i> Company logo</h4>
-                    <p class="ps-muted">
-                        Shown at the top of every receipt and delivery note sent to a customer.
-                        PNG, JPG or WEBP, up to {{ logo_max_mb }} MB. A transparent PNG looks best.
-                    </p>
-                    <div class="crm-branding-tools">
-                        <label class="ps-btn ps-btn-primary ps-btn-sm crm-branding-pick">
-                            <i class="bi bi-upload"></i> <span id="crmBrandingPickLabel">Upload logo</span>
-                            <input type="file" id="crmBrandingFile" hidden
-                                   accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
-                        </label>
-                        <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmBrandingClear"
-                                {% if not logo_url %}hidden{% endif %}>
-                            <i class="bi bi-x-lg"></i> Remove
-                        </button>
-                        <span class="crm-save-note" id="crmBrandingNote"></span>
-                    </div>
-                </div>
-            </div>
-
-            {# Orders are collected from a shop unless this rule says the order is
-               a bulk one going outside Harare. The threshold is business data, so
-               it is set here rather than in code. #}
-            <div class="crm-branding" id="crmDeliveryPolicy">
-                <div class="crm-branding-preview crm-delivery-preview">
-                    <span class="crm-branding-empty">
-                        <i class="bi bi-truck"></i>
-                    </span>
-                </div>
-                <div class="crm-branding-body">
-                    <h4><i class="bi bi-geo-alt"></i> Delivery policy</h4>
-                    <p class="ps-muted">
-                        Every customer is asked whether they are in Harare or outside it.
-                        Orders are collected from a shop unless the customer is outside Harare
-                        and the order reaches the bulk threshold below.
-                    </p>
-                    <div class="crm-add-grid">
-                        <label class="crm-field">
-                            <span>Minimum units for delivery</span>
-                            <input class="ps-input" type="number" min="1" max="9999" step="1"
-                                   id="crmDeliveryMinUnits"
-                                   value="{{ delivery_policy.min_units }}">
-                        </label>
-                        <label class="crm-field">
-                            <span>Minimum order value ({{ PAYNOW_CURRENCY if PAYNOW_CURRENCY is defined else 'USD' }}), 0 to ignore</span>
-                            <input class="ps-input" type="number" min="0" step="0.01"
-                                   id="crmDeliveryMinValue"
-                                   value="{{ '%.2f' | format(delivery_policy.min_value) }}">
-                        </label>
-                    </div>
-                    <div class="crm-branding-tools">
-                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmDeliverySave">
-                            <i class="bi bi-check2"></i> Save delivery policy
-                        </button>
-                        <span class="crm-save-note" id="crmDeliveryNote"></span>
-                    </div>
-                    <p class="ps-muted">
-                        Staff can still set delivery on an individual order from the CRM portal
-                        when a manager approves an exception.
-                    </p>
-                </div>
-            </div>
-
-            {# The native WhatsApp catalogue customers see on the business
-               profile. Meta fills it from the feed below, so products stay
-               managed here rather than being re-entered in Commerce Manager. #}
-            <div class="crm-branding" id="crmWhatsappCatalog">
-                <div class="crm-branding-preview">
-                    <span class="crm-branding-empty">
-                        <i class="bi bi-whatsapp"></i>
-                    </span>
-                </div>
-                <div class="crm-branding-body">
-                    <h4><i class="bi bi-shop"></i> WhatsApp catalogue</h4>
-                    <p class="ps-muted">
-                        The products in this catalogue are published to WhatsApp from the feed
-                        below. Customers can open the catalogue from the business profile or the
-                        assistant's <strong>View catalogue</strong> button, and build a cart
-                        in WhatsApp.
-                    </p>
-                    <div class="crm-add-grid">
-                        <label class="crm-field">
-                            <span>Meta catalog ID</span>
-                            <input class="ps-input" type="text" id="crmCatalogId"
-                                   value="{{ whatsapp_catalog_id }}"
-                                   placeholder="e.g. 123456789012345" autocomplete="off">
-                        </label>
-                        <label class="crm-field crm-field-wide">
-                            <span>Product feed URL (paste into Commerce Manager → Data sources)</span>
-                            <div class="crm-order-settle-row">
-                                <input class="ps-input" type="text" id="crmCatalogFeedUrl"
-                                       value="{{ catalog_feed_url }}" readonly>
-                                <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
-                                        id="crmCatalogFeedCopy">
-                                    <i class="bi bi-clipboard"></i> Copy
-                                </button>
-                                <a class="ps-btn ps-btn-ghost ps-btn-sm"
-                                   href="{{ url_for('catalogue_public_page') }}"
-                                   target="_blank" rel="noopener">
-                                    <i class="bi bi-box-arrow-up-right"></i> Preview
-                                </a>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="crm-branding-tools">
-                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
-                                id="crmCatalogSave">
-                            <i class="bi bi-check2"></i> Save catalog ID
-                        </button>
-                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
-                                id="crmCatalogConnect">
-                            <i class="bi bi-shop"></i> Connect to WhatsApp
-                        </button>
-                        <span class="crm-save-note" id="crmCatalogNote"></span>
-                    </div>
-                    <p class="ps-muted" id="crmCatalogStatus">
-                        Checking the WhatsApp connection…
-                    </p>
-                    <p class="ps-muted">
-                        The shop icon beside the business name in the customer's chat is drawn by
-                        WhatsApp. It appears once the catalog is connected to the WhatsApp Business
-                        Account behind the bot number — connecting it here does that for you.
-                        Setup: in Meta Commerce Manager, add a <strong>scheduled feed</strong>
-                        using the URL above, then save the catalog ID. A pack needs a price and
-                        the product a picture before it can appear.
-                    </p>
-                    <p class="ps-muted">
-                        If Meta refuses the connection, the app's token lacks catalog permission:
-                        connect it in WhatsApp Manager → Account tools → Catalog, or use a token
-                        with <code>catalog_management</code>.
-                    </p>
-                    {% if not catalog_feed_url %}
-                    <p class="ps-muted">
-                        The feed URL could not be built. Set <code>PUBLIC_BASE_URL</code> to
-                        the deployment's public address and reload this page.
-                    </p>
-                    {% endif %}
-                </div>
-            </div>
+            {# Company documents, delivery rules and the WhatsApp catalogue are
+               business settings rather than product data, so they live on their
+               own Settings tab. #}
 
             <!-- Only shown when the catalogue is full, so the limit is explained
                  at the point it actually blocks something. -->
