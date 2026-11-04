@@ -970,10 +970,12 @@
                                   inputmode="numeric" autocomplete="off">
                        </label>
                        <label class="crm-field">
-                           <span>WhatsApp Business Account (WABA) ID</span>
+                           <span>WhatsApp Business Account (WABA) ID
+                               <em>detected automatically</em></span>
                            <input class="ps-input" type="text" id="crmCatalogWabaId"
-                                  value="{{ whatsapp_waba_id }}" readonly
-                                  placeholder="Detected automatically">
+                                  value="{{ whatsapp_waba_id }}"
+                                  placeholder="Filled in from the bot's webhook"
+                                  inputmode="numeric" autocomplete="off">
                        </label>
                        <label class="crm-field crm-field-wide">
                            <span>Product feed URL (paste into Commerce Manager → Data sources)</span>
@@ -1007,16 +1009,18 @@
                        Checking the WhatsApp connection…
                    </p>
                    <p class="ps-muted">
-                       The shop icon beside the business name in the customer's chat is drawn by
-                       WhatsApp. It appears once the catalog is connected to the WhatsApp Business
-                       Account behind the bot number — <strong>Connect to WhatsApp</strong> does
-                       that for you. A pack needs a price and its product a picture before it can
-                       appear in the catalogue.
+                       The shop icon beside the business name is drawn by WhatsApp and appears
+                       once the catalog is linked to the WhatsApp Business Account behind the bot
+                       number. <strong>Connect to WhatsApp</strong> does that for you. The account
+                       ID fills itself in from the bot's webhook — paste it here only if it stays
+                       blank.
                    </p>
                    <p class="ps-muted">
-                       If Meta refuses the connection, the app's token lacks catalog permission:
-                       connect it in WhatsApp Manager → Account tools → Catalog, or use a token
-                       with <code>catalog_management</code>.
+                       If Meta answers <em>“An unknown error occurred”</em>, the app's token is
+                       not allowed to change the account. Either grant the system user
+                       <code>whatsapp_business_management</code> and <code>catalog_management</code>,
+                       or link the catalog by hand in WhatsApp Manager → Account tools → Catalog.
+                       The icon appears either way; only the automatic linking needs the permission.
                    </p>
                    {% if not catalog_feed_url %}
                    <p class="ps-muted">

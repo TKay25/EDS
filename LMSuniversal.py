@@ -20898,14 +20898,17 @@ def wa_outbound_credentials(channel=None):
 def wa_waba_id(channel=None):
     """The WhatsApp Business Account id, or '' when it is not known yet.
 
-    Read from the environment first, then from the channel webhooks taught us.
-    The environment may name the token and phone id without naming the account,
-    so the remembered channels are still consulted rather than stopping there.
-    Empty simply means "cannot check or connect a catalog", never an error.
+    The environment wins, then a value saved in the portal, then whatever the
+    webhooks taught us - so an account that never sends a webhook (or a number
+    added later) can still be configured by hand. Empty simply means "cannot
+    check or connect a catalog", never an error.
     """
     configured = (os.getenv("WHATSAPP_WABA_ID") or "").strip()
     if configured:
         return configured
+    saved = (shop_setting_value(WHATSAPP_WABA_ID_KEY, "") or "").strip()
+    if saved:
+        return saved
     creds = _wa_channels.get(str(channel)) if channel else None
     if creds is None:
         wa_load_channels()
@@ -21413,6 +21416,7 @@ def shop_cart_total(cart):
 # falls back to its own in-chat range rather than offering a button that would
 # open nothing.
 WHATSAPP_CATALOG_ID_KEY = "whatsapp_catalog_id"
+WHATSAPP_WABA_ID_KEY = "whatsapp_waba_id"
 CATALOG_FEED_TOKEN_KEY = "catalog_feed_token"
 
 
@@ -21478,12 +21482,46 @@ def catalog_feed_url():
 
 
 def _graph_error_message(payload):
-    """The message Meta gave for a failed call, or ''."""
+    """What Meta said went wrong, including its code when it gives one.
+
+    Meta's generic failures read "An unknown error occurred", which tells an
+    operator nothing. The code and subcode are what identify the cause - a
+    permission problem, a bad parameter or a catalog in another business - so
+    they are carried into the message rather than dropped.
+    """
     error = (payload or {}).get("error") or {}
     message = str(error.get("message") or "").strip()
-    if message:
-        return message
-    return str((payload or {}).get("message") or "").strip()
+    if not message:
+        return str((payload or {}).get("message") or "").strip()
+    bits = []
+    for key in ("code", "error_subcode", "type"):
+        value = error.get(key)
+        if value not in (None, ""):
+            bits.append(f"{key} {value}")
+    return f"{message} ({', '.join(bits)})" if bits else message
+
+
+def _graph_error_hint(detail):
+    """A concrete next step for a Meta failure the operator has to act on.
+
+    Meta's own "unknown error" is almost always one of three things, and saying
+    which one to check is what makes the message useful.
+    """
+    lowered = str(detail or "").lower()
+    if "unknown error" in lowered or "code 1," in lowered or "oauth" in lowered:
+        return ("Meta would not allow the app to change the account. Usually one of: "
+                "the access token lacks the whatsapp_business_management and "
+                "catalog_management permissions; the catalog belongs to a different "
+                "business portfolio than the WhatsApp account; or the token has expired. "
+                "You can also link it by hand in WhatsApp Manager → Account tools → Catalog.")
+    if "permission" in lowered or "code 200" in lowered or "code 10" in lowered:
+        return ("The token is missing catalog permission. Add whatsapp_business_management "
+                "and catalog_management to the system user token.")
+    if "does not exist" in lowered or "code 100" in lowered or "unsupported" in lowered:
+        return ("Check that the catalog ID is the numeric id from Commerce Manager → "
+                "Catalog → Settings, and that the WhatsApp account id is the one the bot "
+                "number belongs to.")
+    return ""
 
 
 def whatsapp_catalog_status():
@@ -21504,6 +21542,7 @@ def whatsapp_catalog_status():
         "connected": False,
         "catalogs": [],
         "detail": "",
+        "hint": "",
     }
     if not catalog_id:
         status["detail"] = ("Enter and save the Meta catalog ID (Commerce Manager → "
@@ -21522,12 +21561,14 @@ def whatsapp_catalog_status():
         response = requests.get(
             f"https://graph.facebook.com/v18.0/{waba_id}/product_catalogs",
             headers={"Authorization": "Bearer " + token},
+            params={"fields": "id,name"},
             timeout=20,
         )
         payload = response.json() if response.content else {}
         if response.status_code >= 400:
             status["detail"] = (_graph_error_message(payload)
                                 or f"Meta refused the check ({response.status_code}).")
+            status["hint"] = _graph_error_hint(status["detail"])
             return status
         catalogs = payload.get("data") or []
         status["catalogs"] = [
@@ -21565,26 +21606,46 @@ def whatsapp_catalog_connect():
     if not token:
         return False, ("WhatsApp credentials are not available yet. Open the inbox once, "
                        "or set WHATSAPP_ACCESS_TOKEN.")
-    try:
-        response = requests.post(
-            f"https://graph.facebook.com/v18.0/{waba_id}/product_catalogs",
-            headers={"Authorization": "Bearer " + token},
-            data={"catalog_id": catalog_id},
-            timeout=20,
-        )
-        payload = response.json() if response.content else {}
-        if response.status_code >= 400:
-            return False, (_graph_error_message(payload)
-                           or f"Meta refused the connection ({response.status_code}).")
-    except Exception as e:
-        return False, f"Could not reach Meta: {e}"
-    status = whatsapp_catalog_status()
-    if status["connected"]:
-        return True, ("Connected. WhatsApp will show the catalogue icon on the business "
-                      "profile; it can take a few minutes to appear.")
-    return False, (status.get("detail")
-                   or "Meta accepted the request but the catalog does not read back "
-                      "as connected yet.")
+    # Meta's documented form passes the catalog as a query parameter, and it is
+    # also the form that works when the token is a system-user token. The body
+    # form is retried afterwards for older API versions that expect it.
+    attempts = [
+        {"params": {"catalog_id": catalog_id}},
+        {"data": {"catalog_id": catalog_id}},
+    ]
+    last_detail = ""
+    for attempt in attempts:
+        try:
+            response = requests.post(
+                f"https://graph.facebook.com/v18.0/{waba_id}/product_catalogs",
+                headers={"Authorization": "Bearer " + token},
+                timeout=20,
+                **attempt,
+            )
+            payload = response.json() if response.content else {}
+        except Exception as e:
+            last_detail = f"Could not reach Meta: {e}"
+            continue
+        if response.status_code < 400:
+            status = whatsapp_catalog_status()
+            if status["connected"]:
+                return True, ("Connected. WhatsApp will show the catalogue icon on the "
+                              "business profile; it can take a few minutes to appear.")
+            # Meta accepted the call but the link does not read back. Retrying the
+            # other parameter shape would not change that, so the answer is what
+            # the read-back said.
+            last_detail = (status.get("detail")
+                           or "Meta accepted the request but the catalog does not read "
+                              "back as connected yet.")
+            break
+        last_detail = (_graph_error_message(payload)
+                       or f"Meta refused the connection ({response.status_code}).")
+        # A parameter-shape complaint is worth the retry; a permission refusal is
+        # not, and retrying it only buries the real reason.
+        if response.status_code not in (400, 404):
+            break
+    hint = _graph_error_hint(last_detail)
+    return False, (f"{last_detail} {hint}".strip() if hint else last_detail)
 
 
 # Delivery is the exception rather than the norm: an order is collected from a
@@ -33509,18 +33570,26 @@ def crm_whatsapp_catalog_api():
     if len(catalog_id) > 40:
         return jsonify({'success': False,
                         'message': 'That catalog ID is too long.'}), 400
-    ok, message = shop_settings_save({WHATSAPP_CATALOG_ID_KEY: catalog_id})
+    waba_id = re.sub(r"\D", "", str(payload.get('waba_id') or ''))
+    if len(waba_id) > 40:
+        return jsonify({'success': False,
+                        'message': 'That WhatsApp account ID is too long.'}), 400
+    settings = {WHATSAPP_CATALOG_ID_KEY: catalog_id}
+    if waba_id:
+        settings[WHATSAPP_WABA_ID_KEY] = waba_id
+    ok, message = shop_settings_save(settings)
     if not ok:
         return jsonify({'success': False, 'message': message}), 400
     log_activity("changed_whatsapp_catalog", "catalogue",
                  "Connected the WhatsApp catalogue" if catalog_id
                  else "Disconnected the WhatsApp catalogue",
                  target="whatsapp-catalog",
-                 details={"catalog_id": catalog_id}, user=user)
+                 details={"catalog_id": catalog_id, "waba_id": waba_id}, user=user)
     return jsonify({
         'success': True,
         'catalog_id': catalog_id,
-        'message': ("WhatsApp catalogue connected." if catalog_id
+        'waba_id': wa_waba_id(),
+        'message': ("WhatsApp catalogue saved." if catalog_id
                     else "WhatsApp catalogue disconnected."),
     })
 
@@ -33550,12 +33619,22 @@ def crm_whatsapp_catalog_connect_api():
         return error
     payload = request.get_json(silent=True) or {}
     typed_id = re.sub(r"\D", "", str(payload.get('catalog_id') or ''))
+    typed_waba = re.sub(r"\D", "", str(payload.get('waba_id') or ''))
+    settings = {}
     if typed_id:
         if len(typed_id) > 40:
             return jsonify({'success': False,
                             'message': 'That catalog ID is too long.',
                             'status': whatsapp_catalog_status()}), 400
-        saved, message = shop_settings_save({WHATSAPP_CATALOG_ID_KEY: typed_id})
+        settings[WHATSAPP_CATALOG_ID_KEY] = typed_id
+    if typed_waba:
+        if len(typed_waba) > 40:
+            return jsonify({'success': False,
+                            'message': 'That WhatsApp account ID is too long.',
+                            'status': whatsapp_catalog_status()}), 400
+        settings[WHATSAPP_WABA_ID_KEY] = typed_waba
+    if settings:
+        saved, message = shop_settings_save(settings)
         if not saved:
             return jsonify({'success': False, 'message': message,
                             'status': whatsapp_catalog_status()}), 400

@@ -313,7 +313,8 @@
             return (item.name || 'unnamed') + ' (' + item.id + ')';
           }).join(', ') + '.'
         : '';
-      statusEl.textContent = prefix + ' — ' + (status.detail || '') + looked;
+      var hint = status.hint ? ' ' + status.hint : '';
+      statusEl.textContent = prefix + ' — ' + (status.detail || '') + looked + hint;
       statusEl.classList.toggle('is-connected', !!status.connected);
     }
 
@@ -356,7 +357,8 @@
     save.addEventListener('click', function () {
       setBusy(save, true, 'Saving…');
       postJson('/api/crm/whatsapp-catalog',
-               { catalog_id: idEl ? idEl.value.trim() : '' })
+               { catalog_id: idEl ? idEl.value.trim() : '',
+                 waba_id: wabaEl ? wabaEl.value.trim() : '' })
         .then(function (result) {
           setBusy(save, false);
           if (!result.success) {
@@ -365,6 +367,7 @@
             return;
           }
           if (idEl) idEl.value = result.catalog_id || '';
+          if (wabaEl && result.waba_id) wabaEl.value = result.waba_id;
           note('Saved', 'is-ok');
           toast(result.message || 'WhatsApp catalogue saved.', 'ok');
           loadStatus();
@@ -389,22 +392,30 @@
           return;
         }
         setBusy(connect, true, 'Connecting…');
-        postJson('/api/crm/whatsapp-catalog/connect', { catalog_id: typedId })
+        postJson('/api/crm/whatsapp-catalog/connect',
+                 { catalog_id: typedId,
+                   waba_id: wabaEl ? wabaEl.value.trim() : '' })
           .then(function (result) {
             setBusy(connect, false);
-            if (result.status && result.status.catalog_id && idEl) {
-              idEl.value = result.status.catalog_id;
+            var status = result && result.status;
+            if (status && status.catalog_id && idEl) idEl.value = status.catalog_id;
+            if (status && status.waba_id && wabaEl) wabaEl.value = status.waba_id;
+            paintStatus(status);
+            var message = (result && result.message) || '';
+            if (!result.success && status && status.hint && message.indexOf(status.hint) === -1) {
+              message = (message + ' ' + status.hint).trim();
             }
-            paintStatus(result && result.status);
             window.crmToast && window.crmToast(
-              result.message || (result.success
+              message || (result.success
                 ? 'Catalogue connected to WhatsApp.'
                 : 'Could not connect the catalogue.'),
-              result.success ? 'success' : 'error');
+              result.success ? 'success' : 'error', result.success ? '' : message);
           })
           .catch(function () {
             setBusy(connect, false);
-            window.crmToast && window.crmToast('Could not connect the catalogue.', 'error');
+            window.crmToast && window.crmToast('Could not reach the server.',
+                                               'error',
+                                               'Check the connection and try again.');
           });
       });
     }
