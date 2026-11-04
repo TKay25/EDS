@@ -21417,6 +21417,10 @@ def shop_cart_total(cart):
 # open nothing.
 WHATSAPP_CATALOG_ID_KEY = "whatsapp_catalog_id"
 WHATSAPP_WABA_ID_KEY = "whatsapp_waba_id"
+# Set once staff confirm they linked the catalog in WhatsApp Manager themselves.
+# The app cannot verify a link made in Meta's own tools, so the confirmation is
+# recorded rather than the panel accusing the account of being unlinked forever.
+WHATSAPP_CATALOG_MANUAL_KEY = "whatsapp_catalog_manual_link"
 CATALOG_FEED_TOKEN_KEY = "catalog_feed_token"
 
 
@@ -21504,10 +21508,20 @@ def _graph_error_message(payload):
 def _graph_error_hint(detail):
     """A concrete next step for a Meta failure the operator has to act on.
 
-    Meta's own "unknown error" is almost always one of three things, and saying
-    which one to check is what makes the message useful.
+    Meta's own "unknown error" is a catch-all, so the subcode is what actually
+    identifies the cause. Naming the one that matches is the difference between a
+    message an operator can act on and one that only says "no".
     """
     lowered = str(detail or "").lower()
+    # 2388004 is the catalog permission refusal: the app is not allowed to attach
+    # that catalog to the account, whatever the token's other permissions say.
+    if "2388004" in lowered:
+        return ("Meta refused the catalog link (subcode 2388004). The catalog must be "
+                "owned by the same business as the WhatsApp account, and the app's "
+                "token needs catalog_management. Link it once in WhatsApp Manager → "
+                "Account tools → Catalog → Connect catalog, then press “I linked it in "
+                "WhatsApp Manager” here. The shop icon appears either way — this only "
+                "saves doing it by hand.")
     if "unknown error" in lowered or "code 1," in lowered or "oauth" in lowered:
         return ("Meta would not allow the app to change the account. Usually one of: "
                 "the access token lacks the whatsapp_business_management and "
@@ -21535,11 +21549,13 @@ def whatsapp_catalog_status():
     """
     catalog_id = whatsapp_catalog_id()
     waba_id = wa_waba_id()
+    manual = (shop_setting_value(WHATSAPP_CATALOG_MANUAL_KEY, "") or "").strip() == "1"
     status = {
         "configured": bool(catalog_id),
         "catalog_id": catalog_id,
         "waba_id": waba_id,
         "connected": False,
+        "manual": manual,
         "catalogs": [],
         "detail": "",
         "hint": "",
@@ -21547,6 +21563,13 @@ def whatsapp_catalog_status():
     if not catalog_id:
         status["detail"] = ("Enter and save the Meta catalog ID (Commerce Manager → "
                             "Catalog → Settings).")
+        return status
+    if manual:
+        # Confirmed by staff in Meta's own tools. The API link is not readable
+        # from here, but the catalog is connected and the bot can offer it.
+        status["connected"] = True
+        status["detail"] = ("Linked in WhatsApp Manager — the shop icon appears on the "
+                            "business profile. The assistant offers the catalogue.")
         return status
     if not waba_id:
         status["detail"] = ("The WhatsApp Business Account is not known yet. Send one "
@@ -21644,8 +21667,9 @@ def whatsapp_catalog_connect():
         # not, and retrying it only buries the real reason.
         if response.status_code not in (400, 404):
             break
-    hint = _graph_error_hint(last_detail)
-    return False, (f"{last_detail} {hint}".strip() if hint else last_detail)
+    # The hint is left to the status line, which shows it beside the reason; the
+    # toast carries the reason alone so the same paragraph is not printed twice.
+    return False, last_detail
 
 
 # Delivery is the exception rather than the norm: an order is collected from a
@@ -33604,7 +33628,46 @@ def crm_whatsapp_catalog_status_api():
     user, error = portal_api_user('crm')
     if error:
         return error
-    return jsonify({'success': True, 'status': whatsapp_catalog_status()})
+    return jsonify({'success': True,
+                    'status': whatsapp_catalog_status()})
+
+
+@app.route('/api/crm/whatsapp-catalog/manual', methods=['POST'])
+def crm_whatsapp_catalog_manual_api():
+    """Record that the catalog was linked in WhatsApp Manager by hand.
+
+    Meta does not let every token read the catalog link, and its own refusal
+    (subcode 2388004) is about the app's rights rather than the account's state.
+    Staff who have linked it in Meta's tools can say so, so the panel stops
+    reporting a link it cannot see and the catalogue is offered to customers.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    linked = payload.get('linked', True) is not False
+    catalog_id = re.sub(r"\D", "", str(payload.get('catalog_id') or ''))
+    settings = {WHATSAPP_CATALOG_MANUAL_KEY: "1" if linked else ""}
+    if catalog_id:
+        settings[WHATSAPP_CATALOG_ID_KEY] = catalog_id
+    ok, message = shop_settings_save(settings)
+    if not ok:
+        return jsonify({'success': False, 'message': message,
+                        'status': whatsapp_catalog_status()}), 400
+    log_activity("marked_whatsapp_catalog_linked" if linked
+                 else "cleared_whatsapp_catalog_link",
+                 "catalogue",
+                 ("Confirmed the catalog is linked in WhatsApp Manager" if linked
+                  else "Cleared the manual catalog link"),
+                 target="whatsapp-catalog",
+                 details={"catalog_id": catalog_id}, user=user)
+    return jsonify({
+        'success': True,
+        'status': whatsapp_catalog_status(),
+        'message': ("Marked as linked. The assistant now offers the catalogue and "
+                    "WhatsApp shows the shop icon on the business profile." if linked
+                    else "Cleared. The panel will check Meta again."),
+    })
 
 
 @app.route('/api/crm/whatsapp-catalog/connect', methods=['POST'])

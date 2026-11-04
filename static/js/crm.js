@@ -285,6 +285,7 @@
     var feedEl = document.getElementById('crmCatalogFeedUrl');
     var copy = document.getElementById('crmCatalogFeedCopy');
     var connect = document.getElementById('crmCatalogConnect');
+    var manualBtn = document.getElementById('crmCatalogManual');
     var wabaEl = document.getElementById('crmCatalogWabaId');
     var statusEl = document.getElementById('crmCatalogStatus');
     var noteEl = document.getElementById('crmCatalogNote');
@@ -401,21 +402,53 @@
             if (status && status.catalog_id && idEl) idEl.value = status.catalog_id;
             if (status && status.waba_id && wabaEl) wabaEl.value = status.waba_id;
             paintStatus(status);
+            // The status line carries the reason plus the next step; the toast
+            // carries the reason alone so the same paragraph is not printed twice.
             var message = (result && result.message) || '';
-            if (!result.success && status && status.hint && message.indexOf(status.hint) === -1) {
-              message = (message + ' ' + status.hint).trim();
-            }
             window.crmToast && window.crmToast(
               message || (result.success
                 ? 'Catalogue connected to WhatsApp.'
                 : 'Could not connect the catalogue.'),
-              result.success ? 'success' : 'error', result.success ? '' : message);
+              result.success ? 'success' : 'error');
           })
           .catch(function () {
             setBusy(connect, false);
             window.crmToast && window.crmToast('Could not reach the server.',
                                                'error',
                                                'Check the connection and try again.');
+          });
+      });
+    }
+
+    if (manualBtn) {
+      manualBtn.addEventListener('click', function () {
+        var typed = idEl ? idEl.value.trim() : '';
+        if (!typed) {
+          note('Enter the Meta catalog ID first.', 'is-error');
+          if (idEl) idEl.focus();
+          return;
+        }
+        if (!window.confirm('Confirm the catalog is connected in WhatsApp Manager?\n\n' +
+                            'WhatsApp Manager → Account tools → Catalog → Connect catalog.\n' +
+                            'This marks the catalogue as live for the assistant and the shop icon.')) {
+          return;
+        }
+        setBusy(manualBtn, true, 'Saving…');
+        postJson('/api/crm/whatsapp-catalog/manual',
+                 { linked: true, catalog_id: typed })
+          .then(function (result) {
+            setBusy(manualBtn, false);
+            if (result.status && result.status.catalog_id && idEl) {
+              idEl.value = result.status.catalog_id;
+            }
+            paintStatus(result && result.status);
+            window.crmToast && window.crmToast(
+              result.message || (result.success ? 'Marked as linked.' : 'Could not save.'),
+              result.success ? 'success' : 'error');
+          })
+          .catch(function () {
+            setBusy(manualBtn, false);
+            window.crmToast && window.crmToast('Could not save that.', 'error');
           });
       });
     }

@@ -1003,6 +1003,10 @@
                                id="crmCatalogConnect">
                            <i class="bi bi-shop"></i> Connect to WhatsApp
                        </button>
+                       <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button"
+                               id="crmCatalogManual">
+                           <i class="bi bi-check2-circle"></i> I linked it in WhatsApp Manager
+                       </button>
                        <span class="crm-save-note" id="crmCatalogNote"></span>
                    </div>
                    <p class="ps-muted" id="crmCatalogStatus">
@@ -1016,11 +1020,13 @@
                        blank.
                    </p>
                    <p class="ps-muted">
-                       If Meta answers <em>“An unknown error occurred”</em>, the app's token is
-                       not allowed to change the account. Either grant the system user
-                       <code>whatsapp_business_management</code> and <code>catalog_management</code>,
-                       or link the catalog by hand in WhatsApp Manager → Account tools → Catalog.
-                       The icon appears either way; only the automatic linking needs the permission.
+                       If Meta answers <em>“An unknown error occurred (subcode 2388004)”</em>,
+                       the app's token is not permitted to attach the catalog — the catalog
+                       must belong to the same business as the WhatsApp account and the token
+                       needs <code>catalog_management</code>. This does not stop the icon
+                       appearing: link it once in <strong>WhatsApp Manager → Account tools →
+                       Catalog → Connect catalog</strong>, then press <em>I linked it in
+                       WhatsApp Manager</em> above.
                    </p>
                    {% if not catalog_feed_url %}
                    <p class="ps-muted">
