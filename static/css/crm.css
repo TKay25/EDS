@@ -1075,6 +1075,11 @@ select.ps-input {
 .crm-save-note.is-ok { color: #047857; }
 .crm-save-note.is-error { color: #B91C1C; }
 
+/* The catalogue connection is Meta's own state, so the line reads as a status
+   rather than as a hint: green once the catalog is linked, amber until then. */
+#crmCatalogStatus { font-weight: 600; color: #B45309; }
+#crmCatalogStatus.is-connected { color: #047857; }
+
 /* ----------------------------------------------------------- activity log */
 .crm-tab-action { margin-left: auto; }
 .crm-tab-action:not(.is-active) { background: var(--ps-surface-alt); }

@@ -1004,13 +1004,27 @@
                                 id="crmCatalogSave">
                             <i class="bi bi-check2"></i> Save catalog ID
                         </button>
+                        <button class="ps-btn ps-btn-primary ps-btn-sm" type="button"
+                                id="crmCatalogConnect">
+                            <i class="bi bi-shop"></i> Connect to WhatsApp
+                        </button>
                         <span class="crm-save-note" id="crmCatalogNote"></span>
                     </div>
+                    <p class="ps-muted" id="crmCatalogStatus">
+                        Checking the WhatsApp connection…
+                    </p>
                     <p class="ps-muted">
-                        Setup: in Meta Commerce Manager, create or open a catalog, add a
-                        <strong>scheduled feed</strong> using the URL above, then paste the
-                        catalog ID here. A pack needs a price and the product a picture
-                        before it can appear in the catalogue.
+                        The shop icon beside the business name in the customer's chat is drawn by
+                        WhatsApp. It appears once the catalog is connected to the WhatsApp Business
+                        Account behind the bot number — connecting it here does that for you.
+                        Setup: in Meta Commerce Manager, add a <strong>scheduled feed</strong>
+                        using the URL above, then save the catalog ID. A pack needs a price and
+                        the product a picture before it can appear.
+                    </p>
+                    <p class="ps-muted">
+                        If Meta refuses the connection, the app's token lacks catalog permission:
+                        connect it in WhatsApp Manager → Account tools → Catalog, or use a token
+                        with <code>catalog_management</code>.
                     </p>
                     {% if not catalog_feed_url %}
                     <p class="ps-muted">

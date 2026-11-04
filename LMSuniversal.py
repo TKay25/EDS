@@ -6777,7 +6777,13 @@ def webhook():
                 # Make the Meta credentials available to the CRM inbox
                 # so agent replies can be delivered from the same channel.
                 try:
-                    register_wa_channel(display_phone_number, ACCESS_TOKEN, PHONE_NUMBER_ID)
+                    entry_id = ""
+                    try:
+                        entry_id = str((data.get("entry") or [{}])[0].get("id") or "")
+                    except Exception:
+                        entry_id = ""
+                    register_wa_channel(display_phone_number, ACCESS_TOKEN,
+                                        PHONE_NUMBER_ID, entry_id)
                 except Exception as channel_error:
                     print(f"channel registration skipped: {channel_error}")
 
@@ -20824,18 +20830,26 @@ def push_notify_staff(title, body, url="/portal/crm", tag="bc-crm"):
     return sent, len(gone) + failed
 
 
-def register_wa_channel(display_phone_number, access_token, phone_number_id):
+def register_wa_channel(display_phone_number, access_token, phone_number_id, waba_id=None):
     """Remember the Meta credentials a webhook request arrived on.
 
     The reply is sent from a later request that may be served by another worker,
     so the credentials are written to the database and read back by whoever
     needs to send.
+
+    `waba_id` is the WhatsApp Business Account id Meta puts on the webhook
+    envelope. It is kept because connecting a catalog - the thing that puts the
+    shop icon beside the business name - is done on the account, not the number,
+    and asking an operator to find it again is how the catalogue ends up half
+    configured.
     """
     try:
         if display_phone_number and access_token and phone_number_id:
+            waba_id = str(waba_id or "").strip()
             _wa_channels[str(display_phone_number)] = {
                 "token": access_token,
                 "phone_id": str(phone_number_id),
+                "waba_id": waba_id,
             }
             # The table may not exist yet on a fresh deployment, and losing the
             # credentials here is what makes agent replies undeliverable later.
@@ -20843,13 +20857,17 @@ def register_wa_channel(display_phone_number, access_token, phone_number_id):
             with get_db() as (cursor, connection):
                 cursor.execute("""
                     INSERT INTO whatsapp_channels
-                        (display_phone_number, phone_number_id, access_token, updated_at)
-                    VALUES (%s, %s, %s, NOW())
+                        (display_phone_number, phone_number_id, access_token,
+                         waba_id, updated_at)
+                    VALUES (%s, %s, %s, %s, NOW())
                     ON CONFLICT (display_phone_number) DO UPDATE
                         SET phone_number_id = EXCLUDED.phone_number_id,
                             access_token = EXCLUDED.access_token,
+                            waba_id = COALESCE(NULLIF(EXCLUDED.waba_id, ''),
+                                               whatsapp_channels.waba_id),
                             updated_at = NOW()
-                """, (str(display_phone_number), str(phone_number_id), access_token))
+                """, (str(display_phone_number), str(phone_number_id), access_token,
+                      waba_id or None))
                 connection.commit()
     except Exception as e:
         print(f"register_wa_channel failed: {e}")
@@ -20865,7 +20883,8 @@ def wa_outbound_credentials(channel=None):
     token = os.getenv("WHATSAPP_ACCESS_TOKEN")
     phone_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
     if token and phone_id:
-        return {"token": token, "phone_id": str(phone_id)}
+        return {"token": token, "phone_id": str(phone_id),
+                "waba_id": (os.getenv("WHATSAPP_WABA_ID") or "").strip()}
     creds = _wa_channels.get(str(channel)) if channel else None
     if creds is None:
         # Another worker may have handled every webhook so far.
@@ -20874,6 +20893,19 @@ def wa_outbound_credentials(channel=None):
     if creds is None and _wa_channels:
         creds = list(_wa_channels.values())[-1]
     return creds
+
+
+def wa_waba_id(channel=None):
+    """The WhatsApp Business Account id, or '' when it is not known yet.
+
+    Read from the environment first, then from the channel webhooks taught us.
+    Empty simply means "cannot check or connect a catalog", never an error.
+    """
+    configured = (os.getenv("WHATSAPP_WABA_ID") or "").strip()
+    if configured:
+        return configured
+    creds = wa_outbound_credentials(channel) or {}
+    return str(creds.get("waba_id") or "").strip()
 
 
 def wa_load_channels():
@@ -20886,12 +20918,15 @@ def wa_load_channels():
         ensure_crm_tables()
         with get_db() as (cursor, connection):
             cursor.execute("""
-                SELECT display_phone_number, phone_number_id, access_token
+                SELECT display_phone_number, phone_number_id, access_token, waba_id
                 FROM whatsapp_channels
             """)
             for row in cursor.fetchall():
                 if row[1] and row[2]:
-                    _wa_channels[str(row[0])] = {"token": row[2], "phone_id": str(row[1])}
+                    _wa_channels[str(row[0])] = {
+                        "token": row[2], "phone_id": str(row[1]),
+                        "waba_id": str(row[3] or "") if len(row) > 3 else "",
+                    }
     except Exception as e:
         print(f"channel load error: {e}")
     return len(_wa_channels)
@@ -20948,6 +20983,11 @@ def ensure_crm_tables():
                 updated_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        # The WhatsApp Business Account the number belongs to. Kept so a catalog
+        # can be connected to it from the portal without the operator hunting the
+        # id down in Meta Business Suite.
+        cursor.execute("ALTER TABLE whatsapp_channels "
+                       "ADD COLUMN IF NOT EXISTS waba_id VARCHAR(40);")
         cursor.execute("CREATE INDEX IF NOT EXISTS whatsapp_messages_chat_idx ON whatsapp_messages (chat_id, id);")
         # Bring installs created before these columns existed up to date.
         cursor.execute("ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS delivered BOOLEAN;")
@@ -21424,6 +21464,114 @@ def catalog_feed_url():
     if not base or not token:
         return ""
     return f"{base}/catalogue/facebook-feed.csv?token={urllib.parse.quote(token)}"
+
+
+def _graph_error_message(payload):
+    """The message Meta gave for a failed call, or ''."""
+    error = (payload or {}).get("error") or {}
+    message = str(error.get("message") or "").strip()
+    if message:
+        return message
+    return str((payload or {}).get("message") or "").strip()
+
+
+def whatsapp_catalog_status():
+    """Whether the saved catalog is linked to the WhatsApp Business Account.
+
+    The shop icon beside the business name in a customer's chat is drawn by
+    WhatsApp itself, not by anything a message contains. It appears once a
+    catalog is connected to the account behind the number, so this reads that
+    link and reports it rather than letting the portal imply it is live when it
+    is not.
+    """
+    catalog_id = whatsapp_catalog_id()
+    waba_id = wa_waba_id()
+    status = {
+        "configured": bool(catalog_id),
+        "catalog_id": catalog_id,
+        "waba_id": waba_id,
+        "connected": False,
+        "catalogs": [],
+        "detail": "",
+    }
+    if not catalog_id:
+        status["detail"] = "Save the Meta catalog ID first."
+        return status
+    if not waba_id:
+        status["detail"] = ("The WhatsApp Business Account is not known yet. Send one "
+                            "message to the bot number, or set WHATSAPP_WABA_ID.")
+        return status
+    token = str((wa_outbound_credentials() or {}).get("token") or "")
+    if not token:
+        status["detail"] = ("WhatsApp credentials are not available yet. Open the "
+                            "inbox once, or set WHATSAPP_ACCESS_TOKEN.")
+        return status
+    try:
+        response = requests.get(
+            f"https://graph.facebook.com/v18.0/{waba_id}/product_catalogs",
+            headers={"Authorization": "Bearer " + token},
+            timeout=20,
+        )
+        payload = response.json() if response.content else {}
+        if response.status_code >= 400:
+            status["detail"] = (_graph_error_message(payload)
+                                or f"Meta refused the check ({response.status_code}).")
+            return status
+        catalogs = payload.get("data") or []
+        status["catalogs"] = [
+            {"id": str(item.get("id") or ""), "name": str(item.get("name") or "")}
+            for item in catalogs if isinstance(item, dict)
+        ]
+        status["connected"] = any(item["id"] == catalog_id
+                                  for item in status["catalogs"])
+        status["detail"] = (
+            "Connected — WhatsApp shows the catalogue icon on the business profile."
+            if status["connected"] else
+            "The catalog is not linked to this WhatsApp account yet."
+        )
+    except Exception as e:
+        status["detail"] = f"Could not reach Meta: {e}"
+    return status
+
+
+def whatsapp_catalog_connect():
+    """Link the saved catalog to the WhatsApp Business Account. Returns (ok, detail).
+
+    This is the step that makes WhatsApp show the catalogue icon beside the
+    business name, and it is a change to the Meta account rather than to this
+    app - so the outcome is read back from Meta rather than assumed.
+    """
+    catalog_id = whatsapp_catalog_id()
+    if not catalog_id:
+        return False, "Save the Meta catalog ID first."
+    waba_id = wa_waba_id()
+    if not waba_id:
+        return False, ("The WhatsApp Business Account is not known yet. Send one message "
+                       "to the bot number, or set WHATSAPP_WABA_ID.")
+    token = str((wa_outbound_credentials() or {}).get("token") or "")
+    if not token:
+        return False, ("WhatsApp credentials are not available yet. Open the inbox once, "
+                       "or set WHATSAPP_ACCESS_TOKEN.")
+    try:
+        response = requests.post(
+            f"https://graph.facebook.com/v18.0/{waba_id}/product_catalogs",
+            headers={"Authorization": "Bearer " + token},
+            data={"catalog_id": catalog_id},
+            timeout=20,
+        )
+        payload = response.json() if response.content else {}
+        if response.status_code >= 400:
+            return False, (_graph_error_message(payload)
+                           or f"Meta refused the connection ({response.status_code}).")
+    except Exception as e:
+        return False, f"Could not reach Meta: {e}"
+    status = whatsapp_catalog_status()
+    if status["connected"]:
+        return True, ("Connected. WhatsApp will show the catalogue icon on the business "
+                      "profile; it can take a few minutes to appear.")
+    return False, (status.get("detail")
+                   or "Meta accepted the request but the catalog does not read back "
+                      "as connected yet.")
 
 
 # Delivery is the exception rather than the norm: an order is collected from a
@@ -33331,6 +33479,41 @@ def crm_whatsapp_catalog_api():
         'message': ("WhatsApp catalogue connected." if catalog_id
                     else "WhatsApp catalogue disconnected."),
     })
+
+
+@app.route('/api/crm/whatsapp-catalog/status')
+def crm_whatsapp_catalog_status_api():
+    """Whether the catalog is linked to the WhatsApp account behind the number.
+
+    Read live from Meta because the shop icon a customer sees is Meta's, not
+    this app's, so the portal has to report the real link rather than infer one.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    return jsonify({'success': True, 'status': whatsapp_catalog_status()})
+
+
+@app.route('/api/crm/whatsapp-catalog/connect', methods=['POST'])
+def crm_whatsapp_catalog_connect_api():
+    """Link the saved catalog to the WhatsApp Business Account."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    ok, detail = whatsapp_catalog_connect()
+    status = whatsapp_catalog_status()
+    log_activity("connected_whatsapp_catalog" if ok
+                 else "whatsapp_catalog_connect_failed",
+                 "catalogue",
+                 ("Linked the catalog to the WhatsApp account" if ok
+                  else f"Could not link the catalog: {detail}"),
+                 target="whatsapp-catalog",
+                 details={"catalog_id": status.get("catalog_id"),
+                          "waba_id": status.get("waba_id"),
+                          "connected": status.get("connected")}, user=user)
+    return jsonify({'success': bool(ok),
+                    'message': detail,
+                    'status': status}), (200 if ok else 400)
 
 
 @app.route('/api/crm/products/<product_id>/image', methods=['POST'])

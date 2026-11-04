@@ -284,6 +284,8 @@
     var idEl = document.getElementById('crmCatalogId');
     var feedEl = document.getElementById('crmCatalogFeedUrl');
     var copy = document.getElementById('crmCatalogFeedCopy');
+    var connect = document.getElementById('crmCatalogConnect');
+    var statusEl = document.getElementById('crmCatalogStatus');
     var noteEl = document.getElementById('crmCatalogNote');
 
     function note(message, kind) {
@@ -294,6 +296,32 @@
       window.setTimeout(function () {
         if (noteEl.textContent === message) noteEl.textContent = '';
       }, 4000);
+    }
+
+    /* The shop icon a customer sees is drawn by WhatsApp from the catalog link
+       on the business account, so the panel reports Meta's answer rather than
+       assuming the save made it live. */
+    function paintStatus(status) {
+      if (!statusEl) return;
+      if (!status) { statusEl.textContent = ''; return; }
+      var prefix = status.connected ? '\u2705 Connected' : '\u26a0\ufe0f Not connected';
+      var looked = status.catalogs && status.catalogs.length
+        ? ' Catalogs on the account: ' +
+          status.catalogs.map(function (item) {
+            return (item.name || 'unnamed') + ' (' + item.id + ')';
+          }).join(', ') + '.'
+        : '';
+      statusEl.textContent = prefix + ' — ' + (status.detail || '') + looked;
+      statusEl.classList.toggle('is-connected', !!status.connected);
+    }
+
+    function loadStatus() {
+      fetch('/api/crm/whatsapp-catalog/status')
+        .then(function (response) { return response.json(); })
+        .then(function (result) { paintStatus(result && result.status); })
+        .catch(function () {
+          if (statusEl) statusEl.textContent = 'Could not check the WhatsApp connection.';
+        });
     }
 
     if (copy) {
@@ -334,6 +362,7 @@
           if (idEl) idEl.value = result.catalog_id || '';
           note('Saved', 'is-ok');
           toast(result.message || 'WhatsApp catalogue saved.', 'ok');
+          loadStatus();
         })
         .catch(function () {
           setBusy(save, false);
@@ -342,6 +371,28 @@
                 'error');
         });
     });
+
+    if (connect) {
+      connect.addEventListener('click', function () {
+        setBusy(connect, true, 'Connecting…');
+        postJson('/api/crm/whatsapp-catalog/connect', {})
+          .then(function (result) {
+            setBusy(connect, false);
+            paintStatus(result && result.status);
+            window.crmToast && window.crmToast(
+              result.message || (result.success
+                ? 'Catalogue connected to WhatsApp.'
+                : 'Could not connect the catalogue.'),
+              result.success ? 'success' : 'error');
+          })
+          .catch(function () {
+            setBusy(connect, false);
+            window.crmToast && window.crmToast('Could not connect the catalogue.', 'error');
+          });
+      });
+    }
+
+    loadStatus();
   }
 
   /* ------------------------------------------------------------- tabs */
