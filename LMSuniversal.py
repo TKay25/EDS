@@ -21668,6 +21668,160 @@ def whatsapp_catalog_connect():
     return False, last_detail
 
 
+# The permissions the catalogue needs. Sending needs messaging, connecting a
+# catalog needs the other three; a token missing one of them fails in a way Meta
+# reports only as "an unknown error", so the check names the missing scope.
+WA_REQUIRED_SCOPES = (
+    "whatsapp_business_messaging",
+    "whatsapp_business_management",
+    "catalog_management",
+    "business_management",
+)
+
+
+def wa_app_credentials():
+    """(app_id, app_secret) for debugging the token, or ('', '') when unset.
+
+    `debug_token` needs an app access token, which is why the secret has to be
+    configured. Without it the check falls back to asking the token itself which
+    permissions it holds, which still catches a missing scope.
+    """
+    app_id = (os.getenv("WHATSAPP_APP_ID") or os.getenv("META_APP_ID") or "").strip()
+    secret = (os.getenv("WHATSAPP_APP_SECRET") or os.getenv("META_APP_SECRET") or "").strip()
+    return app_id, secret
+
+
+def _wa_token_type_label(kind):
+    """Meta's token type in the words an operator uses."""
+    return {
+        "SYSTEM_USER": "System user token (does not expire)",
+        "USER": "User token (expires — replace it with a system user token)",
+        "PAGE": "Page token",
+        "APP": "App token",
+    }.get(str(kind or "").upper(), str(kind or "unknown"))
+
+
+def _wa_token_source():
+    """Where the active token came from, so the operator knows what to replace."""
+    if (os.getenv("WHATSAPP_ACCESS_TOKEN") or "").strip():
+        return ("environment", "WHATSAPP_ACCESS_TOKEN")
+    return ("webhook", "the token captured from an incoming webhook")
+
+
+def whatsapp_token_check():
+    """What the deployed WhatsApp token is allowed to do.
+
+    Returns a dict rather than a formatted string so the panel can show the
+    scopes as a list. Never includes the token itself - only whether it exists,
+    where it came from, its type and its scopes.
+    """
+    source, source_label = _wa_token_source()
+    creds = wa_outbound_credentials() or {}
+    token = str(creds.get("token") or "").strip()
+    report = {
+        "present": bool(token),
+        "source": source,
+        "source_label": source_label,
+        "phone_number_id": str(creds.get("phone_id") or ""),
+        "waba_id": wa_waba_id(),
+        "type": "",
+        "type_label": "",
+        "app_id": "",
+        "valid": False,
+        "expires_at": "",
+        "scopes": [],
+        "missing": list(WA_REQUIRED_SCOPES),
+        "checked_with": "",
+        "detail": "",
+        "hint": "",
+    }
+    if not token:
+        report["detail"] = ("No WhatsApp token is available. Set WHATSAPP_ACCESS_TOKEN "
+                            "on the deployment, or send one message to the bot number.")
+        return report
+
+    app_id, secret = wa_app_credentials()
+    if app_id and secret:
+        report["checked_with"] = "debug_token"
+        try:
+            response = requests.get(
+                "https://graph.facebook.com/v18.0/debug_token",
+                params={"input_token": token, "access_token": f"{app_id}|{secret}"},
+                timeout=20,
+            )
+            payload = response.json() if response.content else {}
+        except Exception as e:
+            report["detail"] = f"Could not reach Meta: {e}"
+            return report
+        if response.status_code >= 400 or (payload.get("error")):
+            report["detail"] = (_graph_error_message(payload)
+                                or f"Meta refused the token check ({response.status_code}).")
+            report["hint"] = ("Add WHATSAPP_APP_ID and WHATSAPP_APP_SECRET so the token "
+                              "can be inspected, and make sure the secret is the app's.")
+            return report
+        data = payload.get("data") or {}
+        report["valid"] = bool(data.get("is_valid"))
+        report["type"] = str(data.get("type") or "")
+        report["type_label"] = _wa_token_type_label(report["type"])
+        report["app_id"] = str(data.get("app_id") or "")
+        expires = data.get("expires_at")
+        if expires in (0, None):
+            report["expires_at"] = "never"
+        else:
+            try:
+                report["expires_at"] = local_time(
+                    datetime.utcfromtimestamp(int(expires))).strftime("%d %b %Y %H:%M")
+            except Exception:
+                report["expires_at"] = str(expires)
+        report["scopes"] = [str(scope) for scope in (data.get("scopes") or [])]
+    else:
+        # No app secret, so the token is asked directly. A system-user token
+        # answers this the same way a user token does.
+        report["checked_with"] = "me/permissions"
+        try:
+            response = requests.get(
+                "https://graph.facebook.com/v18.0/me/permissions",
+                headers={"Authorization": "Bearer " + token},
+                timeout=20,
+            )
+            payload = response.json() if response.content else {}
+        except Exception as e:
+            report["detail"] = f"Could not reach Meta: {e}"
+            return report
+        if response.status_code >= 400:
+            report["detail"] = (_graph_error_message(payload)
+                                or f"Meta refused the token check ({response.status_code}).")
+            report["hint"] = ("Set WHATSAPP_APP_ID and WHATSAPP_APP_SECRET for a full "
+                              "check, including the token type and expiry.")
+            return report
+        granted = [str(item.get("permission") or "")
+                   for item in (payload.get("data") or [])
+                   if str(item.get("status") or "granted").lower() == "granted"]
+        report["scopes"] = [scope for scope in granted if scope]
+        report["valid"] = bool(report["scopes"])
+        report["type_label"] = "Not reported without an app secret"
+        report["expires_at"] = "not reported without an app secret"
+
+    report["missing"] = [scope for scope in WA_REQUIRED_SCOPES
+                         if scope not in report["scopes"]]
+    if not report["valid"]:
+        report["detail"] = "Meta reports the token as invalid or expired."
+        report["hint"] = ("Generate a new system user token in Business Settings → "
+                          "Users → System users, then set WHATSAPP_ACCESS_TOKEN.")
+    elif report["missing"]:
+        report["detail"] = "The token is missing: " + ", ".join(report["missing"]) + "."
+        report["hint"] = ("In Business Settings → Users → System users, assign the app, "
+                          "catalog and WhatsApp account to the system user, then generate "
+                          "a new token with those permissions.")
+    else:
+        report["detail"] = "The token has every permission the catalogue needs."
+    if str(report["type"]).upper() == "USER":
+        report["hint"] = ((report["hint"] + " ").strip()
+                          + " A user token stops working within about an hour; use a "
+                            "system user token with no expiry.")
+    return report
+
+
 # Delivery is the exception rather than the norm: an order is collected from a
 # shop unless the customer is outside Harare and the order is large enough to be
 # worth sending. The threshold is business data set in the CRM portal, so the
@@ -33626,6 +33780,27 @@ def crm_whatsapp_catalog_status_api():
         return error
     return jsonify({'success': True,
                     'status': whatsapp_catalog_status()})
+
+
+@app.route('/api/crm/whatsapp-catalog/token')
+def crm_whatsapp_token_check_api():
+    """Report what the deployed WhatsApp token is allowed to do.
+
+    A missing scope is the usual reason a catalog cannot be connected and is the
+    one thing Meta's own error never states, so the panel asks Meta directly and
+    names what is absent. The token itself is never returned.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    report = whatsapp_token_check()
+    log_activity("checked_whatsapp_token", "catalogue",
+                 ("WhatsApp token check: " + (report.get("detail") or "no detail")),
+                 target="whatsapp-catalog",
+                 details={"source": report.get("source"),
+                          "type": report.get("type"),
+                          "missing": report.get("missing")}, user=user)
+    return jsonify({'success': True, 'token': report})
 
 
 @app.route('/api/crm/whatsapp-catalog/manual', methods=['POST'])

@@ -1079,6 +1079,17 @@ select.ps-input {
    rather than as a hint: green once the catalog is linked, amber until then. */
 #crmCatalogStatus { font-weight: 600; color: #B45309; }
 #crmCatalogStatus.is-connected { color: #047857; }
+#crmCatalogTokenReport {
+  white-space: pre-line;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border: 1px solid var(--ps-line);
+  border-radius: 10px;
+  background: var(--ps-surface-alt);
+}
+#crmCatalogTokenReport.is-connected { border-color: #A7F3D0; }
 
 /* ----------------------------------------------------------- activity log */
 .crm-tab-action { margin-left: auto; }

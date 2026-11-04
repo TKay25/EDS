@@ -286,6 +286,8 @@
     var copy = document.getElementById('crmCatalogFeedCopy');
     var connect = document.getElementById('crmCatalogConnect');
     var manualBtn = document.getElementById('crmCatalogManual');
+    var tokenBtn = document.getElementById('crmCatalogToken');
+    var tokenReportEl = document.getElementById('crmCatalogTokenReport');
     var wabaEl = document.getElementById('crmCatalogWabaId');
     var statusEl = document.getElementById('crmCatalogStatus');
     var noteEl = document.getElementById('crmCatalogNote');
@@ -449,6 +451,42 @@
           .catch(function () {
             setBusy(manualBtn, false);
             window.crmToast && window.crmToast('Could not save that.', 'error');
+          });
+      });
+    }
+
+    if (tokenBtn) {
+      tokenBtn.addEventListener('click', function () {
+        setBusy(tokenBtn, true, 'Checking…');
+        fetch('/api/crm/whatsapp-catalog/token')
+          .then(function (response) { return response.json(); })
+          .then(function (result) {
+            setBusy(tokenBtn, false);
+            var report = (result && result.token) || {};
+            if (tokenReportEl) {
+              var lines = [];
+              lines.push((report.missing && report.missing.length ? '\u26a0\ufe0f ' : '\u2705 ') +
+                         (report.detail || 'No detail from Meta.'));
+              lines.push('Source: ' + (report.source_label || 'unknown') +
+                         ' · Type: ' + (report.type_label || 'unknown') +
+                         ' · Expires: ' + (report.expires_at || 'unknown'));
+              lines.push('Checked with: ' + (report.checked_with || 'unknown') +
+                         (report.app_id ? ' · App ' + report.app_id : '') +
+                         (report.waba_id ? ' · WABA ' + report.waba_id : ''));
+              lines.push('Scopes: ' + ((report.scopes || []).join(', ') || 'none reported'));
+              if (report.hint) lines.push(report.hint);
+              tokenReportEl.textContent = lines.join('\n');
+              tokenReportEl.hidden = false;
+              tokenReportEl.classList.toggle('is-connected',
+                !!(report.missing && report.missing.length === 0 && report.valid));
+            }
+            window.crmToast && window.crmToast(
+              report.detail || 'Token checked.',
+              (report.missing && report.missing.length) ? 'error' : 'success');
+          })
+          .catch(function () {
+            setBusy(tokenBtn, false);
+            window.crmToast && window.crmToast('Could not check the token.', 'error');
           });
       });
     }
