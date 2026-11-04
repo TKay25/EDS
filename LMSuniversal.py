@@ -33129,6 +33129,17 @@ def catalogue_public_items():
     return items
 
 
+def catalogue_public_product(product_id):
+    """One product for its own page, or None.
+
+    Each product gets a URL of its own because Meta validates the website link on
+    a catalogue item, and a shared page with an anchor is not a product page.
+    """
+    wanted = str(product_id or "").strip().lower()
+    return next((item for item in catalogue_public_items()
+                 if item["id"].lower() == wanted), None)
+
+
 def catalogue_feed_rows():
     """One feed row per sellable pack, ready for Meta Commerce Manager.
 
@@ -33150,7 +33161,10 @@ def catalogue_feed_rows():
             "availability": "in stock",
             "condition": "new",
             "price": f"{item['price']:.2f} {PAYNOW_CURRENCY}",
-            "link": f"{base}/catalogue#{product['id']}" if base else "",
+            # A product page, not an anchor on a shared list: Meta validates the
+            # link it is given, and a bare page of everything is not a product.
+            "link": (f"{base}/catalogue/{urllib.parse.quote(product['id'])}"
+                     if base else ""),
             "image_link": product_image_public_url(product.get("image")) or fallback_image,
             "brand": COMPANY_SYSTEM_NAME,
             "item_group_id": product["id"],
@@ -33162,13 +33176,29 @@ def catalogue_feed_rows():
 @app.route('/catalogue')
 def catalogue_public_page():
     """The public catalogue Meta links each product to, and a shareable page."""
+    return _catalogue_page(catalogue_public_items(), single=None)
+
+
+@app.route('/catalogue/<product_id>')
+def catalogue_public_product_page(product_id):
+    """One product's own page, which is the website link a catalogue item needs."""
+    product = catalogue_public_product(product_id)
+    if not product:
+        return _catalogue_page(catalogue_public_items(), single=None), 404
+    return _catalogue_page([product], single=product)
+
+
+def _catalogue_page(items, single=None):
+    """Render the catalogue page, for the whole range or for one product."""
     channel = company_system_channel_label()
     whatsapp_link = ""
     if channel:
         text = urllib.parse.quote("Catalogue")
         whatsapp_link = f"https://wa.me/{channel}?text={text}"
     return render_template('catalogue_public.html',
-                           items=catalogue_public_items(),
+                           items=items,
+                           single=single,
+                           catalogue_url=f"{public_base_url()}/catalogue",
                            whatsapp_link=whatsapp_link,
                            company_name=COMPANY_SYSTEM_NAME,
                            company_contact=COMPANY_SYSTEM_CONTACT,

@@ -81,6 +81,14 @@
             text-decoration: none;
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
         }
+        .cta-quiet {
+            margin-left: 10px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            color: #fff;
+            box-shadow: none;
+            font-weight: 600;
+        }
         main {
             width: min(1080px, 100%);
             margin: 0 auto;
@@ -172,13 +180,21 @@
                     <p class="brand-sub">Household · Cleaning · Personal care</p>
                 </div>
             </div>
-            <h1>Our catalogue</h1>
+            <h1>{% if single is defined and single %}{{ single.name }}{% else %}Our catalogue{% endif %}</h1>
             <p class="lead">
+                {% if single is defined and single %}
+                {{ single.summary or 'Available pack sizes and prices are shown below.' }}
+                Order on WhatsApp and we will confirm the price and arrange collection.
+                {% else %}
                 Browse the range below. Order on WhatsApp and we will build your cart,
                 confirm the price and arrange collection.
+                {% endif %}
             </p>
             {% if whatsapp_link %}
             <a class="cta" href="{{ whatsapp_link }}">Order on WhatsApp</a>
+            {% endif %}
+            {% if single is defined and single and catalogue_url %}
+            <a class="cta cta-quiet" href="{{ catalogue_url }}">← Back to the full catalogue</a>
             {% endif %}
         </div>
     </header>
