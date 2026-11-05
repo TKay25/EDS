@@ -23945,15 +23945,10 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
     cart_label = "View Cart"
     if count:
         cart_label = f"View Cart ({count} item{'s' if count != 1 else ''})"
-    # Only offered when Meta has a catalogue connected, so the choice always
-    # opens something rather than leading to a refusal.
-    has_catalog = bool(whatsapp_catalog_id())
     options = [("shop", "Shop"), ("search", "Search Products"), ("cart", cart_label),
                ("orders", "Track my order"),
                ("support", "Contact us"), ("about", "About Us"),
                ("support_human", "Talk to a human")]
-    if has_catalog:
-        options.insert(0, ("catalogue", "View catalogue"))
     if staff:
         options.append(("switch_staff", "Switch to Staff"))
     options.append(("language", "Language"))
@@ -23976,9 +23971,7 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
     body = (
         f"{opening}\n"
         f"I am the {COMPANY_SYSTEM_CONTACT['name']} assistant.\n\n"
-        + ("🛍️ Open our WhatsApp catalogue and build a cart\n" if has_catalog else "")
-        + ("🧾 Shop in the chat instead and build an order\n" if has_catalog
-           else "🛍️ Browse the range and build an order\n")
+        + "🛍️ Browse the range and build an order\n"
         + "🔎 Search for a product by name\n"
         "🛒 Review your cart and buy\n"
         "📦 Track or cancel an order\n"
@@ -23988,24 +23981,6 @@ def shop_greeting(cart=None, staff=False, display_name=None, language="en", shor
     # The full welcome is framed as a welcome; a return to the menu (handled
     # above) as a menu.
     return _shop_frame(_shop_options(body, options), "welcome")
-
-
-def _shop_catalog_entry():
-    """The native WhatsApp catalogue message customers open from the menu.
-
-    The catalog is the one connected to the business in Meta, so a product added
-    in the CRM appears after Meta next reads the feed. The text is also what the
-    transcript records, and the fallback is used if WhatsApp refuses the rich
-    message.
-    """
-    return {
-        "type": "catalog",
-        "catalog": True,
-        "text": ("🛍️ *Our catalogue*\n\nBrowse the full range, open a product for "
-                 "details, and add what you need to your WhatsApp cart."),
-        "fallback": ("The catalogue could not be opened just now. Reply *shop* to "
-                     "browse the range here."),
-    }
 
 
 def _shop_category_list():
@@ -28547,12 +28522,9 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         return result("category", [_shop_category_list()])
 
     if low in ("catalogue", "catalog", "view catalogue", "view catalog"):
-        if whatsapp_catalog_id():
-            return result("menu", [_shop_catalog_entry()])
-        # Not connected yet: the range is still browsable in the chat, so the
-        # choice is answered rather than refused.
         return result("category", [
-            _shop_text("The WhatsApp catalogue is not connected yet — here is our range:"),
+            _shop_text("The catalogue shortcut is unavailable in chat right now. "
+                       "You can browse our products here instead."),
             _shop_category_list()])
 
     if low in ("search", "search products"):
@@ -30599,18 +30571,6 @@ def _wa_text_payload(body):
     return {"type": "text", "text": {"body": body}}
 
 
-def _wa_catalog_payload(text):
-    """A native WhatsApp catalogue message opening the connected catalog."""
-    return {
-        "type": "interactive",
-        "interactive": {
-            "type": "catalog_message",
-            "body": {"text": str(text or "")[:WA_BUTTON_BODY_LIMIT]},
-            "action": {"name": "catalog_message"},
-        },
-    }
-
-
 def _wa_button_payload(body, options):
     return {
         "type": "interactive",
@@ -31076,24 +31036,6 @@ def shop_send_whatsapp(wa_number, messages, nav, channel=None, staff=False, lang
 
     kind = "text"
     ok = True
-    # The native catalogue travels as its own interactive message. A rejection is
-    # answered with plain text rather than being left silent.
-    for message in messages or []:
-        if not (message or {}).get("catalog"):
-            continue
-        catalog_payload = _wa_catalog_payload(message.get("text") or "")
-        sent, detail = crm_send_whatsapp_payload(wa_number, catalog_payload, channel)
-        if sent:
-            kind = "interactive"
-        else:
-            print(f"catalogue send failed: {detail}")
-            fallback = (message.get("fallback")
-                        or "Reply *shop* to browse the range here.")
-            sent, fallback_detail = crm_send_whatsapp(wa_number, fallback, channel)
-            if not sent:
-                print(f"catalogue text fallback failed: {fallback_detail}")
-        ok = ok and sent
-
     for payload in payloads:
         sent, detail = crm_send_whatsapp_payload(wa_number, payload, channel)
         if payload.get("type") == "interactive":
