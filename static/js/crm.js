@@ -287,6 +287,7 @@
     var connect = document.getElementById('crmCatalogConnect');
     var manualBtn = document.getElementById('crmCatalogManual');
     var tokenBtn = document.getElementById('crmCatalogToken');
+    var syncBtn = document.getElementById('crmCatalogSync');
     var tokenReportEl = document.getElementById('crmCatalogTokenReport');
     var wabaEl = document.getElementById('crmCatalogWabaId');
     var statusEl = document.getElementById('crmCatalogStatus');
@@ -317,7 +318,10 @@
           }).join(', ') + '.'
         : '';
       var hint = status.hint ? ' ' + status.hint : '';
-      statusEl.textContent = prefix + ' — ' + (status.detail || '') + looked + hint;
+      var count = (status.product_count === 0 || status.product_count)
+        ? ' Products in the catalog: ' + status.product_count + '.'
+        : '';
+      statusEl.textContent = prefix + ' — ' + (status.detail || '') + count + looked + hint;
       statusEl.classList.toggle('is-connected', !!status.connected);
     }
 
@@ -451,6 +455,36 @@
           .catch(function () {
             setBusy(manualBtn, false);
             window.crmToast && window.crmToast('Could not save that.', 'error');
+          });
+      });
+    }
+
+    if (syncBtn) {
+      syncBtn.addEventListener('click', function () {
+        var typed = idEl ? idEl.value.trim() : '';
+        if (!typed) {
+          note('Enter the Meta catalog ID first.', 'is-error');
+          if (idEl) idEl.focus();
+          return;
+        }
+        if (!window.confirm('Publish every priced pack into the Meta catalog now?\n\n' +
+                            'This is the one-off route for an empty catalog. Once the ' +
+                            'scheduled feed is added in Commerce Manager it keeps itself up ' +
+                            'to date.')) {
+          return;
+        }
+        setBusy(syncBtn, true, 'Publishing…');
+        postJson('/api/crm/whatsapp-catalog/sync', { catalog_id: typed })
+          .then(function (result) {
+            setBusy(syncBtn, false);
+            paintStatus(result && result.status);
+            window.crmToast && window.crmToast(
+              result.message || (result.success ? 'Products published.' : 'Publishing failed.'),
+              result.success ? 'success' : 'error');
+          })
+          .catch(function () {
+            setBusy(syncBtn, false);
+            window.crmToast && window.crmToast('Could not publish the products.', 'error');
           });
       });
     }

@@ -21534,6 +21534,107 @@ def _graph_error_hint(detail):
     return ""
 
 
+def wa_catalog_products(catalog_id):
+    """How many products Meta holds for a catalog, and in what state.
+
+    A catalog that is connected but holds nothing Meta is willing to show still
+    draws no icon, so the count is part of the answer to "why is the icon not
+    there". Returns `count` (None when Meta will not say) and `states` keyed by
+    Meta's review state.
+    """
+    info = {"count": None, "states": {}, "detail": ""}
+    catalog_id = str(catalog_id or "").strip()
+    token = str((wa_outbound_credentials() or {}).get("token") or "")
+    if not catalog_id or not token:
+        return info
+    try:
+        response = requests.get(
+            f"https://graph.facebook.com/v18.0/{catalog_id}/products",
+            headers={"Authorization": "Bearer " + token},
+            params={"summary": "true", "limit": 25,
+                    "fields": "id,availability,review_status"},
+            timeout=20,
+        )
+        payload = response.json() if response.content else {}
+        if response.status_code >= 400:
+            info["detail"] = (_graph_error_message(payload)
+                              or f"Meta would not list the catalog ({response.status_code}).")
+            return info
+        summary = payload.get("summary") or {}
+        rows = [row for row in (payload.get("data") or []) if isinstance(row, dict)]
+        count = summary.get("total_count")
+        info["count"] = int(count) if count is not None else len(rows)
+        for row in rows:
+            state = str(row.get("review_status") or "unknown").strip().lower()
+            info["states"][state] = info["states"].get(state, 0) + 1
+    except Exception as e:
+        info["detail"] = f"Could not reach Meta: {e}"
+    return info
+
+
+def wa_catalog_push_products(catalog_id=None):
+    """Create or update every sellable pack in the Meta catalog. Returns (ok, detail).
+
+    The scheduled feed is the normal way to keep Meta in step, but a catalog that
+    is connected and empty shows no icon, and waiting for a feed to process is not
+    an answer when someone is looking at the chat now. This pushes the same rows
+    the feed would publish, once, and reports how many Meta accepted.
+    """
+    catalog_id = str(catalog_id or whatsapp_catalog_id()).strip()
+    if not catalog_id:
+        return False, "Save the Meta catalog ID first."
+    token = str((wa_outbound_credentials() or {}).get("token") or "")
+    if not token:
+        return False, ("WhatsApp credentials are not available yet. Open the inbox once, "
+                       "or set WHATSAPP_ACCESS_TOKEN.")
+    rows = catalogue_feed_rows()
+    if not rows:
+        return False, ("There is nothing to publish. A pack needs a price before it can "
+                       "appear in the catalogue.")
+    pushed, failed, first_error = 0, 0, ""
+    for row in rows:
+        data = {
+            "retailer_id": row["id"],
+            "name": row["title"],
+            "description": row["description"],
+            "availability": "in stock",
+            "condition": "new",
+            "price": row["price"],
+            "currency": PAYNOW_CURRENCY,
+            "url": row["link"],
+            "image_url": row["image_link"],
+            "brand": row["brand"],
+            "item_group_id": row["item_group_id"],
+            "size": row["size"],
+        }
+        try:
+            response = requests.post(
+                f"https://graph.facebook.com/v18.0/{catalog_id}/products",
+                headers={"Authorization": "Bearer " + token},
+                data=data,
+                timeout=20,
+            )
+            payload = response.json() if response.content else {}
+        except Exception as e:
+            failed += 1
+            first_error = first_error or f"Could not reach Meta: {e}"
+            continue
+        if response.status_code >= 400:
+            failed += 1
+            first_error = first_error or (_graph_error_message(payload)
+                                          or f"Meta refused the product ({response.status_code}).")
+        else:
+            pushed += 1
+    if not pushed:
+        hint = _graph_error_hint(first_error)
+        return False, (f"None of the {len(rows)} product(s) were accepted. "
+                       f"{first_error} {hint}".strip())
+    detail = f"{pushed} product(s) sent to the catalog."
+    if failed:
+        detail += (f" {failed} were refused — {first_error}")
+    return True, detail
+
+
 def whatsapp_catalog_status():
     """Whether the saved catalog is linked to the WhatsApp Business Account.
 
@@ -21553,6 +21654,8 @@ def whatsapp_catalog_status():
         "connected": False,
         "manual": manual,
         "catalogs": [],
+        "product_count": None,
+        "product_states": {},
         "detail": "",
         "hint": "",
     }
@@ -21564,8 +21667,26 @@ def whatsapp_catalog_status():
         # Confirmed by staff in Meta's own tools. The API link is not readable
         # from here, but the catalog is connected and the bot can offer it.
         status["connected"] = True
-        status["detail"] = ("Linked in WhatsApp Manager — the shop icon appears on the "
-                            "business profile. The assistant offers the catalogue.")
+        products = wa_catalog_products(catalog_id)
+        status["product_count"] = products["count"]
+        status["product_states"] = products["states"]
+        if products["count"] == 0:
+            # The usual reason a connected catalog still shows no icon.
+            status["detail"] = ("Linked in WhatsApp Manager, but the catalog is empty — "
+                                "WhatsApp only shows the icon once it holds at least one "
+                                "product.")
+            status["hint"] = ("Add the product feed in Commerce Manager → Data sources "
+                              "(use the feed URL above), or add a product by hand. A pack "
+                              "needs a price, and the product needs a picture.")
+        elif products["count"] is None:
+            status["detail"] = ("Linked in WhatsApp Manager. The assistant offers the "
+                                "catalogue.")
+            if products["detail"]:
+                status["hint"] = ("The product count could not be read: "
+                                  + products["detail"])
+        else:
+            status["detail"] = ("Linked in WhatsApp Manager — the assistant offers the "
+                                f"catalogue and Meta holds {products['count']} product(s).")
         return status
     if not waba_id:
         status["detail"] = ("The WhatsApp Business Account is not known yet. Send one "
@@ -21596,11 +21717,28 @@ def whatsapp_catalog_status():
         ]
         status["connected"] = any(item["id"] == catalog_id
                                   for item in status["catalogs"])
-        status["detail"] = (
-            "Connected — WhatsApp shows the catalogue icon on the business profile."
-            if status["connected"] else
-            "The catalog is not linked to this WhatsApp account yet."
-        )
+        if status["connected"]:
+            # An empty catalog is connected but still shows no icon, so the count
+            # is what turns "connected" into an answer about the icon itself.
+            products = wa_catalog_products(catalog_id)
+            status["product_count"] = products["count"]
+            status["product_states"] = products["states"]
+            if products["count"] == 0:
+                status["detail"] = ("Connected, but the catalog is empty — WhatsApp only "
+                                    "shows the icon once it holds at least one product.")
+                status["hint"] = ("Add the product feed in Commerce Manager → Data "
+                                  "sources (use the feed URL above), or add a product by "
+                                  "hand. A pack needs a price, and the product needs a "
+                                  "picture.")
+            elif products["count"] is None:
+                status["detail"] = ("Connected — the catalogue icon is on the business "
+                                    "profile.")
+            else:
+                status["detail"] = ("Connected — Meta holds "
+                                    f"{products['count']} product(s) and WhatsApp shows the "
+                                    "catalogue icon on the business profile.")
+        else:
+            status["detail"] = "The catalog is not linked to this WhatsApp account yet."
     except Exception as e:
         status["detail"] = f"Could not reach Meta: {e}"
     return status
@@ -33780,6 +33918,32 @@ def crm_whatsapp_catalog_status_api():
         return error
     return jsonify({'success': True,
                     'status': whatsapp_catalog_status()})
+
+
+@app.route('/api/crm/whatsapp-catalog/sync', methods=['POST'])
+def crm_whatsapp_catalog_sync_api():
+    """Publish the catalogue's products into the Meta catalog now.
+
+    The scheduled feed remains the normal route; this is for a catalog that is
+    connected but still empty, which is why no icon appears yet.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    catalog_id = re.sub(r"\D", "", str(payload.get('catalog_id') or ''))
+    if catalog_id:
+        ok, message = shop_settings_save({WHATSAPP_CATALOG_ID_KEY: catalog_id})
+        if not ok:
+            return jsonify({'success': False, 'message': message}), 400
+    ok, detail = wa_catalog_push_products()
+    log_activity("published_whatsapp_catalog", "catalogue",
+                 ("Published the catalogue products to Meta" if ok
+                  else f"Could not publish the catalogue: {detail}"),
+                 target="whatsapp-catalog",
+                 details={"catalog_id": whatsapp_catalog_id(), "detail": detail}, user=user)
+    return jsonify({'success': bool(ok), 'message': detail,
+                    'status': whatsapp_catalog_status()}), (200 if ok else 400)
 
 
 @app.route('/api/crm/whatsapp-catalog/token')
