@@ -21509,6 +21509,10 @@ def _graph_error_hint(detail):
     message an operator can act on and one that only says "no".
     """
     lowered = str(detail or "").lower()
+    if "image_url" in lowered or "10801" in lowered:
+        return ("Meta requires every product to have a public image URL. Upload a picture "
+                "for each product, or add a company logo as the fallback, and set "
+                "PUBLIC_BASE_URL to the site's public HTTPS address so Meta can fetch it.")
     # 2388004 is the catalog permission refusal: the app is not allowed to attach
     # that catalog to the account, whatever the token's other permissions say.
     if "2388004" in lowered:
@@ -21607,6 +21611,11 @@ def wa_catalog_push_products(catalog_id=None):
             "item_group_id": row["item_group_id"],
             "size": row["size"],
         }
+        if not str(data["image_url"] or "").strip():
+            failed += 1
+            first_error = first_error or (
+                f"Product '{data['name']}' has no public image URL (Meta requires image_url).")
+            continue
         try:
             response = requests.post(
                 f"https://graph.facebook.com/v18.0/{catalog_id}/products",
