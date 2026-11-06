@@ -35,6 +35,7 @@
     var searchClearEl = document.getElementById('crmChatSearchClear');
     var searchHintEl = document.getElementById('crmSearchHint');
     var filterSelect = document.getElementById('crmFilterSelect');
+    var clientFilterSelect = document.getElementById('crmClientFilterSelect');
 
     var activeId = null;
     var activeStatus = 'bot';
@@ -100,12 +101,18 @@
     function renderList(chats) {
       if (!chats.length) {
         var searching = searchTerm !== '';
+        var clientType = root.getAttribute('data-client-filter') || 'outside';
+        var emptyMessage = clientType === 'inhouse'
+          ? 'In-house conversations will appear here.'
+          : clientType === 'outside'
+            ? 'Outside client conversations will appear here.'
+            : 'Every message on the company WhatsApp channel appears here, from customers and staff alike.';
         listEl.innerHTML = '<div class="ps-empty"><i class="bi bi-' +
           (searching ? 'search' : 'chat-square-text') + '"></i>' +
           '<h4>' + (searching ? 'No matching conversations' : 'No conversations yet') + '</h4>' +
           '<p>' + (searching
             ? 'Nothing matched “' + escapeHtml(searchTerm) + '”. Try a name, a phone number or a product.'
-            : 'Every message on the company WhatsApp channel appears here, from customers and staff alike.') +
+            : emptyMessage) +
           '</p></div>';
         return;
       }
@@ -357,7 +364,9 @@
 
     function refresh(silent, skipAnnounce) {
       var filter = root.getAttribute('data-filter') || 'all';
-      var url = '/api/crm/summary?filter=' + encodeURIComponent(filter);
+      var clientType = root.getAttribute('data-client-filter') || 'outside';
+      var url = '/api/crm/summary?filter=' + encodeURIComponent(filter) +
+        '&client_type=' + encodeURIComponent(clientType);
       if (searchTerm) url += '&search=' + encodeURIComponent(searchTerm);
       fetch(url)
         .then(function (response) { return response.json(); })
@@ -468,7 +477,15 @@
     });
 
     if (filterSelect) {
-      filterSelect.addEventListener('change', function () {        root.setAttribute('data-filter', filterSelect.value);
+      filterSelect.addEventListener('change', function () {
+        root.setAttribute('data-filter', filterSelect.value);
+        refresh(true);
+      });
+    }
+
+    if (clientFilterSelect) {
+      clientFilterSelect.addEventListener('change', function () {
+        root.setAttribute('data-client-filter', clientFilterSelect.value);
         refresh(true);
       });
     }

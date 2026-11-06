@@ -3236,6 +3236,21 @@
       });
     }
 
+    var clientFilterSelect = document.getElementById('crmClientFilterSelect');
+    if (clientFilterSelect) {
+      clientFilterSelect.addEventListener('change', function () {
+        var url = new URL(window.location.href);
+        var value = clientFilterSelect.value;
+        if (!value || value === 'outside') {
+          url.searchParams.delete('client_type');
+        } else {
+          url.searchParams.set('client_type', value);
+        }
+        url.searchParams.delete('chat');
+        window.location.href = url.toString();
+      });
+    }
+
     var retry = document.getElementById('crmChatsRetry');
     if (retry) {
       retry.addEventListener('click', function () {

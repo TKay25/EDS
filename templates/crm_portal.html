@@ -17,7 +17,8 @@
 
 {% include 'components/eds_portal_nav.html' %}
 
-<main class="ps-shell" id="crmInbox" data-filter="all"
+<main class="ps-shell" id="crmInbox" data-filter="{{ chat_filter }}"
+      data-client-filter="{{ client_type }}"
       data-currency="{{ PAYNOW_CURRENCY if PAYNOW_CURRENCY is defined else 'USD' }}">
 
     {# One row carries the page name and the tabs. The old "Sales desk" heading
@@ -138,6 +139,14 @@
                             {% endfor %}
                         </select>
                     </label>
+                    <label class="crm-select-wrap">
+                        <span class="crm-select-label">Clients</span>
+                        <select class="ps-input crm-select" id="crmClientFilterSelect" aria-label="Filter client type">
+                            {% for value, label in crm_client_types %}
+                            <option value="{{ value }}"{% if value == client_type %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
                 </div>
             </div>
 
@@ -209,7 +218,7 @@
                     <div class="ps-empty">
                         <i class="bi bi-chat-square-text"></i>
                         <h4>No conversations yet</h4>
-                        <p>Every message on the company WhatsApp channel appears here, from customers and staff alike.</p>
+                        <p>{% if client_type == 'inhouse' %}In-house conversations will appear here.{% elif client_type == 'outside' %}Outside client conversations will appear here.{% else %}Every message on the company WhatsApp channel appears here, from customers and staff alike.{% endif %}</p>
                     </div>
                 {% endif %}
             </div>

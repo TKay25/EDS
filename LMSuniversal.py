@@ -31458,12 +31458,17 @@ _CRM_CHAT_FILTERS = {
     "open": "Open conversations",
     "unattended": "Unattended",
     "human": "Agent live",
-    "staff": "Staff",
     "closed": "Closed",
 }
 
+_CRM_CLIENT_TYPES = {
+    "outside": "Outside clients",
+    "inhouse": "In-house clients",
+    "all": "All clients",
+}
 
-def _crm_chats(filter_key="all", search=None):
+
+def _crm_chats(filter_key="all", search=None, client_type="outside"):
     """Conversations for the CRM inbox.
 
     `search` matches the customer's name, their WhatsApp number, or the text of
@@ -31490,6 +31495,10 @@ def _crm_chats(filter_key="all", search=None):
     # "all" adds no status condition at all. It used to reuse the open-chats
     # filter, so a closed conversation disappeared from "All conversations" —
     # which reads as the history having been lost.
+    if client_type == "outside":
+        where.append("is_staff = FALSE")
+    elif client_type == "inhouse":
+        where.append("is_staff = TRUE")
 
     search = " ".join(str(search or "").split()).strip()
     if search:
@@ -31747,11 +31756,17 @@ def portal_crm():
         print(f"channel warmup skipped: {e}")
     # The filter is part of the URL so a reload, a bookmark or the back button
     # all land on the same list the agent was looking at.
-    chat_filter = (request.args.get('filter') or 'all').strip().lower()
+    requested_filter = (request.args.get('filter') or 'all').strip().lower()
+    chat_filter = 'all' if requested_filter == 'staff' else requested_filter
     if chat_filter not in _CRM_CHAT_FILTERS:
         chat_filter = 'all'
+    client_type = (request.args.get('client_type') or 'outside').strip().lower()
+    if requested_filter == 'staff' and 'client_type' not in request.args:
+        client_type = 'inhouse'
+    if client_type not in _CRM_CLIENT_TYPES:
+        client_type = 'outside'
     try:
-        chats = _crm_chats(chat_filter)
+        chats = _crm_chats(chat_filter, client_type=client_type)
         chats_error = ""
     except Exception as e:
         # An inbox that failed to load must not render as an empty one: that is
@@ -31781,7 +31796,9 @@ def portal_crm():
                            nav_modules=user_modules(user),
                            chats=chats, chats_error=chats_error,
                            chat_filter=chat_filter,
+                           client_type=client_type,
                            chat_filters=list(_CRM_CHAT_FILTERS.items()),
+                           crm_client_types=list(_CRM_CLIENT_TYPES.items()),
                            orders=orders,
                            catalog=catalog,
                            removed=removed,
@@ -31871,9 +31888,17 @@ def crm_summary():
     user, error = portal_api_user('crm')
     if error:
         return error
+    requested_filter = (request.args.get('filter') or 'all').strip().lower()
+    filter_key = 'all' if requested_filter == 'staff' else requested_filter
+    client_type = (request.args.get('client_type') or 'outside').strip().lower()
+    if requested_filter == 'staff' and 'client_type' not in request.args:
+        client_type = 'inhouse'
+    if client_type not in _CRM_CLIENT_TYPES:
+        client_type = 'outside'
     return jsonify({'success': True,
-                    'chats': _crm_chats(request.args.get('filter', 'all'),
-                                        request.args.get('search')),
+                    'chats': _crm_chats(filter_key,
+                                        request.args.get('search'),
+                                        client_type=client_type),
                     'stats': company_system_stats()})
 
 
