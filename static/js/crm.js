@@ -1923,12 +1923,14 @@
     }
     stockBody.innerHTML = rows.map(function (row) {
       var value = row.quantity === null || row.quantity === undefined ? '' : String(row.quantity);
-      // `available` is what is left once the orders already placed are covered,
-      // so a negative figure is the shortage itself rather than a stock level.
+      // `available` is what is left once the orders already placed are covered.
+      // When it is negative nothing is free, so it reads as "0 left, 3 short"
+      // rather than a negative stock level the shelf cannot hold.
       var available = row.available;
       var unknown = available === null || available === undefined;
       var availClass = unknown ? 'crm-avail is-unknown' : (available < 0 ? 'crm-avail is-short' : 'crm-avail');
-      var availText = unknown ? '—' : (available < 0 ? available + ' short' : String(available));
+      var availText = unknown ? '—'
+        : (available < 0 ? '0 left, ' + (-available) + ' short' : String(available));
       var line = row.product_id + '|' + row.pack_size;
       return '<tr><td><strong>' + escapeHtml(row.name) + '</strong></td>' +
         '<td>' + escapeHtml(row.pack_size) + '</td>' +
@@ -2395,7 +2397,16 @@
   }
   if (stockBody) {
     stockBody.addEventListener('input', paintStockFoot);
-    stockBody.addEventListener('change', paintStockFoot);
+    stockBody.addEventListener('change', function (event) {
+      var input = event.target;
+      // A shelf cannot hold minus two, so a typed negative is floored at zero
+      // before it can become a count the server would refuse to save.
+      if (input && input.getAttribute && input.getAttribute('data-line') &&
+          input.value.trim() !== '' && Number(input.value) < 0) {
+        input.value = '0';
+      }
+      paintStockFoot();
+    });
   }
   if (stockSave) stockSave.addEventListener('click', saveStock);
   var shopNew = document.getElementById('crmShopNew');

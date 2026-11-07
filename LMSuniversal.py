@@ -22573,6 +22573,33 @@ def ensure_shop_tables():
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(200);")
         cursor.execute("ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS agent_note TEXT;")
         connection.commit()
+    # A shelf cannot hold minus two, so zero is the floor for every product at
+    # every shop. Rows already driven below zero before this rule existed are
+    # pulled back once, and a check constraint then refuses any later write that
+    # tries it - a hand-run query as much as one of our own code paths.
+    try:
+        with get_db() as (cursor, connection):
+            cursor.execute("UPDATE shop_stock SET quantity = 0 WHERE quantity < 0")
+            cursor.execute("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_constraint
+                        WHERE conrelid = 'shop_stock'::regclass
+                          AND conname = 'shop_stock_quantity_non_negative'
+                    ) THEN
+                        ALTER TABLE shop_stock
+                            ADD CONSTRAINT shop_stock_quantity_non_negative
+                            CHECK (quantity IS NULL OR quantity >= 0);
+                    END IF;
+                END;
+                $$;
+            """)
+            connection.commit()
+    except Exception as e:
+        # A database user without rights to add constraints still runs: every
+        # code path already clamps at zero, so the floor holds either way.
+        print(f"stock floor constraint skipped: {e}")
     _shop_tables_ready = True
 
 
