@@ -2601,6 +2601,86 @@ select.crm-select:focus {
   color: var(--ps-text-soft);
 }
 .crm-stock-hint.is-dirty { color: #B45309; font-weight: 600; }
+
+/* ----------------------------------------------- orders ⇄ order stock --
+   The stock that has to serve an order belongs beside the order, so both live
+   in the Orders tab and switch with one control. The dot is the only thing that
+   reaches the order list: it says a shop is short without opening the panel. */
+.crm-orders-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 0 14px;
+  border: 1px solid var(--ps-line);
+  border-radius: 999px;
+  background: var(--ps-surface);
+  box-shadow: var(--ps-shadow-soft);
+}
+.crm-orders-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ps-text-soft);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.crm-orders-switch-btn:hover { color: var(--ps-text); }
+.crm-orders-switch-btn.is-active { background: var(--ps-gradient-accent); color: #fff; }
+.crm-orders-switch-btn:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 2px; }
+.crm-orders-switch-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #DC143C;
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.18);
+}
+.crm-orders-switch-dot[hidden] { display: none; }
+.crm-orders-list[hidden],
+.crm-orders-stock[hidden] { display: none; }
+
+/* Stock on a single order: the same figures as the tab, narrowed to the lines
+   this customer is waiting for. */
+.crm-od-stock {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--ps-line);
+  border-left: 4px solid var(--ps-line);
+  border-radius: var(--ps-radius-md);
+  background: var(--ps-surface-soft, rgba(0, 0, 0, 0.015));
+}
+.crm-od-stock.is-ok { border-left-color: #10B981; }
+.crm-od-stock.is-short {
+  border-left-color: #DC143C;
+  background: rgba(220, 20, 60, 0.05);
+}
+.crm-od-stock h6 {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.crm-od-stock-note {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ps-text-soft);
+}
+.crm-od-stock-table { font-size: 12.5px; }
+.crm-od-stock-table tr.is-short .crm-od-stock-avail {
+  color: #9F1239;
+  font-weight: 600;
+}
+.crm-od-stock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
 /* Notifying customers is the one irreversible action on this tab, so it carries
    the same accent the rest of the portal uses for a commit, in solid form. */
 .ps-btn-danger {

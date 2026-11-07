@@ -67,14 +67,6 @@
                         <span class="crm-tab-full">Products &amp; pricing</span><span class="crm-tab-short">Products</span>
                     </span>
                 </button>
-                <button class="crm-tab" type="button" id="crmTabStock"
-                        data-crm-tab="stock" role="tab" aria-selected="false" tabindex="-1"
-                        aria-controls="crmViewStock">
-                    <i class="bi bi-boxes"></i>
-                    <span class="crm-tab-text">
-                        <span class="crm-tab-full">Order stock management</span><span class="crm-tab-short">Stock</span>
-                    </span>
-                </button>
                 <button class="crm-tab" type="button" id="crmTabSettings"
                         data-crm-tab="settings" role="tab" aria-selected="false" tabindex="-1"
                         aria-controls="crmViewSettings">
@@ -381,6 +373,22 @@
     <!-- ======================================================== orders -->
     <section class="crm-view" id="crmViewOrders" data-crm-view="orders"
              role="tabpanel" aria-labelledby="crmTabOrders">
+        {# Orders and the stock that has to serve them are one job, so they
+           share a tab: the switch sits above both panels, and the stock side
+           carries a red dot while any shop cannot cover the orders it has. #}
+        <div class="crm-orders-switch" role="tablist" aria-label="Orders and order stock">
+            <button type="button" class="crm-orders-switch-btn is-active"
+                    data-orders-sub="list" role="tab" aria-selected="true">
+                <i class="bi bi-receipt"></i> Orders
+            </button>
+            <button type="button" class="crm-orders-switch-btn"
+                    data-orders-sub="stock" role="tab" aria-selected="false">
+                <i class="bi bi-boxes"></i> Order stock
+                <span class="crm-orders-switch-dot" id="crmStockSwitchDot" hidden
+                      title="A shop cannot cover the orders it has"></span>
+            </button>
+        </div>
+        <div class="crm-orders-list" id="crmOrdersList">
         {# One compact toolbar rather than a panel with its own header: four
            selects do not need a title bar above them. #}
         <div class="ps-panel crm-filters-panel">
@@ -585,115 +593,9 @@
                 </div>
             </div>
         </div>
-    </section>
-
-    <!-- ================================================== sales analytics -->
-    <section class="crm-view" id="crmViewAnalytics" data-crm-view="analytics"
-             role="tabpanel" aria-labelledby="crmTabAnalytics">
-        {# Reporting, not daily work: the order list lives on the Orders tab, so
-           this view is only the numbers. It reads the same period and payment
-           filters, kept in sync by the shared filter state. #}
-        <div class="ps-panel crm-filters-panel">
-            <div class="crm-filters-bar">
-                <span class="crm-filters-label">
-                    <i class="bi bi-funnel-fill"></i> Filters
-                </span>
-                <div class="crm-filters">
-                    <label class="crm-field">
-                        <span>Period</span>
-                        <select class="ps-input" id="crmAnPeriod">
-                            <option value="today" selected>Today</option>
-                            <option value="yesterday">Yesterday</option>
-                            <option value="this_week">This week</option>
-                            <option value="last_week">Last week</option>
-                            <option value="this_month">This month</option>
-                            <option value="last_month">Last month</option>
-                            <option value="all">All time</option>
-                        </select>
-                    </label>
-                    <label class="crm-field">
-                        <span>Payment</span>
-                        <select class="ps-input" id="crmAnPayment">
-                            <option value="all" selected>Paid &amp; will pay</option>
-                            <option value="paid">Paid</option>
-                            <option value="unpaid">Will pay</option>
-                        </select>
-                    </label>
-                    <label class="crm-field">
-                        <span>Fulfilment</span>
-                        <select class="ps-input" id="crmAnFulfilment">
-                            <option value="all" selected>Everything</option>
-                            <option value="delivery">Delivered home</option>
-                            <option value="collection">Collected from shop</option>
-                            <option value="pending">Awaiting fulfilment</option>
-                            <option value="fulfilled">Fulfilled</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <section class="ps-stats" id="crmAnalyticsStats">
-            <div class="ps-stat">
-                <div class="ps-stat-label"><i class="bi bi-receipt"></i> Orders</div>
-                <div class="ps-stat-value" data-an="orders">0</div>
-                <div class="ps-stat-note"><span data-an="units">0</span> units ordered</div>
-            </div>
-            <div class="ps-stat">
-                <div class="ps-stat-label"><i class="bi bi-cash-coin"></i> Order value</div>
-                <div class="ps-stat-value" data-an="value">0.00</div>
-                <div class="ps-stat-note"><span data-an="currency">USD</span> across priced orders</div>
-            </div>
-            <div class="ps-stat">
-                <div class="ps-stat-label"><i class="bi bi-check2-circle"></i> Paid</div>
-                <div class="ps-stat-value" data-an="paid">0</div>
-                <div class="ps-stat-note">Settled value <span data-an="paid_value">0.00</span></div>
-            </div>
-            <div class="ps-stat">
-                <div class="ps-stat-label"><i class="bi bi-truck"></i> Delivered home</div>
-                <div class="ps-stat-value" data-an="delivery">0</div>
-                <div class="ps-stat-note"><span data-an="collection">0</span> collected from shop</div>
-            </div>
-        </section>
-
-        <div class="ps-panel">
-            <div class="ps-panel-head">
-                <h3><i class="bi bi-bar-chart-line"></i> Sales over time</h3>
-                <div class="ps-panel-actions">
-                    <span class="ps-chip" id="crmSeriesPeak">—</span>
-                </div>
-            </div>
-            <div class="ps-panel-body">
-                <div class="crm-series" id="crmSalesSeries">
-                    <div class="crm-empty-state is-compact">
-                        <span class="crm-empty-icon"><i class="bi bi-bar-chart-line"></i></span>
-                        <p class="crm-empty-title">Nothing to chart yet</p>
-                        <p class="crm-empty-hint">Widen the period above, or take an order.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="ps-panel">
-            <div class="ps-panel-head"><h3><i class="bi bi-trophy-fill"></i> Top products</h3></div>
-            <div class="ps-panel-body">
-                <div class="crm-top-items" id="crmTopItems">
-                    <div class="crm-empty-state is-compact">
-                        <span class="crm-empty-icon"><i class="bi bi-bar-chart-line"></i></span>
-                        <p class="crm-empty-title">Nothing sold in this period</p>
-                        <p class="crm-empty-hint">Widen the period above to see what is moving.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ========================================================= products -->
-
     <!-- =========================================================== stock -->
-    <section class="crm-view" id="crmViewStock" data-crm-view="stock"
-             role="tabpanel" aria-labelledby="crmTabStock">
+    <div class="crm-orders-stock" id="crmViewStock" role="region"
+         aria-label="Order stock management" hidden>
         {# Stock is kept per shop, because the same product sits in different
            quantities in different places and it is the shop that hands the goods
            over. The table is built from the catalogue, so a line nobody has
@@ -884,7 +786,114 @@
             </div>
         </div>
 
+    </div>
+        </div>
     </section>
+
+    <!-- ================================================== sales analytics -->
+    <section class="crm-view" id="crmViewAnalytics" data-crm-view="analytics"
+             role="tabpanel" aria-labelledby="crmTabAnalytics">
+        {# Reporting, not daily work: the order list lives on the Orders tab, so
+           this view is only the numbers. It reads the same period and payment
+           filters, kept in sync by the shared filter state. #}
+        <div class="ps-panel crm-filters-panel">
+            <div class="crm-filters-bar">
+                <span class="crm-filters-label">
+                    <i class="bi bi-funnel-fill"></i> Filters
+                </span>
+                <div class="crm-filters">
+                    <label class="crm-field">
+                        <span>Period</span>
+                        <select class="ps-input" id="crmAnPeriod">
+                            <option value="today" selected>Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="this_week">This week</option>
+                            <option value="last_week">Last week</option>
+                            <option value="this_month">This month</option>
+                            <option value="last_month">Last month</option>
+                            <option value="all">All time</option>
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span>Payment</span>
+                        <select class="ps-input" id="crmAnPayment">
+                            <option value="all" selected>Paid &amp; will pay</option>
+                            <option value="paid">Paid</option>
+                            <option value="unpaid">Will pay</option>
+                        </select>
+                    </label>
+                    <label class="crm-field">
+                        <span>Fulfilment</span>
+                        <select class="ps-input" id="crmAnFulfilment">
+                            <option value="all" selected>Everything</option>
+                            <option value="delivery">Delivered home</option>
+                            <option value="collection">Collected from shop</option>
+                            <option value="pending">Awaiting fulfilment</option>
+                            <option value="fulfilled">Fulfilled</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <section class="ps-stats" id="crmAnalyticsStats">
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-receipt"></i> Orders</div>
+                <div class="ps-stat-value" data-an="orders">0</div>
+                <div class="ps-stat-note"><span data-an="units">0</span> units ordered</div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-cash-coin"></i> Order value</div>
+                <div class="ps-stat-value" data-an="value">0.00</div>
+                <div class="ps-stat-note"><span data-an="currency">USD</span> across priced orders</div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-check2-circle"></i> Paid</div>
+                <div class="ps-stat-value" data-an="paid">0</div>
+                <div class="ps-stat-note">Settled value <span data-an="paid_value">0.00</span></div>
+            </div>
+            <div class="ps-stat">
+                <div class="ps-stat-label"><i class="bi bi-truck"></i> Delivered home</div>
+                <div class="ps-stat-value" data-an="delivery">0</div>
+                <div class="ps-stat-note"><span data-an="collection">0</span> collected from shop</div>
+            </div>
+        </section>
+
+        <div class="ps-panel">
+            <div class="ps-panel-head">
+                <h3><i class="bi bi-bar-chart-line"></i> Sales over time</h3>
+                <div class="ps-panel-actions">
+                    <span class="ps-chip" id="crmSeriesPeak">—</span>
+                </div>
+            </div>
+            <div class="ps-panel-body">
+                <div class="crm-series" id="crmSalesSeries">
+                    <div class="crm-empty-state is-compact">
+                        <span class="crm-empty-icon"><i class="bi bi-bar-chart-line"></i></span>
+                        <p class="crm-empty-title">Nothing to chart yet</p>
+                        <p class="crm-empty-hint">Widen the period above, or take an order.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ps-panel">
+            <div class="ps-panel-head"><h3><i class="bi bi-trophy-fill"></i> Top products</h3></div>
+            <div class="ps-panel-body">
+                <div class="crm-top-items" id="crmTopItems">
+                    <div class="crm-empty-state is-compact">
+                        <span class="crm-empty-icon"><i class="bi bi-bar-chart-line"></i></span>
+                        <p class="crm-empty-title">Nothing sold in this period</p>
+                        <p class="crm-empty-hint">Widen the period above to see what is moving.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================= products -->
+
 
     <!-- ========================================================== settings -->
     <section class="crm-view" id="crmViewSettings" data-crm-view="settings"

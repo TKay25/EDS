@@ -25759,12 +25759,15 @@ SHOP_TEMPLATES = {
         "language": "en",
         "category": "UTILITY",
         # Sent from the stock tab when a shop can no longer cover an order it has
-        # already taken. It says the order stands, because a customer reading
-        # "stock unavailable" otherwise assumes it has been cancelled.
-        "body": ("Stock update on order {{1}}. {{2}} can no longer supply everything on "
-                 "it. Your order is still with us — reply here and our team will offer a "
+        # already taken. It names the lines that are short, because a customer
+        # told only "something is unavailable" has to reply to find out what, and
+        # it says the order stands, because "stock unavailable" otherwise reads
+        # as a cancellation.
+        "body": ("Stock update on order {{1}}. {{2}} can no longer supply: {{3}}.\n"
+                 "\n"
+                 "Your order is still with us — reply here and our team will offer a "
                  "replacement or a refund."),
-        "fields": ["reference", "shop"],
+        "fields": ["reference", "shop", "items"],
         "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
     },
     "agent_order_to_confirm": {
@@ -27522,6 +27525,109 @@ def shop_stock_short_orders(shop_id):
     return short_orders
 
 
+def _shop_stock_short_notice(order, shop_name):
+    """The shortage notice for one order: the message and its template values.
+
+    Shared by the shop-wide notify button and the one on a single order, so the
+    same news is never worded two ways depending on where it was sent from. The
+    template carries the shortage as one line of text, because a template
+    parameter cannot hold the bulleted list the live message uses; it is trimmed
+    so a very long order cannot push the body past Meta's limit.
+    """
+    lines = [f"⚠️ *Stock update — order {order['reference']}*", "",
+             f"{shop_name} can no longer supply everything on this order:", ""]
+    for line in order["lines"]:
+        lines.append(f"    • {line['product']} ({line['pack_size']}) × "
+                     f"{line['quantity']} — {line['missing']} short")
+    lines += ["", "Your order is still with us, and nothing has been charged "
+                  "twice.", "Reply here and our team will offer a replacement "
+                  "or a refund."]
+    items_text = "; ".join(
+        f"{line['product']} ({line['pack_size']}) × {line['quantity']} — "
+        f"{line['missing']} short" for line in order["lines"])
+    if len(items_text) > 500:
+        items_text = items_text[:497].rstrip() + "…"
+    return "\n".join(lines), {"reference": order["reference"], "shop": shop_name,
+                              "items": items_text}
+
+
+def shop_order_stock(reference):
+    """How the order's own shop stands against this order, line by line.
+
+    The same figures the stock tab shows, narrowed to the lines this customer is
+    waiting for, so the order itself answers "can this still be served?" without
+    the reader holding two screens in their head. `status` is 'none' when the
+    order names no shop, which the portal says rather than showing zeroes.
+    """
+    order = order_detail(reference)
+    if not order:
+        return {"status": "none", "lines": []}
+    shop_id = order.get("shop_key")
+    if not shop_id:
+        return {"status": "none", "lines": [],
+                "shop": order.get("shop") or "", "paid": False}
+    index = {(row["name"], row["pack_size"]): row for row in _shop_stock_rows(shop_id)}
+    lines, short = [], 0
+    for line in order.get("lines") or []:
+        row = index.get((line.get("product"), line.get("pack_size")))
+        available = None if row is None else row["available"]
+        is_short = available is not None and available < 0
+        if is_short:
+            short += 1
+        lines.append({"product": line.get("product") or "",
+                      "pack_size": line.get("pack_size") or "",
+                      "quantity": int(line.get("quantity") or 0),
+                      "on_hand": None if row is None else row["quantity"],
+                      "committed": None if row is None else row["committed"],
+                      "available": available,
+                      "short_by": (-available) if is_short else 0})
+    shop = shop_by_id(shop_id) or {}
+    return {"status": "short" if short else "ok",
+            "shop_id": shop_id,
+            "shop": shop.get("name") or order.get("shop") or "",
+            "short_count": short,
+            "paid": (order.get("payment_status") or "").lower() == "paid",
+            "lines": lines}
+
+
+def shop_notify_order_stock_short(reference, user=None, channel=None):
+    """Tell one order's customer that its shop cannot cover part of it.
+
+    Returns (sent, message). It refuses when the order is covered, because a
+    notice sent then would be false, and when it is already paid, because the
+    stock for it has been taken off the shelf already.
+    """
+    order = order_detail(reference)
+    if not order:
+        return False, "That order was not found."
+    if (order.get("payment_status") or "").lower() == "paid":
+        return False, (f"{reference} is already paid, so its stock has been taken "
+                       "off the shelf.")
+    short = next((entry for entry in shop_stock_short_orders(order.get("shop_key"))
+                  if entry["reference"] == reference), None)
+    shop_name = (shop_by_id(order.get("shop_key")) or {}).get("name") \
+        or order.get("shop") or "our shop"
+    if not short:
+        return False, f"{shop_name} can still cover {reference}, so there is nothing to tell the customer."
+    number = short.get("wa_number") or ""
+    if not number:
+        return False, f"{reference} has no WhatsApp number to send to."
+    body, values = _shop_stock_short_notice(short, shop_name)
+    ok, detail, _used = shop_send_notice(number, body, "order_stock_unavailable",
+                                         values, channel)
+    if not ok:
+        return False, f"The notice could not be sent: {detail}"
+    log_activity("stock_short_notice", "order",
+                 f"Told {short.get('customer') or number} that {shop_name} is short "
+                 f"of stock for {reference}",
+                 target=reference,
+                 details={"shop_id": order.get("shop_key"),
+                          "short_lines": len(short["lines"])},
+                 user=user)
+    return True, (f"Told {short.get('customer') or number} that {shop_name} is "
+                  f"short of stock for {reference}.")
+
+
 def shop_notify_stock_short_orders(shop_id, user=None, channel=None):
     """Tell the customers whose orders the shop can no longer cover.
 
@@ -27538,17 +27644,9 @@ def shop_notify_stock_short_orders(shop_id, user=None, channel=None):
         if not number:
             failed.append(order["reference"])
             continue
-        lines = [f"⚠️ *Stock update — order {order['reference']}*", "",
-                 f"{shop_name} can no longer supply everything on this order:", ""]
-        for line in order["lines"]:
-            lines.append(f"    • {line['product']} ({line['pack_size']}) × "
-                         f"{line['quantity']} — {line['missing']} short")
-        lines += ["", "Your order is still with us, and nothing has been charged "
-                      "twice.", "Reply here and our team will offer a replacement "
-                      "or a refund."]
+        body, values = _shop_stock_short_notice(order, shop_name)
         ok, detail, _used = shop_send_notice(
-            number, "\n".join(lines), "order_stock_unavailable",
-            {"reference": order["reference"], "shop": shop_name}, channel)
+            number, body, "order_stock_unavailable", values, channel)
         if not ok:
             failed.append(order["reference"])
             print(f"stock short notice failed for {order['reference']}: {detail}")
@@ -34050,9 +34148,21 @@ def crm_order_detail_api(reference):
     detail['stages'] = [{'value': value, 'label': label}
                         for value, label in shop_stage_options(detail.get('delivery_method'))]
     return jsonify({'success': True, 'order': detail,
+                    'stock': shop_order_stock(reference),
                     'payment': order_payment_status(reference, refresh=False),
                     'payment_history': order_payment_history(reference),
                     'ecocash_configured': paynow_configured()})
+
+
+@app.route('/api/crm/orders/<reference>/stock-notify', methods=['POST'])
+def crm_order_stock_notify_api(reference):
+    """Tell this order's customer that its shop can no longer cover it."""
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    ok, message = shop_notify_order_stock_short(reference, user=user)
+    return jsonify({'success': ok, 'message': message,
+                    'stock': shop_order_stock(reference)}), (200 if ok else 400)
 
 
 @app.route('/api/crm/orders/<reference>/delivery-note.pdf')

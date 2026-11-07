@@ -554,12 +554,6 @@
       if (shell) shell.classList.toggle('ps-shell-tight', name === 'inbox');
       if (name === 'orders') orders.load(false);
       if (name === 'analytics') analytics.load(false);
-      if (name === 'stock' && !stockLoaded) {
-        stockLoaded = true;
-        // Once, on the first sight of the tab: a later visit keeps whatever the
-        // screen already shows rather than throwing away unsaved counts.
-        initStock();
-      }
       if (name === 'inbox') sizeInbox();
       if (name === 'settings' && window.__crmCatalogRefresh) window.__crmCatalogRefresh();
     }
@@ -890,7 +884,61 @@
       }).join('') + '</ol>';
     }
 
-    function renderOrder(order, payment, history) {
+    /* Stock at the order's own shop, for the lines this customer is waiting for.
+       It lives inside the order rather than on another tab because "can this
+       order still be served?" is a question asked one order at a time. */
+    function renderOrderStock(stock) {
+      if (!stock || !stock.lines || !stock.lines.length) return '';
+      if (stock.status === 'none') {
+        return '<div class="crm-od-stock is-unknown">' +
+          '<h6><i class="bi bi-boxes"></i> Stock</h6>' +
+          '<p class="crm-od-stock-note">This order names no shop, so there is no ' +
+          'shelf to check.</p></div>';
+      }
+      var stockRows = stock.lines.map(function (line) {
+        var unknown = line.available === null || line.available === undefined;
+        var avail = unknown ? 'not counted'
+          : (line.available < 0 ? '0 left, ' + line.short_by + ' short' : String(line.available));
+        var onHand = line.on_hand === null || line.on_hand === undefined ? '—' : line.on_hand;
+        var owed = line.committed === null || line.committed === undefined ? '—' : line.committed;
+        return '<tr class="' + (unknown ? '' : (line.available < 0 ? 'is-short' : '')) + '">' +
+          '<td><strong>' + escapeHtml(line.product) + '</strong>' +
+            (line.pack_size ? '<span class="crm-sub">' + escapeHtml(line.pack_size) + '</span>' : '') +
+          '</td>' +
+          '<td class="crm-od-qty">' + line.quantity + '</td>' +
+          '<td class="crm-od-num">' + onHand + '</td>' +
+          '<td class="crm-od-num">' + owed + '</td>' +
+          '<td class="crm-od-num crm-od-stock-avail">' + escapeHtml(avail) + '</td>' +
+        '</tr>';
+      }).join('');
+      var head = stock.paid
+        ? 'Stock was taken off this shelf when the order was paid.'
+        : (stock.status === 'short'
+            ? 'This shop can no longer cover every line.'
+            : 'This shop can still cover every line of this order.');
+      return '<div class="crm-od-stock ' + (stock.status === 'short' ? 'is-short' : 'is-ok') + '">' +
+        '<h6><i class="bi bi-boxes"></i> Stock at ' + escapeHtml(stock.shop || 'the shop') + '</h6>' +
+        '<p class="crm-od-stock-note">' + escapeHtml(head) + '</p>' +
+        '<div class="crm-table-wrap"><table class="crm-table crm-od-stock-table">' +
+          '<thead><tr><th>Item</th><th class="crm-od-qty">Qty</th>' +
+          '<th class="crm-od-num">On hand</th><th class="crm-od-num">Owed</th>' +
+          '<th class="crm-od-num">Available</th></tr></thead>' +
+          '<tbody>' + stockRows + '</tbody></table></div>' +
+        (stock.status === 'short' && !stock.paid
+          ? '<div class="crm-od-stock-actions">' +
+              '<button class="ps-btn ps-btn-danger ps-btn-sm" type="button" ' +
+                'data-order-action="stock-notify">' +
+                '<i class="bi bi-send"></i> Tell the customer stock is short</button>' +
+              '<button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" ' +
+                'data-order-action="stock-open" data-shop="' +
+                escapeHtml(stock.shop_id || '') + '">' +
+                '<i class="bi bi-boxes"></i> Restock this shop</button>' +
+            '</div>'
+          : '') +
+      '</div>';
+    }
+
+    function renderOrder(order, payment, history, stock) {
       var lines = order.lines || [];
       var paid = order.payment_status === 'paid';
       var rows = lines.length ? lines.map(function (line) {
@@ -945,6 +993,7 @@
           '<th class="crm-od-num">Unit price</th><th class="crm-od-num">Line total</th></tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
         '</table></div>' +
+        renderOrderStock(stock) +
         '<div class="crm-od-total"><span>Total' + (paid ? ' paid' : ' due') + '</span>' +
           '<strong>' + escapeHtml(money(order.total)) + '</strong></div>' +
         '<div class="crm-paylog-block"><h6>Payment history</h6>' +
@@ -1081,7 +1130,7 @@
             if (!quiet) window.alert(result.message || 'Could not load that order.');
             return null;
           }
-          renderOrder(result.order, result.payment, result.payment_history);
+          renderOrder(result.order, result.payment, result.payment_history, result.stock);
           refreshOrderActions(result.order, result.payment);
           return result;
         })
@@ -1317,6 +1366,29 @@
                 setBusy(action, false);
                 window.crmToast && window.crmToast('Could not send the receipt.', 'error');
               });
+            return;
+          }
+          if (kind === 'stock-notify') {
+            setBusy(action, true, 'Sending…');
+            postJson('/api/crm/orders/' + encodeURIComponent(orderRef) + '/stock-notify', {})
+              .then(function (result) {
+                setBusy(action, false);
+                window.crmToast && window.crmToast(
+                  result.message || (result.success ? 'Customer told.' : 'Could not send.'),
+                  result.success ? 'success' : 'error');
+                if (result.success) openOrder(orderRef);
+              })
+              .catch(function () {
+                setBusy(action, false);
+                window.crmToast && window.crmToast('Could not send the notice.', 'error');
+              });
+            return;
+          }
+          if (kind === 'stock-open') {
+            // Jump straight to this order's shop on the stock side, so restocking
+            // is one click from the order that needs it.
+            closeOrder();
+            showOrdersSub('stock', action.getAttribute('data-shop'));
             return;
           }
           if (kind === 'request-payment') {
@@ -1954,6 +2026,11 @@
 
   function renderStockBoard(board) {
     if (!stockBoard) return;
+    // The Orders side shows a dot while any shop is short, so the problem is
+    // visible without opening the stock panel.
+    var dot = document.getElementById('crmStockSwitchDot');
+    var anyShort = (board || []).some(function (shop) { return shop.status === 'short'; });
+    if (dot) dot.hidden = !anyShort;
     if (!board || !board.length) {
       stockBoard.innerHTML = '';
       return;
@@ -2409,6 +2486,41 @@
     });
   }
   if (stockSave) stockSave.addEventListener('click', saveStock);
+
+  /* Orders and order stock share one tab, so the switch lives here rather than
+     in the global tab bar. The stock side loads on first sight and keeps what it
+     shows afterwards, so a look at the order list never throws away counts that
+     have not been saved yet. */
+  var ordersSubButtons = Array.prototype.slice.call(
+    document.querySelectorAll('[data-orders-sub]'));
+  var ordersListPane = document.getElementById('crmOrdersList');
+  var ordersStockPane = document.getElementById('crmViewStock');
+
+  function showOrdersSub(name, shopId) {
+    var onStock = name === 'stock';
+    if (ordersListPane) ordersListPane.hidden = onStock;
+    if (ordersStockPane) ordersStockPane.hidden = !onStock;
+    ordersSubButtons.forEach(function (button) {
+      var selected = button.getAttribute('data-orders-sub') === name;
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-selected', selected ? 'true' : 'false');
+    });
+    if (onStock && !stockLoaded) {
+      stockLoaded = true;
+      // A shop named by the caller wins, so opening the pantry from an order does
+      // not land on whichever shop happens to be first in the list.
+      if (shopId) loadStock(shopId); else initStock();
+    } else if (onStock && shopId) {
+      loadStock(shopId);
+    }
+  }
+
+  ordersSubButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      showOrdersSub(button.getAttribute('data-orders-sub'));
+    });
+  });
+
   var shopNew = document.getElementById('crmShopNew');
   if (shopNew) {
     shopNew.addEventListener('click', function () {
