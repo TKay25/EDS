@@ -2601,6 +2601,89 @@ select.crm-select:focus {
   color: var(--ps-text-soft);
 }
 .crm-stock-hint.is-dirty { color: #B45309; font-weight: 600; }
+/* Notifying customers is the one irreversible action on this tab, so it carries
+   the same accent the rest of the portal uses for a commit, in solid form. */
+.ps-btn-danger {
+  background: linear-gradient(135deg, #9F1239, #DC143C);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(220, 20, 60, 0.28);
+}
+.ps-btn-danger:hover { box-shadow: 0 12px 24px rgba(220, 20, 60, 0.36); }
+.ps-btn-danger:disabled { opacity: 0.55; box-shadow: none; cursor: not-allowed; }
+
+/* ------------------------------------------------ order stock management --
+   The board answers the question the tab exists for: can this shop still serve
+   the orders it has already taken? Green means yes, red means no, and the chip
+   is also the fastest way to switch shop, so the colour coding and the filter
+   are the same control. */
+.crm-stock-board {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+.crm-stock-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.crm-stock-chip:hover { transform: translateY(-1px); box-shadow: var(--ps-shadow-soft); }
+.crm-stock-chip:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 2px; }
+.crm-stock-chip .bi { font-size: 13px; }
+.crm-stock-chip-name { font-weight: 600; }
+.crm-stock-chip-note { font-size: 11px; opacity: 0.85; }
+.crm-stock-chip.is-ok {
+  color: #166534;
+  background: rgba(22, 101, 52, 0.10);
+  border-color: rgba(22, 101, 52, 0.28);
+}
+.crm-stock-chip.is-short {
+  color: #9F1239;
+  background: rgba(220, 20, 60, 0.10);
+  border-color: rgba(220, 20, 60, 0.35);
+}
+.crm-stock-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(220, 20, 60, 0.35);
+  border-left: 4px solid #DC143C;
+  border-radius: var(--ps-radius-md);
+  background: rgba(220, 20, 60, 0.06);
+}
+.crm-stock-alert[hidden] { display: none; }
+.crm-stock-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ps-text);
+}
+.crm-stock-alert-body strong { color: #9F1239; }
+.crm-stock-table .crm-committed { color: var(--ps-text-soft); }
+.crm-stock-table .crm-avail { font-weight: 600; }
+.crm-stock-table .crm-avail.is-short { color: #9F1239; }
+.crm-stock-table .crm-avail.is-unknown { color: var(--ps-text-soft); font-weight: 400; }
+.crm-stock-table .crm-restock-input {
+  width: 76px;
+  border-style: dashed;
+}
+.crm-stock-table .crm-restock-input:focus { border-style: solid; }
 .crm-section-sub {
   margin: 22px 0 10px;
   font-size: 12px;

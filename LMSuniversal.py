@@ -25727,6 +25727,19 @@ SHOP_TEMPLATES = {
         "fields": ["reference", "fulfilment"],
         "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
     },
+    "order_stock_unavailable": {
+        "name": "bchem_order_stock_unavailable",
+        "language": "en",
+        "category": "UTILITY",
+        # Sent from the stock tab when a shop can no longer cover an order it has
+        # already taken. It says the order stands, because a customer reading
+        # "stock unavailable" otherwise assumes it has been cancelled.
+        "body": ("Stock update on order {{1}}. {{2}} can no longer supply everything on "
+                 "it. Your order is still with us — reply here and our team will offer a "
+                 "replacement or a refund."),
+        "fields": ["reference", "shop"],
+        "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
+    },
     "agent_order_to_confirm": {
         "name": "bchem_order_needs_confirmation",
         "language": "en",
@@ -27048,9 +27061,20 @@ def _shop_stock_bust():
 
 def _shop_stock_move(shop_id, product_name, pack_size, delta, reason,
                      reference=None, note=None, user=None):
-    """Apply one change to a shop's stock and record why. Returns True if applied."""
+    """Apply one change to a shop's stock and record why. Returns True if applied.
+
+    A count is never written below zero, so the last unit cannot be sold twice:
+    two takers settling at the same moment leave the shelf at zero rather than at
+    minus one. A line the shop has never counted is left untouched when it is
+    deducted from, because an unknown count is not the same as an overdrawn one -
+    creating a negative row would read as "sold out" from then on.
+
+    The movement row records the change that actually landed, not the one that
+    was asked for, so a short deduction is visible in the ledger.
+    """
     if not shop_id or not delta:
         return False
+    delta = int(delta)
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
@@ -27063,21 +27087,50 @@ def _shop_stock_move(shop_id, product_name, pack_size, delta, reason,
             """, (str(product_name or "").strip(), str(product_name or "").strip()))
             row = cursor.fetchone()
             product_id = str(row[0]) if row else str(product_name or "").strip()
+            # One statement, so concurrent takers cannot both read the same count
+            # and both write it back. The `current` read sees the pre-statement
+            # figure, and the insert is skipped for a negative move on a line that
+            # has no row yet.
             cursor.execute("""
-                INSERT INTO shop_stock (shop_id, product_id, pack_size, quantity, updated_at)
-                VALUES (%s, %s, %s, %s, NOW())
-                ON CONFLICT (shop_id, product_id, pack_size)
-                DO UPDATE SET quantity = COALESCE(shop_stock.quantity, 0) + %s,
-                              updated_at = NOW()
-                RETURNING quantity
-            """, (shop_id, product_id, pack_size, delta, delta))
-            after = cursor.fetchone()[0]
+                WITH current AS (
+                    SELECT quantity FROM shop_stock
+                    WHERE shop_id = %s AND product_id = %s AND pack_size = %s
+                ), moved AS (
+                    INSERT INTO shop_stock (shop_id, product_id, pack_size, quantity,
+                                            updated_at)
+                    SELECT %s, %s, %s, GREATEST(%s, 0), NOW()
+                    WHERE %s >= 0
+                       OR EXISTS (SELECT 1 FROM shop_stock
+                                  WHERE shop_id = %s AND product_id = %s
+                                    AND pack_size = %s)
+                    ON CONFLICT (shop_id, product_id, pack_size)
+                    DO UPDATE SET quantity = GREATEST(COALESCE(shop_stock.quantity, 0) + %s, 0),
+                                  updated_at = NOW()
+                    RETURNING quantity
+                )
+                SELECT (SELECT quantity FROM moved),
+                       COALESCE((SELECT quantity FROM current), 0)
+            """, (shop_id, product_id, pack_size,
+                  shop_id, product_id, pack_size, delta,
+                  delta, shop_id, product_id, pack_size,
+                  delta))
+            result = cursor.fetchone()
+            if not result or result[0] is None:
+                # The line is untracked and this is a deduction, so there was
+                # nothing to take and nothing is recorded.
+                connection.commit()
+                return False
+            after, before = int(result[0]), int(result[1] or 0)
+            applied = after - before
+            if applied != delta:
+                note = (f"{note}; " if note else "") + \
+                       f"asked {delta}, applied {applied}"
             cursor.execute("""
                 INSERT INTO shop_stock_movements (shop_id, product_id, pack_size, delta,
                                                   quantity_after, reason, reference, note,
                                                   created_by, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-            """, (shop_id, product_id, pack_size, delta, after, reason, reference,
+            """, (shop_id, product_id, pack_size, applied, after, reason, reference,
                   note, str(user or "")[:200] or None))
             connection.commit()
         # Counts live in the catalogue cache, so a written change has to be
@@ -27126,11 +27179,18 @@ def shop_stock_deduct(reference, user=None, reason="order_paid"):
         return False, "the deduction could not be claimed"
 
     moved = 0
+    uncounted = 0
     for product, pack_size, quantity in lines:
         if _shop_stock_move(shop_id, product, pack_size, -int(quantity or 0),
                             reason, reference=reference, user=user):
             moved += 1
-    return True, f"stock taken off {shop_id} ({moved} line(s))"
+        else:
+            # Nothing was counted for this line, so there was nothing to take.
+            uncounted += 1
+    detail = f"stock taken off {shop_id} ({moved} line(s)"
+    if uncounted:
+        detail += f", {uncounted} not counted"
+    return True, detail + ")"
 
 
 def shop_stock_set(shop_id, product_id, pack_size, quantity, user=None, note=None):
@@ -27227,19 +27287,253 @@ def shop_stock_movements(shop_id=None, limit=40):
     } for row in rows]
 
 
-def shop_stock_table(shop_id):
-    """One row per product and pack size for the stock screen.
+def _shop_order_commitments(shop_id=None):
+    """What placed-but-unpaid orders still need off each shop's shelf.
 
-    Built from the catalogue rather than from the stock table, so everything the
-    business sells can be counted, including lines nobody has stocked yet.
+    Keyed by shop, then by "product_id|pack size", with the product name carried
+    alongside so a line whose product has since left the catalogue can still be
+    shown. Paid orders are left out because their stock has already been taken
+    off, and charging them again here would count the same goods twice. Drafts
+    and cancellations are left out because no goods leave for them, and an order
+    with no shop has no shelf to charge.
     """
-    rows = []
+    where = ["o.shop_id IS NOT NULL",
+             "COALESCE(o.draft, FALSE) = FALSE",
+             "COALESCE(o.status, 'new') <> 'cancelled'",
+             "COALESCE(o.payment_status, 'unpaid') <> 'paid'"]
+    params = []
+    if shop_id:
+        where.append("o.shop_id = %s")
+        params.append(shop_id)
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            # The catalogue is joined on the name the order line captured, with
+            # one row per name so a duplicated display name cannot double a line.
+            cursor.execute(f"""
+                SELECT o.shop_id,
+                       COALESCE(p.product_id, i.product) AS product_id,
+                       i.product, i.pack_size, SUM(i.quantity)
+                FROM shop_order_items i
+                JOIN shop_orders o ON o.id = i.order_id
+                LEFT JOIN (
+                    SELECT DISTINCT ON (display_name) display_name, product_id
+                    FROM shop_products ORDER BY display_name, product_id
+                ) p ON p.display_name = i.product
+                WHERE {' AND '.join(where)}
+                GROUP BY 1, 2, 3, 4
+            """, tuple(params))
+            rows = cursor.fetchall()
+    except Exception as e:
+        print(f"stock commitment error: {e}")
+        return {}
+    by_shop = {}
+    for shop, product_id, product, pack_size, quantity in rows:
+        entry = by_shop.setdefault(str(shop), {})
+        key = f"{product_id}|{pack_size or ''}"
+        current = entry.get(key) or {"quantity": 0,
+                                     "name": product or str(product_id or "")}
+        current["quantity"] += int(quantity or 0)
+        entry[key] = current
+    return by_shop
+
+
+def _shop_stock_row(shop_id, product_id, name, pack_size, commitment=None):
+    """One stock line: what is on the shelf, what is owed, and what is left.
+
+    `available` is the figure the business acts on - what is still free once the
+    orders already placed are covered. A line nobody has counted has no figure at
+    all, because an unknown count is not the same as nothing left.
+    """
+    held = shop_stock_of(shop_id, product_id, pack_size)
+    need = int((commitment or {}).get("quantity") or 0)
+    return {"product_id": product_id, "name": name, "pack_size": pack_size,
+            "quantity": held, "tracked": held is not None, "committed": need,
+            "available": None if held is None else held - need}
+
+
+def _shop_stock_rows(shop_id, committed=None):
+    """Every line a shop can hold, catalogue first, then anything still owed.
+
+    Built from the catalogue rather than from the stock table, so a line nobody
+    has stocked yet still appears and can be counted. A line an unpaid order
+    still owes but that has left the catalogue is carried too: leaving it out
+    would show the shop as covered when it is not.
+    """
+    if committed is None:
+        committed = _shop_order_commitments(shop_id).get(str(shop_id), {})
+    rows, seen = [], set()
     for product in shop_all_products():
         for size in product["sizes"]:
-            held = shop_stock_of(shop_id, product["id"], size)
-            rows.append({"product_id": product["id"], "name": product["name"],
-                         "pack_size": size, "quantity": held, "tracked": held is not None})
+            key = f"{product['id']}|{size}"
+            seen.add(key)
+            rows.append(_shop_stock_row(shop_id, product["id"], product["name"], size,
+                                        committed.get(key)))
+    for key, entry in committed.items():
+        if key in seen:
+            continue
+        product_id, _, size = key.partition("|")
+        rows.append(_shop_stock_row(shop_id, product_id, entry["name"], size, entry))
     return rows
+
+
+def shop_stock_table(shop_id):
+    """One row per product and pack size for the stock screen, with commitments."""
+    return _shop_stock_rows(shop_id)
+
+
+def shop_stock_coverage(shop_id):
+    """Whether a shop's counts still cover the orders placed on it.
+
+    `status` is 'short' when at least one counted line cannot cover what its
+    unpaid orders still need, and 'ok' otherwise. A shop with nothing counted
+    reads 'ok' for the same reason an uncounted line is never a shortage.
+    """
+    rows = _shop_stock_rows(shop_id)
+    short = [row for row in rows
+             if row["available"] is not None and row["available"] < 0]
+    return {
+        "shop_id": shop_id,
+        "status": "short" if short else "ok",
+        "short_count": len(short),
+        "committed_units": sum(int(row.get("committed") or 0) for row in rows),
+        "short_lines": [{"product_id": row["product_id"], "name": row["name"],
+                         "pack_size": row["pack_size"], "on_hand": row["quantity"],
+                         "committed": row["committed"], "short_by": -row["available"]}
+                        for row in short],
+    }
+
+
+def shop_stock_board():
+    """Every shop's coverage in one pass, for the stock tab's colour coding.
+
+    One commitments query serves every shop rather than one per shop, because
+    this is read as the tab opens and a query per shop would make the colour
+    coding the slowest thing on the page.
+    """
+    commitments = _shop_order_commitments()
+    board = []
+    for shop in shop_shops():
+        rows = _shop_stock_rows(shop["id"], commitments.get(str(shop["id"]), {}))
+        short = [row for row in rows
+                 if row["available"] is not None and row["available"] < 0]
+        board.append({"shop_id": shop["id"], "name": shop["name"],
+                      "status": "short" if short else "ok",
+                      "short_count": len(short),
+                      "committed_units": sum(int(row.get("committed") or 0)
+                                             for row in rows)})
+    return board
+
+
+def shop_stock_short_orders(shop_id):
+    """The unpaid orders a shop can no longer cover, oldest first.
+
+    Stock is allocated in the order the orders were placed, so an order is only
+    named once the goods are genuinely gone by the time it is reached. That is
+    what keeps a notification honest: a shop holding two bottles with two orders
+    of one has nothing to apologise to the first customer for.
+    """
+    if not shop_id:
+        return []
+    remaining = {f"{row['product_id']}|{row['pack_size']}": row["quantity"]
+                 for row in _shop_stock_rows(shop_id) if row["quantity"] is not None}
+    try:
+        ensure_shop_tables()
+        with get_db() as (cursor, connection):
+            cursor.execute("""
+                SELECT o.reference, o.wa_number, o.customer_name, o.created_at,
+                       i.product, i.pack_size, i.quantity,
+                       COALESCE(p.product_id, i.product)
+                FROM shop_orders o
+                JOIN shop_order_items i ON i.order_id = o.id
+                LEFT JOIN (
+                    SELECT DISTINCT ON (display_name) display_name, product_id
+                    FROM shop_products ORDER BY display_name, product_id
+                ) p ON p.display_name = i.product
+                WHERE o.shop_id = %s
+                  AND COALESCE(o.draft, FALSE) = FALSE
+                  AND COALESCE(o.status, 'new') <> 'cancelled'
+                  AND COALESCE(o.payment_status, 'unpaid') <> 'paid'
+                ORDER BY o.created_at, o.id, i.id
+            """, (shop_id,))
+            item_rows = cursor.fetchall()
+    except Exception as e:
+        print(f"stock short orders error: {e}")
+        return []
+
+    grouped, index = [], {}
+    for (reference, wa_number, customer, created_at, product, pack_size,
+         quantity, product_id) in item_rows:
+        if reference not in index:
+            index[reference] = {"reference": reference, "wa_number": wa_number or "",
+                                "customer": customer or "",
+                                "at": fmt_time(created_at, "%d %b %Y %H:%M"),
+                                "lines": []}
+            grouped.append(index[reference])
+        index[reference]["lines"].append({
+            "product": product or "", "pack_size": pack_size or "",
+            "quantity": int(quantity or 0), "product_id": product_id})
+
+    short_orders = []
+    for order in grouped:
+        short_lines = []
+        for line in order["lines"]:
+            key = f"{line['product_id']}|{line['pack_size']}"
+            if key not in remaining:
+                # Nobody has counted this line, so it cannot be judged short.
+                continue
+            held = remaining[key]
+            taken = min(held, line["quantity"])
+            remaining[key] = held - taken
+            if taken < line["quantity"]:
+                short_lines.append(dict(line, missing=line["quantity"] - taken))
+        if short_lines:
+            short_orders.append({"reference": order["reference"],
+                                 "wa_number": order["wa_number"],
+                                 "customer": order["customer"],
+                                 "at": order["at"], "lines": short_lines})
+    return short_orders
+
+
+def shop_notify_stock_short_orders(shop_id, user=None, channel=None):
+    """Tell the customers whose orders the shop can no longer cover.
+
+    Returns (sent, failed_references). One notice per order however many of its
+    lines are short: the customer has one order to think about, not a list of
+    shortages to reconcile against their own basket.
+    """
+    orders = shop_stock_short_orders(shop_id)
+    shop = shop_by_id(shop_id) or {}
+    shop_name = shop.get("name") or "our shop"
+    sent, failed = 0, []
+    for order in orders:
+        number = order.get("wa_number") or ""
+        if not number:
+            failed.append(order["reference"])
+            continue
+        lines = [f"⚠️ *Stock update — order {order['reference']}*", "",
+                 f"{shop_name} can no longer supply everything on this order:", ""]
+        for line in order["lines"]:
+            lines.append(f"    • {line['product']} ({line['pack_size']}) × "
+                         f"{line['quantity']} — {line['missing']} short")
+        lines += ["", "Your order is still with us, and nothing has been charged "
+                      "twice.", "Reply here and our team will offer a replacement "
+                      "or a refund."]
+        ok, detail, _used = shop_send_notice(
+            number, "\n".join(lines), "order_stock_unavailable",
+            {"reference": order["reference"], "shop": shop_name}, channel)
+        if not ok:
+            failed.append(order["reference"])
+            print(f"stock short notice failed for {order['reference']}: {detail}")
+            continue
+        sent += 1
+        log_activity("stock_short_notice", "order",
+                     f"Told {order['customer'] or number} that {shop_name} is short "
+                     f"of stock for {order['reference']}",
+                     target=order["reference"],
+                     details={"shop_id": shop_id, "short_lines": len(order["lines"])},
+                     user=user)
+    return sent, failed
 
 
 def _shop_render(step, ctx, cart, customer=None, staff=False, wa_number=None,
@@ -27360,6 +27654,13 @@ def _shop_order_confirmation(cart, customer):
     note = _shop_delivery_note(customer)
     if note:
         lines += ["", note]
+    # The reservation rule is stated before the customer commits, not after: an
+    # unpaid order holds no stock, and finding that out at the counter is worse
+    # than reading it here.
+    lines += ["", "🔒 *Stock is reserved when you pay* — nothing is held for this "
+                  "order until then. Pay by EcoCash now, or "
+                  + ("on delivery" if delivering else "at the shop")
+                  + ". If stock runs out before you pay, we will message you here."]
     lines += ["", "Place this order now?"]
     return [_shop_options("\n".join(lines),
                           [("confirm_order", "Yes, submit"), ("cart", "Back to cart")])]
@@ -28038,8 +28339,10 @@ def _shop_payment_options(customer):
 
 
 def _shop_payment_prompt(customer):
-    return _shop_frame(_shop_options("How would you like to pay?",
-                                     _shop_payment_options(customer)), "payment")
+    return _shop_frame(_shop_options(
+        "How would you like to pay?\n\n🔒 Your items are reserved as soon as the "
+        "payment is received.",
+        _shop_payment_options(customer)), "payment")
 
 
 def _shop_cart_qty_prompt():
@@ -28065,7 +28368,8 @@ def _shop_pay_wait_prompt(amount):
             "📲 *Check your phone*\n\n"
             f"An EcoCash prompt for *{PAYNOW_CURRENCY} {float(amount or 0):.2f}* "
             "has been sent. Enter your EcoCash PIN to authorise the payment.\n\n"
-            "The prompt expires after a few minutes. I will confirm here as soon as it clears."),
+            "The prompt expires after a few minutes. I will confirm here as soon as "
+            "it clears — that is when your items are reserved."),
         _shop_options("Once you are done:",
                       [("paid_check", "I have authorised it"),
                        ("paylater", "Pay later instead")]),
@@ -28170,6 +28474,9 @@ def _shop_agent_order_confirm_prompt(order):
     if order.get("note"):
         lines.append("")
         lines.append(f"📝 *Their note:* {order['note']}")
+    lines.append("")
+    lines.append("🔒 *Stock is reserved when you pay* — nothing is held for this order "
+                 "until then.")
     lines.append("")
     lines.append("Confirm this order, or decline it if it is not right. "
                  "Nothing is arranged until you confirm.")
@@ -29494,6 +29801,18 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
 
     if step == "order_confirm":
         if low == "confirm_order" or low in affirmative_words:
+            # The shop was checked when it was chosen, but the shelf can change
+            # while the customer reads the summary back. Saving an order the shop
+            # can no longer cover is the one thing this step must not do, so the
+            # counts are re-read and the shortfall screen is offered again rather
+            # than a stale promise.
+            # Reload the counts first: another worker may have taken stock since
+            # this process last read the catalogue, and the check is only worth
+            # anything if it is made against the shelf as it is now.
+            _shop_stock_bust()
+            if shop_cart_shortfall(customer.get("shop_id"), cart):
+                return result("order_shop_short", [_shop_short_prompt(customer, cart)],
+                              new_customer=customer)
             total = shop_cart_total(cart)
             can_pay = total is not None and paynow_configured()
             # Without a gateway the customer pays whoever hands over the goods, so
@@ -29516,7 +29835,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                     _shop_text_with_note(
                         "🎉 *Order received*\n\n"
                         f"Thank you {customer.get('name', '')}! Your reference is *{reference}*.\n"
-                        f"Order total: *{PAYNOW_CURRENCY} {total:.2f}*",
+                        f"Order total: *{PAYNOW_CURRENCY} {total:.2f}*\n\n"
+                        "🔒 Your items are reserved once the payment is received.",
                         _shop_delivery_note(customer)),
                     _shop_payment_prompt(customer),
                 ], new_ctx=ctx)
@@ -29592,7 +29912,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             ordered = True
             return result("menu", [
                 _shop_text(f"🎉 *Payment received* — thank you!\n\n"
-                           f"Reference *{reference}* is paid and confirmed."),
+                           f"Reference *{reference}* is paid and confirmed. Your items "
+                           "are reserved and the shop has been told."),
             ], new_history=[])
         if low in ("paylater", "later", "pay later") or low in negative_words:
             shop_payment_update(reference, "pay_later", method=_shop_pay_later_method(customer))
@@ -29609,7 +29930,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             ordered = True
             return result("menu", [
                 _shop_text(f"🎉 *Payment received* — thank you!\n\n"
-                           f"Reference *{reference}* is paid and confirmed."),
+                           f"Reference *{reference}* is paid and confirmed. Your items "
+                           "are reserved and the shop has been told."),
             ], new_history=[])
         if ok and paynow_status in ("cancelled", "failed", "error"):
             shop_payment_update(reference, paynow_status or "failed")
@@ -29660,6 +29982,10 @@ def _shop_order_placed(reference, customer, amount=None, paid=False):
             # rather than left to be discovered when the order arrives.
             lines.append("")
             lines.append(SHOP_DELIVERY_NOTE)
+        lines += ["", "🔒 *Stock is reserved when you pay.* Your items are held from "
+                      f"the moment you pay {'on delivery' if delivering else 'at the shop'}. "
+                      "If they run out before then, we will message you here with a "
+                      "replacement or a refund."]
         lines.append("")
         lines.append(f"Our sales team will confirm "
                      + ("delivery arrangements" if delivering else "when your order is ready")
@@ -34178,7 +34504,9 @@ def crm_stock_api():
     """Stock across the shops, for one shop at a time.
 
     The table is built from the catalogue rather than from the stock rows, so a
-    product nobody has counted yet still appears and can be counted.
+    product nobody has counted yet still appears and can be counted. Every row
+    also carries what the shop's unpaid orders still need, so the figure the
+    business reads is what is free rather than what is merely on the shelf.
     """
     user, error = portal_api_user('crm')
     if error:
@@ -34191,6 +34519,9 @@ def crm_stock_api():
         'shops': shops,
         'shop': shop,
         'rows': shop_stock_table(shop['id']) if shop else [],
+        'coverage': shop_stock_coverage(shop['id']) if shop else None,
+        'board': shop_stock_board(),
+        'short_orders': shop_stock_short_orders(shop['id']) if shop else [],
         'movements': shop_stock_movements(shop['id'] if shop else None, limit=25),
         'name_limit': SHOP_NAME_LIMIT,
     })
@@ -34238,6 +34569,9 @@ def crm_stock_save_api():
                     'message': (f"Saved {len(changed)} change(s) at {shop['name']}."
                                 if changed else "Nothing had changed."),
                     'rows': shop_stock_table(shop['id']),
+                    'coverage': shop_stock_coverage(shop['id']),
+                    'board': shop_stock_board(),
+                    'short_orders': shop_stock_short_orders(shop['id']),
                     'movements': shop_stock_movements(shop['id'], limit=25)})
 
 
@@ -34248,6 +34582,10 @@ def crm_stock_receive_api():
     Kept apart from the count endpoint because the two are different events: a
     count states what is on the shelf, a receipt says what came in. Both move the
     same number, but only one of them explains a rise without a recount.
+
+    A `lines` array restocks several pack sizes in one save, which is what a
+    delivery actually is; the single-line fields still work so the panel's own
+    form and any older caller keep behaving the same.
     """
     user, error = portal_api_user('crm')
     if error:
@@ -34258,20 +34596,77 @@ def crm_stock_receive_api():
         return jsonify({'success': False, 'message': 'Choose a shop first.'}), 400
     note = (payload.get('note') or '').strip()
     name = f"{user.get('firstname', '')} {user.get('surname', '')}".strip()
-    ok, message = shop_stock_receive(shop['id'], payload.get('product_id'),
-                                     payload.get('pack_size'), payload.get('quantity'),
-                                     user=name, note=note or None)
-    if not ok:
-        return jsonify({'success': False, 'message': message}), 400
-    log_activity("received_stock", "stock",
-                 f"Received stock at {shop['name']}",
-                 target=shop['id'],
-                 details={"product": payload.get('product_id'),
-                          "pack_size": payload.get('pack_size'),
-                          "quantity": payload.get('quantity'), "note": note},
-                 user=user)
-    return jsonify({'success': True, 'message': f"{message} to {shop['name']}.",
+    lines = payload.get('lines')
+    if not isinstance(lines, list) or not lines:
+        lines = [{k: payload.get(k) for k in ('product_id', 'pack_size', 'quantity')}]
+    added = 0
+    for line in lines:
+        line = line or {}
+        try:
+            quantity = int(line.get('quantity'))
+        except (TypeError, ValueError):
+            return jsonify({'success': False,
+                            'message': 'How many arrived? That is not a number.'}), 400
+        if quantity <= 0:
+            continue
+        ok, message = shop_stock_receive(shop['id'], line.get('product_id'),
+                                         line.get('pack_size'), quantity,
+                                         user=name, note=note or None)
+        if not ok:
+            return jsonify({'success': False, 'message': message}), 400
+        added += 1
+        log_activity("received_stock", "stock",
+                     f"Received stock at {shop['name']}",
+                     target=shop['id'],
+                     details={"product": line.get('product_id'),
+                              "pack_size": line.get('pack_size'),
+                              "quantity": quantity, "note": note},
+                     user=user)
+    if not added:
+        return jsonify({'success': False,
+                        'message': 'Enter how many arrived on at least one line.'}), 400
+    return jsonify({'success': True,
+                    'message': f"Added stock on {added} line(s) to {shop['name']}.",
                     'rows': shop_stock_table(shop['id']),
+                    'coverage': shop_stock_coverage(shop['id']),
+                    'board': shop_stock_board(),
+                    'short_orders': shop_stock_short_orders(shop['id']),
+                    'movements': shop_stock_movements(shop['id'], limit=25)})
+
+
+@app.route('/api/crm/stock/notify', methods=['POST'])
+def crm_stock_notify_api():
+    """Tell the customers whose orders this shop can no longer cover.
+
+    The list is worked out from the counts at the moment of the tap rather than
+    from whatever the screen last showed, so a shop that has just been restocked
+    does not apologise to customers who are no longer affected.
+    """
+    user, error = portal_api_user('crm')
+    if error:
+        return error
+    payload = request.get_json(silent=True) or {}
+    shop = shop_by_id(payload.get('shop'))
+    if not shop:
+        return jsonify({'success': False, 'message': 'Choose a shop first.'}), 400
+    sent, failed = shop_notify_stock_short_orders(shop['id'], user=user)
+    if not sent and not failed:
+        message = f"{shop['name']} can still cover every order it has."
+    else:
+        message = f"Told {sent} customer(s) about stock at {shop['name']}."
+        if failed:
+            message += (" Could not reach: " + ", ".join(failed) +
+                        ". They can be called from the orders tab.")
+    log_activity("notified_stock_shortage", "stock",
+                 f"Stock shortage notices sent for {shop['name']}",
+                 target=shop['id'],
+                 details={"sent": sent, "failed": failed}, user=user)
+    return jsonify({'success': True, 'message': message, 'sent': sent,
+                    'failed': failed,
+                    'rows': shop_stock_table(shop['id']),
+                    'coverage': shop_stock_coverage(shop['id']),
+                    'board': shop_stock_board(),
+                    'short_orders': shop_stock_short_orders(shop['id']),
                     'movements': shop_stock_movements(shop['id'], limit=25)})
 
 
@@ -34649,8 +35044,8 @@ def shop_send_payment_confirmation(reference):
     delivering = (order.get("delivery_method") or "collection") == "delivery"
     fulfilment = "the delivery" if delivering else "collection"
     message = ("🎉 *Payment received* — thank you!\n\n"
-               f"Reference *{reference}* is paid and confirmed. "
-               f"Our sales team will be in touch about {fulfilment}.")
+               f"Reference *{reference}* is paid and confirmed. Your items are "
+               f"reserved. Our sales team will be in touch about {fulfilment}.")
     number, channel = shop_order_number_and_channel(reference)
     if not number:
         return False

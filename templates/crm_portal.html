@@ -72,7 +72,7 @@
                         aria-controls="crmViewStock">
                     <i class="bi bi-boxes"></i>
                     <span class="crm-tab-text">
-                        <span class="crm-tab-full">Stock</span><span class="crm-tab-short">Stock</span>
+                        <span class="crm-tab-full">Order stock management</span><span class="crm-tab-short">Stock</span>
                     </span>
                 </button>
                 <button class="crm-tab" type="button" id="crmTabSettings"
@@ -700,7 +700,7 @@
            counted yet still appears and can be counted. #}
         <div class="ps-panel">
             <div class="ps-panel-head">
-                <h3><i class="bi bi-boxes"></i> Stock by shop</h3>
+                <h3><i class="bi bi-boxes"></i> Order stock management</h3>
                 <div class="ps-panel-actions">
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmShopNew">
                         <i class="bi bi-plus-lg"></i> Add a shop
@@ -754,13 +754,35 @@
                     </p>
                 </div>
 
+                {# Every shop at a glance, coloured by whether its counts still cover
+                   the orders already placed on it. Green means the shelf can serve
+                   everything it has been asked for; red means it cannot, and the
+                   alert underneath says what to do about it. #}
+                <div class="crm-stock-board" id="crmStockBoard" aria-live="polite"></div>
+                <div class="crm-stock-alert" id="crmStockAlert" hidden>
+                    <div class="crm-stock-alert-body">
+                        <strong id="crmStockAlertTitle"></strong>
+                        <span id="crmStockAlertText"></span>
+                    </div>
+                    <button class="ps-btn ps-btn-danger ps-btn-sm" type="button" id="crmStockNotify">
+                        <i class="bi bi-send"></i> Notify affected orders
+                    </button>
+                </div>
+
                 <div class="crm-table-wrap">
                     <table class="crm-table crm-stock-table">
                         <thead>
                             <tr>
                                 <th>Product</th>
                                 <th>Pack size</th>
-                                <th class="crm-od-num">Stock</th>
+                                <th class="crm-od-num">On hand</th>
+                                <th class="crm-od-num" title="Units still owed to orders placed but not yet paid">
+                                    Unpaid orders
+                                </th>
+                                <th class="crm-od-num" title="On hand minus what unpaid orders still need">
+                                    Available
+                                </th>
+                                <th class="crm-od-num">Restock</th>
                             </tr>
                         </thead>
                         <tbody id="crmStockBody"></tbody>
@@ -771,9 +793,14 @@
                     <button class="ps-btn ps-btn-primary ps-btn-sm" type="button" id="crmStockSave">
                         <i class="bi bi-check2"></i> Save counts
                     </button>
+                    <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmRestockSave">
+                        <i class="bi bi-plus-lg"></i> Add restocked quantities
+                    </button>
                     <span class="crm-stock-hint" id="crmStockHint">
                         Leave a line blank for a product this shop does not hold — blank
                         means nobody has counted it, which is not the same as none left.
+                        Restocking adds to the count and is recorded as a delivery, so it
+                        reaches the assistant, the orders and the shelf in one go.
                     </span>
                 </div>
 
