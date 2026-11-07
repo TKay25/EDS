@@ -21259,6 +21259,31 @@ def wa_outbound_number(value):
     return digits
 
 
+def wa_display_number(value):
+    """A WhatsApp number as a message body should print it: +263… .
+
+    Stored numbers are international digits, but a number typed into a portal
+    form can still arrive in local 07… form, so the display value is built with
+    the same normaliser the send layer uses. The leading plus is what makes the
+    number tappable in WhatsApp, which is the point of printing it at all.
+    """
+    digits = wa_outbound_number(value)
+    return "+" + digits if digits else ""
+
+
+def wa_store_number(value, fallback=None):
+    """A number as it should be saved: international digits, no plus.
+
+    Only a value that reads as a Zimbabwean mobile is rewritten. A landline, a
+    note, or anything else typed into a phone field is stored exactly as it came
+    in, so a column that also holds non-WhatsApp numbers is never mangled.
+    """
+    text = str(value or "").strip()
+    if not text:
+        return fallback
+    return wa_outbound_number(text) if shop_staff_number(text) else text
+
+
 def crm_send_whatsapp(wa_number, text, channel=None):
     """Send a WhatsApp text from the company channel. Returns (ok, detail)."""
     creds = wa_outbound_credentials(channel)
@@ -23372,8 +23397,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "Keep it": "Sirasiya odha",
         "Track my order": "Tevedzera odha",
         "All my orders": "Maodha angu ose",
-        "Send a reminder about it": "Yeuchidza nezvayo",
-        "Send reminder about it": "Yeuchidza nezvayo",
+        "Send Reminder": "Yeuchidza nezvayo",
         "Track another order": "Tevedzera imwe odha",
         "Remind them again": "Vayeuchidze zvakare",
         "Confirm agent orders": "Simbisa odha dzemumiririri",
@@ -23417,8 +23441,7 @@ SHOP_OPTION_TRANSLATIONS = {
         "Keep it": "Yigcine i-oda",
         "Track my order": "Landela i-oda",
         "All my orders": "Wonke ama-oda ami",
-        "Send a reminder about it": "Khumbuza ngayo",
-        "Send reminder about it": "Khumbuza ngayo",
+        "Send Reminder": "Khumbuza ngayo",
         "Track another order": "Landela enye i-oda",
         "Remind them again": "Bakhumbuze futhi",
         "Confirm agent orders": "Qinisekisa ama-oda omeluleki",
@@ -24791,7 +24814,7 @@ def shop_agent_order_create(wa_number, lines, user=None, note=None, channel=None
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'unpaid', %s, %s,
                         'agent', %s, %s, TRUE, NOW())
                 RETURNING id
-            """, (reference, typed_name or None, (phone or "").strip() or None,
+            """, (reference, typed_name or None, wa_store_number(phone),
                   (delivery_address or "").strip() or None, channel, owner, chat_id,
                   (note or "").strip() or None,
                   sum(item["qty"] for item in cart), method,
@@ -25003,7 +25026,8 @@ def _shop_save_order(state, channel, wa_number=None, customer=None, payment_meth
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                         'customer', NOW())
                 RETURNING id
-            """, (reference, typed_name or None, customer.get("company"), customer.get("phone"),
+            """, (reference, typed_name or None, customer.get("company"),
+                  wa_store_number(customer.get("phone")),
                   customer.get("email"), address if method == "delivery" else None, channel,
                   wa_number, chat_id, customer.get("notes"),
                   sum(item["qty"] for item in cart), payment_method, payment_status, amount,
@@ -25129,7 +25153,8 @@ def shop_staff_save(shop_id, staff, user=None):
     The list is replaced rather than merged, because the portal shows exactly the
     people who will be messaged and a save has to leave the two matching. Numbers
     are normalised first so the same person entered as 0771… and +263 771… counts
-    as one entry rather than two.
+    as one entry rather than two, and are stored in international form whatever
+    was typed.
     """
     shop = shop_by_id(shop_id)
     if not shop:
@@ -25149,7 +25174,9 @@ def shop_staff_save(shop_id, staff, user=None):
             # The same number twice would message one person twice for one order.
             return False, f"{number} is listed twice. Keep one entry per person."
         seen.add(number)
-        cleaned.append((name, number))
+        # Saved in international form so a number is one row whichever way it was
+        # typed, and so anything that reads the column gets a dialable number.
+        cleaned.append((name, wa_outbound_number(number)))
     if len(cleaned) > SHOP_STAFF_LIMIT:
         return False, (f"A shop can have up to {SHOP_STAFF_LIMIT} staff. "
                        f"{len(cleaned)} were given.")
@@ -25263,27 +25290,16 @@ def _shop_order_notice_for_staff(reference, order):
     return "\n".join(lines)
 
 
-def _shop_staff_buttons_payload(body, reference):
+def _shop_staff_buttons_payload(body, reference, template_key="staff_new_order"):
     """The staff notification as WhatsApp buttons.
 
-    The button id carries the order, so a reply can be matched to it without the
-    staff member typing or selecting anything.
+    The buttons are the template's own, so the in-chat notice and the
+    out-of-window fallback offer exactly the same choices, and each id carries
+    the order so a tap names it without the staff member typing anything.
     """
-    return {
-        "type": "interactive",
-        "interactive": {
-            "type": "button",
-            "body": {"text": body[:1024]},
-            "action": {
-                "buttons": [
-                    {"type": "reply",
-                     "reply": {"id": f"staffwork:{reference}", "title": "Working on it"}},
-                    {"type": "reply",
-                     "reply": {"id": f"staffdone:{reference}", "title": "Ready / done"}},
-                ]
-            },
-        },
-    }
+    buttons = [(shop_template_button_id(button_id, {"reference": reference}), title)
+               for button_id, title in shop_template_buttons(template_key)]
+    return _wa_buttons_payload(body, buttons)
 
 
 def shop_notify_hq_of_payment(reference, order, amount=None, method=None):
@@ -25357,7 +25373,7 @@ def shop_notify_agent_of_handover(wa_number, reason=None, display_name=None, cha
     numbers = shop_sales_agent_numbers()
     if not numbers:
         return 0
-    local = str(wa_number or "")[-15:]
+    display = wa_display_number(wa_number) or str(wa_number or "")
     # The profile name is looked up here too, so the notice carries a real name
     # even when the caller did not know one. Both lines are always printed: in
     # WhatsApp the agent can tap the number, and a name is what tells them who
@@ -25365,7 +25381,7 @@ def shop_notify_agent_of_handover(wa_number, reason=None, display_name=None, cha
     name = (display_name or "").strip() or (crm_best_display_name(wa_number) or "").strip()
     lines = ["🙋 *A customer is asking for a person*", "",
              f"*Customer name:* {name or 'not given'}",
-             f"*WhatsApp number:* +{local}"]
+             f"*WhatsApp number:* {display}"]
     if reason:
         lines.append(f"*Reason:* {reason}")
     lines.append("")
@@ -25373,7 +25389,7 @@ def shop_notify_agent_of_handover(wa_number, reason=None, display_name=None, cha
     body = "\n".join(lines)
     template_values = {
         "customer": name or "not given",
-        "number": f"+{local}",
+        "number": display,
         "reason": reason or "the customer did not say",
     }
     sent = 0
@@ -25389,9 +25405,9 @@ def shop_notify_agent_of_handover(wa_number, reason=None, display_name=None, cha
             print(f"agent handover notice error: {e}")
     if sent:
         log_activity("notified_sales_agent", "chat",
-                     f"Told the sales agent that {name or 'a customer'} (+{local}) "
+                     f"Told the sales agent that {name or 'a customer'} ({display}) "
                      f"wants a person",
-                     target=f"+{local}",
+                     target=display,
                      details={"sent": sent, "name": name})
     return sent
     sent = 0
@@ -25736,19 +25752,31 @@ SHOP_TEMPLATES = {
                     ("staffdone:{{reference}}", "Ready / done")],
     },
     "staff_order_reminder": {
-        "name": "bchem_staff_order_reminder",
+        "name": "customer_order_reminder",
         "language": "en",
         "category": "UTILITY",
         # Sent when a customer chases an order. It reuses the shop's own action
         # buttons so the reminder can be acted on directly, rather than making the
         # shopkeeper look the order up again.
-        "body": ("Reminder from a customer. Order {{1}} is still waiting at your shop. "
-                 "Customer {{2}}. Items {{3}}. Current status {{4}}. Tap *Working on "
-                 "it* below if someone is handling it, or *Ready / done* when it is "
-                 "finished."),
-        "fields": ["reference", "customer", "items", "stage"],
+        # The body mirrors the approved template exactly, line for line, so the
+        # two can be compared without translating between them.
+        "body": ("Reminder from a customer.\n"
+                 "Order {{1}} is still waiting at your shop.\n"
+                 "Customer {{2}}, WhatsApp {{3}}.\n"
+                 "Items {{4}}.\n"
+                 "Current status {{5}}.\n"
+                 "\n"
+                 "Tap \"Working on it\" if someone is handling it, \"Ready for "
+                 "collection\" once it is packed, or \"Order on the way\" once it has "
+                 "left."),
+        "fields": ["reference", "customer", "customer_number", "items", "stage"],
+        # One button per stage the shop can move the order to, so a tap is enough
+        # without going back to the status picker. "Order on the way" is on every
+        # reminder because a template's buttons are fixed at approval; the
+        # fulfilment check in shop_order_stage_set refuses it on a collection.
         "buttons": [("staffwork:{{reference}}", "Working on it"),
-                    ("staffdone:{{reference}}", "Ready / done")],
+                    ("staffready:{{reference}}", "Ready for collection"),
+                    ("staffenroute:{{reference}}", "Order on the way")],
     },
     "hq_payment_received": {
         "name": "bchem_hq_payment_received",
@@ -25822,17 +25850,19 @@ def shop_send_template(to_number, key, values, channel=None):
     if parameters:
         components.append({"type": "body", "parameters": parameters})
     # A quick-reply button returns a payload, which is what the assistant's own
-    # handlers read. The index identifies which button was tapped.
-    buttons = shop_template_buttons(key)
-    if buttons:
+    # handlers read. Meta reads `index` to know which button a payload belongs
+    # to, so each button needs its own component - stacking every payload under
+    # index 0 would leave the later buttons carrying the placeholder they were
+    # approved with instead of this order's reference.
+    for index, (button_id, _title) in enumerate(
+            shop_template_buttons(key)[:WA_TEMPLATE_BUTTON_LIMIT]):
         components.append({
             "type": "button",
             "sub_type": "quick_reply",
-            "index": 0,
+            "index": index,
             "parameters": [
                 {"type": "payload",
                  "payload": shop_template_button_id(button_id, values)}
-                for button_id, _title in buttons[:WA_TEMPLATE_BUTTON_LIMIT]
             ],
         })
     payload = {
@@ -25937,7 +25967,7 @@ def _shop_send_to_staff_members(staff, body, reference, channel=None,
     the approved template. A shopkeeper's handset often sits outside the 24-hour
     window, so the fallback is what makes the notice arrive at all.
     """
-    payload = _shop_staff_buttons_payload(body, reference)
+    payload = _shop_staff_buttons_payload(body, reference, template_key)
     sent = 0
     for person in staff:
         number = person.get("wa_number") or ""
@@ -26006,6 +26036,17 @@ def shop_notify_staff_of_order(reference, order):
     return sent
 
 
+def _shop_customer_wa_text(order):
+    """The customer's WhatsApp number in the form the shop should dial it.
+
+    Stored numbers are international digits, but an order taken by hand can name
+    a local 07… number, so the display value is built with the same normaliser
+    the send layer uses rather than echoing the column.
+    """
+    order = order or {}
+    return wa_display_number(order.get("wa_number") or order.get("phone")) or "-"
+
+
 def _shop_order_reminder_notice_for_staff(reference, order):
     """What a shop is told when a customer chases an order."""
     stage = (order.get("stage") or "").strip().lower()
@@ -26015,6 +26056,7 @@ def _shop_order_reminder_notice_for_staff(reference, order):
         lines.append(f"*Shop:* {order['shop']}")
     if order.get("customer_name"):
         lines.append(f"*Customer:* {order['customer_name']}")
+    lines.append(f"*Customer WhatsApp:* {_shop_customer_wa_text(order)}")
     lines.append(f"*Items:* {order.get('item_count') or 0}")
     lines.append("*Receive by:* "
                  + ("Delivery to the customer" if delivering
@@ -26024,16 +26066,16 @@ def _shop_order_reminder_notice_for_staff(reference, order):
         lines.append(f"*Last update:* {order['stage_at']}")
     lines.append("")
     lines.append("The customer asked for an update. Tap *Working on it* if someone "
-                 "is handling it, or *Ready / done* when it is finished.")
+                 "is handling it, *Ready for collection* once it is packed, or "
+                 "*Order on the way* once it has left.")
     return "\n".join(lines)
 
 
 def shop_notify_staff_of_reminder(reference, order=None):
     """Ask the fulfilling shop to chase an order a customer reminded us about.
 
-    Returns how many staff were reached. The same buttons as the new-order notice
-    are attached, so the shopkeeper can act on the reminder without opening
-    anything else.
+    Returns how many staff were reached. The reminder's own buttons are attached,
+    so the shopkeeper can act on it without opening anything else.
     """
     order = order_detail(reference) or order or {}
     shop_id = order.get("shop_key")
@@ -26046,6 +26088,7 @@ def shop_notify_staff_of_reminder(reference, order=None):
     template_values = {
         "reference": reference,
         "customer": order.get("customer_name") or "-",
+        "customer_number": _shop_customer_wa_text(order),
         "items": order.get("item_count") or 0,
         "stage": SHOP_STAGE_STAFF_LABELS.get(
             (order.get("stage") or "").strip().lower(), "Not set"),
@@ -26798,6 +26841,39 @@ def shop_staff_reply(sender_id, button_id, staff, channel=None):
             _shop_staff_send(sender_id,
                              f"Status change for {parts[1]} cancelled; the order was not changed.",
                              staff, channel)
+            return True
+
+    # Moving the order on from the notice itself. "Ready for collection" and
+    # "Order on the way" carry the stage they ask for, and shop_order_stage_set
+    # validates it against the order's own fulfilment before the customer is
+    # told, so a collection order cannot be sent out on the way.
+    for prefix, stage in (("staffready:", "ready"),
+                          ("staffenroute:", "enroute")):
+        if button_id.startswith(prefix):
+            reference = button_id.split(":", 1)[1].strip()
+            if not _shop_staff_order_for_update(reference, staff):
+                _shop_staff_send(sender_id,
+                                 f"I couldn't find order {reference} for your shop.",
+                                 staff, channel)
+                return True
+            ok, message = shop_order_stage_set(
+                reference, stage, user=staff.get("name") or "Shop staff",
+                notify=True, expected_shop_id=staff.get("shop_id"))
+            if ok and message == "Stage unchanged.":
+                message = (f"{reference} is already marked as "
+                           f"{SHOP_STAGE_STAFF_LABELS[stage].lower()}.")
+            elif ok:
+                message = (f"✅ Order {reference} is now marked as "
+                           f"{SHOP_STAGE_STAFF_LABELS[stage]}. The customer's usual "
+                           "WhatsApp order update was triggered.")
+            _shop_staff_send(sender_id, message, staff, channel)
+            log_activity("shop_staff_replied", "order",
+                         f"{staff.get('name') or 'Shop staff'} marked {reference} "
+                         f"as {stage}" if ok else
+                         f"{staff.get('name') or 'Shop staff'} could not update {reference}",
+                         target=reference,
+                         details={"button": button_id, "stage": stage,
+                                  "shop_id": staff.get("shop_id"), "success": ok})
             return True
 
     for prefix, handler in (("staffwork:", shop_order_claim),
@@ -28150,7 +28226,7 @@ def _shop_track_prompt(wa_number):
 
 def _shop_track_view(order, wa_number):
     """The tracking reply for one order, with its next-step choices."""
-    options = [("nudge", "Send a reminder about it")]
+    options = [("nudge", "Send Reminder")]
     # Offered only while the goods are not yet on their way, so the choice on
     # screen can always be honoured rather than leading to a refusal.
     if order.get("address_changeable"):
@@ -29601,7 +29677,7 @@ def _shop_order_placed(reference, customer, amount=None, paid=False):
     return [_shop_frame(_shop_options(
         "\n".join(lines),
         [("track", "Track my order"),
-         ("nudge", "Send a reminder about it")]), "done" if paid else "order")]
+         ("nudge", "Send Reminder")]), "done" if paid else "order")]
 
 
 def _shop_payment_event(reference, event, status, payload=""):
@@ -30838,7 +30914,7 @@ def _push_alert_unattended(wa_number, reason, display_name=None):
     """
     if not push_configured():
         return
-    who = (display_name or "").strip() or f"+{str(wa_number)[-15:]}"
+    who = (display_name or "").strip() or wa_display_number(wa_number) or "A customer"
     title = f"{who} needs a person"
     body = (reason or "A customer is waiting for a reply").strip()
 
