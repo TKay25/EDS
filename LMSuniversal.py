@@ -26163,14 +26163,15 @@ def shop_order_claim(reference, staff):
         return False, f"Order {reference} was cancelled."
     if (order.get("stage") or "").strip().lower() == "preparing":
         return True, f"{reference} is already being worked on."
-    ok, _message = shop_order_stage_set(reference, "preparing",
-                                        user=staff.get("name") or "Shop staff",
-                                        notify=True,
-                                        expected_shop_id=staff.get("shop_id"))
+    ok, message = shop_order_stage_set(reference, "preparing",
+                                       user=staff.get("name") or "Shop staff",
+                                       notify=True,
+                                       expected_shop_id=staff.get("shop_id"))
     if not ok:
         return False, f"Could not update {reference}."
-    return True, (f"👍 Thank you. *{reference}* is marked as being worked on and the "
-                  f"customer has been told.")
+    # The stage message states whether the customer's WhatsApp update actually
+    # went out, so the shop is not told "customer told" when it was not.
+    return True, f"👍 Thank you. *{reference}*: {message}"
 
 
 def shop_order_ready(reference, staff):
@@ -26184,14 +26185,14 @@ def shop_order_ready(reference, staff):
     # Which stage "done" means depends on how the order leaves, so the staff
     # button does the right thing without them having to choose.
     stage = "collected" if order.get("delivery_method") != "delivery" else "delivered"
-    ok, _message = shop_order_stage_set(reference, stage,
-                                        user=staff.get("name") or "Shop staff",
-                                        notify=True,
-                                        expected_shop_id=staff.get("shop_id"))
+    ok, message = shop_order_stage_set(reference, stage,
+                                       user=staff.get("name") or "Shop staff",
+                                       notify=True,
+                                       expected_shop_id=staff.get("shop_id"))
     if not ok:
         return False, f"Could not update {reference}."
-    return True, (f"✅ *{reference}* is marked as {SHOP_STAGE_STAFF_LABELS[stage].lower()}, "
-                  f"and the customer has been told.")
+    # Reused rather than restated so "customer told" is only said when it is true.
+    return True, f"✅ *{reference}*: {message}"
 
 
 def _shop_staff_send(sender_id, text, staff, channel=None):
@@ -26866,9 +26867,9 @@ def shop_staff_reply(sender_id, button_id, staff, channel=None):
                 reference, stage, user=staff.get("name") or "Shop staff",
                 notify=True, expected_shop_id=staff.get("shop_id"))
             if ok:
-                message = (f"✅ Order {reference} is now marked as "
-                           f"{SHOP_STAGE_STAFF_LABELS[stage]}. The customer's usual "
-                           "WhatsApp order update was triggered.")
+                # The message already says whether the customer's WhatsApp update
+                # actually went out, so it is reused rather than claiming success.
+                message = f"✅ Order {reference}: {message}"
             _shop_staff_send(sender_id, message, staff, channel)
             log_activity("shop_staff_replied", "order",
                          f"{staff.get('name') or 'Shop staff'} confirmed {reference} "
@@ -26907,9 +26908,9 @@ def shop_staff_reply(sender_id, button_id, staff, channel=None):
                 message = (f"{reference} is already marked as "
                            f"{SHOP_STAGE_STAFF_LABELS[stage].lower()}.")
             elif ok:
-                message = (f"✅ Order {reference} is now marked as "
-                           f"{SHOP_STAGE_STAFF_LABELS[stage]}. The customer's usual "
-                           "WhatsApp order update was triggered.")
+                # Reused so the shop is told whether the customer update actually
+                # went out, rather than always being told it was triggered.
+                message = f"✅ Order {reference}: {message}"
             _shop_staff_send(sender_id, message, staff, channel)
             log_activity("shop_staff_replied", "order",
                          f"{staff.get('name') or 'Shop staff'} marked {reference} "
@@ -26997,9 +26998,9 @@ def shop_staff_reply(sender_id, button_id, staff, channel=None):
             reference, stage, user=staff.get("name") or "Shop staff",
             notify=True, expected_shop_id=staff.get("shop_id"))
         if ok:
-            message = (f"✅ Order {reference} is now marked as "
-                       f"{SHOP_STAGE_STAFF_LABELS[stage]}. The customer's usual "
-                       "WhatsApp order update was triggered.")
+            # The message already says whether the customer's WhatsApp update
+            # actually went out, so it is reused rather than claiming success.
+            message = f"✅ Order {reference}: {message}"
         _shop_staff_send(sender_id, message, staff, channel)
         return True
 
@@ -28374,9 +28375,15 @@ def _shop_shop_prompt(customer, cart=None):
         prompt = ("🚚 *Which shop is closest to you?*\n\n"
                   "We deliver from the shop nearest your address, so choose the one "
                   "that suits you.")
-    else:
+    elif (customer or {}).get("delivery_method") == "collection":
         prompt = ("🏬 *Which shop will you collect from?*\n\n"
                   "Choose the shop that is easiest for you to reach.")
+    else:
+        # The shop is asked before the customer says how they will receive the
+        # order, so this prompt must not promise collection or delivery.
+        prompt = ("🏬 *Which shop should serve your order?*\n\n"
+                  "Choose the shop that is easiest for you to reach. We will "
+                  "confirm whether you collect it or have it delivered next.")
     shops = shop_shops()
     notes = {}
     if cart:
@@ -28401,7 +28408,7 @@ def _shop_shop_prompt(customer, cart=None):
     # Named so the list's own button says what it holds, rather than "Choose an
     # option" over a column of shop names.
     options["content_label"] = ("Choose a shop to collect from"
-                               if not _shop_paying_on_delivery(customer)
+                               if (customer or {}).get("delivery_method") == "collection"
                                else "Choose a shop")
     return options
 
@@ -28441,9 +28448,24 @@ def _shop_short_prompt(customer, cart):
                           ("order_shop", "Choose another shop")])
 
 
-def _shop_next_after_shop(customer):
-    """The step after a shop is settled: an address only when it is delivered."""
-    return "order_address" if _shop_paying_on_delivery(customer) else "order_confirm"
+def _shop_after_shop_step(cart, customer):
+    """The next step once a shop has been chosen.
+
+    The shop is asked before the customer's details, so a fresh order asks for
+    the name and number next. A conversation already past those questions - a
+    returning customer, or a legacy session that had reached the picker before
+    this change - carries on from where it had got to instead of retyping them.
+    """
+    if not customer.get("name") or not customer.get("phone"):
+        return "order_name", [_shop_text(_shop_name_phone_prompt())]
+    method = (customer.get("delivery_method") or "").strip().lower()
+    if method == "delivery":
+        return "order_address", [_shop_order_address_prompt(customer)]
+    if method == "collection":
+        return "order_confirm", _shop_order_confirmation(cart, customer)
+    # The area question decides whether delivery is even offered, so it is asked
+    # after the details and before the fulfilment choice.
+    return "order_area", [_shop_area_prompt()]
 
 
 def _shop_text_with_note(text, note):
@@ -28930,6 +28952,19 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         state["history"] = kept[-12:]
         state["nav"] = {"back": bool(state["history"]), "menu": new_step != "menu"}
         return state, messages, actions or []
+
+    # Whether the reply matched something on screen is needed by result() below,
+    # including the branches that answer before the step handlers run. It is
+    # worked out here so the closure can never read it before it exists.
+    #
+    # A button press, a number that named an option, or a word this step accepts
+    # is never second-guessed. The label a customer tapped arrives as the message
+    # text, so comparing it against id prefixes would reject a valid tap:
+    # "Collect from the shop" against "collect:".
+    typed_word = command.strip().lower()
+    accepted_words = _SHOP_STEP_ACCEPTS.get(step, ())
+    already_understood = (bool(button_id) or typed_word in (previous_options or [])
+                          or typed_word in accepted_words)
 
     def result(new_step, messages, actions=None, new_ctx=None, new_customer=None, new_history=None):
         # The single place a step's answer is known, so it is also the place to
@@ -29477,24 +29512,21 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
     if low in ("checkout", "order", "buy") or low in SHOP_CHECKOUT_WORDS:
         if not cart:
             return result("cart", [_shop_cart_message(cart)])
+        # The shop is chosen before the details, so the whole cart's stock is
+        # confirmed while the customer is still looking at what they picked.
+        if shop_shops():
+            prompt = _shop_shop_prompt(customer, cart)
+            if prompt is None:
+                return result("order_shop", [_shop_stock_choices(cart, customer)])
+            return result("order_shop", [prompt])
         return result("order_name", [_shop_text(_shop_name_phone_prompt())])
 
     # An unrecognised reply should never be answered with silence. A prompt that
     # simply reappears reads as the assistant being deaf, and on the product step
     # it also threw the customer back to the whole catalogue. The feedback is
-    # added in `result` below, once the step has decided what to do, so the step
-    # is the only thing that judges its own input.
-    #
-    # These two are read there:
-    #   already_understood - a button press, or a number that named an option, or
-    #     a word this step accepts, is never second-guessed. The label a customer
-    #     tapped arrives as the message text, so an earlier version that compared
-    #     it against id prefixes rejected a valid tap: "Collect from the shop"
-    #     against "collect:".
-    typed_word = command.strip().lower()
-    accepted_words = _SHOP_STEP_ACCEPTS.get(step, ())
-    already_understood = (bool(button_id) or typed_word in (previous_options or [])
-                          or typed_word in accepted_words)
+    # added in `result` above, once the step has decided what to do, so the step
+    # is the only thing that judges its own input. How the reply was understood
+    # is worked out before `result` so every branch can rely on it.
 
     # ------------------------------------------------------------------ steps
     # "More options" opens the choices that did not fit on the list. Handled
@@ -29713,7 +29745,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         customer["delivery_method"] = "collection"
         customer["delivery_address"] = ""
         notice = _shop_text(reason)
-        if not shop_shops():
+        if not shop_shops() or customer.get("shop_id"):
             return result("order_confirm",
                           [notice] + _shop_order_confirmation(cart, customer),
                           new_customer=customer)
@@ -29738,9 +29770,9 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                               [_shop_text(reason), _shop_fulfilment_prompt(customer, cart)],
                               new_customer=customer)
             customer["delivery_method"] = "delivery"
-            if not shop_shops():
-                # No shops are configured, so the question would have no answers.
-                # The order carries on exactly as it did before shops existed.
+            if not shop_shops() or customer.get("shop_id"):
+                # No shops are configured, or the shop was already chosen before
+                # the details were taken, so this question has an answer.
                 return result("order_address", [_shop_order_address_prompt(customer)])
             prompt = _shop_shop_prompt(customer, cart)
             if prompt is None:
@@ -29751,7 +29783,7 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
             # No address to collect: the customer comes to us.
             customer["delivery_method"] = "collection"
             customer["delivery_address"] = ""
-            if not shop_shops():
+            if not shop_shops() or customer.get("shop_id"):
                 return result("order_confirm", _shop_order_confirmation(cart, customer))
             prompt = _shop_shop_prompt(customer, cart)
             if prompt is None:
@@ -29777,11 +29809,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
         if shop_cart_shortfall(chosen["id"], cart):
             return result("order_shop_short", [_shop_short_prompt(customer, cart)],
                           new_customer=customer)
-        if _shop_paying_on_delivery(customer):
-            return result("order_address", [_shop_order_address_prompt(customer)],
-                          new_customer=customer)
-        return result("order_confirm", _shop_order_confirmation(cart, customer),
-                      new_customer=customer)
+        step, messages = _shop_after_shop_step(cart, customer)
+        return result(step, messages, new_customer=customer)
 
     if step == "order_shop_short":
         if low in ("stock_fit", "fit", "use what is available", "available"):
@@ -29797,11 +29826,8 @@ def shop_engine(state, raw_input="", button_id="", channel="web", wa_number=None
                                   new_customer=customer)
                 return result("order_shop", [prompt], new_customer=customer)
             cart = fitted
-            if _shop_paying_on_delivery(customer):
-                return result("order_address", [_shop_order_address_prompt(customer)],
-                              new_customer=customer)
-            return result("order_confirm", _shop_order_confirmation(cart, customer),
-                          new_customer=customer)
+            step, messages = _shop_after_shop_step(cart, customer)
+            return result(step, messages, new_customer=customer)
         if low in ("order_shop", "shop", "another", "change shop", "change"):
             customer.pop("shop_id", None)
             prompt = _shop_shop_prompt(customer, cart)
@@ -30939,19 +30965,25 @@ def shop_order_stage_set(reference, stage, user=None, notify=True,
                  user=user)
     _shop_payment_event(reference, "stage", stage or "cleared", user or "")
 
+    notice_sent = None
     if stage and notify:
         # Re-read so the notice is built from what was actually stored, and not
         # from a stage the customer may have moved on from meanwhile.
         fresh = order_detail(reference)
         notice = shop_order_stage_notice(reference, fresh, stage) if fresh else ""
         if notice:
-            sent = shop_send_stage_notice(reference, stage, fresh, notice)
-            if not sent:
+            notice_sent = bool(shop_send_stage_notice(reference, stage, fresh, notice))
+            if not notice_sent:
                 # The stage is saved either way: the update is real business
                 # state, and a customer who has not opted in on WhatsApp simply
                 # finds out at the next turn they take.
                 print(f"stage notice not delivered for {reference}")
     message = SHOP_STAGE_STAFF_LABELS.get(stage, "Stage cleared")
+    if notice_sent is True:
+        message += ". The customer was sent the update on WhatsApp."
+    elif notice_sent is False:
+        message += (". The customer could not be reached on WhatsApp, so the "
+                    "status is saved but they have not been told.")
     if stage == "collected":
         message += ". " + _shop_collected_receipt_note(reference)
     return True, message
@@ -34607,8 +34639,9 @@ def crm_product_image_save_api(product_id):
     log_activity("changed_product_image", "catalogue",
                  f"Updated the picture for “{product_name}”", target=product_name,
                  details={"product_id": product_id, "image_path": stored}, user=user)
-    return jsonify({'success': True, 'products': crm_catalog(), 'image_url':
-                    product_image_public_url(stored),
+    return jsonify({'success': True, 'products': crm_catalog(),
+                    'image_path': stored,
+                    'image_url': product_image_public_url(stored),
                     'currency': PAYNOW_CURRENCY, 'limits': catalog_limits()})
 
 

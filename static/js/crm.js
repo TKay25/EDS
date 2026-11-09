@@ -2922,7 +2922,11 @@
         if (preview) {
           preview.innerHTML = imageUrl
             ? '<img src="' + escapeHtml(imageUrl) + '" alt="">'
-            : '<span class="crm-product-image-empty"><i class="bi bi-image"></i> No picture yet</span>';
+            : (imagePath
+                ? '<span class="crm-product-image-empty is-error">' +
+                  '<i class="bi bi-exclamation-triangle"></i> Picture unavailable</span>'
+                : '<span class="crm-product-image-empty">' +
+                  '<i class="bi bi-image"></i> No picture yet</span>');
         }
         var clearButton = wrapper.querySelector('[data-role="imageclear"]');
         if (clearButton) clearButton.hidden = !imagePath;
@@ -2980,7 +2984,8 @@
                 toast(result.message || 'Could not save the picture.', 'error');
                 return;
               }
-              paintImage(imageWrapper, result.image_url ? true : '', result.image_url || '');
+              paintImage(imageWrapper, result.image_path || '',
+                         result.image_url || '');
               imageNote(imageWrapper, 'Picture saved', 'is-ok');
               toast('Picture saved for “' + nameOf(product) + '”.', 'ok');
               if (result.limits) applyLimits(result.limits);

@@ -1068,6 +1068,8 @@ select.ps-input {
 /* A file input inside a label keeps the native picker without a custom button. */
 .crm-product-image-pick { cursor: pointer; margin-bottom: 0; }
 
+.crm-product-image-empty.is-error { color: #B91C1C; }
+
 .crm-product-image-hint { margin: 0; font-size: 0.72rem; }
 .crm-product-image .crm-save-note { grid-column: 2; }
 
@@ -3662,6 +3664,13 @@ input.crm-check[type="checkbox"]:disabled {
 
 .crm-view { min-width: 0; }
 .crm-view[hidden] { display: none !important; }
+
+/* Component rules such as .ps-btn { display: inline-flex } and
+   .crm-product-image-tools { display: flex } outrank the browser's own
+   [hidden] { display: none }, so a control toggled with the hidden attribute
+   stayed on screen - most visibly "Remove photo" beside "No picture yet".
+   One rule here makes hidden authoritative across the whole CRM. */
+.crm-shell [hidden] { display: none !important; }
 
 .crm-view.is-active {
   animation: crmFade 0.18s ease-out;
