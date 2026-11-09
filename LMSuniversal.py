@@ -30902,7 +30902,10 @@ def shop_order_stage_set(reference, stage, user=None, notify=True,
                        + ("a delivery." if order.get("delivery_method") == "delivery"
                           else "a collection."))
     if (order.get("stage") or "") == stage:
-        return True, "Stage unchanged."
+        message = "Stage unchanged."
+        if stage == "collected":
+            message += ". " + _shop_collected_receipt_note(reference)
+        return True, message
     try:
         ensure_shop_tables()
         with get_db() as (cursor, connection):
@@ -30949,14 +30952,17 @@ def shop_order_stage_set(reference, stage, user=None, notify=True,
                 # finds out at the next turn they take.
                 print(f"stage notice not delivered for {reference}")
     message = SHOP_STAGE_STAFF_LABELS.get(stage, "Stage cleared")
-    if stage == "collected" and \
-            (order.get("payment_status") or "").strip().lower() == "paid":
-        sent, detail = _shop_auto_send_receipt(reference, "collected order")
-        if sent:
-            message += ". The receipt is available in the customer's WhatsApp conversation."
-        else:
-            message += f". The receipt was not sent automatically: {detail}"
+    if stage == "collected":
+        message += ". " + _shop_collected_receipt_note(reference)
     return True, message
+
+
+def _shop_collected_receipt_note(reference):
+    """Try sending a paid order's receipt when collection is recorded."""
+    sent, detail = _shop_auto_send_receipt(reference, "collected order")
+    if sent:
+        return "The receipt is available in the customer's WhatsApp conversation."
+    return f"The receipt was not sent automatically: {detail}"
 
 
 def shop_order_track_text(order):
