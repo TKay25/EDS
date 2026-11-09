@@ -17,23 +17,27 @@
 
 {% include 'components/eds_portal_nav.html' %}
 
-<main class="ps-shell" id="crmInbox" data-filter="{{ chat_filter }}"
+<a class="crm-skip-link" href="#crmInbox">Skip to CRM content</a>
+
+<main class="ps-shell crm-shell" id="crmInbox" tabindex="-1" data-filter="{{ chat_filter }}"
       data-client-filter="{{ client_type }}"
       data-currency="{{ PAYNOW_CURRENCY if PAYNOW_CURRENCY is defined else 'USD' }}">
 
-    {# One row carries the page name and the tabs. The old "Sales desk" heading
-       only repeated what the tabs already say, and the row it cost is worth
-       more to the conversation list. #}
-    <div class="crm-topbar">
-        <span class="ps-eyebrow"><i class="bi bi-headset"></i> CRM Portal</span>
-
-        {# The tablist holds only tabs. The activity log opens a dialog rather than
-           switching a view, so it sits beside the tablist instead of inside it. #}
-        <div class="crm-tabs">
-            <div class="crm-tablist" role="tablist" aria-label="CRM sections">
+    <div class="crm-layout">
+        <aside class="crm-sidebar" aria-label="CRM navigation">
+            <div class="crm-sidebar-brand">
+                <span class="crm-sidebar-mark" aria-hidden="true"><i class="bi bi-headset"></i></span>
+                <span class="crm-sidebar-brand-copy">
+                    <strong>Brilliant Chemicals</strong>
+                    <small>Customer operations</small>
+                </span>
+            </div>
+            <nav class="crm-tabs" aria-label="CRM sections">
+                <div class="crm-tablist" role="tablist" aria-label="CRM sections">
                 <button class="crm-tab is-active" type="button" id="crmTabInbox"
                         data-crm-tab="inbox" role="tab" aria-selected="true" tabindex="0"
-                        aria-controls="crmViewInbox">
+                        aria-controls="crmViewInbox" data-title="Inbox"
+                        data-description="Reply to customer messages and manage active WhatsApp conversations.">
                     <i class="bi bi-chat-dots-fill"></i>
                     <span class="crm-tab-text">
                         <span class="crm-tab-full">Inbox</span><span class="crm-tab-short">Inbox</span>
@@ -45,7 +49,8 @@
                    than at how the month is going. #}
                 <button class="crm-tab" type="button" id="crmTabOrders"
                         data-crm-tab="orders" role="tab" aria-selected="false" tabindex="-1"
-                        aria-controls="crmViewOrders">
+                        aria-controls="crmViewOrders" data-title="Orders"
+                        data-description="Track payments, stock cover, fulfilment and customer updates.">
                     <i class="bi bi-bag-check-fill"></i>
                     <span class="crm-tab-text">
                         <span class="crm-tab-full">Orders</span><span class="crm-tab-short">Orders</span>
@@ -53,17 +58,20 @@
                 </button>
                 <button class="crm-tab" type="button" id="crmTabShops"
                         data-crm-tab="shops" role="tab" aria-selected="false" tabindex="-1"
-                        aria-controls="crmViewShops">
+                        aria-controls="crmViewShops" data-title="Shops &amp; stock"
+                        data-description="Monitor shop stock, record deliveries and manage shop teams.">
                     <i class="bi bi-shop-window"></i>
                     <span class="crm-tab-text">
                         <span class="crm-tab-full">Shops</span><span class="crm-tab-short">Shops</span>
                         <span class="crm-stock-shortage-dot" id="crmStockSwitchDot" hidden
-                              title="A shop cannot cover the orders it has"></span>
+                              title="A shop cannot cover the orders it has"
+                              aria-label="Stock shortage needs attention"></span>
                     </span>
                 </button>
                 <button class="crm-tab" type="button" id="crmTabAnalytics"
                         data-crm-tab="analytics" role="tab" aria-selected="false" tabindex="-1"
-                        aria-controls="crmViewAnalytics">
+                        aria-controls="crmViewAnalytics" data-title="Sales analytics"
+                        data-description="Review order volume, paid sales and top-selling products.">
                     <i class="bi bi-graph-up-arrow"></i>
                     <span class="crm-tab-text">
                         <span class="crm-tab-full">Sales analytics</span><span class="crm-tab-short">Analytics</span>
@@ -71,7 +79,8 @@
                 </button>
                 <button class="crm-tab" type="button" id="crmTabProducts"
                         data-crm-tab="products" role="tab" aria-selected="false" tabindex="-1"
-                        aria-controls="crmViewProducts">
+                        aria-controls="crmViewProducts" data-title="Products &amp; pricing"
+                        data-description="Maintain the catalogue, pack sizes, pricing and WhatsApp listings.">
                     <i class="bi bi-box-seam-fill"></i>
                     <span class="crm-tab-text">
                         <span class="crm-tab-full">Products &amp; pricing</span><span class="crm-tab-short">Products</span>
@@ -79,22 +88,33 @@
                 </button>
                 <button class="crm-tab" type="button" id="crmTabSettings"
                         data-crm-tab="settings" role="tab" aria-selected="false" tabindex="-1"
-                        aria-controls="crmViewSettings">
+                        aria-controls="crmViewSettings" data-title="Settings"
+                        data-description="Configure business documents, delivery rules and WhatsApp.">
                     <i class="bi bi-gear-fill"></i>
                     <span class="crm-tab-text">
                         <span class="crm-tab-full">Settings</span><span class="crm-tab-short">Settings</span>
                     </span>
                 </button>
             </div>
-            <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity"
-                    aria-haspopup="dialog">
-                <i class="bi bi-clock-history"></i>
-                <span class="crm-tab-text">
-                    <span class="crm-tab-full">Activity log</span><span class="crm-tab-short">Activity</span>
-                </span>
-            </button>
+            </nav>
+            <div class="crm-sidebar-footer">
+                <button class="crm-tab crm-tab-action" type="button" id="crmOpenActivity"
+                        aria-haspopup="dialog" aria-controls="crmActivityModal"
+                        aria-label="Activity log">
+                    <i class="bi bi-clock-history"></i>
+                    <span class="crm-tab-text">Activity log</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="crm-workspace">
+    <header class="crm-topbar">
+        <div class="crm-page-heading">
+            <span class="ps-eyebrow"><i class="bi bi-grid-1x2-fill"></i> CRM PORTAL</span>
+            <h1 id="crmPageTitle">Inbox</h1>
+            <p id="crmPageDescription">Reply to customer messages and manage active WhatsApp conversations.</p>
         </div>
-    </div>
+    </header>
 
     <section class="crm-view is-active" id="crmViewInbox" data-crm-view="inbox"
              role="tabpanel" aria-labelledby="crmTabInbox">
@@ -346,6 +366,7 @@
                 </div>
             </div>
         </div>
+    </section>
 
         {# Replying while the assistant is still answering is ambiguous, so the
            choice is made explicit before the message goes out. #}
@@ -375,11 +396,12 @@
                         Cancel
                     </button>
                 </div>
-            </section>
+            </div>
+        </div>
     </section>
 
     <!-- ======================================================== orders -->
-    <section class="crm-view" id="crmViewOrders" data-crm-view="orders"
+    <section class="crm-view" id="crmViewOrders" data-crm-view="orders" hidden
              role="tabpanel" aria-labelledby="crmTabOrders">
         <div class="crm-orders-list" id="crmOrdersList">
         {# One compact toolbar rather than a panel with its own header: four
@@ -590,7 +612,7 @@
     </section>
 
     <!-- =========================================================== stock -->
-    <section class="crm-view crm-shops-stock" id="crmViewShops" data-crm-view="shops"
+    <section class="crm-view crm-shops-stock" id="crmViewShops" data-crm-view="shops" hidden
              role="tabpanel" aria-labelledby="crmTabShops">
         {# Stock is kept per shop, because the same product sits in different
            quantities in different places and it is the shop that hands the goods
@@ -785,7 +807,7 @@
     </section>
 
     <!-- ================================================== sales analytics -->
-    <section class="crm-view" id="crmViewAnalytics" data-crm-view="analytics"
+    <section class="crm-view" id="crmViewAnalytics" data-crm-view="analytics" hidden
              role="tabpanel" aria-labelledby="crmTabAnalytics">
         {# Reporting, not daily work: the order list lives on the Orders tab, so
            this view is only the numbers. It reads the same period and payment
@@ -890,7 +912,7 @@
 
 
     <!-- ========================================================== settings -->
-    <section class="crm-view" id="crmViewSettings" data-crm-view="settings"
+    <section class="crm-view" id="crmViewSettings" data-crm-view="settings" hidden
              role="tabpanel" aria-labelledby="crmTabSettings">
         <div class="ps-panel">
             <div class="ps-panel-head">
@@ -1087,7 +1109,7 @@
         </div>
     </section>
 
-    <section class="crm-view" id="crmViewProducts" data-crm-view="products"
+    <section class="crm-view" id="crmViewProducts" data-crm-view="products" hidden
              role="tabpanel" aria-labelledby="crmTabProducts">
         <div class="ps-panel">
             <div class="ps-panel-head">
@@ -1301,6 +1323,8 @@
             </details>
         </div>
     </section>
+        </div>
+    </div>
 </main>
 
 {# The limits the editor enforces, as data the script can read. Rendered rather

@@ -536,11 +536,23 @@
     var views = Array.prototype.slice.call(root.querySelectorAll('[data-crm-view]'));
     if (!tabs.length) return;
 
+    var titleEl = document.getElementById('crmPageTitle');
+    var descriptionEl = document.getElementById('crmPageDescription');
+
     // The inbox manages its own scrolling, so the shell can drop the page-level
     // bottom padding while it is showing.
     var shell = document.querySelector('.ps-shell');
 
     function show(name, focusTab, shopId) {
+      var selectedTab = tabs.filter(function (tab) {
+        return tab.getAttribute('data-crm-tab') === name;
+      })[0];
+      if (!selectedTab) {
+        name = 'inbox';
+        selectedTab = tabs.filter(function (tab) {
+          return tab.getAttribute('data-crm-tab') === name;
+        })[0];
+      }
       tabs.forEach(function (tab) {
         var selected = tab.getAttribute('data-crm-tab') === name;
         tab.classList.toggle('is-active', selected);
@@ -551,8 +563,19 @@
         if (selected && focusTab) tab.focus();
       });
       views.forEach(function (view) {
-        view.classList.toggle('is-active', view.getAttribute('data-crm-view') === name);
+        var selected = view.getAttribute('data-crm-view') === name;
+        view.classList.toggle('is-active', selected);
+        // The hidden attribute is the authoritative off state: it removes the
+        // panel from the accessibility tree and from tab order, rather than
+        // only painting it out of sight.
+        view.hidden = !selected;
       });
+      if (titleEl && selectedTab) {
+        titleEl.textContent = selectedTab.getAttribute('data-title') || name;
+      }
+      if (descriptionEl && selectedTab) {
+        descriptionEl.textContent = selectedTab.getAttribute('data-description') || '';
+      }
       if (shell) shell.classList.toggle('ps-shell-tight', name === 'inbox');
       if (name === 'orders') orders.load(false);
       if (name === 'shops') {
@@ -568,7 +591,24 @@
       if (name === 'settings' && window.__crmCatalogRefresh) window.__crmCatalogRefresh();
     }
 
-    selectCrmTab = show;
+    // The current section lives in the URL hash, so a refresh or a shared link
+    // returns to the same place instead of dropping the agent back on the inbox.
+    // replaceState is deliberate: tab switches are not separate pages, so they
+    // should not fill the browser's Back history.
+    function hashTab() {
+      return (window.location.hash || '').replace('#', '').toLowerCase();
+    }
+
+    function navigate(name, focusTab, shopId) {
+      show(name, focusTab, shopId);
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', name === 'inbox'
+          ? window.location.pathname + window.location.search
+          : '#' + name);
+      }
+    }
+
+    selectCrmTab = navigate;
 
     // The inbox takes whatever the viewport has left after the chrome above it.
     // The CSS fallback already expresses this; the measurement only corrects it
@@ -590,7 +630,7 @@
     }
 
     tabs.forEach(function (tab, index) {
-      tab.addEventListener('click', function () { show(tab.getAttribute('data-crm-tab')); });
+      tab.addEventListener('click', function () { navigate(tab.getAttribute('data-crm-tab')); });
 
       // Arrow keys walk the tabs, Home and End jump to the ends. The view is
       // selected as focus moves so the panel always matches the focused tab.
@@ -608,15 +648,29 @@
         }
         if (next === null) return;
         event.preventDefault();
-        show(tabs[next].getAttribute('data-crm-tab'), true);
+        navigate(tabs[next].getAttribute('data-crm-tab'), true);
       });
     });
 
-    // Apply the initial state. Without this the selected tab carried no
-    // aria-selected until the first click, so the active view was never
-    // announced, and every tab kept a tabindex of 0.
-    var initial = root.querySelector('[data-crm-tab].is-active');
-    show(initial ? initial.getAttribute('data-crm-tab') : 'inbox');
+    // Apply the initial state. A known hash wins so a refreshed page lands on
+    // the section it was showing; otherwise the server-rendered active tab is
+    // used. Setting it through show() keeps aria-selected and tabindex honest.
+    var wanted = hashTab();
+    var known = tabs.some(function (tab) {
+      return tab.getAttribute('data-crm-tab') === wanted;
+    });
+    var initialTab = root.querySelector('[data-crm-tab].is-active');
+    var initial = known ? wanted
+      : (initialTab ? initialTab.getAttribute('data-crm-tab') : 'inbox');
+    show(initial);
+
+    window.addEventListener('hashchange', function () {
+      var name = hashTab() || 'inbox';
+      var exists = tabs.some(function (tab) {
+        return tab.getAttribute('data-crm-tab') === name;
+      });
+      if (exists) show(name, true);
+    });
 
     // Measure once the browser has laid the page out; measuring mid-init reads
     // a not-yet-laid-out box and would size the inbox wrongly on first paint.
@@ -1139,7 +1193,7 @@
         .then(function (response) { return response.json(); })
         .then(function (result) {
           if (!result.success) {
-            if (!quiet) window.alert(result.message || 'Could not load that order.');
+            if (!quiet) toast(result.message || 'Could not load that order.', 'error');
             return null;
           }
           renderOrder(result.order, result.payment, result.payment_history, result.stock);
@@ -1147,7 +1201,7 @@
           return result;
         })
         .catch(function () {
-          if (!quiet) window.alert('Could not load that order.');
+          if (!quiet) toast('Could not load that order.', 'error');
           return null;
         });
     }
@@ -1507,14 +1561,15 @@
         .then(function (result) {
           row.style.opacity = '';
           if (!result.success) {
-            window.alert(result.message || 'Could not update that order.');
+            toast(result.message || 'Could not update that order.', 'error');
             return;
           }
           analytics.applyOrderResult(result);
         })
         .catch(function () {
           row.style.opacity = '';
-          window.alert('Could not update that order.');
+          toast('Could not update that order.', 'error',
+                'The change was not saved. Check the connection and try again.');
         });
     }
 
@@ -1546,6 +1601,9 @@
           renderSeries((payload.analytics || {}).series);
         })
         .catch(function () {
+          // Previous numbers are left on screen: a momentary network failure
+          // should not wipe a report the agent is reading.
+          toast('Sales analytics could not be refreshed.', 'warn');
           if (!silent) console.warn('Could not load sales analytics');
         })
         .then(loadFinished, loadFinished);
@@ -1736,8 +1794,32 @@
       renderState();
     }
 
+    function renderLoadError(message) {
+      var body = document.getElementById('crmOrdersBody');
+      if (!body) return;
+      body.innerHTML = '<tr><td colspan="9" class="crm-empty-cell">' +
+        analytics.emptyState('bi-cloud-slash', 'Orders could not be loaded',
+          message || 'The request did not complete. Try again in a moment.') +
+        '</td></tr>';
+      var cell = body.querySelector('.crm-empty-state');
+      if (cell) {
+        var actions = document.createElement('div');
+        actions.className = 'crm-empty-actions';
+        var retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'ps-btn ps-btn-ghost ps-btn-sm';
+        retry.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Try again';
+        retry.addEventListener('click', function () { load(false); });
+        actions.appendChild(retry);
+        cell.appendChild(actions);
+      }
+      if (countEl) countEl.textContent = '—';
+    }
+
     function loadFinished() {
       inFlight = false;
+      var body = document.getElementById('crmOrdersBody');
+      if (body) body.removeAttribute('aria-busy');
       if (reloadPending) {
         reloadPending = false;
         load(false);
@@ -1750,17 +1832,23 @@
         return;
       }
       inFlight = true;
+      var body = document.getElementById('crmOrdersBody');
+      if (body) body.setAttribute('aria-busy', 'true');
       fetch('/api/crm/analytics?' + query())
         .then(function (response) { return response.json(); })
         .then(function (payload) {
           // Superseded by a newer filter choice, so it is not painted over the
           // one the user is now looking at; the queued load replaces it.
           if (reloadPending) return;
-          if (!payload.success) return;
+          if (!payload.success) {
+            renderLoadError(payload.message);
+            return;
+          }
           loaded = true;
           render(payload);
         })
         .catch(function () {
+          renderLoadError('The connection dropped before the order list arrived.');
           if (!silent) console.warn('Could not load orders');
         })
         .then(loadFinished, loadFinished);
