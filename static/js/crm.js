@@ -529,6 +529,8 @@
   }
 
   /* ------------------------------------------------------------- tabs */
+  var selectCrmTab;
+
   function initTabs() {
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-crm-tab]'));
     var views = Array.prototype.slice.call(root.querySelectorAll('[data-crm-view]'));
@@ -538,7 +540,7 @@
     // bottom padding while it is showing.
     var shell = document.querySelector('.ps-shell');
 
-    function show(name, focusTab) {
+    function show(name, focusTab, shopId) {
       tabs.forEach(function (tab) {
         var selected = tab.getAttribute('data-crm-tab') === name;
         tab.classList.toggle('is-active', selected);
@@ -553,10 +555,20 @@
       });
       if (shell) shell.classList.toggle('ps-shell-tight', name === 'inbox');
       if (name === 'orders') orders.load(false);
+      if (name === 'shops') {
+        if (!stockLoaded) {
+          stockLoaded = true;
+          if (shopId) loadStock(shopId); else initStock();
+        } else if (shopId) {
+          loadStock(shopId);
+        }
+      }
       if (name === 'analytics') analytics.load(false);
       if (name === 'inbox') sizeInbox();
       if (name === 'settings' && window.__crmCatalogRefresh) window.__crmCatalogRefresh();
     }
+
+    selectCrmTab = show;
 
     // The inbox takes whatever the viewport has left after the chrome above it.
     // The CSS fallback already expresses this; the measurement only corrects it
@@ -678,9 +690,6 @@
           node.textContent = (key === 'value' || key === 'paid_value') ? money(value) : value;
         });
       });
-      Array.prototype.forEach.call(document.querySelectorAll('.ps-chip [data-an="orders"]'), function (node) {
-        node.textContent = data.orders;
-      });
     }
 
     function emptyState(icon, title, hint) {
@@ -747,8 +756,9 @@
       var contact = order.company ? '<span class="crm-sub">' + escapeHtml(order.company) + '</span>' : '';
       var address = order.address ? '<span class="crm-sub">' + escapeHtml(order.address) + '</span>' : '';
       var paid = order.payment_status === 'paid';
-      var delivered = order.delivery_method === 'delivery';
+      var homeDelivery = order.delivery_method === 'delivery';
       var cancelled = !!order.cancelled;
+      var fulfilled = !!order.fulfilled;
       // A cancelled order has nothing left to fulfil and no money to take, so
       // the fulfilment buttons are replaced rather than left to be pressed.
       var paymentCell = cancelled
@@ -778,13 +788,15 @@
       var actionsCell = cancelled
         ? '<span class="crm-row-note">Cancelled by the customer</span>'
         : '<div class="crm-row-actions">' +
-          '<button class="crm-mini-btn' + (delivered ? ' is-active' : '') + '" type="button" ' +
-          'data-fulfil="delivery" title="Delivered to the customer">Home</button>' +
-          '<button class="crm-mini-btn' + (!delivered ? ' is-active' : '') + '" type="button" ' +
-          'data-fulfil="collection" title="Collected from the shop">Shop</button>' +
-          '<button class="crm-mini-btn" type="button" data-mark-done="1" ' +
-          'title="Mark this order as fulfilled">' +
-          '<i class="bi bi-check2-circle"></i> Done</button>' +
+          '<button class="crm-mini-btn' + (homeDelivery ? ' is-active' : '') + '" type="button" ' +
+          'data-fulfil="delivery" title="Set this order to home delivery">Home</button>' +
+          '<button class="crm-mini-btn' + (!homeDelivery ? ' is-active' : '') + '" type="button" ' +
+          'data-fulfil="collection" title="Set this order to shop collection">Shop</button>' +
+          (fulfilled
+            ? '<span class="crm-row-note"><i class="bi bi-check2-circle"></i> Fulfilled</span>'
+            : '<button class="crm-mini-btn" type="button" data-mark-done="1" ' +
+              'title="Mark this order as fulfilled">' +
+              '<i class="bi bi-check2-circle"></i> Done</button>') +
           '<button class="crm-mini-btn" type="button" data-open-order="1" ' +
           'title="Open this order to print documents or take payment">' +
           '<i class="bi bi-receipt"></i> Open</button>' +
@@ -1385,10 +1397,9 @@
             return;
           }
           if (kind === 'stock-open') {
-            // Jump straight to this order's shop on the stock side, so restocking
-            // is one click from the order that needs it.
+            // Jump straight to this order's shop, so restocking is one click away.
             closeOrder();
-            showOrdersSub('stock', action.getAttribute('data-shop'));
+            selectCrmTab('shops', false, action.getAttribute('data-shop'));
             return;
           }
           if (kind === 'request-payment') {
@@ -1556,7 +1567,7 @@
     function applyOrderResult(result, row) {
       if (result.analytics) renderStats(result.analytics);
       if (result.analytics) renderTop(result.analytics.top_items);
-      if (orders && result.orders) orders.replace(result.orders);
+      if (orders && result.orders) orders.replace(result.orders, result.cards);
       else if (result.orders) renderTable(result.orders);
     }
 
@@ -1582,6 +1593,7 @@
     var searchEl = document.getElementById('crmOrderSearch');
     var cardsEl = document.getElementById('crmOrderCards');
     var titleEl = document.getElementById('crmOrdersTitle');
+    var countEl = document.getElementById('crmOrdersCount');
     var clearEl = document.getElementById('crmOrdersClear');
     var loaded = false;
     var inFlight = false;
@@ -1706,6 +1718,7 @@
       renderCards(payload.card_meta, payload.cards);
       var rows = visibleOrders(payload.orders);
       analytics.renderTable(rows);
+      if (countEl) countEl.textContent = rows.length;
       if (titleEl) {
         var label = '';
         if (payload.card_meta && activeCard) {
@@ -1777,9 +1790,9 @@
     return { load: load, isLoaded: function () { return loaded; },
              // Refresh the cards and the table from a payload another action
              // already fetched, so a save does not cost a second round trip.
-             replace: function (rows) {
+             replace: function (rows, counts) {
                lastPayload = { orders: rows, card_meta: lastPayload && lastPayload.card_meta,
-                               cards: lastPayload && lastPayload.cards };
+                              cards: counts || (lastPayload && lastPayload.cards) };
                renderState();
              } };
   })();
@@ -2026,8 +2039,7 @@
 
   function renderStockBoard(board) {
     if (!stockBoard) return;
-    // The Orders side shows a dot while any shop is short, so the problem is
-    // visible without opening the stock panel.
+    // Keep the Shops tab indicator in sync while any shop is short.
     var dot = document.getElementById('crmStockSwitchDot');
     var anyShort = (board || []).some(function (shop) { return shop.status === 'short'; });
     if (dot) dot.hidden = !anyShort;
@@ -2486,40 +2498,6 @@
     });
   }
   if (stockSave) stockSave.addEventListener('click', saveStock);
-
-  /* Orders and order stock share one tab, so the switch lives here rather than
-     in the global tab bar. The stock side loads on first sight and keeps what it
-     shows afterwards, so a look at the order list never throws away counts that
-     have not been saved yet. */
-  var ordersSubButtons = Array.prototype.slice.call(
-    document.querySelectorAll('[data-orders-sub]'));
-  var ordersListPane = document.getElementById('crmOrdersList');
-  var ordersStockPane = document.getElementById('crmViewStock');
-
-  function showOrdersSub(name, shopId) {
-    var onStock = name === 'stock';
-    if (ordersListPane) ordersListPane.hidden = onStock;
-    if (ordersStockPane) ordersStockPane.hidden = !onStock;
-    ordersSubButtons.forEach(function (button) {
-      var selected = button.getAttribute('data-orders-sub') === name;
-      button.classList.toggle('is-active', selected);
-      button.setAttribute('aria-selected', selected ? 'true' : 'false');
-    });
-    if (onStock && !stockLoaded) {
-      stockLoaded = true;
-      // A shop named by the caller wins, so opening the pantry from an order does
-      // not land on whichever shop happens to be first in the list.
-      if (shopId) loadStock(shopId); else initStock();
-    } else if (onStock && shopId) {
-      loadStock(shopId);
-    }
-  }
-
-  ordersSubButtons.forEach(function (button) {
-    button.addEventListener('click', function () {
-      showOrdersSub(button.getAttribute('data-orders-sub'));
-    });
-  });
 
   var shopNew = document.getElementById('crmShopNew');
   if (shopNew) {

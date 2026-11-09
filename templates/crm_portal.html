@@ -51,6 +51,16 @@
                         <span class="crm-tab-full">Orders</span><span class="crm-tab-short">Orders</span>
                     </span>
                 </button>
+                <button class="crm-tab" type="button" id="crmTabShops"
+                        data-crm-tab="shops" role="tab" aria-selected="false" tabindex="-1"
+                        aria-controls="crmViewShops">
+                    <i class="bi bi-shop-window"></i>
+                    <span class="crm-tab-text">
+                        <span class="crm-tab-full">Shops</span><span class="crm-tab-short">Shops</span>
+                        <span class="crm-stock-shortage-dot" id="crmStockSwitchDot" hidden
+                              title="A shop cannot cover the orders it has"></span>
+                    </span>
+                </button>
                 <button class="crm-tab" type="button" id="crmTabAnalytics"
                         data-crm-tab="analytics" role="tab" aria-selected="false" tabindex="-1"
                         aria-controls="crmViewAnalytics">
@@ -365,29 +375,12 @@
                         Cancel
                     </button>
                 </div>
-            </div>
-        </div>
-    </section>
+            </section>
     </section>
 
     <!-- ======================================================== orders -->
     <section class="crm-view" id="crmViewOrders" data-crm-view="orders"
              role="tabpanel" aria-labelledby="crmTabOrders">
-        {# Orders and the stock that has to serve them are one job, so they
-           share a tab: the switch sits above both panels, and the stock side
-           carries a red dot while any shop cannot cover the orders it has. #}
-        <div class="crm-orders-switch" role="tablist" aria-label="Orders and order stock">
-            <button type="button" class="crm-orders-switch-btn is-active"
-                    data-orders-sub="list" role="tab" aria-selected="true">
-                <i class="bi bi-receipt"></i> Orders
-            </button>
-            <button type="button" class="crm-orders-switch-btn"
-                    data-orders-sub="stock" role="tab" aria-selected="false">
-                <i class="bi bi-boxes"></i> Order stock
-                <span class="crm-orders-switch-dot" id="crmStockSwitchDot" hidden
-                      title="A shop cannot cover the orders it has"></span>
-            </button>
-        </div>
         <div class="crm-orders-list" id="crmOrdersList">
         {# One compact toolbar rather than a panel with its own header: four
            selects do not need a title bar above them. #}
@@ -457,7 +450,7 @@
                             title="Show every order in this period again" hidden>
                         <i class="bi bi-x-circle"></i> Clear card filter
                     </button>
-                    <span class="ps-chip"><strong data-an="orders">0</strong> orders</span>
+                    <span class="ps-chip"><strong id="crmOrdersCount">0</strong> orders</span>
                 </div>
             </div>
             <div class="crm-table-wrap">
@@ -593,16 +586,19 @@
                 </div>
             </div>
         </div>
+        </div>
+    </section>
+
     <!-- =========================================================== stock -->
-    <div class="crm-orders-stock" id="crmViewStock" role="region"
-         aria-label="Order stock management" hidden>
+    <section class="crm-view crm-shops-stock" id="crmViewShops" data-crm-view="shops"
+             role="tabpanel" aria-labelledby="crmTabShops">
         {# Stock is kept per shop, because the same product sits in different
            quantities in different places and it is the shop that hands the goods
            over. The table is built from the catalogue, so a line nobody has
            counted yet still appears and can be counted. #}
         <div class="ps-panel">
             <div class="ps-panel-head">
-                <h3><i class="bi bi-boxes"></i> Order stock management</h3>
+                <h3><i class="bi bi-shop-window"></i> Shops &amp; stock</h3>
                 <div class="ps-panel-actions">
                     <button class="ps-btn ps-btn-ghost ps-btn-sm" type="button" id="crmShopNew">
                         <i class="bi bi-plus-lg"></i> Add a shop
@@ -786,8 +782,6 @@
             </div>
         </div>
 
-    </div>
-        </div>
     </section>
 
     <!-- ================================================== sales analytics -->

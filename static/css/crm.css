@@ -2602,47 +2602,15 @@ select.crm-select:focus {
 }
 .crm-stock-hint.is-dirty { color: #B45309; font-weight: 600; }
 
-/* ----------------------------------------------- orders ⇄ order stock --
-   The stock that has to serve an order belongs beside the order, so both live
-   in the Orders tab and switch with one control. The dot is the only thing that
-   reaches the order list: it says a shop is short without opening the panel. */
-.crm-orders-switch {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  margin: 0 0 14px;
-  border: 1px solid var(--ps-line);
-  border-radius: 999px;
-  background: var(--ps-surface);
-  box-shadow: var(--ps-shadow-soft);
-}
-.crm-orders-switch-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ps-text-soft);
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.crm-orders-switch-btn:hover { color: var(--ps-text); }
-.crm-orders-switch-btn.is-active { background: var(--ps-gradient-accent); color: #fff; }
-.crm-orders-switch-btn:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 2px; }
-.crm-orders-switch-dot {
+/* The Shops tab shows a dot while any shop is short. */
+.crm-stock-shortage-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #DC143C;
   box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.18);
 }
-.crm-orders-switch-dot[hidden] { display: none; }
-.crm-orders-list[hidden],
-.crm-orders-stock[hidden] { display: none; }
+.crm-stock-shortage-dot[hidden] { display: none; }
 
 /* Stock on a single order: the same figures as the tab, narrowed to the lines
    this customer is waiting for. */

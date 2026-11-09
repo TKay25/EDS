@@ -25765,8 +25765,9 @@ SHOP_TEMPLATES = {
         # as a cancellation.
         "body": ("Stock update on order {{1}}. {{2}} can no longer supply: {{3}}.\n"
                  "\n"
-                 "Your order is still with us — reply here and our team will offer a "
-                 "replacement or a refund."),
+                 "Your order is still with us. We will notify you as soon as the "
+                 "stock is restocked, so you can come to the shop, pay and collect "
+                 "your order."),
         "fields": ["reference", "shop", "items"],
         "buttons": [("track", "Track my order"), ("support_human", "Talk to a human")],
     },
@@ -27539,9 +27540,9 @@ def _shop_stock_short_notice(order, shop_name):
     for line in order["lines"]:
         lines.append(f"    • {line['product']} ({line['pack_size']}) × "
                      f"{line['quantity']} — {line['missing']} short")
-    lines += ["", "Your order is still with us, and nothing has been charged "
-                  "twice.", "Reply here and our team will offer a replacement "
-                  "or a refund."]
+    lines += ["", "Your order is still with us.", "We will notify you as soon as "
+                  "the stock is restocked, so you can come to the shop, pay and "
+                  "collect your order."]
     items_text = "; ".join(
         f"{line['product']} ({line['pack_size']}) × {line['quantity']} — "
         f"{line['missing']} short" for line in order["lines"])
@@ -32575,6 +32576,7 @@ def orders_overview(period="today", payment="all", fulfilment="all", limit=50):
             "wa_number": row[12] or "",
             "profile_name": row[13] or "",
             "fulfilled_at": fmt_time(row[14], "%d %b %Y %H:%M"),
+            "fulfilled": row[14] is not None or (row[10] or "").lower() == "closed",
             "cancelled_at": fmt_time(row[15], "%d %b %Y %H:%M"),
             "cancelled": row[15] is not None or (row[10] or "") == "cancelled",
             "stage": row[16] or "",
@@ -32760,7 +32762,8 @@ def order_fulfilment_filter(key, alias="shop_orders"):
         "collection": f"COALESCE({alias}.delivery_method, 'collection') = 'collection' AND {active}",
         "pending": (f"{alias}.fulfilled_at IS NULL AND {alias}.status <> 'closed' "
                     f"AND {active}"),
-        "fulfilled": f"{alias}.fulfilled_at IS NOT NULL OR {alias}.status = 'closed'",
+        "fulfilled": (f"({alias}.fulfilled_at IS NOT NULL OR "
+                      f"{alias}.status = 'closed') AND {active}"),
         "cancelled": cancelled,
     }
     return filters.get(key) or filters["all"]
@@ -34979,20 +34982,20 @@ def crm_order_fulfilment_api(reference):
         return jsonify({'success': False, 'message': 'Could not update that order.'}), 500
     if method in ('delivery', 'collection'):
         log_activity("set_fulfilment", "order",
-                     f"Marked {reference} as {'delivered to the customer' if method == 'delivery' else 'collected from the shop'}",
+                     f"Changed {reference} to "
+                     f"{'home delivery' if method == 'delivery' else 'shop collection'}",
                      target=reference, details={"delivery_method": method}, user=user)
     if fulfilled is not None:
         log_activity("marked_fulfilled" if fulfilled else "reopened_order", "order",
                      f"Marked {reference} as {'fulfilled' if fulfilled else 'not yet fulfilled'}",
                      target=reference, details={"fulfilled": bool(fulfilled)}, user=user)
     period = request.args.get('period', 'today')
+    payment = request.args.get('payment', 'all')
+    fulfilment = request.args.get('fulfilment', 'all')
     return jsonify({'success': True,
-                    'analytics': orders_analytics(period,
-                                                  request.args.get('payment', 'all'),
-                                                  request.args.get('fulfilment', 'all')),
-                    'orders': orders_overview(period,
-                                              request.args.get('payment', 'all'),
-                                              request.args.get('fulfilment', 'all'))})
+                    'analytics': orders_analytics(period, payment, fulfilment),
+                    'orders': orders_overview(period, payment, fulfilment),
+                    'cards': order_status_counts(period, payment, fulfilment)})
 
 
 @app.route('/api/crm/orders/<reference>/stage', methods=['POST'])
@@ -35012,6 +35015,8 @@ def crm_order_stage_api(reference):
         return jsonify({'success': False, 'message': message}), 400
     detail = order_detail(reference) or {}
     period = request.args.get('period', 'today')
+    payment = request.args.get('payment', 'all')
+    fulfilment = request.args.get('fulfilment', 'all')
     return jsonify({'success': True,
                     'message': message,
                     'stage': detail.get('stage', ''),
@@ -35023,12 +35028,9 @@ def crm_order_stage_api(reference):
                                for value, label in shop_stage_options(
                                    detail.get('delivery_method'))],
                     'customer_text': shop_order_stage_text(detail) if detail else '',
-                    'analytics': orders_analytics(period,
-                                                  request.args.get('payment', 'all'),
-                                                  request.args.get('fulfilment', 'all')),
-                    'orders': orders_overview(period,
-                                              request.args.get('payment', 'all'),
-                                              request.args.get('fulfilment', 'all'))})
+                    'analytics': orders_analytics(period, payment, fulfilment),
+                    'orders': orders_overview(period, payment, fulfilment),
+                    'cards': order_status_counts(period, payment, fulfilment)})
 
 
 @app.route('/api/crm/chats/<int:chat_id>/messages')
